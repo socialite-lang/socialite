@@ -1,4 +1,4 @@
-# SociaLite: Python-integrated Query Language For Big Data Analysis
+### SociaLite: Python-integrated Query Language For Big Data Analysis
 
 http://socialite.stanford.edu
 
