@@ -1,7 +1,6 @@
-SociaLite: Python-integrated Query Language For Big Data Analysis
+# SociaLite: Python-integrated Query Language For Big Data Analysis
 
 http://socialite.stanford.edu
-=========
 
 **SociaLite** is a high-level query language for distributed data analysis.
 In SociaLite, analysis programs are implemented in high-level queries, that are compiled to parallel/distributed code.  The compiled code is highly optimized, and can run as fast as three orders of magnitude (1000x) faster than equivalent Hadoop programs on InfiniBand network.
