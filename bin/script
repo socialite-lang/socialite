@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+curDir=`pwd`
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+. "$bin/socialite-config.sh"
+
+# Copied from bin/launcher
+if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then 
+  SOCIALITE_OPTS="$SOCIALITE_OPTS -Djava.library.path=$JAVA_LIBRARY_PATH"
+fi
+SOCIALITE_OPTS="$SOCIALITE_OPTS -Dsocialite.log.dir=$SOCIALITE_LOG_DIR"
+SOCIALITE_OPTS="$SOCIALITE_OPTS -Dsocialite.log.file=socialite-shell-$HOSTNAME.log"
+SOCIALITE_OPTS="$SOCIALITE_OPTS -Dsocialite.output.dir=${SOCIALITE_OUTPUT_DIR}"
+SOCIALITE_OPTS="$SOCIALITE_OPTS -Dsocialite.master=$SOCIALITE_MASTER"
+if [ "x$SOCIALITE_BASE_PORT" != "x" ]; then
+  SOCIALITE_OPTS="$SOCIALITE_OPTS -Dsocialite.port=$SOCIALITE_BASE_PORT"
+fi
+
+SOCIALITE_OPTS="$SOCIALITE_OPTS -Dpython.verbose=warning"
+SOCIALITE_OPTS="$SOCIALITE_OPTS -Dpython.options.proxyDebugDirectory=${SOCIALITE_OUTPUT_DIR}"
+SOCIALITE_OPTS="$SOCIALITE_OPTS -Dpython.options.includeJavaStackInExceptions=false"
+
+cd "$curDir"
+#$bin/jython -J-server -J-da -J-XX:+UseG1GC -J-XX:+PrintGC -J-XX:+PrintGCDetails -J-XX:+PrintGCTimeStamps -J-XX:PermSize=40000m -J-XX:MaxPermSize=79000m -J$JAVA_HEAP_MAX -J$JAVA_HEAP_MIN $SOCIALITE_OPTS  $@
+#$bin/jython -J-server -J-da -J-XX:+PrintGC -J-XX:+PrintGCDetails -J-XX:+PrintGCTimeStamps -J-XX:PermSize=40000m -J-XX:MaxPermSize=79000m -J$JAVA_HEAP_MAX -J$JAVA_HEAP_MIN $SOCIALITE_OPTS  $@
+
+
+#$bin/jython -J-XX:MaxInlineSize=72 -J-server -J-da -J$JAVA_HEAP_MAX -J$JAVA_HEAP_MIN $SOCIALITE_OPTS  $@
+JAVA_OPTS=$JVM_OPTS $bin/jython -J-server -J-da -J$JAVA_HEAP_MAX -J$JAVA_HEAP_MIN $SOCIALITE_OPTS  $@

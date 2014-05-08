@@ -1,0 +1,489 @@
+group dynamic-table;
+
+import "TableCommon.stg"
+
+dynamicTable(name, visitorClass, columns, gbColumns, gbAggrColumn, 
+			sortedCol, idxCols, 
+			methods, size, id,			 
+			sortOrder="Asc", inplaceSort=false, 
+			multiSet=false, isNested=false) ::= <<
+<if(!isNested)>
+package socialite.tables;
+
+<importForTable()>
+<endif>
+
+// dynamicTable
+<if(isNested)>static<else> public<endif> final class <name> extends AbstractTableInst {
+	private static final long serialVersionUID = 1;
+	
+	public static int theRowSize() {
+		return <columns:{c|<c.typeSize>};separator="+">;
+	}
+	public static int tableid() { return <id>; }		
+	
+	public static <name> create() { return new <name>(<size>); }	
+	public static <name> create(int size) { return new <name>(size); }	
+	public static <name> createSmall() {
+		int capacity=<size>/8;
+		if (capacity \< 1) capacity = 1; 
+		return new <name>(capacity); 
+	}
+	
+	<columns:{c|<if(c.const)> <ConstContainer.(c.type)> col<i0>;<\n>
+				<else><getContainer(c.type)> col<i0>;<\n>
+				<endif>}>
+		
+	<idxCols:{ic|SIndex index<ic.relPos>;<\n>}>
+<if(gbColumns)>
+	GroupbyMap groupbyMap;
+	Tuple<gbColumns:{g|_<TupleMap.(g.type)>}> groupbyTup = 
+						new Tuple<gbColumns:{g|_<TupleMap.(g.type)>}>();
+<endif>
+
+<if(sortedCol && !inplaceSort)>
+	SIntArrayList sortedIdx;
+	<getContainer(sortedCol.type)> sortedCol;
+<endif>
+	
+	public <name>() { this(0); }	
+	public <name>(int size) {
+		size = (int)(size/sizeEstimFactor());
+		
+		<columns:{c|<if(c.const)> col<i0>=new <ConstContainer.(c.type)>(size);<\n>
+					<else> col<i0>=new <ContainerMap.(c.type)>(size);<\n>
+					<endif>}>
+		<idxCols:{ic|index<ic.relPos> = new SIndex(<ic.size>, <length(columns)>);<\n>}>		
+		<if(gbColumns)>groupbyMap = new GroupbyMap(size);<endif>
+		
+		<if(sortedCol && !inplaceSort)>
+		sortedIdx = new SIntArrayList();
+		sortedCol = new <getContainer(sortedCol.type)>(); 
+		<endif>	
+	}
+	
+	public boolean isSmall() { return size() \<= <size>/8; }
+	public boolean isTooSmall() { return size() \<= <size>/50; }	
+	public int vacancy() { return col0.capacity() - col0.size(); }
+	
+	public boolean nearlyEmpty() {
+		return col0.size() \< 2048;
+	}
+	public boolean filledToCapacity() {
+		return col0.filledToCapacity();
+	}
+	
+	public double rowSize() { return <name>.theRowSize(); }		
+	public int totalAllocSize() {
+		int capacity = col0.capacity();
+		int totalAlloc = 0;
+		<columns:{c|totalAlloc += 32+capacity*<c.typeSize>;<\n>}>
+		return (int)(totalAlloc*sizeEstimFactor());
+	}	
+	public int totalDataSize() {
+		int size = col0.size();
+		int totalData = 0;
+		<columns:{c|totalData += 32+size*<c.typeSize>;<\n>}>
+		return (int)(totalData*sizeEstimFactor());
+	}
+	
+	private volatile boolean accessed=false;
+	public void setAccessed(boolean _accessed) { accessed = _accessed; }
+	public boolean isAccessed() { return accessed; }
+	
+	public int id() { return <id>; }	
+	public int size() { return col0.size(); }
+		
+	public String toString() {
+		String str="Table #<id>:";
+		int limit=col0.size();
+		str += "size="+limit+" ";
+		if (limit > 4) limit=4;
+		for (int i=0; i\<limit; i++) {
+			str += ""<columns:{c| +col<i0>.get(i)+", "}>;
+			str += "\n";
+		}
+		return str;
+	}
+	
+	public void clearQuick() { clear(); }
+	public void clear() {
+		<columns:{c|col<i0>.resetQuick();<\n>}>
+		<idxCols:{ic|index<ic.relPos>.clear();<\n>}>
+		<if(sortedCol && !inplaceSort)>
+		sortedIdx.resetQuick();
+		sortedCol.resetQuick();
+		<endif>		
+		<if(gbColumns)>groupbyMap.clear();<endif>
+		setVirtualSliceNum(1);		
+		assert isEmpty();
+	}
+	
+	public TableInst copy() {
+		<name> copy;
+		/*if (isSmall()) {
+			copy = (<name>)TmpTablePool.getSmall(<name>.class);
+		} else */ {
+			copy = (<name>)TmpTablePool.get(<name>.class);
+		}		
+		assert copy.isEmpty();
+		copy.addAllFast(this);
+		return copy;
+	}
+	
+	public void addAllFast(TableInst inst) {
+		// should be only used by Sender.java (all index, sorted columns, etc are ignored)
+		if (inst==null) return;
+		<name> other = (<name>)inst;
+		
+		<columns:{c|col<i0>.addAllFast(other.col<i0>);<\n>}>		
+	}
+	
+	public boolean contains(<columns:{c|<c.type> a<i0>};separator=", ">) {
+		int pos=-1;
+		int first=0;
+	 	int last=col0.size()-1;
+		<if(idxCols)>
+			TIntArrayList posList=(TIntArrayList)index<first(idxCols).relPos>.get(a<first(idxCols).relPos>);
+			if (posList==null) return false;
+			for (int i=0; i\<posList.size(); i++) {
+				pos=posList.getQuick(i);
+				if (<columns:{c|col<i0>.getQuick(pos)<EqOpMap.(c.type)>(a<i0>)}; separator=" && ">)
+					return true;
+			}
+			if (true) return false;
+		<elseif(sortedCol)>
+			<getContainer(sortedCol.type)> $sortedCol;
+			<if(inplaceSort)>$sortedCol=col<sortedCol.relPos>;
+			<else>$sortedCol=sortedCol;<endif>
+			
+			pos = $sortedCol.binarySearch(a<sortedCol.relPos>);
+			if (pos\<0 || pos >= col0.size()) return false;	
+						
+			<if(rest(columns))>
+				first = firstIndex($sortedCol, pos);
+				last = lastIndex($sortedCol, pos);
+			<else>if (true) return true;<endif>
+		<endif>
+		
+		for (int i=first; i\<= last; i++) {
+		  <if(sortedCol && !inplaceSort)>pos=sortedIdx.getQuick(i);
+		  <else>pos = i;<endif>
+			if (<columns:{c|col<i0>.get(pos)<EqOpMap.(c.type)>(a<i0>)};separator="&&">) {
+				return true;
+			}
+		}		
+		return false;
+	}
+	public boolean contains(<columns:{c|<c.type> a<i0>};separator=", ">, boolean[] dontcare) {
+		int pos=-1;
+		int first=0;
+	 	int last=col0.size()-1;
+		<if(idxCols)>
+		if (!dontcare[<first(idxCols).relPos>]) {
+			TIntList posList=index<first(idxCols).relPos>.get(a<first(idxCols).relPos>);
+			
+			if (posList==null) return false;
+			for (int i=0; i\<posList.size(); i++) {
+				pos=posList.get(i);
+				if (<columns:{c|(dontcare[<i0>] || col<i0>.get(pos)<EqOpMap.(c.type)>(a<i0>))}; separator=" && ">)
+					return true;
+			}
+			if (true) return false;
+		}
+		<elseif(sortedCol)>
+		if (!dontcare[<sortedCol.relPos>]) {
+			<getContainer(sortedCol.type)> $sortedCol;
+			<if(inplaceSort)>$sortedCol=col<sortedCol.relPos>;
+			<else>$sortedCol=sortedCol;<endif>
+			
+			pos = $sortedCol.binarySearch(a<sortedCol.relPos>);
+			if (pos\<0 || pos >= col0.size()) return false;	
+						
+			<if(rest(columns))>
+				first = firstIndex($sortedCol, pos);
+				last = lastIndex($sortedCol, pos);
+			<else>if (true) return true;<endif>
+		}
+		<endif>
+		
+		for (int i=first; i\<= last; i++) {
+		  <if(sortedCol && !inplaceSort)>pos=sortedIdx.getQuick(i);
+		  <else>pos = i;<endif>
+			if (<columns:{c|(dontcare[<i0>] || col<i0>.get(pos)<EqOpMap.(c.type)>(a<i0>))};separator="&&">)
+				return true;
+		}		
+		return false;
+	}
+	
+	public boolean insert(<columns:{c|<c.type> a<i0>};separator=", ">) {
+		<if(rest(columns))>
+		assert col0.size()==col1.size():"col0 size:"+col0.size()+", col1 size:"+col1.size();
+		<endif>
+	
+	<if(!isNested && !multiSet)>
+		if (contains(<columns:{c|a<i0>};separator=",">)) return false;
+	<endif>
+	
+		int pos=0;
+		boolean dontCare=false;
+	<if(sortedCol)>
+		<if(inplaceSort)>
+			<findPos("pos", {col<sortedCol.relPos>}, {a<sortedCol.relPos>}, "dontCare")>
+		<else>
+			<findPos("pos", "sortedCol", {a<sortedCol.relPos>}, "dontCare")>
+		<endif>
+	<else>pos = col0.size(); <endif>		
+		
+	<if(sortedCol && !inplaceSort)>
+		<columns:{c|col<i0>.add(a<i0>);<\n>}>
+		sortedCol.insert(pos, a<sortedCol.relPos>);
+		
+		sortedIdx.insert(pos, col0.size()-1);
+		pos = col0.size()-1;
+	<else>
+		<columns:{c|col<i0>.insert(pos, a<i0>);<\n>}>
+	<endif>
+		<idxCols:{ic|index<ic.relPos>.add(a<ic.relPos>, pos);<\n>}>
+		
+	<if(gbColumns)>
+	<if(rest(gbColumns))>
+		<gbColumns:{g|groupbyTup._<i0> = a<i0>;}; separator="\n">
+		groupbyMap.add1(groupbyTup.clone(), pos);
+	<else>
+		groupbyMap.add1(a0, pos);
+	<endif>
+	<endif>
+		return true;
+	}
+
+<if(gbColumns)> //  if (gbColumns) [
+	public <gbAggrColumn.type> groupby(<gbColumns:{g|<g.type> a<i0>};separator=", ">) {
+	<if(rest(gbColumns))>
+		<gbColumns:{g|groupbyTup._<i0> = a<i0>;}; separator="\n">
+		int pos=groupbyMap.get1(groupbyTup);		
+	<else>
+		int pos=groupbyMap.get1(a0);				
+	<endif>
+		if (pos\<0) { throw new SociaLiteException("Unexpected groupby operation"); }
+	
+		return col<gbAggrColumn.relPos>.get(pos);	
+	}	
+	public boolean contains(<gbColumns:{g|<g.type> a<i0>};separator=", ">) {
+	<if(rest(gbColumns))>
+	<gbColumns:{g|groupbyTup._<i0> = a<i0>;}; separator="\n">
+		int pos=groupbyMap.get1(groupbyTup);		
+	<else>
+		int pos=groupbyMap.get1(a0);				
+	<endif>
+		if (pos\<0) return false;
+		else return true;
+	}	
+	public boolean update(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+	<if(rest(gbColumns))>
+		<gbColumns:{g|groupbyTup._<i0> = a<i0>;}; separator="\n">
+		int pos=groupbyMap.get1(groupbyTup);				
+	<else>		
+		int pos=groupbyMap.get1(a0);
+	<endif>
+		if (pos\<0) return insert(<columns:{c|a<i0>}; separator=", ">);
+		assert pos\<col0.size();
+		<columns:{c|col<i0>.setQuick(pos, a<i0>);}; separator="\n">
+		return true;
+	}
+<else> // if (!gbColumns) [
+	public boolean update(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+		return insert(<columns:{c|a<i0>}; separator=", ">);
+	}
+<endif> // ] if(gbColumns)
+	
+	public void iterate(<visitorClass> v) {
+		int pos;
+		<forEach("i", "col0")> {
+			<if(sortedCol && !inplaceSort)>pos = sortedIdx.getQuick(i);
+			<else>pos=i;<endif>
+			boolean cont=v.visit(<columns:{c|col<i0>.getQuick(pos)}; separator=",">);
+			if (!cont) return;
+		}
+	}	
+	public void iterate_range(int from, int to, <visitorClass> v) {
+		assert virtualSliceNum() > 1;
+		if (to >= size()) to = size()-1;
+		<fromTo("i", "from", "to")> {
+			boolean cont=v.visit(<columns:{c|col<i0>.getQuick(i)}; separator=", ">);
+			if (!cont) return;
+		}
+	}
+	
+<if(first(columns).indexed)>    
+	public void iterate(<first(columns).type> a, <visitorClass> v) {
+		TIntArrayList posList=(TIntArrayList)index<first(columns).relPos>.get(a);
+		if (posList==null) return;	
+		for (int i=0; i\<posList.size(); i++) {
+			int pos = posList.getQuick(i);
+			boolean cont=v.visit(<columns:{c|col<i0>.getQuick(pos)};separator=", ">);
+			if (!cont) return;
+		}
+	}
+<endif>
+<idxCols:{c|
+	public void iterate_by_<c.absPos>(<c.type> a, <visitorClass> v) {
+		TIntArrayList posList=(TIntArrayList)index<c.relPos>.get(a);
+		if (posList==null) return;
+		for (int i=0; i\<posList.size(); i++) {
+			int pos=posList.getQuick(i);
+			boolean cont=v.visit(<columns:{c2|col<i0>.getQuick(pos)};separator=", ">);
+			if (!cont) return;		
+		\}
+	\}
+}>
+	
+// there should be only one sorted column in this DynamicTable
+<if(sortedCol)>
+	public void iterate_part_<sortedCol.absPos>(<visitorClass> v, <sortedCol.type> val, int cmpOp) {
+		int start=0, end=col0.size()-1;
+		<getContainer(sortedCol.type)> $sortedCol;		
+	  	<if(inplaceSort)>$sortedCol = col<sortedCol.relPos>;
+	  	<else>$sortedCol = sortedCol; <endif>
+	  
+	  	int pos=$sortedCol.binarySearch(val);	   
+		if (cmpOp == -2) {        // \<
+			if (pos\<0) end=(-pos)-1;
+			else end=firstIndex($sortedCol, pos)-1;
+		} else if (cmpOp == -1) { // \<=
+			if (pos\<0) end=(-pos)-1;
+			else end=lastIndex($sortedCol, pos);
+		} else if (cmpOp == 0) {  // ==
+			if (pos\<0) return;
+			else {
+				start=firstIndex($sortedCol, pos);
+				end=lastIndex($sortedCol, pos);
+			}
+		} else if (cmpOp == 1) {  // >=
+			if (pos\<0) start=(-pos)-1;
+			else start=firstIndex($sortedCol, pos);
+		} else if (cmpOp == 2) {  // >
+			if (pos\<0) start=(-pos)-1;
+			else start=lastIndex($sortedCol, pos)+1;
+		}
+	 	<fromTo("i", "start", "end")> {
+	 		<if(inplaceSort)>pos = i;
+	 		<else>pos = sortedIdx.getQuick(i);<endif>
+			boolean cont=v.visit(<columns:{c|col<i0>.getQuick(pos)};separator=", ">);
+			if (!cont) return;
+		}
+	}
+<endif>
+	
+	int firstIndex(Object col, int pos) {
+		if (col instanceof TIntArrayList) {
+			TIntArrayList list=(TIntArrayList)col;
+			<firstIdx("int", "list", "pos")>;			
+		} else if (col instanceof TLongArrayList) {
+			TLongArrayList list=(TLongArrayList)col;
+			<firstIdx("long", "list", "pos")>;			
+		} else if (col instanceof TFloatArrayList) {
+			TFloatArrayList list=(TFloatArrayList)col;
+			<firstIdx("float", "list", "pos")>;
+		} else if (col instanceof TDoubleArrayList) {
+			TDoubleArrayList list=(TDoubleArrayList)col;
+			<firstIdx("double", "list", "pos")>;
+		} else if (col instanceof SArrayList) {
+			SArrayList list=(SArrayList)col;
+			<firstIdxObj("list", "pos")>;
+		} else {
+		    Assert.not_implemented();
+		    return -1;
+		}
+	}
+	int lastIndex(Object col, int pos) {
+		if (col instanceof TIntArrayList) {
+			TIntArrayList list=(TIntArrayList)col;
+			<lastIdx("int", "list", "pos")>;			
+		} else if (col instanceof TLongArrayList) {
+			TLongArrayList list=(TLongArrayList)col;
+			<lastIdx("long", "list", "pos")>;			
+		} else if (col instanceof TFloatArrayList) {
+			TFloatArrayList list=(TFloatArrayList)col;
+			<lastIdx("float", "list", "pos")>;
+		} else if (col instanceof TDoubleArrayList) {
+			TDoubleArrayList list=(TDoubleArrayList)col;
+			<lastIdx("double", "list", "pos")>;
+		} else if (col instanceof SArrayList) {
+			SArrayList list=(SArrayList)col;
+			<lastIdxObj("list", "pos")>;
+		} else {
+		    Assert.not_implemented();
+		    return -1;
+		}
+	}
+
+	<methods;separator="\n">
+
+	/*
+<if(sortedCol && inplaceSort)>
+	public int get_insert_pos_<sortedCol.absPos>(<sortedCol.type> val) {
+		int pos = col<sortedCol.relPos>.binarySearch(val);
+		if (pos \< 0) return (-pos)-1;
+		return firstIndex(col<sortedCol.relPos>, pos);
+	}
+	public void iterate_from_idx_<sortedCol.absPos>(<visitorClass> v, int idx) {
+		int from = idx;
+		int to = size()-1;
+		<fromTo("i", "from", "to")> {
+			boolean cont=v.visit(<columns:{c|col<i0>.getQuick(i)}; separator=", ">);
+			if (!cont) return;
+		}
+	}
+	public void iterate_upto_idx_<sortedCol.absPos>(<visitorClass> v, int idx) {
+		int from = 0;
+		int to = idx;
+		assert to \< size()-1;
+		<fromTo("i", "from", "to")> {
+			boolean cont=v.visit(<columns:{c|col<i0>.getQuick(i)}; separator=", ">);
+			if (!cont) return;
+		}
+	}
+<endif>
+	*/
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		<columns:{c|col<i0>.writeExternal(out);<\n>}>
+		
+		<if(sortedCol && !inplaceSort)>
+			out.writeObject(sortedIdx);
+			out.writeObject(sortedCol);
+		<endif>
+	}
+	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		<columns:{c|col<i0>.readExternal(in);<\n>}>		
+
+		<if(sortedCol && !inplaceSort)>
+			sortedIdx=(SIntArrayList)in.readObject();
+			sortedCol=(<getContainer(sortedCol.type)>)in.readObject();
+		<endif>
+		
+		<if(idxCols)>
+		<idxCols:{ic|index<ic.relPos> = new SIndex(col0.size(), <length(columns)>);<\n>}>
+		<idxCols:{ic|
+			for(int i=0; i\<col0.size(); i++) {
+				index<ic.relPos>.add(col<ic.relPos>.getQuick(i), i);
+			\} }>
+		<endif>
+		
+		<if(gbColumns)>
+			groupbyMap = new GroupbyMap(col0.size());
+			for(int i=0; i\<col0.size(); i++) {			
+			<if(rest(gbColumns))>
+				<gbColumns:{g|groupbyTup._<i0> = col<g.relPos>.getQuick(i);<\n>}>
+				groupbyMap.add1(groupbyTup.clone(), i);
+			<else>groupbyMap.add1(col<gbColumns.relPos>.getQuick(i), i);<endif>
+			}
+		<endif>
+	}
+}
+>>
+ 

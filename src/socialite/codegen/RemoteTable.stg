@@ -1,0 +1,359 @@
+group remote-table;
+
+import "TableCommon.stg"
+
+remoteTable(name, id, cols0, cols1, cols2, cols3, nest, size, rowSize, visitorClass) ::= <<
+
+package socialite.tables;
+<importForTable()>
+
+public class <name> extends AbstractTableInst {
+	private static final long serialVersionUID = 1;
+	
+	public static <name> create() { return new <name>(<size>); }
+	public static <name> create(int size) { return new <name>(size); }
+	public static <name> createSmall() { return new <name>(<size>/8); }
+	
+	static int id=<id>;
+	
+    <cols0:{c|<getContainer(c.type)> col<c.absPos>;<\n>}>	
+
+<if(cols1)>
+  SIntArrayList idxToNest1;
+  <cols1:{c|<getContainer(c.type)> col<c.absPos>;<\n>}>  
+<endif>
+
+<if(cols2)>
+  SIntArrayList idxToNest2;
+  <cols2:{c|<getContainer(c.type)> col<c.absPos>;<\n>}>
+<endif>
+
+<if(cols3)>
+  SIntArrayList idxToNest3;
+  <cols3:{c|<getContainer(c.type)> col<c.absPos>;<\n>}>
+<endif>
+
+	public <name>() { this(0); }	
+	public <name>(int _size) {
+		_size = (int)(_size/sizeEstimFactor());
+	
+		int size = _size;
+		if (<nest> > 1) size = _size/((<nest>-1)*8);
+		<cols0:{c|col<c.absPos> = new <getContainer(c.type)>(size);<\n>}>
+	<if(cols1)>
+		idxToNest1 = new SIntArrayList(size);
+		size = _size;
+		if (<nest> > 2) size = _size/((<nest>-2)*6);		
+		<cols1:{c|col<c.absPos> = new <getContainer(c.type)>(size);<\n>}>
+	<endif>	
+	<if(cols2)>
+		idxToNest2 = new SIntArrayList(size);
+		size = _size;
+		if (<nest> > 3) size = _size/((<nest>-3)*4);
+		<cols2:{c|col<c.absPos> = new <getContainer(c.type)>(size);<\n>}>
+	<endif>
+	<if(cols3)>
+		idxToNest3 = new SIntArrayList(size);
+		size = _size;		
+		<cols3:{c|col<c.absPos> = new <getContainer(c.type)>(size);<\n>}>
+	<endif>
+	}
+	
+	public boolean isSmall() { return size() \<= <size>/8; }
+	public boolean isTooSmall() { return size() \<= <size>/50; }		
+	public int vacancy() {
+		int vacancy1 = col0.capacity() - col0.size();
+		int vacancy2 = 0;
+		<if(cols1)>vacancy2=col<first(cols1).absPos>.capacity()-col<first(cols1).absPos>.capacity();<endif>
+		<if(cols2)>vacancy2=col<first(cols2).absPos>.capacity()-col<first(cols2).absPos>.capacity();<endif>
+		<if(cols3)>vacancy2=col<first(cols3).absPos>.capacity()-col<first(cols3).absPos>.capacity();<endif>
+		if (vacancy1\<vacancy2) return vacancy1;
+		else return vacancy2;	
+	}
+	
+	public boolean filledToCapacity() {
+	<if(cols3)>  return col0.filledToCapacity() || col<first(cols3).absPos>.filledToCapacity();
+	<elseif(cols2)>  return col0.filledToCapacity() || col<first(cols2).absPos>.filledToCapacity();
+	<elseif(cols1)>  return col0.filledToCapacity() || col<first(cols1).absPos>.filledToCapacity();
+	<else>  return col0.filledToCapacity();
+	<endif>
+	}
+
+	public double rowSize() { return <rowSize>; }
+	public int totalAllocSize() {
+		int totalAlloc = 0;
+		<cols0:{c|totalAlloc += 32+col<c.absPos>.capacity()*<c.typeSize>;<\n>}>
+		<cols1:{c|totalAlloc += 32+col<c.absPos>.capacity()*<c.typeSize>;<\n>}>
+		<cols2:{c|totalAlloc += 32+col<c.absPos>.capacity()*<c.typeSize>;<\n>}>
+		<cols3:{c|totalAlloc += 32+col<c.absPos>.capacity()*<c.typeSize>;<\n>}>
+		return (int)(totalAlloc*sizeEstimFactor());		
+	}
+	public int totalDataSize() {
+		int totalData = 0;
+		<cols0:{c|totalData += 32+col<c.absPos>.size()*<c.typeSize>;<\n>}>
+		<cols1:{c|totalData += 32+col<c.absPos>.size()*<c.typeSize>;<\n>}>
+		<cols2:{c|totalData += 32+col<c.absPos>.size()*<c.typeSize>;<\n>}>
+		<cols3:{c|totalData += 32+col<c.absPos>.size()*<c.typeSize>;<\n>}>
+		return (int)(totalData*sizeEstimFactor());
+	}
+	
+	public int id() { return id; }
+	public int size() {
+	<if(cols3)> return col<first(cols3).absPos>.size();
+	<elseif(cols2)> return col<first(cols2).absPos>.size();
+	<elseif(cols1)> return col<first(cols1).absPos>.size();
+	<else> return col<first(cols0).absPos>.size();
+	<endif>
+	}  
+	
+	
+	public String toString() {
+		return "<name>(size="+size()+")";
+	}	
+	public void clearQuick() { clear(); }
+	public void clear() {
+		<cols0:{c|col<c.absPos>.resetQuick();<\n>}>
+	<if(cols1)>
+		idxToNest1.resetQuick();
+		<cols1:{c|col<c.absPos>.resetQuick();<\n>}>
+	<endif>
+	<if(cols2)>
+		idxToNest2.resetQuick();
+		<cols2:{c|col<c.absPos>.resetQuick();<\n>}>
+	<endif>
+	<if(cols3)>
+		idxToNest3.resetQuick();
+		<cols3:{c|col<c.absPos>.resetQuick();<\n>}>
+	<endif>
+	}
+	
+	public TableInst copy() {
+		<name> copy;
+		if (isSmall()) {
+			copy = (<name>)TmpTablePool.getSmall(<name>.class);
+		} else {
+			copy = (<name>)TmpTablePool.get(<name>.class);		
+		}
+		copy.addAllFast(this);
+		return copy;
+	}
+	
+	public void addAllFast(TableInst inst) {
+		if (inst==null) return;
+		<name> other = (<name>)inst;
+		<cols0:{c|col<c.absPos>.addAllFast(other.col<c.absPos>);<\n>}>
+		
+		int from=-1, offset=-1;
+		<if(cols1)>
+			from = idxToNest1.size();
+			offset = col<first(cols1).absPos>.size();			
+			idxToNest1.addAllFast(other.idxToNest1);			
+			for (int i=from; i\<idxToNest1.size(); i++) {
+				int val = idxToNest1.getQuick(i)+offset;
+				idxToNest1.setQuick(i, val);
+			}
+			<cols1:{c|col<c.absPos>.addAllFast(other.col<c.absPos>);<\n>}>
+		<endif>
+		
+		<if(cols2)>
+			from = idxToNest2.size();
+			offset = col<first(cols2).absPos>.size();			
+			idxToNest2.addAllFast(other.idxToNest2);			
+			for (int i=from; i\<idxToNest2.size(); i++) {
+				int val = idxToNest2.getQuick(i)+offset;
+				idxToNest2.setQuick(i, val);
+			}
+			<cols2:{c|col<c.absPos>.addAllFast(other.col<c.absPos>);<\n>}>
+		<endif>
+		
+		<if(cols3)>
+			from = idxToNest3.size();
+			offset = col<first(cols3).absPos>.size();			
+			idxToNest3.addAllFast(other.idxToNest3);			
+			for (int i=from; i\<idxToNest3.size(); i++) {
+				int val = idxToNest3.getQuick(i)+offset;
+				idxToNest3.setQuick(i, val);
+			}
+			<cols3:{c|col<c.absPos>.addAllFast(other.col<c.absPos>);<\n>}>
+		<endif>		
+	}
+	
+	public boolean insert(<cols0:{c|<c.type> a<c.absPos>};separator=",">
+						  <cols1:{c|, <c.type> a<c.absPos>}>	
+						  <cols2:{c|, <c.type> a<c.absPos>}>
+						  <cols3:{c|, <c.type> a<c.absPos>}>) {				  
+<if(cols1)>						  
+		if (col<first(cols0).absPos>.size()==0) {
+			<cols0:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+			<if(cols1)>
+			idxToNest1.add(0);
+			<endif>			
+		} else {
+			if (<cols0:{c|col<c.absPos>.getQuick(col<c.absPos>.size()-1) != a<c.absPos>}; separator=" ||">) {
+				<cols0:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+				idxToNest1.add(col<first(cols1).absPos>.size());
+			}
+		}
+		insert(<cols1:{c|a<c.absPos>};separator=", ">	
+			   <cols2:{c|, a<c.absPos>}>
+			   <cols3:{c|, a<c.absPos>}>);
+		return true;
+<else>
+		<cols0:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+		return true;
+<endif>
+	}
+	
+<if(cols1)>	
+// cols1
+	public boolean insert(<cols1:{c|<c.type> a<c.absPos>};separator=",">	
+						  <cols2:{c|, <c.type> a<c.absPos>}>
+						  <cols3:{c|, <c.type> a<c.absPos>}>) {
+<if(cols2)>						  
+		if (col<first(cols1).absPos>.size()==0) {
+			<cols1:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+			<if(cols2)>
+			idxToNest2.add(0);
+			<endif>			
+		} else {
+			if (<cols1:{c|col<c.absPos>.getQuick(col<c.absPos>.size()-1) != a<c.absPos>}; separator=" ||">) {
+				<cols1:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+				idxToNest2.add(col<first(cols2).absPos>.size());
+			}
+		}
+		insert(<cols2:{c|a<c.absPos>};separator=", ">	
+			   <cols3:{c|, a<c.absPos>}>);
+		return true;
+<else>
+		<cols1:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+		return true;
+<endif>						  
+	}
+<endif>
+
+<if(cols2)>	
+// cols2
+	public boolean insert(<cols2:{c|<c.type> a<c.absPos>};separator=",">
+						  <cols3:{c|, <c.type> a<c.absPos>}>) {
+<if(cols3)>						  
+		if (col<first(cols2).absPos>.size()==0) {
+			<cols2:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+			<if(cols3)>
+			idxToNest3.add(0);
+			<endif>			
+		} else {
+			if (<cols2:{c|col<c.absPos>.getQuick(col<c.absPos>.size()-1) != a<c.absPos>}; separator=" ||">) {
+				<cols2:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+				idxToNest3.add(col<first(cols3).absPos>.size());
+			}
+		}
+		insert(<cols3:{c|a<c.absPos>};separator=",">);
+		return true;
+<else>
+		<cols2:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+		return true;
+<endif>						  
+	}
+<endif>
+
+<if(cols3)>
+// cols3
+	public boolean insert(<cols3:{c|<c.type> a<c.absPos>};separator=",">) {
+		<cols3:{c|col<c.absPos>.add(a<c.absPos>);<\n>}>
+		return true;						  
+	}
+<endif>
+
+	public boolean contains(<cols0:{c|<c.type> a<c.absPos>};separator=",">
+						  <cols1:{c|, <c.type> a<c.absPos>}>	
+						  <cols2:{c|, <c.type> a<c.absPos>}>
+						  <cols3:{c|, <c.type> a<c.absPos>}>) {
+		return false;
+	}
+	
+	public void iterate(<visitorClass> v) {
+		int size = col<first(cols0).absPos>.size();
+		for (int i=0; i \< size; i++) {
+		<if(cols1)>
+			v.visit<cols0:{c|_<c.absPos>}>(<cols0:{c|col<c.absPos>.getQuick(i)};separator=", ">);
+			int from = idxToNest1.getQuick(i);
+			int to = col<first(cols1).absPos>.size()-1;
+			if (i+1 \< idxToNest1.size()) to = idxToNest1.getQuick(i+1)-1;
+			
+			for (int j=from; j\<=to; j++) {
+			<if(cols2)>
+				v.visit<cols1:{c|_<c.absPos>}>(<cols1:{c|col<c.absPos>.getQuick(j)};separator=", ">);
+				int from2 = idxToNest2.getQuick(j);
+				int to2= col<first(cols2).absPos>.size()-1;
+				if (j+1 \< idxToNest2.size()) to2 = idxToNest2.getQuick(j+1)-1;
+				
+				for (int k=from2; k\<=to2; k++) {
+				<if(cols3)>
+					v.visit<cols2:{c|_<c.absPos>}>(<cols2:{c|col<c.absPos>.getQuick(k)};separator=", ">);
+					int from3 = idxToNest3.getQuick(k);
+					int to3 = col<first(cols3).absPos>.size()-1;
+					if (k+1 \< idxToNest3.size()) to3 = idxToNest3.getQuick(k+1)-1;
+					
+					for (int l=from3; l\<=to3; l++) {
+						v.visit(<cols3:{c|col<c.absPos>.getQuick(l)};separator=", ">);
+					}
+				<else>
+					v.visit(<cols2:{c|col<c.absPos>.getQuick(k)};separator=", ">);
+				<endif>
+				} 
+			<else>
+				v.visit(<cols1:{c|col<c.absPos>.getQuick(j)};separator=", ">);
+			<endif>
+			}
+		<else>
+			v.visit(<cols0:{c|col<c.absPos>.getQuick(i)};separator=", ">);
+		<endif>
+		}
+	}
+	
+	@Override
+	public int virtualSliceNum() { return 1;}
+	
+	public boolean isEmpty() {
+		return col0.isEmpty();
+	}
+		
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		<cols0:{c|col<c.absPos>.readExternal(in);<\n>}>
+		
+	<if(cols1)>
+		idxToNest1.readExternal(in);
+		<cols1:{c|col<c.absPos>.readExternal(in);<\n>}>
+	<endif>
+	
+	<if(cols2)>
+		idxToNest2.readExternal(in);
+		<cols2:{c|col<c.absPos>.readExternal(in);<\n>}>
+	<endif>
+	
+	<if(cols3)>
+		idxToNest3.readExternal(in);
+		<cols3:{c|col<c.absPos>.readExternal(in);<\n>}>
+	<endif>
+	}
+	
+	public void writeExternal(ObjectOutput out) throws IOException {
+		<cols0:{c|col<c.absPos>.writeExternal(out);<\n>}>
+	
+	<if(cols1)>
+	 	idxToNest1.writeExternal(out);
+		<cols1:{c|col<c.absPos>.writeExternal(out);<\n>}>
+	<endif>
+	
+	<if(cols2)>
+		idxToNest2.writeExternal(out);
+		<cols2:{c|col<c.absPos>.writeExternal(out);<\n>}>
+	<endif>
+	
+	<if(cols3)>
+		idxToNest3.writeExternal(out);
+		<cols3:{c|col<c.absPos>.writeExternal(out);<\n>}>
+	<endif>
+	}
+}
+>>

@@ -1,0 +1,106 @@
+evalClass(name, tableVars, tableDecls, tableInsts, tableRegs, tableInit, tableStmts, evalBaseClass) ::= <<
+package socialite.eval;
+
+import java.lang.reflect.Constructor;
+import java.util.List;
+
+import socialite.engine.Config;
+import socialite.codegen.RuleComp;
+import socialite.codegen.Epoch;
+
+import socialite.parser.Rule;
+import socialite.tables.*;
+import socialite.resource.*;
+import socialite.util.Assert;
+
+import socialite.eval.Manager;
+
+public class <name> extends <evalBaseClass> {
+	<tableDecls; separator=";\n">;
+
+	public <name>(SRuntime _runtime, Epoch _epoch, Config _conf) {
+		super(_runtime, _epoch, _conf);
+		<tableInsts; separator=";\n">;	
+		<tableRegs; separator=";\n">;
+		<tableStmts; separator=";\n">;
+	}
+
+	public void init() {
+		super.init();
+		
+		<tableInit; separator=";\n">;		
+	}
+	
+	//public void run() { super.run(); }	
+	public void finish() { 
+		super.finish();
+		<tableVars: {v|<v> = null;<\n>}>
+	}
+}
+>>
+
+for(init, cond, inc, stmts) ::= <<
+for(<init>; <cond>; <inc>) {
+    <stmts; separator=";\n">;
+}
+>>
+
+if(cond, stmts) ::= <<
+if (<cond>) {
+	<stmts; separator=";\n">;
+}
+>>
+
+simpleStmts(stmts) ::= <<
+{<stmts; separator=";\n">;}
+>>
+
+initClass(name, tableid, tableRegVar, sliceMapVar, stmts, fieldDecls, methodDecls) ::= <<
+package socialite.eval;
+
+import java.lang.reflect.Constructor;
+import java.util.List;
+
+import socialite.engine.Config;
+import socialite.codegen.RuleComp;
+import socialite.codegen.Epoch;
+
+import socialite.parser.Rule;
+import socialite.tables.*;
+import socialite.resource.*;
+import socialite.util.Assert;
+
+import socialite.eval.Manager;
+
+public class <name> implements InitRunnable {
+	public static int tableid() { return <tableid>; }
+
+	int id;
+	TableInstRegistry <tableRegVar>;
+	TableSliceMap <sliceMapVar>;
+		
+	<fieldDecls:{f|private <f>;<\n>}>;
+
+	public <name> (int _id, TableInstRegistry _$reg, TableSliceMap _$sliceMap) { 
+		id=_id; 
+		<tableRegVar> = _$reg;
+		<sliceMapVar> = _$sliceMap;
+	}
+	
+	public void run() {
+		<stmts; separator=";\n">;
+	}
+
+	<methodDecls; separator="\n">
+}
+>>
+
+method(comment, modifier, type, name, args, stmts, ret) ::= <<
+<if(comment)>/* <comment> */<endif>
+<modifier> <type> <name>(<args; separator=", ">) {
+    <stmts; separator=";\n">;
+    <if(ret)><ret; separator=";\n">;<endif>
+}
+>>
+
+

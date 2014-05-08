@@ -1,0 +1,238 @@
+group array-table;
+
+import "TableCommon.stg"
+
+arrayTable(name, visitorClass, columns, gbColumns, gbAggrColumn,		
+		sortedCol, idxCols,
+		methods, base, size, id, 
+		multiSet=false, isNested=false) ::= <<
+<if(!isNested)>
+package socialite.tables;
+
+<importForTable()>
+<endif>
+
+// ArrayTable
+<if(isNested)>static<else>public<endif> class <name> extends AbstractTableInst {
+	private static final long serialVersionUID = 1;
+	
+	public static double theRowSize() {
+		return <columns:{c|<c.typeSize>};separator="+">;
+	}
+	public static int tableid() { return <id>; }
+	
+	public static <name> create() { return new <name>(<base>, <size>); }
+	public static <name> create(<first(columns).type> base, int size) { return new <name>(base, size); }
+<if(IsInt.(first(columns).type))>
+	public static <name> create(Integer base, Integer size) { return new <name>(base.intValue(), size.intValue()); }
+<else>	
+	public static <name> create(Long base, Integer size) { return new <name>(base.longValue(), size.intValue()); }
+<endif>
+
+	int base;
+	byte filled[];
+	<rest(columns):{c|<c.type> col<i>[];<\n>}>
+	 
+	//int tupleNum = 0; 
+	boolean isEmpty = true;
+	
+	public <name>() { }
+	public <name>(<first(columns).type> _base, int size) {
+		base = _base;
+		filled = new byte[size];
+		<rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[size][]<else><c.type>[size]<endif>;<\n>}>;
+		<idxCols:{ic|index<ic.relPos> = new SIndex(size/8, <length(columns)>);<\n>}>
+	}
+	
+	public double rowSize() {
+		return <name>.theRowSize(); 
+	}
+	
+<rest(columns):{c| private <c.type> col<i>(int i) { return col<i>[i]; \}<\n>}>
+	
+	public int size() { throw new UnsupportedOperationException(); }
+	public boolean isEmpty() { return isEmpty; }
+	public int id() { return <id>; }
+	
+	public void init(<rest(columns):{c|<c.type> init<i>};separator=", ">) {
+		for (int i=0; i\<filled.length; i++) {
+			filled[i]=1;
+			<rest(columns):{t| col<i>[i]=init<i>;<\n>}>;
+		}
+	}
+	
+	public TableInst copy() {
+		Assert.not_supported();
+		return null;
+	}	
+	public void addAllFast(TableInst table) {
+		Assert.not_supported();
+	}
+	
+	public boolean filledToCapacity() {
+		Assert.not_implemented();
+		return false;
+	}
+	
+	public void clearQuick() { clear(); }
+	
+	public void clear() {
+		Arrays.fill(filled, (byte)0);
+	<if(rest(columns) && !rest(rest(columns)) && IsPrimitive.(rest(columns).type) && gbColumns)> // two-column table
+		Arrays.fill(col1, 0);
+	<endif>
+	
+		isEmpty = true;
+	}
+	
+	public void clear(int from, int to) {
+		from -= base;
+		to -= base;		
+		Arrays.fill(filled, from, to, (byte)0);	
+	<if(rest(columns) && !rest(rest(columns)) && IsPrimitive.(rest(columns).type) && gbColumns)> // two-column table
+		Arrays.fill(col1, from, to, 0);
+	<endif>
+		isEmpty = true;
+	}
+	
+	public int virtualSliceNum() {
+		Assert.not_supported();
+		return 0; // this should not be called!	
+	}
+	
+	public int totalAllocSize() {
+		int totalAlloc = 4+filled.length;
+		<columns:{c|totalAlloc += 12+<c.typeSize>*filled.length;<\n>}>
+		return totalAlloc;
+	}
+	public boolean contains(<first(columns).type> a0<rest(columns):{c|, <c.type> a<i>}>) {
+		int i=(int)(a0-base);
+		if (filled[i]==0) return false;
+		
+		if (true<rest(columns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
+			return true;
+		return false;
+	}
+	public boolean contains(<first(columns).type> a0<rest(columns):{c|, <c.type> a<i>}>, boolean[] dontcare) {
+		if (dontcare[0]) {
+			for (int i=0; i\<filled.length; i++) {
+				if (filled[i]==0) continue;
+				if (true<rest(columns):{c|&&(dontcare[<i>] || col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
+					return true;
+			}
+			return false;
+		}
+		
+		int i=(int)(a0-base);
+		if (filled[i]==0) return false;
+		
+		if (true<rest(columns):{c|&&(dontcare[<i>] || col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
+			return true;
+		return false;
+	}
+	
+	public boolean insert(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
+		int i=(int)(a0-base);
+	<if(!multiSet)>
+		if (filled[i]==1 && contains(a0<rest(columns): {c|, a<i>}>)) return false;
+	<endif>
+				
+		if (isEmpty) isEmpty = false;	
+		filled[i]=1;
+		<rest(columns):{c|col<i>[i] = a<i>;<\n>}>		
+		return true;
+	}
+	
+	public void iterate(<visitorClass> v) {
+		if (isEmpty) return;
+		for (int i=0; i\<filled.length; i++) {
+			if (filled[i]==1) {			
+				boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
+				if (!$cont) return;
+			}
+		}
+	}
+	public void iterate_range_<first(columns).absPos>(<first(columns).type> _from, <first(columns).type> _to, <visitorClass> v) {
+		int from=(int)(_from-base);
+		int to=(int)(_to-base);
+		for (int i=from; i\<=to; i++) {
+			if (filled[i]==1) {
+				boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
+				if (!$cont) return;
+			}
+		}
+	}
+	public void iterate_by_<first(columns).absPos>(<first(columns).type> n, <visitorClass> v) {
+		int i=(int)(n-base);
+		if (i\<0||i>=filled.length) return;
+		if (filled[i]==1) {
+			boolean $cont=v.visit(n <rest(columns): {c|,col<i>(i)}>);
+			if (!$cont) return;
+		}
+	}
+	
+<if(gbColumns)>	
+	public <gbAggrColumn.type> groupby(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
+		int i=(int)(a0-base);
+		assert filled[i]==1;		
+		
+		if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
+			return col<gbAggrColumn.relPos>[i];
+		} else {
+			throw new SociaLiteException("Unexpected groupby operation");
+		}		
+	}
+	<if(rest(gbColumns))>
+	// group-by only with the array index
+    public <gbAggrColumn.type> groupby(<first(gbColumns).type> a0) { 
+    	int i=(int)(a0-base);
+    	assert filled[i]==1;		
+		
+		return col<gbAggrColumn.relPos>[i];
+    }
+	<endif>
+	public boolean contains(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
+		int i=(int)(a0-base);
+		if (filled[i]==0) return false;
+		
+		if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
+			return true;
+		throw new SociaLiteException("Unexpected contains(for groupby) operation");
+	}
+	public boolean update(<columns:{c|<c.type> a<i0>};separator=", ">) {
+		int i=(int)(a0-base);
+		assert filled[i]==1;
+		<rest(columns): {c|col<i>[i] = a<i>;<\n>}>;		
+		return true;
+	}
+<endif>
+
+	<methods;separator="\n">
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(base);
+		
+		out.writeInt(filled.length);
+		for (int i=0; i\<filled.length; i++)
+			out.writeByte(filled[i]);		
+		
+		<rest(columns):
+		{c|for (int i=0; i\<filled.length; i++)
+			out.<WriteF.(c.type)>(col<i>[i]);
+		}>	
+	}
+	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		base=in.readInt();
+		int len=in.readInt();
+		filled = new byte[len];		
+		for (int i=0; i\<len; i++) 
+			filled[i]=in.readByte();
+			
+		<rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[len][]<else><c.type>[len]<endif>;<\n>}>
+		<rest(columns):{c|for(int i=0; i\<len; i++) col<i>[i]=(<c.type>)in.<ReadF.(c.type)>();<\n>}>	
+	}
+}
+>>

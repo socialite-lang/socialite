@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+curDir=`pwd`
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+
+$bin/script $bin/console.py $@

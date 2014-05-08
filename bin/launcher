@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+usage="Usage: launcher (master|worker|client) command..." 
+if [ $# -lt 1 ]; then
+  echo $usage
+  exit 1
+fi
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+. "$bin/socialite-config.sh"
+
+kind=$1; shift
+
+# setup 'java.library.path' for native-hadoop code. Copied from the hadoop launch script
+JAVA_LIBRARY_PATH=''
+if [ -d "${HADOOP_HOME}/build/native" -o -d "${HADOOP_HOME}/lib/native" -o -e "${HADOOP_PREFIX}/lib/libhadoop.a" ]; then
+  JAVA_PLATFORM=`CLASSPATH=${CLASSPATH} ${JAVA} -Xmx32m org.apache.hadoop.util.PlatformName | sed -e "s/ /_/g"`
+
+  if [ "$JAVA_PLATFORM" = "Linux-amd64-64" ]; then
+    JSVC_ARCH="amd64"
+  else
+    JSVC_ARCH="i386"
+  fi
+
+  if [ -d "$HADOOP_HOME/build/native" ]; then
+    JAVA_LIBRARY_PATH=${HADOOP_HOME}/build/native/${JAVA_PLATFORM}/lib
+  fi
+
+  if [ -d "${HADOOP_HOME}/lib/native" ]; then
+    if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
+      JAVA_LIBRARY_PATH=${JAVA_LIBRARY_PATH}:${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}
+    else
+      JAVA_LIBRARY_PATH=${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}
+    fi
+  fi
+
+  if [ -e "${HADOOP_PREFIX}/lib/libhadoop.a" ]; then
+    JAVA_LIBRARY_PATH=${HADOOP_PREFIX}/lib
+  fi
+fi
+
+if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then 
+  SOCIALITE_OPTS="$SOCIALITE_OPTS -Djava.library.path=$JAVA_LIBRARY_PATH"
+fi
+
+SOCIALITE_OPTS="${SOCIALITE_OPTS} -Dsocialite.output.dir=${SOCIALITE_OUTPUT_DIR}"
+SOCIALITE_OPTS="$SOCIALITE_OPTS -Dsocialite.master=$SOCIALITE_MASTER"
+if [ "x$SOCIALITE_BASE_PORT" != "x" ]; then
+  SOCIALITE_OPTS="$SOCIALITE_OPTS -Dsocialite.port=$SOCIALITE_BASE_PORT"
+fi
+
+SOCIALITE_OPTS="$SOCIALITE_OPTS -Dpython.verbose=warning"
+if [ "x$SOCIALITE_WORKER_NUM" != "x" ]; then
+    SOCIALITE_OPTS="${SOCIALITE_OPTS} -Dsocialite.worker.num=${SOCIALITE_WORKER_NUM}"
+fi
+
+
+if [ "x$SOCIALITE_HOSTNAME" != "x" ]; then
+  SOCIALITE_OPTS="$SOCIALITE_OPTS -Dsocialite.hostname=$SOCIALITE_HOSTNAME"
+fi
+
+case $kind in
+  (master)
+    CLASS=socialite.dist.master.MasterNode
+    JAVA_HEAP_MAX=-Xmx128m
+    JAVA_HEAP_MIN=-Xms8m
+  ;;
+  (worker)
+    CLASS=socialite.dist.worker.WorkerNode
+  ;;
+  (client)
+    CLASS=socialite.dist.client.Run
+  ;;
+  (query)
+    CLASS=$1; shift
+    JAVA_HEAP_MAX=-Xmx12m
+    JAVA_HEAP_MIN=-Xms4m
+  ;;
+  (*)
+    CLASS=$kind
+    #echo $usage
+    #exit 1
+  ;;
+esac
+
+exec "$JAVA" $JVM_OPTS $SOCIALITE_OPTS -classpath "$CLASSPATH" $CLASS  "$@"

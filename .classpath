@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="ext/antlr-3.5.2-complete-no-st3.jar"/>
+	<classpathentry kind="lib" path="ext/commons-configuration-1.6.jar"/>
+	<classpathentry kind="lib" path="ext/commons-lang-2.6.jar"/>
+	<classpathentry kind="lib" path="ext/commons-lang3-3.1.jar"/>
+	<classpathentry kind="lib" path="ext/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="ext/commons-logging-api-1.0.4.jar"/>
+	<classpathentry kind="lib" path="ext/hadoop-core-1.2.1.jar"/>
+	<classpathentry kind="lib" path="ext/jython.jar"/>
+	<classpathentry kind="lib" path="ext/log4j-1.2.16.jar"/>
+	<classpathentry kind="lib" path="ext/ST-4.0.7.jar"/>
+	<classpathentry kind="lib" path="ext/trove-3.0.3.jar"/>
+	<classpathentry kind="output" path="classes"/>
+</classpath>

@@ -1,0 +1,199 @@
+import "VisitorImports.stg"
+import "Heap.stg"
+import "ColumnUtils.stg"
+
+
+class(packageStmt, description, imports, modifier, name, extends, interfaces, fieldDecls, methodDecls, classDefs) ::= <<
+<packageStmt>;
+/* 
+    <description; separator="\n"> 
+*/
+<commonImports()>
+<imports: {cls| import <cls>;<\n>}>
+
+<modifier> final class <name> <extends> implements <interfaces; separator=", "> {
+    <fieldDecls:{f|private <f>;<\n>}>;
+    <methodDecls; separator="\n">
+    
+    <classDefs>
+}
+>>
+
+method(comment, modifier, type, name, args, stmts, ret) ::= <<
+<if(comment)>/* <comment> */<endif>
+<modifier> <type> <name>(<args; separator=", ">) {
+    <stmts; separator=";\n">;
+    <if(ret)><ret; separator=";\n">;<endif>
+}
+>>
+
+collectOutputSimple(OutputType, containerVar, idxVar, var) ::= <<
+T<OutputType>ArrayList $tmpList = (T<OutputType>ArrayList)<containerVar>.get(<idxVar>);
+if ($tmpList == null) {
+	$tmpList = new T<OutputType>ArrayList();
+	<containerVar>.put(<idxVar>, $tmpList);
+}
+$tmpList.add(<var>)
+>> 
+
+tuple(types) ::= <%
+Tuple<types:{t|_<TupleMap.(t)>}>
+%>
+
+switch(cond, cases) ::= <<
+switch (<cond>) {
+    <cases; separator="\n">
+}
+>>
+
+case(val, stmts, endstmt) ::= <<
+case <val>: 
+{<stmts; separator=";\n">;
+<endstmt>;
+break;
+}
+
+>>
+
+if(cond, stmts) ::= <<
+if (<cond>) {
+    <stmts; separator=";\n">;
+}
+>>
+
+ifElse(cond, stmts, elseStmts) ::= <<
+if (<cond>) {
+    <stmts; separator=";\n">;
+} else {
+    <elseStmts; separator=";\n">;
+}
+>>
+
+synchronized(monitor, stmts, endstmt) ::= <<
+synchronized(<monitor>) {
+   <stmts; separator=";\n">;
+   <endstmt>;
+}
+>>
+
+
+while(cond, stmts, endstmt) ::= <<
+while(<cond>) {
+   <stmts; separator=";\n">;
+   <endstmt>;
+}
+>>
+
+for(init, cond, inc, stmts) ::= <<
+for(<init>; <cond>; <inc>) {
+    <stmts; separator=";\n">;
+}
+>>
+
+forEach(elem, set, stmts) ::= <<
+for(<elem>:<set>) {
+    <stmts; separator=";\n">;
+}
+>>
+
+tryCatch(preStmts, stmts, catchStmts, finally, errorVar="e") ::= <<
+<preStmts; separator=";\n">;
+try {
+    <stmts; separator=";\n">;
+} catch(Exception <errorVar>) {
+    <catchStmts; separator=";\n">;
+} finally {
+    <finally; separator=";\n">;
+}
+>>
+
+
+try(preStmts, stmts, finally) ::= <<
+<preStmts; separator=";\n">;
+try {
+    <stmts; separator=";\n">;
+} finally {
+    <finally; separator=";\n">;
+}
+>>
+
+updateSnippetSimple(deltaTableVar, idx, Type) ::= <<
+T<Type>Collection $tmp = (T<Type>Collection)<deltaTableVar>.get(<idx>);
+assert($tmp != null);
+assert($tmp.size()==1);
+return $tmp.iterator().next()
+>>
+
+updateSnippetSimpleAggregate(deltaTableVar, idx, type, Type, function, oldVal, isDeltaEmpty) ::= <<
+T<Type>Collection $tmp = (T<Type>Collection)<deltaTableVar>.get(<idx>);
+assert($tmp != null);
+<type> $ret = <function>(<oldVal>, $tmp);
+if (!$tmp.isEmpty()) <isDeltaEmpty>=false;
+return $ret
+>>
+
+updateSnippetAggregate(deltaTableVar, idx, type, function, oldVal, isDeltaEmpty) ::= <<
+Collection\<Tuple\> $tmp = (Collection\<Tuple\>)<deltaTableVar>.get(<idx>);
+assert($tmp != null);
+<function>(<oldVal>, $tmp);
+if (!$tmp.isEmpty()) <isDeltaEmpty>=false;
+>>
+
+
+IteratorMap ::= [
+	"int": "TIntIterator",
+	"long": "TLongIterator",
+	"float": "TFloatIterator",
+    "double": "TDoubleIterator",
+    default: "Iterator"
+]
+
+// iterVar is used for removing an element (<iterVar>.remove())
+withIterator(iterGetter, iterType, iterVar, var, stmts) ::= <<
+<IteratorMap.(iterType)> <iterVar> = <iterGetter>;
+while (<iterVar>.hasNext()) {
+	<iterType> <var> = (<iterType>)<iterVar>.next();
+	<stmts; separator=";\n">;
+}
+>>
+
+updateParam(param, tupleClass, tupleVar) ::= <<
+<param: {p| <p> = ((<tupleClass>)<tupleVar>)._<i0>}; separator=";\n">;
+>>
+
+invokeAggr(type, ret, f, arg1, arg2, stmts, ifUpdated, ifNotUpdated) ::= <<
+<type> <ret> = <f>.invoke(<arg1>, <arg2>);
+<stmts; separator=";\n">;
+if (<f>.isUpdated()) {
+	<ifUpdated; separator=";\n">;
+} else {
+	<ifNotUpdated; separator=";\n">;
+}
+>>
+
+simpleStmts(stmts) ::= <<
+{<stmts; separator=";\n">;}
+>>
+
+expr(expr) ::= <<
+<expr> >>
+
+doWhile0(stmts) ::= <<
+do {
+  <stmts; separator=";\n">;
+} while (false);
+>>
+
+waitClass(name, stmts) ::= <<
+class <name> implements Runnable {
+	void sleep() {
+		int waitTime=1;
+		try { Thread.sleep(waitTime); } 
+		catch (InterruptedException e) { throw new SociaLiteException(e); }
+		if (waitTime\<16) waitTime*=2;
+	}
+	public void run() {
+		<stmts; separator=";\n">;
+	}
+}
+>>

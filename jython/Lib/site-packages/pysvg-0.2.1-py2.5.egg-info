@@ -1,0 +1,18 @@
+Metadata-Version: 1.0
+Name: pysvg
+Version: 0.2.1
+Summary: Python SVG Library
+Home-page: http://codeboje.de/pysvg/
+Author: Kerim Mansour
+Author-email: kmansour@web.de
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python
+Classifier: Topic :: Multimedia :: Graphics
