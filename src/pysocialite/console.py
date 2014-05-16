@@ -140,6 +140,9 @@ class SociaLiteConsole(InteractiveConsole):
         try:
             InteractiveConsole.interact(self, banner)
         except KeyboardInterrupt:
+            if self.inQuery: 
+                self.inQuery = False
+                self.buffer = []
             print "Enter quit() or Ctrl-D to exit"
 
     def push(self, line):
