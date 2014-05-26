@@ -81,13 +81,19 @@ esac
 
 # Define JVM Options
 
-JAVA_HEAP_MAX=-Xmx2000m
-JAVA_HEAP_MIN=-Xms2000m
-if [ "x$SOCIALITE_HEAPSIZE" != "x" ]; then
-    JAVA_HEAP_MAX="-Xmx""$SOCIALITE_HEAPSIZE""m"
+if [ "x$JAVA_HEAP_MAX" == "x" ]; then
+    if [ "x$SOCIALITE_HEAPSIZE" != "x" ]; then
+        JAVA_HEAP_MAX="-Xmx""$SOCIALITE_HEAPSIZE""m"
+    else
+        JAVA_HEAP_MAX=-Xmx2048m
+    fi
 fi
-if [ "x$SOCIALITE_HEAPSIZE_MIN" != "x" ]; then
-    JAVA_HEAP_MIN="-Xms""$SOCIALITE_HEAPSIZE_MIN""m"
+if [ "x$JAVA_HEAP_MIN" == "x" ]; then
+    if [ "x$SOCIALITE_HEAPSIZE_MIN" != "x" ]; then
+        JAVA_HEAP_MIN="-Xms""$SOCIALITE_HEAPSIZE_MIN""m"
+    else
+        JAVA_HEAP_MIN=-Xms1024m
+    fi
 fi
 
 JVM_OPTS="$JVM_OPTS -da"

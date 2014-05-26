@@ -18,10 +18,13 @@ def pyfoo(a,b):
     return a+b
 
 @returns(int)
-def pyErr(a, b, c=None):
+def pybar(a, b, c=None):
     if a<b: return a
     return b
 
+@returns(int)
+def pyerr(a, b):
+    raise Exception("Exception in a function")
 
 class TestFunctions(unittest.TestCase):
     def __init__(self, methodName='runTest'):
@@ -44,11 +47,11 @@ class TestFunctions(unittest.TestCase):
 
     def test_argcount_error(self):
         try:
-            `Foo(a, b) :- a=10, b=$pyErr(1,2,3).`
+            `Foo(a, b) :- a=10, b=$pybar(1,2,3).`
         except SociaLiteException:
             pass
         else:
-            self.fail("Expecting exception is not raised")
+            self.fail("Expected exception is not raised")
 
     def test_aggr_func_typecast(self):
         `Foo(a, b) :- a=12, b=a+23*((int)$pyadd(1,2)+1).`
@@ -56,6 +59,15 @@ class TestFunctions(unittest.TestCase):
         l=set(`Foo(a,b)`)
         exp=set([(12,104)])
         self.assertEqual(l, exp)
+
+    def test_error_in_func(self):
+        try:
+            `Foo(a, b) :- a=10, b=$pyerr(1,2).`
+        except SociaLiteException:
+            pass
+        else:
+            self.fail("Expected exception is not raised from $pyerr")
+
 
 if __name__ == '__main__':
     unittest.main()

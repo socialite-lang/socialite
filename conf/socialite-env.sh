@@ -13,7 +13,7 @@ export SOCIALITE_BASE_PORT=50100
 export SOCIALITE_HEAPSIZE=8000
 
 # The initial heap size in MB
-export SOCIALITE_HEAPSIZE_MIN=2000
+export SOCIALITE_HEAPSIZE_MIN=1000
 
 # The directory where pid files are stored. /tmp/ by default.
 # export SOCIALITE_PID_DIR=/var/socialite/pids/

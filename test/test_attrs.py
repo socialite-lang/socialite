@@ -26,5 +26,29 @@ class TesetAttrs(unittest.TestCase):
         a = list(`Bar(a)`)[0]
         self.assertTrue(a==5)
 
+    def test_str(self):
+        `Qux(String w) indexby w.
+         Qux(w) :- (w, unused)=$Str.split(" qux unused ", " ").`
+        w = list(`Qux(w)`)[0]
+        self.assertTrue(w=='qux')
+
+
+    def test_exception1(self):
+        try:
+            `Foo(i, $avg(n)) :- i=$range(0, 10), n=$range(1, 4).
+             Bar(i) :- Foo(0, avg), i=(int)avg.XXX .`
+        except SociaLiteException:
+            pass
+        else:
+            self.fail("Expected exception is not raised")
+
+    def test_exception2(self):
+        try:
+            `Bar(i) :- i=(int)$Math.XXX(4.2).`
+        except SociaLiteException:
+            pass
+        else:
+            self.fail("Expected exception is not raised")
+
 if __name__ == '__main__':
     unittest.main()
