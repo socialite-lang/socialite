@@ -23,7 +23,7 @@ public class Median {
 	TLongArrayList llist;
 	TFloatArrayList flist;
 	TDoubleArrayList dlist;
-	SArrayList olist;	
+	SArrayList<Object> olist;	
 	int defaultCapacity = 1024;
 
 	public Median() { }
@@ -81,7 +81,7 @@ public class Median {
 	}
 	public boolean add(Object o) {
 		if (olist == null) {
-			olist = new SArrayList(defaultCapacity);
+			olist = new SArrayList<Object>(defaultCapacity);
 		}
 		int pos = olist.binarySearch(o);
 		if (pos>=0) return false;

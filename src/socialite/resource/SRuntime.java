@@ -88,6 +88,7 @@ public class SRuntime {
 	TableSliceMap sliceMap;
 	TableInstRegistry tableReg;
 	LockMap lockMap;
+	Throwable exception;
 	
 	TIntObjectHashMap<VisitorBuilder> builderMap = new TIntObjectHashMap<VisitorBuilder>(16);
 	TIntObjectHashMap<RuleMap> rulemapMap = new TIntObjectHashMap<RuleMap>(16);
@@ -121,7 +122,10 @@ public class SRuntime {
 	}
 	public void setVoid() { isVoid = true; }
 	public boolean isVoid() { return isVoid; }
-
+	
+	public void setException(Throwable t) { exception = t; }
+	public Throwable getException() { return exception; }
+	
 	public WorkerAddrMap getWorkerAddrMap() {
 		return workerAddrMap;
 	}
@@ -194,6 +198,7 @@ public class SRuntime {
 	public void update(Epoch e) {		
 		assert tableMap!=null;
 		createVisitorBuilderFor(e.getRules());
+		exception = null;
 		
 		for (Table t:e.getNewTables()) {
 			if (t.isCompiled())
@@ -204,7 +209,7 @@ public class SRuntime {
 			getSliceMap().addTable(t);
 			if (t instanceof RemoteHeadTable ||
 					t instanceof RemoteBodyTable) {
-				Class tableCls=TableUtil.load(t.className());
+				Class<?> tableCls=TableUtil.load(t.className());
 				assert tableCls!=null;
 				getClassLookup().addClass(tableCls);
 			}
@@ -217,7 +222,7 @@ public class SRuntime {
 			if (r.isSimpleArrayInit()) continue;
 			String visitorClsName = e.getVisitorClassName(r.id());
 			if (visitorClsName!=null) {
-				Class visitorCls = Loader.forName(visitorClsName);
+				Class<?> visitorCls = Loader.forName(visitorClsName);
 				getVisitorBuilder(r.id()).setVisitorClass(r.id(), visitorCls);
 			}
 		}
@@ -283,12 +288,14 @@ public class SRuntime {
 	}
 	
 	public Eval getEvalInst(Epoch epoch) {
+		@SuppressWarnings("rawtypes")
 		Class evalClass=epoch.getEvalclass();
 		if (evalClass==null) return null;
 		
 		Eval inst=null;
 		try {
-		    Constructor<? extends Runnable> c = evalClass.getConstructor(SRuntime.class, Epoch.class, Config.class);
+		    @SuppressWarnings("unchecked")
+			Constructor<? extends Runnable> c = evalClass.getConstructor(SRuntime.class, Epoch.class, Config.class);
 		    inst = (Eval)c.newInstance(this, epoch, conf);
 		} catch (Exception e) {		        
 			L.fatal("Cannot get/call constructor of "+evalClass+":"+e);
@@ -298,13 +305,15 @@ public class SRuntime {
 		return inst;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public QueryRunnable getQueryInst(int queryTableId, String queryClsName, QueryVisitor qv) {
 		Constructor<? extends Runnable> c=null;
 		
 		TableInst[] tableArray = tableReg.getTableInstArray(queryTableId);			
 		Object tableArg = tableArray.length==1? tableArray[0]:tableArray;
+		@SuppressWarnings("rawtypes")
 		Class queryClass = Loader.forName(queryClsName);
-		Class type=tableArg.getClass();
+		Class<?> type=tableArg.getClass();
 		try {
 			c=queryClass.getConstructor(type, QueryVisitor.class, TableSliceMap.class);
 			QueryRunnable qr = (QueryRunnable)c.newInstance(tableArg, qv, sliceMap);				

@@ -1,7 +1,5 @@
 package socialite.util;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -9,8 +7,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +26,6 @@ import org.python.core.PySystemState;
 import org.python.core.imp;
 
 import socialite.codegen.CodeGenMain;
-import socialite.eval.ClassFilesBlob;
 
 public class Loader extends URLClassLoader {
     public static final Log L=LogFactory.getLog(Loader.class);
@@ -87,7 +82,7 @@ public class Loader extends URLClassLoader {
     	}
     }
     
-    public static Class forName(String klass) {
+    public static Class<?> forName(String klass) {
     	ClassLoader l=(ClassLoader)Loader.get();
     	synchronized(l) {
     		try {    			
@@ -104,7 +99,7 @@ public class Loader extends URLClassLoader {
     	((Loader)Loader.get())._loadFromBytes(classNames, classFiles);
     }
     void _loadFromBytes(List<String> classNames, List<byte[]> classFiles) {    	
-    	Class[] classes=new Class[classNames.size()];
+    	Class<?>[] classes=new Class[classNames.size()];
     	for (int i=0; i<classNames.size(); i++) {
     		String n = classNames.get(i);
     		byte[] b = classFiles.get(i);
@@ -170,18 +165,19 @@ public class Loader extends URLClassLoader {
     }
     static void releaseCommonsLoggingCache(Loader l) {
     	 try {
-             Class logFactory = l.loadClass("org.apache.commons.logging.LogFactory");
+             Class<?> logFactory = l.loadClass("org.apache.commons.logging.LogFactory");
              Method release = logFactory.getMethod("release", new Class[] {ClassLoader.class});
              release.invoke(null, new Object[] {l});
          } catch (Throwable ignored) {
              // there is nothing a user could do about this anyway
          }
     }
-    static void clearSunSoftCache(Class clazz, String fieldName) {
-        Map cache = null;
+    @SuppressWarnings("rawtypes")
+	static void clearSunSoftCache(Class<?> clazz, String fieldName) {
+		Map cache = null;
         try {
-        	Class cacheCls = null;
-        	for (Class c:clazz.getDeclaredClasses()) {
+        	Class<?> cacheCls = null;
+        	for (Class<?> c:clazz.getDeclaredClasses()) {
         		if (c.getName().endsWith("$Caches")) {
         			cacheCls = c;
         		}
@@ -190,7 +186,7 @@ public class Loader extends URLClassLoader {
         	
             Field field = cacheCls.getDeclaredField(fieldName);            
             field.setAccessible(true);
-            cache = (Map) field.get(null);
+            cache = (Map)field.get(null);
         } catch (Throwable ignored) {
             // there is nothing a user could do about this anyway
         	L.warn("cannot clear Sun soft cache");

@@ -240,6 +240,7 @@ public class Manager extends Thread {
 		WorkerNode.getInst().reportError(t.getRuleId(), e);
 	}
 	void handleErrorLocal(Task t, Throwable e) {
+		runtime.setException(e);
 		Worker.haltEpoch();
 		L.warn("While executing \""+t+"\",");
 		L.warn("  an error was thrown:"+e);		

@@ -125,7 +125,6 @@ public class QueryListener implements QueryProtocol {
 			Path hdfsPath = new Path(filePath);
 			Path localPath = new Path(localExtLibPath());
 
-			File local = new File(localExtLibPath());
 			FileUtil.copy(hdfs, hdfsPath, localFs, localPath, false, true,
 					hConf);
 
@@ -149,14 +148,6 @@ public class QueryListener implements QueryProtocol {
 			L.error("Malformed path[" + file + "]:" + e);
 			return new BooleanWritable(false);
 		}
-	}
-
-	String currentDate() {
-		// DateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd-HHmm");
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		Date date = new Date();
-		Calendar cal = Calendar.getInstance();
-		return dateFormat.format(cal.getTime());
 	}
 
 	boolean prevSessionExists() {
@@ -371,7 +362,7 @@ public class QueryListener implements QueryProtocol {
 		Loader.loadFromBytes(classFilesBlob.names(), classFilesBlob.files());
 		for (String pyClassName:classFilesBlob.names()) {			
 			try {
-				Class pyClass=Loader.forName(pyClassName);
+				Class<?> pyClass=Loader.forName(pyClassName);
 				Constructor<?> constr = pyClass.getConstructor(new Class[]{String.class});
 				constr.newInstance(new Object[] {"<SociaLite>"});
 			} catch (Exception e) {
@@ -489,7 +480,7 @@ public class QueryListener implements QueryProtocol {
 		Status summary=new Status();
 
 		Object[] _workerStats;
-		WorkerAddrMap workerAddrMap = master.getCurrentWorkerAddrMap();				
+		WorkerAddrMap workerAddrMap = MasterNode.getCurrentWorkerAddrMap();				
 		summary.putNodeNum(""+workerAddrMap.size());
 		try {
 			Method status = WorkerCmd.class.getMethod("status",new Class[]{IntWritable.class});

@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import socialite.util.InternalException;
 
 public class Predicate implements Serializable {
@@ -15,7 +16,8 @@ public class Predicate implements Serializable {
 	
 	private static final long serialVersionUID = 1;
 	
-	public Object idxParam; 
+	public Object idxParam;	
+	@SuppressWarnings("rawtypes")
 	public List params;
 
 	Object[] allParams;
@@ -26,18 +28,21 @@ public class Predicate implements Serializable {
 	String name;
 	boolean isHeadPredicate;
 	
+	
+	@SuppressWarnings("unchecked")
 	@Override
 	public Predicate clone() {
+		@SuppressWarnings("rawtypes")
 		List newParams = new ArrayList();
 		newParams.addAll(params);
-		Predicate p = new Predicate(name, idxParam, new ArrayList(newParams));
+		Predicate p = new Predicate(name, idxParam, new ArrayList<Object>(newParams));
 		p.negated = negated;
 		p.posAtRuleBody = posAtRuleBody;
 		p.isHeadPredicate = isHeadPredicate;
 		return p;
 	}
 	protected Predicate() {	}
-	public Predicate(String _name, Object _idxParam, List _params) {
+	public Predicate(String _name, Object _idxParam, List<?> _params) {
 		name = _name;
 		idxParam = _idxParam;
 		params = _params;
@@ -79,8 +84,8 @@ public class Predicate implements Serializable {
 		return negated;
 	}
 	
-	public List getConstValues() {
-		List consts = new ArrayList();
+	public List<Object> getConstValues() {
+		List<Object> consts = new ArrayList<Object>();
 		Object[] params = getAllParamsExpanded();
 		for (int i=0; i<params.length; i++) {
 			if (params[i] instanceof Const) {
@@ -158,6 +163,7 @@ public class Predicate implements Serializable {
 		assert false:"should not reach here";
 		return -1;
 	}
+	@SuppressWarnings("unchecked")
 	public void replaceParamAt(int idx, Object newParam) {
 		if (idxParam!=null) {
 			if (idx==0) {
@@ -208,7 +214,7 @@ public class Predicate implements Serializable {
 	public Object[] getAllInputParams() { return getAllParamsExpanded(); }	
 	public Object[] getAllOutputParams() { 
 		if (allOutputParams==null) {
-			List tmp = new ArrayList();
+			List<Object> tmp = new ArrayList<Object>();
 			if (idxParam!=null) tmp.add(idxParam);
 			for (Object o:params) {
 				if (o instanceof AggrFunction) {
@@ -223,7 +229,7 @@ public class Predicate implements Serializable {
 	
 	public Object[] getAllParams() {
 		if (allParams==null) {
-			List tmp = new ArrayList();
+			List<Object> tmp = new ArrayList<Object>();
 			if (idxParam!=null) tmp.add(idxParam);
 			for (Object o:params) {
 				tmp.add(o);
@@ -234,7 +240,7 @@ public class Predicate implements Serializable {
 	}
 	public Object[] getAllParamsExpanded() {
 		if (allParamsExp==null) {
-			List tmp = new ArrayList();
+			List<Object> tmp = new ArrayList<Object>();
 			if (idxParam!=null) tmp.add(idxParam);
 			for (Object o:params) {
 				if (o instanceof AggrFunction) {
@@ -246,8 +252,8 @@ public class Predicate implements Serializable {
 		}
 		return allParamsExp;
 	}
-	public List getRestInputParams() {
-		List tmp=new ArrayList();
+	public List<?> getRestInputParams() {
+		List<Object> tmp=new ArrayList<Object>();
 		for (Object o:params) {
 			if (o instanceof AggrFunction) {
 				AggrFunction f=(AggrFunction)o;
@@ -256,8 +262,8 @@ public class Predicate implements Serializable {
 		}
 		return tmp;
 	}
-	public List getRestOutputParams() {
-		List tmp=new ArrayList();
+	public List<?> getRestOutputParams() {
+		List<Object> tmp=new ArrayList<Object>();
 		for (Object o:params) {
 			if (o instanceof AggrFunction) {
 				AggrFunction f=(AggrFunction)o;
@@ -274,6 +280,7 @@ public class Predicate implements Serializable {
 			v = (Variable)idxParam;
 			v.setType(t.idxType());			
 		}
+		@SuppressWarnings("rawtypes")
 		Class[] types = t.types();		
 		for(int i=0; i<params.size(); ) {
 			if (params.get(i) instanceof Variable) {

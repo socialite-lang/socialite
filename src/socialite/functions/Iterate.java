@@ -10,7 +10,8 @@ public class Iterate {
 			String msg="The argument to $Iterate is required to implement Iterable";
 			throw new SociaLiteException(msg);
 		}
-		Iterable iter=(Iterable)o;
+		@SuppressWarnings("unchecked")
+		Iterable<Object> iter=(Iterable<Object>)o;
 		return iter.iterator();
 	}
 }

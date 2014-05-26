@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.stringtemplate.v4.ST;
@@ -81,7 +80,7 @@ public class VisitorBaseGen {
 		}
 		return decls;
 	}
-	static Class[] types = {int.class, long.class, float.class, double.class, Object.class};
+	static Class<?>[] types = {int.class, long.class, float.class, double.class, Object.class};
 	static void getColumns(List<Column[]> results, Column[] cols, int pos, int startPos, int type) {
 		ColumnDecl cd = new ColumnDecl(types[type], "col"+(pos+startPos));
 		cd.setPos(startPos+pos);
@@ -97,8 +96,8 @@ public class VisitorBaseGen {
 		}
 	}
 	
-	public static List<Class> generate(Config conf, List<Table> tables) {
-		List<Class> classes = new ArrayList<Class>();
+	public static List<Class<?>> generate(Config conf, List<Table> tables) {
+		List<Class<?>> classes = new ArrayList<Class<?>>();
 		for (Table t:tables) {
 			if (t.numColumns()<=3) continue;
 		
@@ -126,7 +125,7 @@ public class VisitorBaseGen {
 				String msg="Cannot compile "+fullname+".class";			
 				throw new SociaLiteException(msg);			
 			}
-			Class klass=Loader.forName(fullname);
+			Class<?> klass=Loader.forName(fullname);
 			classes.add(klass);
 		}
 		return classes;
@@ -204,7 +203,7 @@ class MethodDecls implements Iterable<MethodDecl> {
 	}
 	public Iterator<MethodDecl> iterator() {
 		if (methodDecls==null) {
-			return Collections.EMPTY_LIST.iterator();
+			return Collections.<MethodDecl>emptyList().iterator();
 		}
 		return methodDecls.iterator();
 	}

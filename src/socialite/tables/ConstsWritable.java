@@ -17,15 +17,16 @@ import socialite.util.SocialiteInputStream;
 import socialite.util.SocialiteOutputStream;
 
 public class ConstsWritable implements Writable {
-	List consts;
+	List<Object> consts;
 	
 	public ConstsWritable() {}
-	public ConstsWritable(List _consts) {
+	public ConstsWritable(List<Object> _consts) {
 		consts = _consts;
 	}
 	
-	public List get() { return consts; }
+	public List<?> get() { return consts; }
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		int size=in.readInt();
@@ -34,8 +35,9 @@ public class ConstsWritable implements Writable {
 		ByteArrayInputStream byteIn = new ByteArrayInputStream(inBytes);		
 		ObjectInputStream ois = new SocialiteInputStream(byteIn);
 		try {
-			consts = (List)ois.readObject();
+			consts = (List<Object>)ois.readObject();
 		} catch (ClassNotFoundException e) {
+			ois.close();
 			throw new SociaLiteException(e);
 		}
 		ois.close();

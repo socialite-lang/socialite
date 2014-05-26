@@ -4,7 +4,6 @@ import gnu.trove.list.array.TIntArrayList;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Iterator;
 import java.util.concurrent.BrokenBarrierException;
@@ -182,9 +181,9 @@ public class EvalParallel extends Eval {
 			} 				
 		}
 		int idx=0;
-		for (Class init:epoch.getInitClasses()) {
+		for (Class<?> init:epoch.getInitClasses()) {
 			List<Const> _consts=epoch.getInitConsts().get(idx);			
-			List consts = new ArrayList(_consts.size());
+			List<Object> consts = new ArrayList<Object>(_consts.size());
 			for (int i=0; i<_consts.size(); i++) {
 				Const c=_consts.get(i);
 				consts.add(c.val);
@@ -194,10 +193,10 @@ public class EvalParallel extends Eval {
 		}
 	}
 	
-	void initTable(Class init, List consts) {
+	void initTable(Class<?> init, List<Object> consts) {
 		startInitThreads();				
 		
-		Constructor<? extends Runnable> c;
+		Constructor<?> c;
 		try {
 			c = init.getConstructor(int.class, TableInstRegistry.class, TableSliceMap.class);
 		} catch (Exception e) {

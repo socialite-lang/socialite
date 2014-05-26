@@ -27,6 +27,7 @@ import socialite.dist.worker.WorkerCmd;
 import socialite.engine.Config;
 import socialite.resource.WorkerAddrMap;
 import socialite.resource.SRuntime;
+import socialite.util.SociaLiteException;
 import socialite.util.TextArrayWritable;
 
 public class WorkerReqListener implements WorkerRequest {
@@ -196,7 +197,7 @@ public class WorkerReqListener implements WorkerRequest {
 		try {
 			Method halt=WorkerCmd.class.getMethod("haltEpoch", new Class[]{});
 			Object p[] = new Object[]{};
-			master.callWorkers(halt, p);
+			master.callWorkers(halt, p);			
 		} catch (Exception e) {
 			L.error("Exception while calling WorkerCmd.haltEpoch()");
 			L.fatal(ExceptionUtils.getStackTrace(e));
@@ -207,5 +208,7 @@ public class WorkerReqListener implements WorkerRequest {
 		InetAddress workerAddr = workerAddrMap.get(_workerid.get());
 		errorMsg = workerAddr + ":"+errorMsg;
 		ErrorRecord.getInst().addErrorMsg(ruleid, errorMsg);
+		
+		SRuntime.masterRt().setException(new SociaLiteException(errorMsg));
 	}
 }

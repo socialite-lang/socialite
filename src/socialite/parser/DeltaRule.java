@@ -40,7 +40,7 @@ public class DeltaRule extends Rule {
 	public DeltaPredicate getTheP() { return theP; }
 	
 	protected RuleDecl createRuleDecl() {
-		List newBody=new ArrayList();
+		List<Object> newBody=new ArrayList<Object>();
 		int pos=0;
 		for (Object o:origRuleDecl.body) {
 			if (pos==theP.getPos()) 

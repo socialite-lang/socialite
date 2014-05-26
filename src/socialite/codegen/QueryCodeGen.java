@@ -66,6 +66,7 @@ public class QueryCodeGen {
 		assert !queryP.hasFunctionParam();
 	}
 	
+	@SuppressWarnings("unchecked")
 	Predicate makeNewPredicate(Predicate oldP, TIntObjectHashMap<Variable> constVars) {
 		Predicate p = oldP.clone();
 		int offset = 0;
@@ -74,7 +75,6 @@ public class QueryCodeGen {
 				p.idxParam = constVars.get(0);				
 			offset = 1;
 		}		
-		List params = new ArrayList();
 		for (int i=0; i<oldP.params.size(); i++) {
 			Object o = oldP.params.get(i);
 			if (o instanceof Const)

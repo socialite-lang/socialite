@@ -168,7 +168,7 @@ public class CmdListener implements WorkerCmd {
 		Loader.loadFromBytes(classFilesBlob.names(), classFilesBlob.files());
 		for (String pyClassName:classFilesBlob.names()) {			
 			try {
-				Class pyClass=Loader.forName(pyClassName);
+				Class<?> pyClass=Loader.forName(pyClassName);
 				Constructor<?> constr = pyClass.getConstructor(new Class[]{String.class});
 				constr.newInstance(new Object[] {"<SociaLite>"});
 			} catch (Exception e) {
@@ -238,8 +238,6 @@ public class CmdListener implements WorkerCmd {
 		}
 	}
 	void prepareWorkSpace() {
-		Config conf=SRuntime.workerRt().getConf();
-		
 		// prepare workspace in local-fs
 		String localDir = PathTo.classOutput();
 		
@@ -432,7 +430,6 @@ public class CmdListener implements WorkerCmd {
 		}
 		
 		void waitUntilIdle() throws InterruptedException {
-			int count=0;
 			while (true) {
 				if (worker.likelyIdle() && worker.idle()) {
 					sleep(8);

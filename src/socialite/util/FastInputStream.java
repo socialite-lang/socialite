@@ -64,7 +64,7 @@ public class FastInputStream extends ObjectInputStream {
 		if (className.startsWith("[")) {
 			return readArray(className);
 		}
-		Class cls = getClass(className);
+		Class<?> cls = getClass(className);
 		if (cls.equals(String.class)) {
 			char[] s = new char[readInt()];
 			for (int i=0; i<s.length; i++) s[i] = readChar();
@@ -90,19 +90,19 @@ public class FastInputStream extends ObjectInputStream {
 			throw new SociaLiteException(e);
 		} 
 	}	
-	static TableInst newInstance(Class tableCls) throws Exception {
-		Constructor c = tableCls.getDeclaredConstructor((Class[])null);
+	static TableInst newInstance(Class<?> tableCls) throws Exception {
+		Constructor<?> c = tableCls.getDeclaredConstructor((Class[])null);
 		c.setAccessible(true);
 		TableInst i= (TableInst)c.newInstance((Object[])null);
 		return i;
 	}
 	
-	private Class getClass(String className) {
+	private Class<?> getClass(String className) {
 		if (className.charAt(0)=='#') {
 			int fastIdx=Integer.parseInt(className.substring(1));
 			return lookup.getClass(fastIdx);
 		} else {
-			Class cls=Loader.forName(className);
+			Class<?> cls=Loader.forName(className);
 			lookup.addClass(cls);
 			return cls;
 		}
@@ -110,14 +110,14 @@ public class FastInputStream extends ObjectInputStream {
 	
 	Object readArray(String className) throws IOException, ClassNotFoundException {
 		className = className.substring(1, className.length());
-		Class cls = getClass(className);
+		Class<?> cls = getClass(className);
 		if (cls.isPrimitive()) {
 			return readPrimArray(cls);
 		} else {
 			return readObjectArray(cls);
 		}
 	}
-	Object readPrimArray(Class cls) throws IOException, ClassNotFoundException {
+	Object readPrimArray(Class<?> cls) throws IOException, ClassNotFoundException {
 		int arraylen = readInt();
 		Object ret=null;
 		if (cls.equals(int.class)) {
@@ -174,7 +174,7 @@ public class FastInputStream extends ObjectInputStream {
 		return ret;
 	}
 	
-	Object readObjectArray(Class cls) throws IOException, ClassNotFoundException {		
+	Object readObjectArray(Class<?> cls) throws IOException, ClassNotFoundException {		
 		int arrayLen = readInt();
 		Object[] array=(Object[])Array.newInstance(cls, arrayLen);
 		

@@ -17,6 +17,8 @@ import socialite.util.SociaLiteException;
 
 
 class FunctionNotFoundException extends RuntimeException {
+	private static final long serialVersionUID = -2774815654552982394L;
+
 	public FunctionNotFoundException(Exception e) {
 		super(e);
 	}
@@ -26,24 +28,24 @@ public class FunctionLoader {
 		return "socialite.functions."+functionName;
 	}
 	
-	public static Class load(String name) {
+	public static Class<?> load(String name) {
 		String className=name;		
 		String fullName = getFunctionPath(className);
 		if (Loader.exists(fullName)) {
 			return Loader.forName(fullName);
 		} else { return null; }
 	}	
-	public static boolean hasMethod(Class klass, String name, Class[] argTypes) {
-		Method m=null;
+	public static boolean hasMethod(Class<?> klass, String name, Class<?>[] argTypes) {
 		try {
-			m=klass.getMethod(name, argTypes);
+			@SuppressWarnings("unused")
+			Method m=klass.getMethod(name, argTypes);
 			return true;
 		} catch (Exception e) {
 			return false;
 		}
 	}
 	
-	public static Method loadMethod(Class klass, Class[] argTypes) {
+	public static Method loadMethod(Class<?> klass, Class<?>[] argTypes) {
 		try {
 			Method m= klass.getMethod("invoke", argTypes);
 			return m;
@@ -54,7 +56,7 @@ public class FunctionLoader {
 		}
 	}
 	
-	public static Method loadMethod(Class klass, String name, Class[] argTypes) {
+	public static Method loadMethod(Class<?> klass, String name, Class<?>[] argTypes) {
 		try {
 			return klass.getMethod(name, argTypes);
 		} catch (SecurityException e) {

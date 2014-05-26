@@ -93,7 +93,7 @@ public class Config {
 	boolean isDistributed=false;
 	PortMap portMap=null;
 		
-	boolean errorRecovery=true;
+	boolean errorRecovery=false;
 	TObjectIntHashMap<String> debugInfo;
 	
 	void setupDebugInfo() {

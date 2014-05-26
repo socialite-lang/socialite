@@ -60,7 +60,8 @@ public class Status {
 		try {
 			ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
 			ObjectInputStream ois = new SocialiteInputStream(byteIn);
-			HashMap<Object, Object> map = (HashMap)ois.readObject();
+			@SuppressWarnings("unchecked")
+			HashMap<Object, Object> map = (HashMap<Object, Object>)ois.readObject();
 			Status s = new Status();
 			s.elem = map;
 			ois.close();

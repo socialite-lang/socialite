@@ -27,6 +27,7 @@ public class Min2 implements MeetOp {
 		if (ans.compareTo(newVal)<0) return ans;
 		else return newVal;
 	}	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static Comparable invoke(Comparable c1, Comparable c2) {
 		if (c1.compareTo(c2)<0) return c1;
 		else return c2;

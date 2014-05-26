@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+
 import socialite.tables.Tuple;
 import socialite.type.Utf8;
 import socialite.util.Assert;
@@ -53,6 +54,7 @@ public class MyType {
 		return klass;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public static Class javaType(Object o) {
 		if (o instanceof Function) {
 			Function f = (Function)o;

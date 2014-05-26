@@ -4,7 +4,6 @@ import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +39,7 @@ public class CodeGenMain {
 	
 	static CodeClassCache visitorClass$ = new CodeClassCache();
 	static CodeClassCache arrayInitClass$ = new CodeClassCache();
+	@SuppressWarnings("rawtypes")
 	static QueryCache<Class> queryClass$ = new QueryCache<Class>();
 	public static void clearCache() {
 		visitorClass$.clear();
@@ -59,6 +59,7 @@ public class CodeGenMain {
 	Config conf;
 	
 	List<Eval> evalInsts=new ArrayList<Eval>();
+	@SuppressWarnings("rawtypes")
 	List<Class> generated = new ArrayList<Class>();
 	
 	SRuntime runtime;
@@ -104,12 +105,13 @@ public class CodeGenMain {
 		return runtime.getEvalInst(e);
 	}
 
-	void addToGeneratedClasses(Class klass) {
-		for (Class innerClass:klass.getDeclaredClasses()) 
+	void addToGeneratedClasses(Class<?> klass) {
+		for (Class<?> innerClass:klass.getDeclaredClasses()) 
 			generated.add(innerClass);
 		generated.add(klass);		
 	}
-	void addToGeneratedClasses(Collection<Class> klasses) {
+	
+	void addToGeneratedClasses(List<Class<?>> klasses) {
 		for (Class klass:klasses)
 			addToGeneratedClasses(klass);
 	}
@@ -133,7 +135,7 @@ public class CodeGenMain {
 		for (Epoch e:epochs) {
 			generateVisitors(e);
 			generateArrayInit(e);
-			Class evalClass=generateEval(e);
+			Class<?> evalClass=generateEval(e);
 			if (!evalClass.equals(EvalParallel.class) && 
 					!evalClass.equals(EvalDist.class)) {
 				addToGeneratedClasses(evalClass);
@@ -147,6 +149,7 @@ public class CodeGenMain {
 			runtime.update(e);
 		}
 	}
+	@SuppressWarnings("rawtypes")
 	public List<Class> getGeneratedClasses() { return generated; }
 	
 	public List<Epoch> getEpoch() { return epochs; }
@@ -189,7 +192,7 @@ public class CodeGenMain {
 		}
 	}
 	
-	Class generateEval(Epoch e) {
+	Class<?> generateEval(Epoch e) {
 		//long s=System.currentTimeMillis();
 		List<Table> newTablesToAlloc = new ArrayList<Table>();
 		for (Table t:e.getNewTables()) {
@@ -216,7 +219,7 @@ public class CodeGenMain {
 				throw new SociaLiteException(msg);
 			}
 		}
-		Class<? extends Runnable> evalClass=Loader.forName(evalGen.evalName());
+		Class<?> evalClass=Loader.forName(evalGen.evalName());
 		return evalClass;
 	}
 	
@@ -224,7 +227,7 @@ public class CodeGenMain {
 		return runtime.getTableRegistry(); 
 	}
 		
-	public Class getQueryClass() {
+	public Class<?> getQueryClass() {
 		return queryClass;
 	}
 	
@@ -233,7 +236,7 @@ public class CodeGenMain {
 			return null;
 
 		Predicate p=query.getP();
-		List args = p.getConstValues();
+		List<Object> args = p.getConstValues();
 		
 		Table t=tableMap.get(p.name());		
 		String queryClsName=queryClass.getName();		
@@ -246,6 +249,7 @@ public class CodeGenMain {
 	
 	public Query getQuery() { return query; }
 	
+	@SuppressWarnings("unchecked")
 	public void generateQuery(QueryVisitor qv) {
 		if (query==null) return;
 		
@@ -265,7 +269,7 @@ public class CodeGenMain {
 			String msg="Error while compiling a query class:"+c.getErrorMsg();
 			throw new SociaLiteException(msg);
 		}
-		queryClass=Loader.forName(qgen.queryName());
+		queryClass=(Class<? extends Runnable>)Loader.forName(qgen.queryName());
 		queryClass$.put(query.getP(), tableMap, queryClass);
 		addToGeneratedClasses(queryClass);
 	}	
@@ -341,10 +345,10 @@ class QuerySignature {
 }
 
 class CodeClassCache {
-	Map<String, Class> classMap;
+	Map<String, Class<?>> classMap;
 	int size=0;
 	CodeClassCache() {
-		classMap = new HashMap<String, Class>();
+		classMap = new HashMap<String, Class<?>>();
 	}
 	public synchronized void clear() {
 		classMap.clear();
@@ -356,11 +360,11 @@ class CodeClassCache {
 			size=0;
 		}
 	}
-	public synchronized Class get(String ruleSig) {			
+	public synchronized Class<?> get(String ruleSig) {			
 		return classMap.get(ruleSig);
 	}
-	public synchronized void put(String ruleSig, Class cls) {
-		Class old = classMap.put(ruleSig, cls);			
+	public synchronized void put(String ruleSig, Class<?> cls) {
+		Class<?> old = classMap.put(ruleSig, cls);			
 		if (old==null) size++;
 	}
 }

@@ -166,7 +166,7 @@ public class Rule implements Serializable {
 				_consts.addAll(e.getConsts());
 			}
 		}
-		return new ArrayList(_consts);
+		return new ArrayList<Const>(_consts);
 	}
 	public void computeParamTypes(Map<String, Table> tableMap) {
 		Predicate currentP=null;
@@ -272,7 +272,7 @@ public class Rule implements Serializable {
 		return ruleDecl.head;
 	}
 	
-	public List getBody() {
+	public List<?> getBody() {
 		return ruleDecl.body;
 	}
 	

@@ -6,6 +6,7 @@ import gnu.trove.list.array.TFloatArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 
+@SuppressWarnings("rawtypes")
 public class Count implements Comparable {
 	public static boolean invoke(Count a, int b) { return a.add(b); }
 	public static boolean invoke(Count a, long b) { return a.add(b); }
@@ -19,7 +20,7 @@ public class Count implements Comparable {
 	TLongArrayList llist;
 	TFloatArrayList flist;
 	TDoubleArrayList dlist;
-	SArrayList olist;
+	SArrayList<Object> olist;
 	
 	int defaultCapacity = 1024;
 
@@ -100,7 +101,7 @@ public class Count implements Comparable {
 	}
 	public boolean add(Object o) {
 		if (olist == null) {
-			olist = new SArrayList(defaultCapacity);
+			olist = new SArrayList<Object>(defaultCapacity);
 		}
 		int pos = olist.binarySearch(o);
 		if (pos>=0) return false;

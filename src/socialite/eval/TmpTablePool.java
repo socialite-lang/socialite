@@ -2,24 +2,20 @@ package socialite.eval;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
 import socialite.resource.SRuntime;
 import socialite.tables.TableInst;
-import socialite.util.ArrayQueue;
-import socialite.util.ByteBufferPool;
 import socialite.util.SociaLiteException;
 import socialite.util.SoftRefArrayQueue;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class TmpTablePool {
-	static ConcurrentHashMap<Class, SoftRefArrayQueue<TableInst>> globalFreeTableList; 
+	static ConcurrentHashMap<Class, SoftRefArrayQueue<TableInst>> globalFreeTableList;
 	static ConcurrentHashMap<Class, SoftRefArrayQueue<TableInst>> freeSmallTableList;
 	static ConcurrentHashMap<Class, SoftRefArrayQueue<TableInst>>[] localFreeTableList; // indexed by workerid
 	static TIntObjectHashMap<TableInst>[] accessedTables; // indexed by workerid
@@ -37,7 +33,7 @@ public class TmpTablePool {
 		realWorkerNum = workerNum;
 	}
 	
-	@SuppressWarnings("unchecked")
+	
 	public static void init(int workerNum) {
 		globalFreeTableList = new ConcurrentHashMap<Class, SoftRefArrayQueue<TableInst>>();		
 		freeSmallTableList = new ConcurrentHashMap<Class, SoftRefArrayQueue<TableInst>>();
@@ -331,8 +327,6 @@ public class TmpTablePool {
 	}
 	
 	public static void status() {
-		int allocMB = (int)(allocKB.get()/1024.0);		
-		
 		System.out.println(" NOTICE TmpTable allocMB:"+allocKB.get()/1024);
 	}
 	

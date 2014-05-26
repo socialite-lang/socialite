@@ -118,6 +118,9 @@ public class LocalEngine {
 			List<Eval> evals = compile(program).getEvalInsts();
 			for (Eval e:evals) {
 			    e.run();
+			    if (runtime.getException()!=null) {
+			    	throw new SociaLiteException(runtime.getException());
+			    }
 			}
 		} catch (Exception e) {
 			if (conf.isVerbose()) {

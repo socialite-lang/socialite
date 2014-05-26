@@ -5,6 +5,9 @@ import java.io.PrintStream;
 public class SociaLiteException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	
+	public SociaLiteException(Throwable t) {
+		super(t.getMessage());		
+	}
 	public SociaLiteException(Exception e) {
 		super(e.getMessage());		
 	}

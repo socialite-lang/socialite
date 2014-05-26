@@ -112,7 +112,7 @@ public class TableInstRegistry {
 					oos.writeBoolean(true);					
 					String name = getTableName(i);
 					L.info("Storing table "+name);
-					Class tableClass = tableInstArrayMap[i][0].getClass();
+					Class<?> tableClass = tableInstArrayMap[i][0].getClass();
 					oos.writeInt(tableClass.getName().length());
 					oos.writeChars(tableClass.getName());
 					oos.writeInt(tableInstArrayMap[i].length);
@@ -147,7 +147,7 @@ public class TableInstRegistry {
 						_className[k] = ois.readChar();	
 					}
 					String className = new String(_className);
-					Class tableClass=Loader.forName(className);
+					Class<?> tableClass=Loader.forName(className);
 					int arraySize = ois.readInt();
 					String name = getTableName(i);
 					L.info("Loading table "+name);					
@@ -172,6 +172,7 @@ public class TableInstRegistry {
 		}		
 		tableInstArrayMap = prevTableInstArray;
 	}
+	@SuppressWarnings({ "unchecked", "resource" })
 	public Map<String, Table> loadTableMap(ObjectInputStream ois) {
 		if (!tableMap().isEmpty()) {
 			throw new SociaLiteException("Cannot load tables if there are new tables declared.");
@@ -227,7 +228,7 @@ public class TableInstRegistry {
 	}
 	
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "resource" })
 	public void load(ObjectInputStream ois) {
 		if (!tableMap().isEmpty()) {
 			throw new SociaLiteException("Cannot load serialized tables if there are new tables declared.");

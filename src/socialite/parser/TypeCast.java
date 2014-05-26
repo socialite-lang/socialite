@@ -12,20 +12,23 @@ import org.stringtemplate.v4.ST;
 import socialite.codegen.CodeGen;
 
 public class TypeCast extends Op implements UnaryOp {
-	public Class type;
+	private static final long serialVersionUID = 1864131799421671063L;
+	
+	public Class<?> type;
 	public Object arg;
-	public TypeCast(Class _type, Object _arg) {
+	public TypeCast(Class<?> _type, Object _arg) {
 		type = _type;
 		arg = _arg;
 	}
 	@Override
-	public Class opType() {
+	public Class<?> opType() {
 		return type;
 	}
+	@SuppressWarnings("rawtypes")
 	public void getTypes(Collection<Class> types) { 
 		types.add(type);
 	}
-	public boolean isValid(Class fromType) {
+	public boolean isValid(Class<?> fromType) {
 		if (type.equals(fromType)) return true;
 		
 		if (fromType.isPrimitive()) {
@@ -53,8 +56,6 @@ public class TypeCast extends Op implements UnaryOp {
 	}
 	@Override
 	public void visit(OpVisitor v) {
-		// TODO Auto-generated method stub
-		
 	}
 	@Override
 	public Set<Variable> getVars() {		

@@ -1,14 +1,11 @@
 package socialite.collection;
 
 import java.util.AbstractCollection;
-import java.util.AbstractList;
 import java.util.Arrays;
-import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
 import java.util.ListIterator;
-import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 
 public class ArrayList<E> extends AbstractCollection<E>
@@ -46,6 +43,7 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 	public void ensureCapacity(int minCapacity) {
 		int oldCapacity = elems.length;
 		if (minCapacity > oldCapacity) {
+			@SuppressWarnings("unused")
 			Object oldData[] = elems;
 			int newCapacity = (oldCapacity*3)/2+1;
 			if (newCapacity < minCapacity)
@@ -90,6 +88,7 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 
 	public Object clone() {
 		try {
+			@SuppressWarnings("unchecked")
 			ArrayList<E> v = (ArrayList<E>) super.clone();
 			v.elems = Arrays.copyOf(elems, size);
 			return v;
@@ -102,6 +101,7 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 		return Arrays.copyOf(elems, size);
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T[] toArray(T[] a) {
 		if (a.length < size) {
 			return (T[]) Arrays.copyOf(elems, size, a.getClass());
@@ -111,6 +111,7 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 			a[size] = null;
 		return a;
 	}
+	@SuppressWarnings("unchecked")
 	public E get(int idx) {
 		checkBounds(idx);
 		return (E) elems[idx];
@@ -118,6 +119,7 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 
 	public E set(int idx, E e) {
 		checkBounds(idx);
+		@SuppressWarnings("unchecked")
 		E oldVal = (E) elems[idx];
 		elems[idx] = e;
 		return oldVal;
@@ -142,6 +144,7 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 
 	public E remove(int idx) {
 		checkBounds(idx);
+		@SuppressWarnings("unchecked")
 		E oldValue = (E)elems[idx];
 		removeReallyAt(idx);
 		return oldValue;
@@ -216,8 +219,25 @@ implements List<E>, RandomAccess, Cloneable, java.io.Serializable
         throw new UnsupportedOperationException();
     }
     public Iterator<E> iterator() {
-    	throw new UnsupportedOperationException();
+    	return new Itr();
     }
+    
+    private class Itr implements Iterator<E> {
+    	int pos=0;
+    	public Itr() {}
+		@Override
+		public boolean hasNext() {
+			return pos<size;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public E next() { return (E)elems[pos++]; }
+
+		@Override
+		public void remove() {}
+    }
+    
     public ListIterator<E> listIterator() {
     	throw new UnsupportedOperationException();
     }

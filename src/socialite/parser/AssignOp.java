@@ -1,7 +1,6 @@
 package socialite.parser;
 
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -13,11 +12,11 @@ import java.util.TreeSet;
 import org.stringtemplate.v4.ST;
 
 import socialite.codegen.CodeGen;
-import socialite.type.Utf8;
-import socialite.util.Assert;
 import socialite.util.InternalException;
 
 public class AssignOp extends Op {
+	private static final long serialVersionUID = -7554928921566465892L;
+	
 	public Object arg1, arg2;
 	TypeCast cast;
 	protected AssignOp() { }
@@ -38,7 +37,7 @@ public class AssignOp extends Op {
 		
 		if (isMultipleAssign()) {
 			Function f=(Function)arg2;
-			assert f.getReturns().size()==((List)arg1).size();
+			assert f.getReturns().size()==((List<?>)arg1).size();
 		}
 	}
 	
@@ -72,6 +71,7 @@ public class AssignOp extends Op {
 			return;
 		}
 		
+		@SuppressWarnings("rawtypes")
 		Set<Class> types = new LinkedHashSet<Class>();
 		getRhsTypes(types);
 		if (types.contains(NoType.class)) return;
@@ -80,7 +80,7 @@ public class AssignOp extends Op {
 			lhs.setType(doTypeCast(types.iterator().next()));
 		} else {			
 			if (!containsOnlyPrimOrStr(types)) {
-				Class t=getNonPrimOrStr(types);
+				Class<?> t=getNonPrimOrStr(types);
 				throw new InternalException("Unexpected type ("+t.getSimpleName()+") in "+this);
 			}
 			
@@ -99,7 +99,7 @@ public class AssignOp extends Op {
 			}
 		}				
 	}
-	Class doTypeCast(Class fromType) throws InternalException {
+	Class<?> doTypeCast(Class<?> fromType) throws InternalException {
 		if (cast==null) return fromType;
 		
 		if (!cast.isValid(fromType)) {
@@ -109,15 +109,15 @@ public class AssignOp extends Op {
 		return cast.type;
 	}
 	
-	static Class getNonPrimOrStr(Set<Class> types) {
-		for (Class type:types) {
+	static Class<?> getNonPrimOrStr(@SuppressWarnings("rawtypes") Set<Class> types) {
+		for (Class<?> type:types) {
 			if (!(MyType.isPrimitive(type)||type.equals(String.class)))
 				return type;
 		}
 		return null;
 	}
-	static boolean containsOnlyPrimOrStr(Set<Class> types) {
-		for (Class type:types) {
+	static boolean containsOnlyPrimOrStr(@SuppressWarnings("rawtypes") Set<Class> types) {
+		for (Class<?> type:types) {
 			if (!(MyType.isPrimitive(type)||type.equals(String.class)))
 				return false;
 		}
@@ -149,6 +149,7 @@ public class AssignOp extends Op {
 			withIter.add("var", funcRet);			
 			
 			if (isMultipleAssign() && f.isArrayType()) {
+				@SuppressWarnings("unchecked")
 				List<Variable> lhs=(List<Variable>)arg1;
 				withIter.add("iterType", "Object[]");
 				for (int i=0; i<lhs.size(); i++) {
@@ -177,6 +178,7 @@ public class AssignOp extends Op {
 		} else {
 			if (isMultipleAssign() && f.isArrayType()) {
 				String arrayVar=CodeGen.uniqueVar("$array");
+				@SuppressWarnings("unchecked")
 				List<Variable> lhs=(List<Variable>)arg1;
 				stmts.add("stmts", "Object[] "+arrayVar+"=(Object[])"+f.codegen().render());
 				for (int i=0; i<lhs.size(); i++) {
@@ -199,7 +201,7 @@ public class AssignOp extends Op {
 			return stmts;
 		}	
 	}
-	String valueGetter(Class type) {
+	String valueGetter(Class<?> type) {
 		if (type.equals(int.class)) return ".intValue()";
 		if (type.equals(long.class)) return ".longValue()";
 		if (type.equals(float.class)) return ".floatValue()";
@@ -220,7 +222,7 @@ public class AssignOp extends Op {
 		String arg1Str=null;
 		if (arg1 instanceof List) {
 			arg1Str = "(";
-			List l = (List)arg1;
+			List<?> l = (List<?>)arg1;
 			for (int i=0; i<l.size(); i++) {
 				if (i!=0) arg1Str += ", ";
 				arg1Str += l.get(i);
@@ -243,7 +245,7 @@ public class AssignOp extends Op {
 		return false;
 	}
 	
-	public void getRhsTypes(Collection<Class> types) throws InternalException {
+	public void getRhsTypes(@SuppressWarnings("rawtypes") Collection<Class> types) throws InternalException {
 		if (arg2 instanceof Op) {
 			((Op)arg2).getTypes(types);
 		} else if (arg2 instanceof Function) {
@@ -255,16 +257,16 @@ public class AssignOp extends Op {
 				
 			if (f.getReturns().size()>1) {
 				for (int i=0; i<f.getReturns().size(); i++) {
-					Class t = MyType.javaType(f.getReturns().get(0));
+					Class<?> t = MyType.javaType(f.getReturns().get(0));
 					types.add(t);
 				}
 			} else {
 				assert f.getReturns().size()==1;
-				Class t = MyType.javaType(f.getReturns().get(0));
+				Class<?> t = MyType.javaType(f.getReturns().get(0));
 				types.add(t);
 			}
 		} else {
-			Class t = MyType.javaType(arg2);
+			Class<?> t = MyType.javaType(arg2);
 			types.add(t);
 		}
 	}
@@ -281,6 +283,7 @@ public class AssignOp extends Op {
 		}
 		return vars;
 	}
+	@SuppressWarnings("unchecked")
 	public Set<Variable> getLhsVars() {
 		Set<Variable> vars = new HashSet<Variable>();
 		if (arg1 instanceof Variable) {

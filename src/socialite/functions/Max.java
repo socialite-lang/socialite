@@ -27,6 +27,7 @@ public class Max implements MeetOp {
 		if (ans.compareTo(newVal)>0) return ans;
 		return newVal;
 	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static Comparable invoke(Comparable c1, Comparable c2) {
 		if (c1.compareTo(c2)<0) return c2;
 		else return c1;

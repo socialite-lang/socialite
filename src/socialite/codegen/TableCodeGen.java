@@ -1,8 +1,5 @@
 package socialite.codegen;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,19 +8,14 @@ import java.util.Map;
 
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
 
 import socialite.engine.Config;
 import socialite.parser.Column;
-import socialite.parser.DeltaRule;
 import socialite.parser.DeltaTable;
-import socialite.parser.MyType;
 import socialite.parser.PrivateTable;
 import socialite.parser.RemoteBodyTable;
 import socialite.parser.RemoteHeadTable;
-import socialite.parser.Rule;
 import socialite.parser.Table;
-import socialite.parser.hash;
 import socialite.parser.antlr.ColumnGroup;
 import socialite.resource.SRuntime;
 import socialite.tables.TableUtil;
@@ -31,7 +23,6 @@ import socialite.util.Assert;
 import socialite.util.InternalException;
 import socialite.util.MySTGroupFile;
 import socialite.util.SociaLiteException;
-import socialite.visitors.IVisitor;
 
 //import org.antlr.stringtemplate.StringTemplate;
 //import org.antlr.stringtemplate.StringTemplateGroup;
@@ -159,7 +150,7 @@ public class TableCodeGen {
 		return visitorClass;
 	}
 	
-	String getColumnType(Class type) {
+	String getColumnType(Class<?> type) {
 		return type.getSimpleName();
 	}
 	
@@ -334,11 +325,11 @@ public class TableCodeGen {
 	public boolean isParallel() { return conf.isParallel(); }
 	
 	/* static methods  */	
-	public static List<Class> ensureExist(List<Table> tables) throws InternalException {
+	public static List<Class<?>> ensureExist(List<Table> tables) throws InternalException {
 		return ensureExist(Config.seq(), tables);
 	}
 	
-	public static List<Class> ensureExistOrDie(List<Table> tables) {
+	public static List<Class<?>> ensureExistOrDie(List<Table> tables) {
 		try {
 			return ensureExist(Config.seq(), tables);
 		} catch (InternalException e) {
@@ -351,11 +342,11 @@ public class TableCodeGen {
 	 */
 	//static final boolean GENERATE_NEW_TABLE_JAVA_SOURCES = true;
 	
-	public static List<Class> ensureExist(Config conf, List<Table> tables) throws InternalException {
-		if (tables.isEmpty()) return Collections.EMPTY_LIST;
+	public static List<Class<?>> ensureExist(Config conf, List<Table> tables) throws InternalException {
+		if (tables.isEmpty()) return Collections.emptyList();
 		Compiler c=new Compiler(conf);
-		List<Class> generated = new ArrayList<Class>(tables.size());
-		Class tableClass;		
+		List<Class<?>> generated = new ArrayList<Class<?>>(tables.size());
+		Class<?> tableClass;		
 		boolean is_generated=false;
 		for (Table t:tables) {			
 			TableCodeGen gen = new TableCodeGen(t, conf);

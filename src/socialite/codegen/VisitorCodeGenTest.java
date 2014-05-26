@@ -447,8 +447,8 @@ public class VisitorCodeGenTest {
 		en.shutdown();
 	}
 	static void testArgmin() {
-		String query ="Data(int n:0..4000000, double x, double y).\n"+
-				"Data(id, lat, lng) :- id=$range(0, 4000000), lat=1.2, lng=5.2.\n"+
+		String query ="Data(int n:0..400000, double x, double y).\n"+
+				"Data(id, lat, lng) :- id=$range(0, 400000), lat=1.2, lng=5.2.\n"+
 				"Center(int k:0..100, Avg[] avg).\n";				
 		Config c=Config.par(2);
 		LocalEngine en = new LocalEngine(c);		
@@ -460,7 +460,7 @@ public class VisitorCodeGenTest {
 			en.run(query);
 			x+=0.2; y+=0.2;
 		}
-		en.run("Cluster(int did:0..4000000, int i:iter,ArgMin min).");
+		en.run("Cluster(int did:0..400000, int i:iter,ArgMin min).");
 		for (int i=0; i<10; i++) {
 			query="Cluster(did, "+i+", $argmin(idx, diff)) :- Data(did, x, y), Center(idx, a),  (cx,cy)=$unpack(a),"+
 					"diff= (x-cx.value)*(x-cx.value)+(y-cy.value)*(y-cy.value).";

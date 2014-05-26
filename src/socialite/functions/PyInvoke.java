@@ -25,6 +25,7 @@ import org.python.core.PyType;
 import org.python.core.ThreadState;
 
 import socialite.eval.Manager;
+import socialite.util.SociaLiteException;
 
 class MyArray<E> {
 	static final long serialVersionUID = 1L;
@@ -53,10 +54,12 @@ class MyArray<E> {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public E get(int idx) {
 		return (E)elems[idx];
 	}
 	public E set(int idx, E e) {
+		@SuppressWarnings("unchecked")
 		E old=(E)elems[idx];
 		elems[idx] = e;
 		return old;
@@ -214,7 +217,7 @@ public class PyInvoke {
 			return new PyGenIterator(pygen);
 		}
 		PyObject ret = code.call(ts, frame, func.func_closure);		
-		return toJava(ret);
+		return toJava(ret);		
 	}
 	public static Object invoke(int workerId, int funcIdx, Object arg0, Object arg1, Object arg2) {
 		PyFunction func = PyFunctionCache.get(funcIdx);
@@ -338,15 +341,16 @@ public class PyInvoke {
 				a[i] = toJava(pyseq.__finditem__(i));
 			}
 			return a;
-		} else if (py.TYPE instanceof PyJavaType) {
-			PyJavaType t = (PyJavaType)py.TYPE;
-			Class klass = t.getProxyType();
+		} else if (py instanceof PyJavaType) {			
+			PyJavaType t = (PyJavaType)py;
+			Class<?> klass = t.getProxyType();
 			return py.__tojava__(klass);
 		} else {			
 			return py.__tojava__(Object.class);
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static Class py2javaType(PyType c) {
 		if (PyInteger.TYPE.equals(c)) {
 			return int.class;

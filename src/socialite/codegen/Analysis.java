@@ -771,13 +771,13 @@ public class Analysis {
 					Predicate newH = new PrivPredicate(privT.name(), h.idxParam, copyParams(h.params));
 					newH.setAsHeadP();
 					prepareAggrFunction(newH, privT);
-					RuleDecl rd1 = new RuleDecl(newH, new ArrayList(r.getBody()));
+					RuleDecl rd1 = new RuleDecl(newH, new ArrayList<Object>(r.getBody()));
 					Rule add1 = new Rule(rd1);
 
 					// add rule [OrigPredicate() :- PrivateTable().]
 					Predicate newP = new PrivPredicate(privT.name(), h.idxParam, h.getRestOutputParams(), true/*rename param vars*/);
 					newP.setPos(0);
-					List body = new ArrayList();
+					List<Object> body = new ArrayList<Object>();
 					body.add(newP);
 
 					// getting renamed parameters
@@ -807,13 +807,14 @@ public class Analysis {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	List copyParams(List params) {
-		List tmp = new ArrayList();
+		List<Object> tmp = new ArrayList<Object>();
 		for (Object o : params) {
 			if (o instanceof AggrFunction) {
 				AggrFunction f = (AggrFunction) o;
-				List args = new ArrayList();
-				for (Object a : f.getArgs())
+				List<Object> args = new ArrayList<Object>();
+				for (Object a: f.getArgs())
 					args.add(a);
 				AggrFunction aggr = new AggrFunction(f, args);
 				tmp.add(aggr);
@@ -1010,6 +1011,7 @@ public class Analysis {
 		return groups;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	List<Variable> topologicalSort(List<Variable> relatedVars, Map<Object, Set> oneToMany) {
 		List<Variable> sorted = new ArrayList<Variable>();		
 		Set<Variable> initSet = new HashSet<Variable>();
@@ -1028,6 +1030,7 @@ public class Analysis {
 			dfsVisit(v, oneToMany, visited, sorted);
 		return sorted;
 	}
+	@SuppressWarnings("rawtypes")
 	void dfsVisit(Variable v, Map<Object, Set> oneToMany, Set<Variable> visited, List<Variable> sorted) {
 		if (visited.contains(v)) return;		
 		visited.add(v);
@@ -1043,7 +1046,9 @@ public class Analysis {
 		sorted.add(v);
 	}
 	
-	Map<Rule, Map<Object, Set>> oneToManyMap = new HashMap();
+	@SuppressWarnings("rawtypes")
+	Map<Rule, Map<Object, Set>> oneToManyMap = new HashMap<Rule, Map<Object, Set>>();
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	Map<Object, Set> getOneToManyRelation(Rule r, int transferPos) {
 		if (oneToManyMap.containsKey(r))
 			return oneToManyMap.get(r);
@@ -1062,7 +1067,7 @@ public class Analysis {
 					for (int j=pos;j<params.length; j++) {
 						Set s = oneToMany.get(params[i]);
 						if (s==null) {
-							s = new HashSet();
+							s = new HashSet<Object>();
 							oneToMany.put(params[i], s);
 						}						
 						s.add(params[j]);
@@ -1075,6 +1080,7 @@ public class Analysis {
 	}
 	List<List<Variable>> inferNesting(Rule r, List<Variable> vars, int pos) {
 		List<List<Variable>> nestedColumns = new ArrayList<List<Variable>>();
+		@SuppressWarnings("rawtypes")
 		Map<Object, Set> oneToMany = getOneToManyRelation(r, pos);
 		
 		List<Variable> sortedVars = topologicalSort(vars, oneToMany);
@@ -1123,25 +1129,26 @@ outer:	for (Variable v:sortedVars) {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	void processRemoteRuleBody(Rule r, List<Rule> toAdd) {
 		List<Integer> sendPos = tableSendPos(r);//tableSendPos(r.getBodyP());
 		assert !sendPos.isEmpty();
 		for (int pos : sendPos) {
 			List<Variable> vars = collectLiveVarsAt(r, pos);
 			assert !vars.isEmpty();
-			RemoteBodyTable rt =  getRemoteBodyTable(r, pos, vars);//getRemoteBodyTable(r, pos, MyType.javaTypes(vars));
+			RemoteBodyTable rt =  getRemoteBodyTable(r, pos, vars);
 
 			// add new rule
 			Predicate newP = new PrivPredicate(rt.name(), null, vars);
 			newP.setPos(0);
+			@SuppressWarnings("rawtypes")
 			List body = new ArrayList();
 			body.add(newP);
 			for (int i = pos; i < r.getBody().size(); i++) {
 				Object o = r.getBody().get(i);
 				if (o instanceof Predicate) {
 					Predicate p = (Predicate) o;
-					Predicate clonedP = new Predicate(p.name(), p.idxParam,
-							p.params);
+					Predicate clonedP = new Predicate(p.name(), p.idxParam, p.params);
 					clonedP.setPos(i - pos + 1);
 					body.add(clonedP);
 				} else body.add(o);
@@ -1195,6 +1202,7 @@ outer:	for (Variable v:sortedVars) {
 			return rt;
 		}
 	}
+	@SuppressWarnings("unchecked")
 	void processRemoteRuleHead(Rule r, List<Rule> toAdd) {
 		Predicate h = r.getHead();
 		assert h.idxParam != null;
@@ -1233,6 +1241,7 @@ outer:	for (Variable v:sortedVars) {
 		toAdd.add(newR);
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	List makeNewParams(List oldParams, List input) {
 		List newParam = new ArrayList();
 		int i=0;
@@ -1250,6 +1259,7 @@ outer:	for (Variable v:sortedVars) {
 		return newParam;	
   }
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	List replaceInputWithVars(List params, List<Variable> vars) {
 		List replaced = new ArrayList();
 		int i=0;
@@ -1284,7 +1294,7 @@ outer:	for (Variable v:sortedVars) {
 		DeltaPredicate deltaH = new DeltaPredicate(h);		
 		Predicate b = new Predicate(t.name(), idxVar, vars);
 		b.setPos(0);		
-		List params = new ArrayList(); params.add(b);
+		List<Object> params = new ArrayList<Object>(); params.add(b);
 		
 		RuleDecl decl = new RuleDecl(deltaH, params);
 		DeltaRule deltaRule = new DeltaRule(decl, deltaH);
@@ -1979,7 +1989,8 @@ outer:	for (Variable v:sortedVars) {
 			}
 		}
 	}	
-	void typeCheckInHead(Object p, Class type, Rule r) {
+	@SuppressWarnings("unchecked")
+	void typeCheckInHead(Object p, @SuppressWarnings("rawtypes") Class type, Rule r) {
 		if (p instanceof Variable && ((Variable)p).dontCare) return;
 		
 		if (!type.isAssignableFrom(MyType.javaType(p))) {
@@ -2028,6 +2039,7 @@ outer:	for (Variable v:sortedVars) {
 
 	public static LinkedHashSet<Variable>[] getResolvedVars(Rule rule) {
 		int termCount = rule.getBody().size();
+		@SuppressWarnings("unchecked")
 		LinkedHashSet<Variable> resolved[] = new LinkedHashSet[termCount+1];
 		Set<Variable> vars = null, prevVars = null;
 		int i = 0;

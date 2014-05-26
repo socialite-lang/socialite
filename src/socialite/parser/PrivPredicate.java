@@ -10,11 +10,11 @@ public class PrivPredicate extends Predicate {
 		return new PrivPredicate(name, idxParam, params);
 	}
 
-	public PrivPredicate(String _name, Object _idxParam, List _params, boolean rename) {
+	public PrivPredicate(String _name, Object _idxParam, @SuppressWarnings("rawtypes")List _params, boolean rename) {
 		super(_name, renameVar(_idxParam), renameVariables(_params));
 		assert rename;
 	}	
-	public PrivPredicate(String _name, Object _idxParam, List _params) {
+	public PrivPredicate(String _name, Object _idxParam, @SuppressWarnings("rawtypes")List _params) {
 		super(_name, _idxParam, _params);
 	}	
 	
@@ -27,8 +27,9 @@ public class PrivPredicate extends Predicate {
 		}
 		return param;
 	}
+	@SuppressWarnings("rawtypes")
 	static List renameVariables(List _params) {
-		List params = new ArrayList(_params.size());
+		List<Object> params = new ArrayList<Object>(_params.size());
 		for (Object o:_params) {
 			if (o instanceof Variable) {
 				params.add(renameVar(o));

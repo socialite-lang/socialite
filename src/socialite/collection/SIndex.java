@@ -91,6 +91,7 @@ public final class SIndex implements Externalizable {
 		if (index==null) index = new TIntIntHashMap(initCapacity, LOAD_FACTOR, NO_ENTRY, NO_ENTRY);
 		return (TIntIntHashMap)index;
 	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	TIntObjectHashMap<TIntArrayList> iIndex2() {
 		if (index==null) index = new TIntObjectHashMap(initCapacity, LOAD_FACTOR, NO_ENTRY);
 		return (TIntObjectHashMap)index;
@@ -134,6 +135,7 @@ public final class SIndex implements Externalizable {
 		}
 		return (TLongIntHashMap)index;
 	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	TLongObjectHashMap<TIntArrayList> lIndex2() {
 		if (index==null) index = new TLongObjectHashMap(initCapacity, LOAD_FACTOR, NO_ENTRY);
 		return (TLongObjectHashMap)index;
@@ -171,6 +173,7 @@ public final class SIndex implements Externalizable {
 		if (index==null) index = new TFloatIntHashMap(initCapacity, LOAD_FACTOR, NO_ENTRY, NO_ENTRY);
 		return (TFloatIntHashMap)index;
 	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	TFloatObjectHashMap<TIntArrayList> fIndex2() {
 		if (index==null) index = new TFloatObjectHashMap(initCapacity, LOAD_FACTOR, NO_ENTRY);
 		return (TFloatObjectHashMap)index;
@@ -208,6 +211,7 @@ public final class SIndex implements Externalizable {
 		if (index==null) index = new TDoubleIntHashMap(initCapacity, LOAD_FACTOR, NO_ENTRY, NO_ENTRY);
 		return (TDoubleIntHashMap)index;
 	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	TDoubleObjectHashMap<TIntArrayList> dIndex2() {
 		if (index==null) index = new TDoubleObjectHashMap(initCapacity, LOAD_FACTOR, NO_ENTRY);
 		return (TDoubleObjectHashMap)index;
@@ -241,14 +245,17 @@ public final class SIndex implements Externalizable {
 	}
 	
 	// Object key
+	@SuppressWarnings("rawtypes")
 	public TObjectIntHashMap oIndex1() {
 		if (index==null) index = new TObjectIntHashMap(initCapacity, LOAD_FACTOR, NO_ENTRY);
 		return (TObjectIntHashMap)index;
 	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	HashMap<Object, TIntArrayList> oIndex2() {
 		if (index==null) index = new HashMap(initCapacity, LOAD_FACTOR);
 		return (HashMap)index;
 	}
+	@SuppressWarnings("unchecked")
 	public void add(Object key, int pos) {
 		if (singleIndex) oIndex1().put(key, pos);
 		else {
@@ -260,6 +267,7 @@ public final class SIndex implements Externalizable {
 			l.add(pos);
 		}
 	}
+	@SuppressWarnings("unchecked")
 	public void remove(Object key, int pos) {
 		if (singleIndex) oIndex1().put(key, NO_ENTRY);
 		else {
@@ -284,7 +292,7 @@ public final class SIndex implements Externalizable {
 			initCapacity = DEFAULT_CAPACITY; 
 			return;
 		} 
-		Class klass = (Class)in.readObject();
+		Class<?> klass = (Class<?>)in.readObject();
 		if (klass.equals(TIntIntHashMap.class)) {
 			iIndex1().readExternal(in);;
 		} else if (klass.equals(TIntObjectHashMap.class)) {

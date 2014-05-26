@@ -9,10 +9,7 @@ import gnu.trove.iterator.TLongIterator;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
-import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -39,9 +36,7 @@ import socialite.functions.FunctionLoader;
 import socialite.functions.PyInterp;
 import socialite.functions.PyInvoke;
 import socialite.functions.returns;
-import socialite.tables.Tuple;
 import socialite.type.Utf8;
-import socialite.util.Assert;
 import socialite.util.IdFactory;
 import socialite.util.InternalException;
 import socialite.util.ReflectionUtil;
@@ -52,26 +47,26 @@ public class Function implements Externalizable {
 	
 	protected String name;
 	protected List<Variable> returns;	
-	protected List args;
+	protected List<?> args;
 
 	boolean isArrayType=false;	
 	int pyfuncIdx=-1;
 	transient String pyname;
-	transient Class klass;
+	transient Class<?> klass;
 	transient Method method;
 	transient PyFunction pyfunc;
 		
 	public Function() { }
-	public Function(String _name, List _args) {
+	public Function(String _name, List<?> _args) {
 		if (_name.indexOf('.')>=0) name = _name; 
 		else name = "Builtin."+_name;
 		setArgs(_args);
 		if (getArgs() == null)
-			setArgs(new ArrayList());
+			setArgs(new ArrayList<Object>());
 		returns = null;
 	}
 	
-	public Class klass() {
+	public Class<?> klass() {
 		if (klass==null) {
 			try { load(); }
 			catch (Exception e) { throw new SociaLiteException(e); }
@@ -100,6 +95,7 @@ public class Function implements Externalizable {
 		return isArrayType;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void setReturnVars(Object ret) throws InternalException {
 		assert ret instanceof Variable || ret instanceof List;
 		List<Variable> vars;
@@ -131,7 +127,7 @@ public class Function implements Externalizable {
 
 	public boolean multiRows() {
 		if (method!=null) {
-			Class type = getMethodReturnType();
+			Class<?> type = getMethodReturnType();
 			return Iterator.class.isAssignableFrom(type) ||
 					TIterator.class.isAssignableFrom(type);
 		} else {
@@ -141,6 +137,7 @@ public class Function implements Externalizable {
 	}
 	public boolean singleRow() { return !multiRows(); }
 
+	@SuppressWarnings("rawtypes")
 	Class[] makeArgTypes() throws InternalException {
 		Class[] argTypes = new Class[getArgs().size()];
 		for (int i = 0; i < getArgs().size(); i++) {
@@ -204,7 +201,7 @@ public class Function implements Externalizable {
 			loadPyFunc();
 			return;
 		}
-		Class[] argTypes = makeArgTypes();
+		Class<?>[] argTypes = makeArgTypes();
 		if (FunctionLoader.hasMethod(klass(), methodName(), argTypes)) {
 			method = FunctionLoader.loadMethod(klass(), methodName(), argTypes);			
 		} else { 
@@ -226,7 +223,7 @@ public class Function implements Externalizable {
 	}
 	
 	
-	Class getMethodReturnType() {
+	Class<?> getMethodReturnType() {
 		if (method!=null) {
 			return method.getReturnType();
 		} else {
@@ -245,7 +242,7 @@ public class Function implements Externalizable {
 		String s=name()+"(";
 		boolean first=true;
 		for (Object a:getArgs()) {
-			Class t=MyType.javaType(a);			
+			Class<?> t=MyType.javaType(a);			
 			if (!first) s+=" ,";
 			if (t.isArray()) s += t.getComponentType().getSimpleName();
 			else s += t.getSimpleName();
@@ -260,22 +257,22 @@ public class Function implements Externalizable {
 		else computePyReturnVarTypes(cast);
 	}
 	
-	Class[] getTypesFromJavaAnnotation() {
+	Class<?>[] getTypesFromJavaAnnotation() {
 		returns ann=method.getAnnotation(returns.class);
 		if (ann==null) return null;
 		return ann.value();
 	}
-	Class doTypeCast(TypeCast cast, Class fromType) throws InternalException  {
+	Class<?> doTypeCast(TypeCast cast, Class<?> fromType) throws InternalException  {
 		if (cast==null) return fromType;
 		
 		if (!cast.isValid(fromType)) {
 			String msg="Unexpected type cast from "+fromType.getSimpleName()+" to "+cast.type.getSimpleName();
-			throw new InternalException();  
+			throw new InternalException(msg);  
 		}
 		return cast.type;
 	}
 	void computeJavaReturnVarTypes(TypeCast cast) throws InternalException {
-		Class retType = getMethodReturnType();		
+		Class<?> retType = getMethodReturnType();		
 		if (retType.equals(Iterator.class)) {
 			Type genRetType = method.getGenericReturnType();
 			if (!(genRetType instanceof ParameterizedType)) {
@@ -285,10 +282,10 @@ public class Function implements Externalizable {
 			Type paramType = ((ParameterizedType) genRetType).getActualTypeArguments()[0];			
 			if (paramType instanceof GenericArrayType) {
 				Type compType=((GenericArrayType)paramType).getGenericComponentType();
-        retType = (Class)compType;
+        retType = (Class<?>)compType;
 				computeJavaArrayReturnVarTypes(cast, retType);	
 			} else {
-        retType = (Class)paramType;
+        retType = (Class<?>)paramType;
 				retType = doTypeCast(cast, retType);
 				Variable v=getReturns().get(0);
 				v.setType(retType);
@@ -312,21 +309,21 @@ public class Function implements Externalizable {
 			v.setType(retType);
 		}		
 	}
-	void computeJavaArrayReturnVarTypes(TypeCast cast, Class methodRetType) throws InternalException {
+	void computeJavaArrayReturnVarTypes(TypeCast cast, Class<?> methodRetType) throws InternalException {
 		if (getReturns().size()==1) {
 			methodRetType = doTypeCast(cast, methodRetType);
 			Variable v=getReturns().get(0);
 			v.setType(methodRetType);
 		} else {
-			Class[] types=getTypesFromJavaAnnotation();
+			Class<?>[] types=getTypesFromJavaAnnotation();
 			isArrayType=true;
 			if (types==null) {
-				Class arrType = getMethodReturnType();
+				Class<?> arrType = getMethodReturnType();
 				if (!arrType.isArray()) {
 					String msg = "Expecting an array return from $"+name;
 					throw new InternalException(msg);
 				}
-				Class elemType = arrType.getComponentType();
+				Class<?> elemType = arrType.getComponentType();
 				elemType = doTypeCast(cast, elemType);				
 				for (int i=0; i<getReturns().size(); i++) {
 					getReturns().get(i).setType(elemType);
@@ -346,11 +343,11 @@ public class Function implements Externalizable {
 		}
 	}
 
-	Class[] typesFromPyTuple(PyTuple pytypes) {		
-		List<Class> types = new ArrayList<Class>();
+	Class<?>[] typesFromPyTuple(PyTuple pytypes) {		
+		List<Class<?>> types = new ArrayList<Class<?>>();
 		for (int i=0; i<pytypes.size(); i++) {
 			assert pytypes.__finditem__(i) instanceof PyType;
-			Class type=PyInvoke.py2javaType((PyType)pytypes.__finditem__(i));			
+			Class<?> type=PyInvoke.py2javaType((PyType)pytypes.__finditem__(i));			
 			types.add(type);
 		}
 		return types.toArray(new Class[0]);
@@ -362,12 +359,12 @@ public class Function implements Externalizable {
 		if (pytypes instanceof PyType) {
 			if (getReturns().size()>1) 
 				throw new InternalException(msg);			
-			Class type = doTypeCast(cast, PyInvoke.py2javaType((PyType)pytypes));
+			Class<?> type = doTypeCast(cast, PyInvoke.py2javaType((PyType)pytypes));
 			getReturns().get(0).setType(type);
 		} else {
 			assert pytypes instanceof PyTuple;
 			isArrayType=true;
-			Class[] types = typesFromPyTuple((PyTuple)pytypes);
+			Class<?>[] types = typesFromPyTuple((PyTuple)pytypes);
 			
 			if (types.length!=getReturns().size()) 
 				throw new InternalException(msg);			
@@ -395,7 +392,7 @@ public class Function implements Externalizable {
 		PyStringMap fmap = (PyStringMap)((PyFunction)pyfunc).getDict();
 		PyObject returns = fmap.__finditem__("returns");
 		
-		Class[] types = typesFromPyTuple((PyTuple)returns);
+		Class<?>[] types = typesFromPyTuple((PyTuple)returns);
 		if (!(types.length == getReturns().size())) {
 			String msg = "Unexpected number of returns from "+pyname;
 			throw new InternalException(msg);
@@ -404,9 +401,9 @@ public class Function implements Externalizable {
 			getReturns().get(i).setType(types[i]);
 	}
 	void getJavaReturnTypesForTuple() throws InternalException {
-		Class argTypes[] = null;
+		Class<?> argTypes[] = null;
 		Method tupleType = FunctionLoader.loadMethod(klass(), "tupleType", argTypes);
-		Class types[] = null;
+		Class<?> types[] = null;
 		try {
 			types = (Class[]) tupleType.invoke(null, (Object[])null);
 		} catch (Exception e) {
@@ -502,12 +499,13 @@ public class Function implements Externalizable {
 	public List<Variable> getReturns() {
 		return returns;
 	}
-	public void setArgs(List args) {
+	public void setArgs(List<?> args) {
 		this.args = args;
 	}
-	public List getArgs() {
+	public List<?> getArgs() {
 		return args;
 	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {

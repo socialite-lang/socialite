@@ -16,10 +16,10 @@ public class RuleDecl implements Serializable {
 	private static final long serialVersionUID = 1;
 	
 	public Predicate head;
-	public List body;
+	public List<?> body;
 	
 	boolean simpleUpdate=false;
-	public RuleDecl(Predicate _head, List _body) {
+	public RuleDecl(Predicate _head, List<?> _body) {
 		head = _head;
 		body = _body;
 	}

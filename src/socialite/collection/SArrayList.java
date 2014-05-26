@@ -31,7 +31,7 @@ public class SArrayList<E> extends ArrayList<E> implements Externalizable {
 		return false;
 	}
 	
-	public void addAllFast(SArrayList other) {
+	public void addAllFast(SArrayList<E> other) {
 		if (other==null) return;
 		addAll(other);
 	}
@@ -44,24 +44,24 @@ public class SArrayList<E> extends ArrayList<E> implements Externalizable {
 	}
 	public int binarySearch(E value) {
 		assert value instanceof Comparable;
-		Comparable v = (Comparable)value;
 		return binarySearch(value, 0, size());
 	}
 	public int binarySearch(E value, SIntArrayList sortedIndices) {
 		assert value instanceof Comparable;
-		Comparable v = (Comparable)value;
 		return binarySearch(value, 0, size(), sortedIndices);
 	}
 	
 	// copied from trove, TIntArrayList.binarySearch()
+	@SuppressWarnings("unchecked")
 	int binarySearch(E value, int fromIndex, int toIndex) {
-		Comparable v = (Comparable)value;
+		Comparable<E> v = (Comparable<E>)value;
 		int low = fromIndex;
 		int high = toIndex-1;
 		
 		while (low<=high) {
 			int mid = ( low + high ) >>> 1;
-	        Comparable midVal = (Comparable)get(mid);
+	        @SuppressWarnings("rawtypes")
+			Comparable midVal = (Comparable)get(mid);
 
 	        if (midVal.compareTo(v) < 0)
 	        	low = mid + 1;
@@ -71,6 +71,7 @@ public class SArrayList<E> extends ArrayList<E> implements Externalizable {
 		}
 		return -(low+1);
 	}	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	int binarySearch(E value, int fromIndex, int toIndex, SIntArrayList idx) {
 		Comparable v = (Comparable)value;
 		int low = fromIndex;
@@ -117,6 +118,7 @@ public class SArrayList<E> extends ArrayList<E> implements Externalizable {
 			out.writeObject(elems[i]);			
 		}
 	}
+	@SuppressWarnings("unchecked")
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		int len = in.readInt();
 		int capacity = elems.length;

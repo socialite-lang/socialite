@@ -69,6 +69,7 @@ public class Epoch implements Externalizable {
 		
 		topologicalOrder = topologicalSort(ruleComps);
 	}
+	@SuppressWarnings("unchecked")
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
@@ -168,7 +169,7 @@ public class Epoch implements Externalizable {
 		return topologicalOrder.iterator();
 	}
 	
-	public void addInitClass(Class _initClass, List<Const> consts) {
+	public void addInitClass(@SuppressWarnings("rawtypes") Class _initClass, List<Const> consts) {
 		assert initClasses.size()==initClassNames.size() && initClasses.size()==initClassConsts.size();
 
 		initClasses.add(_initClass);
@@ -179,6 +180,7 @@ public class Epoch implements Externalizable {
 		return initClassConsts;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public List<Class> getInitClasses() {
 		if (initClasses==null || initClasses.isEmpty()) {
 			if (initClasses==null)
@@ -192,10 +194,11 @@ public class Epoch implements Externalizable {
 		return initClasses;
 	}
 	
-	public void setEvalClass(Class _evalClass) {
+	public void setEvalClass(@SuppressWarnings("rawtypes") Class _evalClass) {
 		evalClass=_evalClass;
 		evalClassName = evalClass.getName();
 	}
+	@SuppressWarnings("rawtypes")
 	public Class getEvalclass() {
 		if (evalClass==null) {
 			evalClass = Loader.forName(evalClassName);
@@ -244,7 +247,7 @@ public class Epoch implements Externalizable {
 			builder.setVisitorClass(ruleId, visitorClass);
 		}
 	}*/
-	public void addVisitorClass(int rule, Class visitorClass) {
+	public void addVisitorClass(int rule, Class<?> visitorClass) {
 		assert !visitorClassMap.contains(rule):"rule["+rule+"] already has visitor:"+visitorClass;
 		visitorClassMap.put(rule, visitorClass.getName());
 	}

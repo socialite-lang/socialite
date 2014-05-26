@@ -4,28 +4,18 @@ import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.python.antlr.ast.Tuple;
-
-import socialite.parser.AggrFunction;
 import socialite.parser.Column;
 import socialite.parser.Const;
-import socialite.parser.Function;
 import socialite.parser.MyType;
-import socialite.parser.Variable;
 import socialite.util.AnalysisException;
 import socialite.util.Assert;
 import socialite.util.InternalException;
 import socialite.util.ParseException;
-import socialite.parser.Parser;
 
 public class TableDecl implements Serializable {
 	private static final long serialVersionUID = 1;
@@ -60,13 +50,13 @@ public class TableDecl implements Serializable {
 		setColumnPositions();
 	}
 		
-	public void checkTypes(Object locationParam, List _params) throws InternalException {
+	public void checkTypes(Object locationParam, List<?> _params) throws InternalException {
 		if (locationColDecl==null && locationParam!=null)
 			throw new InternalException("unexpected location operator for "+name());			
 		if (locationColDecl!=null && locationParam==null)
 			throw new InternalException("location operator is required for "+name());
 		
-		List params = new ArrayList();
+		List<Object> params = new ArrayList<Object>();
 		if (locationParam!=null) params.add(locationParam);
 		params.addAll(_params);
 		
@@ -85,8 +75,8 @@ public class TableDecl implements Serializable {
 			}
 			
 			Const c = (Const)p;
-			Class constType = MyType.javaType(c);
-			Class columnType;
+			Class<?> constType = MyType.javaType(c);
+			Class<?> columnType;
 			if (iterColumn()==i) { columnType = int.class; }
 			else { columnType = allColDecls.get(j++).type(); }
 			

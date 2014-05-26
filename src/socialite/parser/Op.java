@@ -14,6 +14,7 @@ import socialite.util.Assert;
 
 public abstract class Op implements Serializable {
 	public abstract ST codegen();
+	@SuppressWarnings("rawtypes")
 	public void getTypes(Collection<Class> types) { Assert.not_implemented(); }
 	public Set<Variable> getLhsVars() {
 		return new HashSet<Variable>();

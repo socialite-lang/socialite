@@ -12,7 +12,6 @@ import java.util.Map;
 import org.antlr.grammar.v3.ANTLRv3Parser.throwsSpec_return;
 
 import socialite.util.Assert;
-
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TDoubleIntHashMap;
 import gnu.trove.map.hash.TDoubleObjectHashMap;
@@ -33,7 +32,7 @@ public class GroupbyMap implements Externalizable {
 	TLongIntHashMap longIntMap;
 	TFloatIntHashMap floatIntMap;
 	TDoubleIntHashMap doubleIntMap;
-	TObjectIntHashMap objIntMap;
+	TObjectIntHashMap<Object> objIntMap;
 	TObjectIntHashMap<Tuple> tupIntMap;
 	transient int initCapacity=2048;
 		
@@ -59,7 +58,7 @@ public class GroupbyMap implements Externalizable {
 		doubleIntMap.put(d, pos);
 	}
 	public void add1(Object o, int pos) {
-		if (objIntMap==null) objIntMap = new TObjectIntHashMap(initCapacity, 0.7f, -1);
+		if (objIntMap==null) objIntMap = new TObjectIntHashMap<Object>(initCapacity, 0.7f, -1);
 		assert objIntMap.containsKey(o)==false;
 		objIntMap.put(o, pos);
 	}	
@@ -198,6 +197,7 @@ public class GroupbyMap implements Externalizable {
 		if (objIntMap!=null) objIntMap.clear();
 		if (tupIntMap!=null) tupIntMap.clear();		
 	}
+	@SuppressWarnings("unchecked")
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
@@ -219,11 +219,11 @@ public class GroupbyMap implements Externalizable {
 		}
 		b=in.readByte();
 		if (b==1) {
-			objIntMap = (TObjectIntHashMap) in.readObject();
+			objIntMap = (TObjectIntHashMap<Object>) in.readObject();
 		}
 		b=in.readByte();
 		if (b==1) {
-			tupIntMap = (TObjectIntHashMap) in.readObject();
+			tupIntMap = (TObjectIntHashMap<Tuple>) in.readObject();
 		}
 	}
 	@Override

@@ -18,6 +18,7 @@ public class InternSet<T> {
 		entry = new Object[capacity];
 	}
 	
+	@SuppressWarnings("unchecked")
 	public T get(T t) {
 		int h = hash(t.hashCode());
 		int idx = h%entry.length;
@@ -39,6 +40,7 @@ public class InternSet<T> {
 		} else {
 			if (t.equals(o)) return (T)o;
 			else {
+				@SuppressWarnings("rawtypes")
 				ArrayList<T> list = new ArrayList(2);
 				list.add((T)o);
 				list.add(t);

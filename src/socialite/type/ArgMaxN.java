@@ -1,6 +1,5 @@
 package socialite.type;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import socialite.collection.SArrayList;
@@ -8,11 +7,11 @@ import gnu.trove.list.array.TIntArrayList;
 
 public class ArgMaxN {
 	TIntArrayList args;
-	SArrayList vals;
+	SArrayList<Object> vals;
 	
 	public ArgMaxN () {
 		args=new TIntArrayList();
-		vals=new SArrayList();
+		vals=new SArrayList<Object>();
 	}
 	
 	public boolean add(int limit, Object v, int _arg) {
