@@ -298,7 +298,7 @@ public class LocalEngine {
 	public Status status(int verbose) {
 		Status s = new Status();
 		s.putNodeNum("1");
-		int freeMem=(int)SRuntime.freeMemory()/1024/1024;
+		int freeMem=(int)(SRuntime.freeMemory()/1024/1024);
 		s.putMemStatus(""+freeMem+"MB");
 		TIntFloatHashMap progressMap = runtime.getProgress().get();
 		int[] rules=progressMap.keys();

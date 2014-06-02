@@ -4,3 +4,4 @@ gen/
 jython/cachedir/
 gen_master/
 logs/
+socialite-all.jar
