@@ -2,7 +2,7 @@ group remote-table;
 
 import "TableCommon.stg"
 
-remoteTable(name, id, cols0, cols1, cols2, cols3, nest, size, rowSize, visitorClass) ::= <<
+remoteTable(tableName, name, id, cols0, cols1, cols2, cols3, nest, size, rowSize, visitorClass) ::= <<
 
 package socialite.tables;
 <importForTable()>

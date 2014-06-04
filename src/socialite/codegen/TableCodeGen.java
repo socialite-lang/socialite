@@ -93,6 +93,7 @@ public class TableCodeGen {
 	String genRemoteBodyT(RemoteBodyTable rt) {
 		tableTmpl = tmplGroup.getInstanceOf("remoteTable");
 		
+		tableTmpl.add("tableName", table.name());
 		tableTmpl.add("name", rt.className());
 		tableTmpl.add("id", rt.id());
 		tableTmpl.add("size", rt.lastColumnSize());
@@ -116,6 +117,7 @@ public class TableCodeGen {
 	String genArrayTableSimple() {
 		tableTmpl = tmplGroup.getInstanceOf("arrayTable");
 		
+		tableTmpl.add("tableName", table.name());
 		tableTmpl.add("name", table.className());		
 		tableTmpl.add("id", table.id());
 		tableTmpl.add("multiSet", table.isMultiSet());
@@ -193,6 +195,7 @@ public class TableCodeGen {
 			tmpl = getTableTemplate(table.getColumnGroups().get(i), hasNested);
 			if (hasNested) tmpl.add("nestedTable", nestedTableName(i+1));
 						
+			tmpl.add("tableName", table.name());
 			tmpl.add("name", nestedTableName(i));
 			tmpl.add("id", table.id());
 			if (i>0) tmpl.add("isNested", true);			
@@ -289,6 +292,7 @@ public class TableCodeGen {
 	String genDynamicTableSimple() {
 		tableTmpl = tmplGroup.getInstanceOf("dynamicTable");
 		
+		tableTmpl.add("tableName", table.name());
 		tableTmpl.add("name", table.className());
 		tableTmpl.add("id", table.id());
 		tableTmpl.add("multiSet", table.isMultiSet());

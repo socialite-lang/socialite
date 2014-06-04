@@ -2,7 +2,7 @@ group dynamic-table;
 
 import "TableCommon.stg"
 
-dynamicTable(name, visitorClass, columns, gbColumns, gbAggrColumn, 
+dynamicTable(tableName, name, visitorClass, columns, gbColumns, gbAggrColumn, 
 			sortedCol, idxCols, 
 			methods, size, id,			 
 			sortOrder="Asc", inplaceSort=false, 

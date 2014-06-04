@@ -2,7 +2,7 @@ group array-nested-table;
 
 import "TableCommon.stg"
 
-arrayNestedTable(name, visitorClass, nestedTable, classes, methods, 
+arrayNestedTable(tableName, name, visitorClass, nestedTable, classes, methods, 
 				 base, size, id,  
 				 columns, nestedColumns, nestedNestedColumns, gbColumns, gbNestedColumns, gbAggrColumn, 
 				 sortedCol, idxCols,
@@ -104,11 +104,16 @@ package socialite.tables;
 		}
 		isEmpty = true;
 	}
-	
+	void rangeCheck(<first(columns).type> i) {
+		if (i\<0 || i>=nestedTables.length) {
+			throw new SociaLiteException("Value out of range for <tableName> <first(columns).absPos>'th column: "+(i+base));
+		}
+	}
+
 	public void iterate_range_<first(columns).absPos>(<first(columns).type> _from, <first(columns).type> _to, <visitorClass> v) {
 		if (isEmpty) return;
-		int from=(int)(_from-base);
-		int to=(int)(_to-base);
+		int from=(int)(_from-base); rangeCheck(from);
+		int to=(int)(_to-base); rangeCheck(to);
 		for (int i=from; i\<=to; i++) {
 			if (nestedTables[i]!=null && !nestedTables[i].isEmpty()) {
 				boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
@@ -129,7 +134,7 @@ package socialite.tables;
 	}
 	public void iterate_range_<first(nestedColumns).absPos>_by_<first(columns).absPos>(<first(columns).type> a0, 
 								   <first(nestedColumns).type> _from, <first(nestedColumns).type> _to, <visitorClass> v) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null) return;
 		if (nestedTables[i].isEmpty()) return;		
 		
@@ -140,8 +145,8 @@ package socialite.tables;
 <if(first(nestedColumns).indexed)>
 	public void iterate_range_<first(columns).absPos>_by_<first(nestedColumns).absPos>(<first(nestedColumns).type> n,
 																					int _from, int _to, <visitorClass> v) {
-		int from=(int)(_from-base);
-		int to=(int)(_to-base);
+		int from=(int)(_from-base); rangeCheck(from);
+		int to=(int)(_to-base); rangeCheck(to);
 		for (int i=from; i\<=to; i++) {
 			if (nestedTables[i]!=null && !nestedTables[i].isEmpty()) {
 				boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
@@ -161,7 +166,7 @@ package socialite.tables;
 		}
 	}	
 	public void iterate_by_<first(columns).absPos>(<first(columns).type> n, <visitorClass> v) {
-		int i=(int)(n-base);
+		int i=(int)(n-base); rangeCheck(i);
 		if (nestedTables[i]!=null && !nestedTables[i].isEmpty()) {
 			boolean cont=v.visit<columns:{c|_<c.absPos>}>(n<rest(columns):{c|, col<i>(i)}>);
 			if (cont) nestedTables[i].iterate(v);
@@ -170,7 +175,7 @@ package socialite.tables;
 
 <if(first(nestedColumns).indexed)>
 	public void iterate_by_<first(columns).absPos>_<first(nestedColumns).absPos>(<first(columns).type> a0,<first(nestedColumns).type> b0, <visitorClass> v) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null) return;
 		if (nestedTables[i].isEmpty()) return;
 		
@@ -181,7 +186,7 @@ package socialite.tables;
 	<if(first(nestedNestedColumns).indexed)>
 	public void iterate_by_<first(columns).absPos>_<first(nestedColumns).absPos>_<first(nestedNestedColumns).absPos>
 						(<first(columns).type> a0,<first(nestedColumns).type> b0, <first(nestedNestedColumns).type> c0, <visitorClass> v) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null) return;
 		if (nestedTables[i].isEmpty()) return;
 		
@@ -237,7 +242,7 @@ package socialite.tables;
 
 <nestedColumns:{c|<if(c.sorted)>
 	public void iterate_part_<c.absPos>_by_<first(columns).absPos>(<first(columns).type> a0, <visitorClass> v, <c.type> val, int cmpOp) {
-		int i=(int)(a0-base);	
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null) return;
 		if (nestedTables[i].isEmpty()) return;
 		
@@ -247,7 +252,7 @@ package socialite.tables;
 <endif>}>
 	
 	public boolean contains(int n<rest(columns):{c|, <c.type> a<i>}><nestedColumns:{c|, <c.type> b<i>}>) {
-		int i=(int)(n-base);
+		int i=(int)(n-base); rangeCheck(i);
 		if (nestedTables[i]==null) return false;
 		if (nestedTables[i].isEmpty()) return false;
 		
@@ -272,7 +277,7 @@ package socialite.tables;
 			}
 			return false;
 		} 
-		int i=(int)(n-base);
+		int i=(int)(n-base); rangeCheck(i);
 		if (nestedTables[i]==null) return false;
 		if (nestedTables[i].isEmpty()) return false;
 		
@@ -289,7 +294,7 @@ package socialite.tables;
 	<if(!isNested && !multiSet)>
 		if (contains(<columns:{c|a<i0>};separator=","><nestedColumns:{c|, b<i>}>)) return false;
 	<endif>		
-		int i=(int)(a0-base);		
+		int i=(int)(a0-base); rangeCheck(i);
 		
 		// inserting the values
 		<rest(columns): {c|col<i>[i] = a<i>;};separator="\n">	
@@ -312,21 +317,21 @@ package socialite.tables;
 	/*
 <nestedColumns:{c|<if(c.sorted)>
 	public int get_insert_pos_<c.absPos>(<first(columns).type> a0, <c.type> val) {
-		int i=(int)(a0-base);	
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null) return 0;
 		if (nestedTables[i].isEmpty()) return 0;
 		
 		return nestedTables[i].get_insert_pos_<c.absPos>(val);
 	\}
 	public void iterate_from_idx_<c.absPos>(<first(columns).type> a0, <visitorClass> v, int idx) {
-		int i=(int)(a0-base);	
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null) return;
 		if (nestedTables[i].isEmpty()) return;
 		
 		nestedTables[i].iterate_from_idx_<c.absPos>(v, idx);
 	\}
 	public void iterate_upto_idx_<c.absPos>(<first(columns).type> a0, <visitorClass> v, int idx) {
-		int i=(int)(a0-base);	
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null) return;
 		if (nestedTables[i].isEmpty()) return;
 		
@@ -372,7 +377,7 @@ groupbyArr() ::= <<
 <if(gbNestedColumns)> // if(gbNestedColumns) [
   	public <gbAggrColumn.type> groupby(<gbColumns:{c|<c.type> a<i0>};separator=", ">
   									   <gbNestedColumns:{c|, <c.type> b<i0>}>) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		
 		if (nestedTables[i]==null || nestedTables[i].isEmpty())
 			throw new SociaLiteException("Unexpected groupby operation");
@@ -385,7 +390,7 @@ groupbyArr() ::= <<
 	}
 	public boolean contains(<gbColumns:{c|<c.type> a<i0>};separator=", ">
 							<gbNestedColumns:{c|, <c.type> b<i0>}>) {
-		int i=(int)(a0-base);	
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null || nestedTables[i].isEmpty())
 			return false;
 	
@@ -394,7 +399,7 @@ groupbyArr() ::= <<
 		throw new SociaLiteException("Unexpected contains(for groupby) operation");
 	}
 	public boolean update(<columns:{c|<c.type> a<i0>};separator=","><nestedColumns:{c|,<c.type> b<i0>}>) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		
 		if (nestedTables[i]==null) nestedTables[i] = <nestedTable>.create();			
 		
@@ -405,7 +410,7 @@ groupbyArr() ::= <<
 	}
 <else> // if(!gbNestedColumns) [
 	public <gbAggrColumn.type> groupby(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		
 		if (nestedTables[i]==null || nestedTables[i].isEmpty())
 			throw new SociaLiteException("Unexpected groupby operation");
@@ -419,7 +424,7 @@ groupbyArr() ::= <<
 	<if(rest(gbColumns))>
 	// group-by only with the array index
 	public <gbAggrColumn.type> groupby(<first(gbColumns).type> a0) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		
 		if (nestedTables[i]==null || nestedTables[i].isEmpty())
 			throw new SociaLiteException("Unexpected groupby operation");
@@ -427,7 +432,7 @@ groupbyArr() ::= <<
 	}
 	<endif>
 	public boolean contains(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
-		int i=(int)(a0-base);		
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null || nestedTables[i].isEmpty())
 			return false;
 			
@@ -436,7 +441,7 @@ groupbyArr() ::= <<
 		throw new SociaLiteException("Unexpected contains(for groupby) operation");
 	}
 	public boolean update(<columns:{c|<c.type> a<i0>};separator=","><nestedColumns:{c|,<c.type> b<i0>}>) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables[i]==null) nestedTables[i] = <nestedTable>.create();
 			
 		if (true<rest(gbColumns):{c|&&(col<i>[i]<EqOpMap.(c.type)>(a<i>))}>) {		
