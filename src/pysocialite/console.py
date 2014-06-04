@@ -174,7 +174,7 @@ class SociaLiteConsole(InteractiveConsole):
             
 def getBanner():
     banner = """
-PySociaLite (Python integrated SociaLite) 0.8.1
+PySociaLite (Python integrated SociaLite) 0.8.0-alpha
 Type "help" for more information.
 Type "quit()" to quit.
 """

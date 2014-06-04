@@ -2,7 +2,7 @@ group array-table;
 
 import "TableCommon.stg"
 
-arrayTable(name, visitorClass, columns, gbColumns, gbAggrColumn,		
+arrayTable(tableName, name, visitorClass, columns, gbColumns, gbAggrColumn,		
 		sortedCol, idxCols,
 		methods, base, size, id, 
 		multiSet=false, isNested=false) ::= <<
@@ -105,8 +105,13 @@ package socialite.tables;
 		<columns:{c|totalAlloc += 12+<c.typeSize>*filled.length;<\n>}>
 		return totalAlloc;
 	}
+	void rangeCheck(<first(columns).type> i) {
+		if (i\<0 || i>=filled.length) {
+			throw new SociaLiteException("Value out of range for <tableName> <first(columns).absPos>'th column: "+(i+base));
+		}
+	}
 	public boolean contains(<first(columns).type> a0<rest(columns):{c|, <c.type> a<i>}>) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		if (filled[i]==0) return false;
 		
 		if (true<rest(columns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
@@ -122,8 +127,7 @@ package socialite.tables;
 			}
 			return false;
 		}
-		
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		if (filled[i]==0) return false;
 		
 		if (true<rest(columns):{c|&&(dontcare[<i>] || col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
@@ -132,7 +136,7 @@ package socialite.tables;
 	}
 	
 	public boolean insert(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 	<if(!multiSet)>
 		if (filled[i]==1 && contains(a0<rest(columns): {c|, a<i>}>)) return false;
 	<endif>
@@ -153,8 +157,8 @@ package socialite.tables;
 		}
 	}
 	public void iterate_range_<first(columns).absPos>(<first(columns).type> _from, <first(columns).type> _to, <visitorClass> v) {
-		int from=(int)(_from-base);
-		int to=(int)(_to-base);
+		int from=(int)(_from-base); rangeCheck(from);
+		int to=(int)(_to-base); rangeCheck(to);
 		for (int i=from; i\<=to; i++) {
 			if (filled[i]==1) {
 				boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
@@ -163,7 +167,7 @@ package socialite.tables;
 		}
 	}
 	public void iterate_by_<first(columns).absPos>(<first(columns).type> n, <visitorClass> v) {
-		int i=(int)(n-base);
+		int i=(int)(n-base); rangeCheck(i);
 		if (i\<0||i>=filled.length) return;
 		if (filled[i]==1) {
 			boolean $cont=v.visit(n <rest(columns): {c|,col<i>(i)}>);
@@ -173,7 +177,7 @@ package socialite.tables;
 	
 <if(gbColumns)>	
 	public <gbAggrColumn.type> groupby(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		assert filled[i]==1;		
 		
 		if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
@@ -184,15 +188,15 @@ package socialite.tables;
 	}
 	<if(rest(gbColumns))>
 	// group-by only with the array index
-    public <gbAggrColumn.type> groupby(<first(gbColumns).type> a0) { 
-    	int i=(int)(a0-base);
-    	assert filled[i]==1;		
+	public <gbAggrColumn.type> groupby(<first(gbColumns).type> a0) { 
+		int i=(int)(a0-base); rangeCheck(i);
+		assert filled[i]==1;		
 		
 		return col<gbAggrColumn.relPos>[i];
-    }
+	}
 	<endif>
 	public boolean contains(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		if (filled[i]==0) return false;
 		
 		if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
@@ -200,7 +204,7 @@ package socialite.tables;
 		throw new SociaLiteException("Unexpected contains(for groupby) operation");
 	}
 	public boolean update(<columns:{c|<c.type> a<i0>};separator=", ">) {
-		int i=(int)(a0-base);
+		int i=(int)(a0-base); rangeCheck(i);
 		assert filled[i]==1;
 		<rest(columns): {c|col<i>[i] = a<i>;<\n>}>;		
 		return true;

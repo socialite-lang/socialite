@@ -96,6 +96,7 @@ public class Column implements Serializable {
 	}
 		
 	// For StringTemplate
+	public String getName() { return name(); }
 	public String getType() { return type().getSimpleName(); }
 	public String getCompType() {
 		return type().getComponentType().getSimpleName(); 

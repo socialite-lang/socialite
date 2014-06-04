@@ -1,7 +1,7 @@
 group dynamic-nested-table;
 import "TableCommon.stg"
 
-dynamicNestedTable(name, visitorClass, nestedTable, classes, methods, 
+dynamicNestedTable(tableName, name, visitorClass, nestedTable, classes, methods, 
 		size, id, 
 		columns, nestedColumns, nestedNestedColumns, gbColumns, gbNestedColumns, gbAggrColumn,
 		sortedCol, idxCols, sortOrder="Asc", inplaceSort=false,
