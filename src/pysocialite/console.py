@@ -23,24 +23,17 @@ class _Helper(object):
     """
     def __init__(self, socialite):
         self.socialite = socialite
-        self.socialiteHelp = """
-Use backtik(`) for SociaLite queries
-e.g. `Edge(int s, (int t)).`  # declares table Edge with 2 columns, the 2nd column is nested.
-
-     `Foo(a, d) :- Bar(a, b), Baz(b, c), d=c+1.` # joins Bar table with Baz table (using variable b), 
-                                                 # and inserts into Foo table.
-
-     for a, b in `Foo(a, 10)`:        # iterates over tuples (where 2nd column is 10) in Foo table
-        print a, b
-
-"""
+        self.socialiteExamples = socialite.examples
 
     def __repr__(self):
         return "Type help(socialite) for help on SociaLite, " \
                "or help(object) for help about object." 
     def __call__(self, *args, **kwds):
         if args and args[0]==self.socialite:
-            print self.socialiteHelp
+            print self.socialite.__doc__
+            return
+        elif args and args[0]==self.socialiteExamples:
+            print self.socialite.examples
             return
 
         import pydoc
