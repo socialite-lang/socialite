@@ -25,11 +25,11 @@ public class Str {
 			if (newIdx > idx) splitted.add(str.substring(idx, newIdx));
 			idx = newIdx + 1;
 			splitnum++;
-			if (maxsplit>0 && splitnum >= maxsplit)
+			if (maxsplit>0 && splitnum+1 >= maxsplit)
 				break;
 		}
 		if (idx < str.length()) splitted.add(str.substring(idx));
-		
+
 		return splitted.toArray(new String[splitted.size()]);
 	}
 	
@@ -48,7 +48,7 @@ public class Str {
 			if (newIdx > idx) splitted.add(str.substring(idx, newIdx));
 			idx = newIdx + delimLength;
 			splitnum++;
-			if (maxsplit>0 && splitnum >= maxsplit)
+			if (maxsplit>0 && splitnum+1 >= maxsplit)
 				break;
 		}
 		if (idx < str.length()) splitted.add(str.substring(idx));
