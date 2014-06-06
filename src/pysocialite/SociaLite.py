@@ -11,6 +11,52 @@ from threading import Thread, InterruptedException, Condition, Lock
 from Queue import Queue, Empty, Full
 
 __all__ = ['returns', 'cwd', 'chdir', 'store', 'load', 'tables', 'status', 'engine', 'SociaLiteException', 'double']
+__doc__ = """
+Useful functions:
+ tables() : shows declared SociaLite tables
+ status() : shows runtime status of SociaLite
+
+Use backtik(`) to run SociaLite queries
+e.g. `Friend(String i, (String f)).`  # declares a table Friend having two columns.
+     `Friend(a,b) :- a="John Smith", b="Jane Doe".` # inserts a tuple into Friend.
+     for i, f in `Friend(i, f)`:  # iterates over tuples in Friend
+        print i, f
+
+Type help(socialite.examples) to see more SociaLite query examples.
+"""
+
+examples="""
+`Edge(int i, (int f)).`         # declares Edge table (with nested 2nd column).
+`Edge(int i:0..1000, (int f)).` # Values of 1st column of Edge is between 0 and 1000
+
+`Edge(s, t) :- l=$read("edges.txt"), # $read returns lines in edges.txt
+               (a,b)=$split(l, "\\t"),# splits a string with a delimiter, tab here.
+               s=$toInt(a),          # Casting a,b into primitive int.
+               t=$toInt(b).`
+
+                  
+`Foaf(i, f) :- Friend(i,x), Friend(x,f).` # joins Friend table with itself 
+                                          # to compute friends-of-friends 
+                                          # and store the result in Foaf.
+
+for i, f in `Foaf(i, f)`:  # iterates over tuples in Foaf 
+   print i, f
+
+`FriendCnt(int i, int cnt) groupby(1).  # we will apply $inc to the 'cnt' column,
+                                        # which requires groupby with one column (column 'i').
+ FriendCnt(i, $inc(1)) :- Friend(i,f).` # counting the # of friends for each person.
+
+@returns(int)             # annotates function return type 
+def randInt(s, e):        # to access it from SociaLite queries
+    import random as r
+    return r.randint(s, e)
+
+# Computes average friend counts for randomly selected samples.
+`SampleAvg(int i:0..0, Avg avg).
+ SampleAvg(0, $avg(cnt)) :- i=$randInt(0,100), FriendCnt(i, cnt).`
+
+"""
+
 
 double = float
 import sys
