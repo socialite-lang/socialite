@@ -34,6 +34,7 @@ public class Builtin {
 	public static long toLong(String s) { return Long.parseLong(s); }
 	public static float toFloat(String s) { return Float.parseFloat(s); }
 	public static double toDouble(String s) { return Double.parseDouble(s); }
+	public static Utf8 toUtf8(String s) { return new Utf8(s); }
 		
 	public static String toStr(int i) { return ""+i; }
 	public static String toStr(long l) { return ""+l; }
