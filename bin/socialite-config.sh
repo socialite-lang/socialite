@@ -97,7 +97,7 @@ if [ "x$JAVA_HEAP_MIN" == "x" ]; then
 fi
 
 JVM_OPTS="$JVM_OPTS -da"
-JVM_OPTS="$JVM_OPTS -server $JAVA_HEAP_MIN $JAVA_HEAP_MIN -Xss1024k"
+JVM_OPTS="$JVM_OPTS -server $JAVA_HEAP_MAX $JAVA_HEAP_MIN -Xss1024k"
 JVM_OPTS="$JVM_OPTS -XX:MaxInlineSize=128"
 JVM_OPTS="$JVM_OPTS -XX:+UseParallelGC -XX:+UseTLAB -XX:TLABSize=8M -XX:+ResizeTLAB"
 
