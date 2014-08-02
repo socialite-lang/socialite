@@ -28,10 +28,9 @@ class TesetAttrs(unittest.TestCase):
 
     def test_str(self):
         `Qux(String w) indexby w.
-         Qux(w) :- (w, unused)=$Str.split(" qux unused ", " ").`
+         Qux(w) :- (w, unused)=$Str.split("qux  unused trailing strs..  ", " ").`
         w = list(`Qux(w)`)[0]
         self.assertTrue(w=='qux')
-
 
     def test_exception1(self):
         try:
