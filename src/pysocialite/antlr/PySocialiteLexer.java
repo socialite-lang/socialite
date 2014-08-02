@@ -1,8 +1,11 @@
-// $ANTLR 3.4 /x/jiwon/workspace/socialite/grammar/PySocialite.g 2014-05-04 00:33:09
+// $ANTLR 3.4 /Users/jiwon/workspace/socialite/grammar/PySocialite.g 2014-07-28 13:00:30
 
     package pysocialite.antlr;
     import org.python.core.PyObject;
     import org.python.core.PyString;
+    import socialite.util.SociaLiteException;
+    import pysocialite.Format;
+    import org.apache.commons.lang3.StringUtils;
 
 
 import org.antlr.runtime.*;
@@ -26,13 +29,14 @@ public class PySocialiteLexer extends Lexer {
     public static final int WS=14;
 
         static String socialiteMod="socialiteModule";
-        static PyObject substPythonVars=null;
         public static void setSocialiteModule(String mod) { socialiteMod = mod; }
-        public static void setSubstFunc(PyObject subst) { substPythonVars = subst; }
 
-        String socialiteVar() { return socialiteMod+".engine"; /* see SociaLite.py */ }
-        String tableIterClass() { return socialiteMod+".TableIterator"; /* see SociaLite.py */ }
+        static String socialiteVar() { return socialiteMod+".engine"; /* see SociaLite.py */ }
+        static String stringifyPythonVarFunc() { return socialiteMod+".passVars"; /* see SociaLite.py */ }
+        static String tableIterClass() { return socialiteMod+".TableIterator"; /* see SociaLite.py */ }
+        static String quoteStr() { return "\"\"\"";}
 
+        ArrayList<String> varnames = new ArrayList<String>();
         boolean isTableIter(String query) {
             String q=query.trim();
             if (q.charAt(q.length()-1)=='.') return false;
@@ -52,23 +56,141 @@ public class PySocialiteLexer extends Lexer {
             s = s.replace("\"", "\\\"");
             return s;
         }
-        String quote(String s) { return "\"\"\""+escape(s)+"\"\"\""; }
-        String maybeSubstPythonVars(String query) {
-            if (query.indexOf('$')>=0) {
-                PyObject ret=substPythonVars.__call__(new PyString(query));
-                query = (String)ret.__tojava__(String.class);
-            }
-            return query;
+        String quote(String s) { 
+            return quoteStr()+escape(s)+quoteStr();
         }
+
+        int skipTo(String src, int offset, String to) {
+            int newOffset = src.indexOf(to, offset);
+            if (newOffset<0) {
+                throw new SociaLiteException("EOL while scanning string literal");
+            }
+            return newOffset;
+        }
+
+        boolean isDigit(char c) {
+            return c >= '0' && c <= '9';
+        }
+        boolean isValidVarNameChar1(char c) {
+            return c=='_' || StringUtils.isAlpha(String.valueOf(c));
+        }
+        boolean isValidVarNameChar(char c) {
+            return c=='_' || StringUtils.isAlpha(String.valueOf(c)) || isDigit(c);
+        }
+        boolean isWhitespace(char c) {
+            return StringUtils.isWhitespace(String.valueOf(c));
+        }
+        boolean isEndOfVarChar(char c) {
+            if (Character.isWhitespace(c)) return true;
+            if (c==')' || c==',' || 
+                c=='+' || c=='-' || c=='*' || c=='/' ||
+                c=='=' || c=='<' || c=='>' || c==Format.percent()) {
+                return true;
+            }
+            return false;
+        }
+
+        // returns beginning and ending indices of variable name.
+        // indices are inclusive.
+        int[] findPythonVars(String query, int offset) {
+            int[] span = new int[2];
+            int i=offset;
+            while (i<query.length()) {
+                if (query.charAt(i) == '\"') {
+                    i = skipTo(query, i+1, "\"")+1;
+                    continue;
+                }
+                if (query.charAt(i) == '$') {
+                    int j=i+1;
+                    if (!isValidVarNameChar1(query.charAt(j))) {
+                        String s=query.substring(j,j+1);
+                        String msg="Invalid variable name:$"+s+"... "+ ", name cannot start with "+s;
+                        throw new SociaLiteException(msg);
+                    }
+                    boolean varFound=false;
+                    while (j<query.length()) {
+                        char c=query.charAt(j);
+                        if (c == '(') {
+                            break; // function, will be handled by the parser
+                        } if (c == '.') {
+                            if (j+1<query.length()) {
+                                if (isWhitespace(query.charAt(j+1))) {
+                                    varFound=true; // if next char is whitespace, consider it python var
+                                    break;
+                                } else { // if next char is anything but whitespace, it is not python var
+                                    break;
+                                }
+                            } else { // if it is end of string, consider it python var
+                                varFound=true;
+                                break;
+                            }
+                        } else if (isEndOfVarChar(c)) {
+                            varFound=true;
+                            break;
+                        } else if (isValidVarNameChar(c)) {
+                            j+=1;
+                        } else {
+                            String s=query.substring(i,j+1), ch=query.substring(j, j+1);
+                            String msg="Invalid variable name:"+s+", unexpected character:"+ch;
+                            throw new SociaLiteException(msg);
+                        }
+                    }
+                    if (j==query.length()) varFound=true;
+
+                    if (varFound) {
+                        span[0] = i; span[1] = j-1;
+                        return span;   
+                    } else { i = j; }
+                } else {
+                    i++;
+                }
+            }
+            return null; // not found!
+        }
+
+        String quoteAndSubstPythonVars(String query) {
+            varnames.clear();
+            if (query.indexOf('$')<0) return quote(query);
+
+            String result = "";
+            int offset=0;
+            while (true) {
+                int[] span = findPythonVars(query, offset);
+                if (span==null) {
+                    result += query.substring(offset);
+                    break;
+                }
+
+                String var = query.substring(span[0]+1, span[1]+1); // excluding $ prefix
+                varnames.add(var);
+                result += query.substring(offset, span[0]);
+                result += Format.str();
+
+                offset = span[1]+1;
+            }
+            result = quote(result);
+
+            if (varnames.size()>0) {
+                result += Format.percent()+"("+ stringifyPythonVarFunc()+"(";
+                boolean first = true;
+                for (String var:varnames) {
+                    if (!first) result += ", ";
+                    result += var;
+                    first = false;
+                }
+                result += "))";
+            }
+
+            return result;
+        }
+
         String tableIter(String query) {
             query = "?-"+query+".";
-            query = quote(query);
-            query = maybeSubstPythonVars(query);
-            return socialiteMod+".TableIterator("+socialiteVar()+", "+query+")";
+            query = quoteAndSubstPythonVars(query);
+            return tableIterClass()+"("+socialiteVar()+", "+query+")";
         }
         String runQuery(String query) {
-            query = quote(query);
-            query = maybeSubstPythonVars(query);
+            query = quoteAndSubstPythonVars(query);
             return socialiteVar()+".run("+query+")";
         }
 
@@ -86,14 +208,14 @@ public class PySocialiteLexer extends Lexer {
     public PySocialiteLexer(CharStream input, RecognizerSharedState state) {
         super(input,state);
     }
-    public String getGrammarFileName() { return "/x/jiwon/workspace/socialite/grammar/PySocialite.g"; }
+    public String getGrammarFileName() { return "/Users/jiwon/workspace/socialite/grammar/PySocialite.g"; }
 
     // $ANTLR start "COMMENT"
     public final void mCOMMENT() throws RecognitionException {
         try {
             int _type = COMMENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:75:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' | '/*' ( options {greedy=false; } : . )* '*/' | '#' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:197:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' | '/*' ( options {greedy=false; } : . )* '*/' | '#' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' )
             int alt6=3;
             int LA6_0 = input.LA(1);
 
@@ -126,13 +248,13 @@ public class PySocialiteLexer extends Lexer {
             }
             switch (alt6) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:75:9: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:197:9: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
                     {
                     match("//"); 
 
 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:75:14: (~ ( '\\n' | '\\r' ) )*
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:197:14: (~ ( '\\n' | '\\r' ) )*
                     loop1:
                     do {
                         int alt1=2;
@@ -145,7 +267,7 @@ public class PySocialiteLexer extends Lexer {
 
                         switch (alt1) {
                     	case 1 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:
                     	    {
                     	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '\t')||(input.LA(1) >= '\u000B' && input.LA(1) <= '\f')||(input.LA(1) >= '\u000E' && input.LA(1) <= '\uFFFF') ) {
                     	        input.consume();
@@ -166,7 +288,7 @@ public class PySocialiteLexer extends Lexer {
                     } while (true);
 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:75:28: ( '\\r' )?
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:197:28: ( '\\r' )?
                     int alt2=2;
                     int LA2_0 = input.LA(1);
 
@@ -175,7 +297,7 @@ public class PySocialiteLexer extends Lexer {
                     }
                     switch (alt2) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:75:28: '\\r'
+                            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:197:28: '\\r'
                             {
                             match('\r'); 
 
@@ -190,13 +312,13 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:76:9: '/*' ( options {greedy=false; } : . )* '*/'
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:198:9: '/*' ( options {greedy=false; } : . )* '*/'
                     {
                     match("/*"); 
 
 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:76:14: ( options {greedy=false; } : . )*
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:198:14: ( options {greedy=false; } : . )*
                     loop3:
                     do {
                         int alt3=2;
@@ -221,7 +343,7 @@ public class PySocialiteLexer extends Lexer {
 
                         switch (alt3) {
                     	case 1 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:76:42: .
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:198:42: .
                     	    {
                     	    matchAny(); 
 
@@ -241,11 +363,11 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:77:9: '#' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:199:9: '#' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
                     {
                     match('#'); 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:77:14: (~ ( '\\n' | '\\r' ) )*
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:199:14: (~ ( '\\n' | '\\r' ) )*
                     loop4:
                     do {
                         int alt4=2;
@@ -258,7 +380,7 @@ public class PySocialiteLexer extends Lexer {
 
                         switch (alt4) {
                     	case 1 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:
                     	    {
                     	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '\t')||(input.LA(1) >= '\u000B' && input.LA(1) <= '\f')||(input.LA(1) >= '\u000E' && input.LA(1) <= '\uFFFF') ) {
                     	        input.consume();
@@ -279,7 +401,7 @@ public class PySocialiteLexer extends Lexer {
                     } while (true);
 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:77:28: ( '\\r' )?
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:199:28: ( '\\r' )?
                     int alt5=2;
                     int LA5_0 = input.LA(1);
 
@@ -288,7 +410,7 @@ public class PySocialiteLexer extends Lexer {
                     }
                     switch (alt5) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:77:28: '\\r'
+                            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:199:28: '\\r'
                             {
                             match('\r'); 
 
@@ -318,8 +440,8 @@ public class PySocialiteLexer extends Lexer {
         try {
             int _type = WS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:80:5: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:202:5: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:
             {
             if ( (input.LA(1) >= '\t' && input.LA(1) <= '\n')||input.LA(1)=='\r'||input.LA(1)==' ' ) {
                 input.consume();
@@ -347,7 +469,7 @@ public class PySocialiteLexer extends Lexer {
         try {
             int _type = STRING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:88:5: ( '\"' ( ESC_SEQ |~ '\"' )* '\"' | 'r' '\"' ( options {greedy=false; } : . )* '\"' | '\\'' ( ESC_SEQ |~ '\\'' )* '\\'' | 'r' '\\'' ( options {greedy=false; } : . )* '\\'' | '\"\"\"' ( options {greedy=false; } : . )* '\"\"\"' )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:210:5: ( '\"' ( ESC_SEQ |~ '\"' )* '\"' | 'r' '\"' ( options {greedy=false; } : . )* '\"' | '\\'' ( ESC_SEQ |~ '\\'' )* '\\'' | 'r' '\\'' ( options {greedy=false; } : . )* '\\'' | '\"\"\"' ( options {greedy=false; } : . )* '\"\"\"' )
             int alt12=5;
             switch ( input.LA(1) ) {
             case '\"':
@@ -410,11 +532,11 @@ public class PySocialiteLexer extends Lexer {
 
             switch (alt12) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:88:8: '\"' ( ESC_SEQ |~ '\"' )* '\"'
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:210:8: '\"' ( ESC_SEQ |~ '\"' )* '\"'
                     {
                     match('\"'); 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:88:12: ( ESC_SEQ |~ '\"' )*
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:210:12: ( ESC_SEQ |~ '\"' )*
                     loop7:
                     do {
                         int alt7=3;
@@ -500,7 +622,7 @@ public class PySocialiteLexer extends Lexer {
 
                         switch (alt7) {
                     	case 1 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:88:14: ESC_SEQ
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:210:14: ESC_SEQ
                     	    {
                     	    mESC_SEQ(); 
 
@@ -508,7 +630,7 @@ public class PySocialiteLexer extends Lexer {
                     	    }
                     	    break;
                     	case 2 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:88:24: ~ '\"'
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:210:24: ~ '\"'
                     	    {
                     	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '!')||(input.LA(1) >= '#' && input.LA(1) <= '\uFFFF') ) {
                     	        input.consume();
@@ -534,13 +656,13 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:89:8: 'r' '\"' ( options {greedy=false; } : . )* '\"'
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:211:8: 'r' '\"' ( options {greedy=false; } : . )* '\"'
                     {
                     match('r'); 
 
                     match('\"'); 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:89:16: ( options {greedy=false; } : . )*
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:211:16: ( options {greedy=false; } : . )*
                     loop8:
                     do {
                         int alt8=2;
@@ -556,7 +678,7 @@ public class PySocialiteLexer extends Lexer {
 
                         switch (alt8) {
                     	case 1 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:89:44: .
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:211:44: .
                     	    {
                     	    matchAny(); 
 
@@ -574,11 +696,11 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:90:8: '\\'' ( ESC_SEQ |~ '\\'' )* '\\''
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:212:8: '\\'' ( ESC_SEQ |~ '\\'' )* '\\''
                     {
                     match('\''); 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:90:13: ( ESC_SEQ |~ '\\'' )*
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:212:13: ( ESC_SEQ |~ '\\'' )*
                     loop9:
                     do {
                         int alt9=3;
@@ -664,7 +786,7 @@ public class PySocialiteLexer extends Lexer {
 
                         switch (alt9) {
                     	case 1 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:90:15: ESC_SEQ
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:212:15: ESC_SEQ
                     	    {
                     	    mESC_SEQ(); 
 
@@ -672,7 +794,7 @@ public class PySocialiteLexer extends Lexer {
                     	    }
                     	    break;
                     	case 2 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:90:25: ~ '\\''
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:212:25: ~ '\\''
                     	    {
                     	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '&')||(input.LA(1) >= '(' && input.LA(1) <= '\uFFFF') ) {
                     	        input.consume();
@@ -698,13 +820,13 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 4 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:91:8: 'r' '\\'' ( options {greedy=false; } : . )* '\\''
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:213:8: 'r' '\\'' ( options {greedy=false; } : . )* '\\''
                     {
                     match('r'); 
 
                     match('\''); 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:91:17: ( options {greedy=false; } : . )*
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:213:17: ( options {greedy=false; } : . )*
                     loop10:
                     do {
                         int alt10=2;
@@ -720,7 +842,7 @@ public class PySocialiteLexer extends Lexer {
 
                         switch (alt10) {
                     	case 1 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:91:45: .
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:213:45: .
                     	    {
                     	    matchAny(); 
 
@@ -738,13 +860,13 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 5 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:92:8: '\"\"\"' ( options {greedy=false; } : . )* '\"\"\"'
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:214:8: '\"\"\"' ( options {greedy=false; } : . )* '\"\"\"'
                     {
                     match("\"\"\""); 
 
 
 
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:92:14: ( options {greedy=false; } : . )*
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:214:14: ( options {greedy=false; } : . )*
                     loop11:
                     do {
                         int alt11=2;
@@ -778,7 +900,7 @@ public class PySocialiteLexer extends Lexer {
 
                         switch (alt11) {
                     	case 1 :
-                    	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:92:42: .
+                    	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:214:42: .
                     	    {
                     	    matchAny(); 
 
@@ -811,8 +933,8 @@ public class PySocialiteLexer extends Lexer {
     // $ANTLR start "EXPONENT"
     public final void mEXPONENT() throws RecognitionException {
         try {
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:97:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:97:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:219:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:219:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
             {
             if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
                 input.consume();
@@ -824,7 +946,7 @@ public class PySocialiteLexer extends Lexer {
             }
 
 
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:97:22: ( '+' | '-' )?
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:219:22: ( '+' | '-' )?
             int alt13=2;
             int LA13_0 = input.LA(1);
 
@@ -833,7 +955,7 @@ public class PySocialiteLexer extends Lexer {
             }
             switch (alt13) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:
                     {
                     if ( input.LA(1)=='+'||input.LA(1)=='-' ) {
                         input.consume();
@@ -851,7 +973,7 @@ public class PySocialiteLexer extends Lexer {
             }
 
 
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:97:33: ( '0' .. '9' )+
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:219:33: ( '0' .. '9' )+
             int cnt14=0;
             loop14:
             do {
@@ -865,7 +987,7 @@ public class PySocialiteLexer extends Lexer {
 
                 switch (alt14) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:
+            	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:
             	    {
             	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
             	        input.consume();
@@ -903,8 +1025,8 @@ public class PySocialiteLexer extends Lexer {
     // $ANTLR start "HEX_DIGIT"
     public final void mHEX_DIGIT() throws RecognitionException {
         try {
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:100:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:222:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:
             {
             if ( (input.LA(1) >= '0' && input.LA(1) <= '9')||(input.LA(1) >= 'A' && input.LA(1) <= 'F')||(input.LA(1) >= 'a' && input.LA(1) <= 'f') ) {
                 input.consume();
@@ -929,7 +1051,7 @@ public class PySocialiteLexer extends Lexer {
     // $ANTLR start "ESC_SEQ"
     public final void mESC_SEQ() throws RecognitionException {
         try {
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:104:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UNICODE_ESC | OCTAL_ESC )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:226:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UNICODE_ESC | OCTAL_ESC )
             int alt15=3;
             int LA15_0 = input.LA(1);
 
@@ -982,7 +1104,7 @@ public class PySocialiteLexer extends Lexer {
             }
             switch (alt15) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:104:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:226:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
                     {
                     match('\\'); 
 
@@ -999,7 +1121,7 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:105:9: UNICODE_ESC
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:227:9: UNICODE_ESC
                     {
                     mUNICODE_ESC(); 
 
@@ -1007,7 +1129,7 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:106:9: OCTAL_ESC
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:228:9: OCTAL_ESC
                     {
                     mOCTAL_ESC(); 
 
@@ -1027,7 +1149,7 @@ public class PySocialiteLexer extends Lexer {
     // $ANTLR start "OCTAL_ESC"
     public final void mOCTAL_ESC() throws RecognitionException {
         try {
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:111:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:233:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
             int alt16=3;
             int LA16_0 = input.LA(1);
 
@@ -1078,7 +1200,7 @@ public class PySocialiteLexer extends Lexer {
             }
             switch (alt16) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:111:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:233:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
                     {
                     match('\\'); 
 
@@ -1115,7 +1237,7 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:112:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:234:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
                     {
                     match('\\'); 
 
@@ -1142,7 +1264,7 @@ public class PySocialiteLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:113:9: '\\\\' ( '0' .. '7' )
+                    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:235:9: '\\\\' ( '0' .. '7' )
                     {
                     match('\\'); 
 
@@ -1171,8 +1293,8 @@ public class PySocialiteLexer extends Lexer {
     // $ANTLR start "UNICODE_ESC"
     public final void mUNICODE_ESC() throws RecognitionException {
         try {
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:118:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:118:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:240:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:240:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
             {
             match('\\'); 
 
@@ -1205,12 +1327,12 @@ public class PySocialiteLexer extends Lexer {
         try {
             int _type = QUERY;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:121:5: ( '`' ( ESC_SEQ |~ ( '\\\\' | '`' ) )* '`' )
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:121:7: '`' ( ESC_SEQ |~ ( '\\\\' | '`' ) )* '`'
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:243:5: ( '`' ( ESC_SEQ |~ ( '\\\\' | '`' ) )* '`' )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:243:7: '`' ( ESC_SEQ |~ ( '\\\\' | '`' ) )* '`'
             {
             match('`'); 
 
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:121:11: ( ESC_SEQ |~ ( '\\\\' | '`' ) )*
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:243:11: ( ESC_SEQ |~ ( '\\\\' | '`' ) )*
             loop17:
             do {
                 int alt17=3;
@@ -1226,7 +1348,7 @@ public class PySocialiteLexer extends Lexer {
 
                 switch (alt17) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:121:12: ESC_SEQ
+            	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:243:12: ESC_SEQ
             	    {
             	    mESC_SEQ(); 
 
@@ -1234,7 +1356,7 @@ public class PySocialiteLexer extends Lexer {
             	    }
             	    break;
             	case 2 :
-            	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:121:22: ~ ( '\\\\' | '`' )
+            	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:243:22: ~ ( '\\\\' | '`' )
             	    {
             	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '[')||(input.LA(1) >= ']' && input.LA(1) <= '_')||(input.LA(1) >= 'a' && input.LA(1) <= '\uFFFF') ) {
             	        input.consume();
@@ -1275,8 +1397,8 @@ public class PySocialiteLexer extends Lexer {
         try {
             int _type = ANY_OTHER_CHAR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:125:2: ( . )
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:125:3: .
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:247:2: ( . )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:247:3: .
             {
             matchAny(); 
 
@@ -1292,7 +1414,7 @@ public class PySocialiteLexer extends Lexer {
     // $ANTLR end "ANY_OTHER_CHAR"
 
     public void mTokens() throws RecognitionException {
-        // /x/jiwon/workspace/socialite/grammar/PySocialite.g:1:8: ( COMMENT | WS | STRING | QUERY | ANY_OTHER_CHAR )
+        // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:1:8: ( COMMENT | WS | STRING | QUERY | ANY_OTHER_CHAR )
         int alt18=5;
         int LA18_0 = input.LA(1);
 
@@ -1371,7 +1493,7 @@ public class PySocialiteLexer extends Lexer {
         }
         switch (alt18) {
             case 1 :
-                // /x/jiwon/workspace/socialite/grammar/PySocialite.g:1:10: COMMENT
+                // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:1:10: COMMENT
                 {
                 mCOMMENT(); 
 
@@ -1379,7 +1501,7 @@ public class PySocialiteLexer extends Lexer {
                 }
                 break;
             case 2 :
-                // /x/jiwon/workspace/socialite/grammar/PySocialite.g:1:18: WS
+                // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:1:18: WS
                 {
                 mWS(); 
 
@@ -1387,7 +1509,7 @@ public class PySocialiteLexer extends Lexer {
                 }
                 break;
             case 3 :
-                // /x/jiwon/workspace/socialite/grammar/PySocialite.g:1:21: STRING
+                // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:1:21: STRING
                 {
                 mSTRING(); 
 
@@ -1395,7 +1517,7 @@ public class PySocialiteLexer extends Lexer {
                 }
                 break;
             case 4 :
-                // /x/jiwon/workspace/socialite/grammar/PySocialite.g:1:28: QUERY
+                // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:1:28: QUERY
                 {
                 mQUERY(); 
 
@@ -1403,7 +1525,7 @@ public class PySocialiteLexer extends Lexer {
                 }
                 break;
             case 5 :
-                // /x/jiwon/workspace/socialite/grammar/PySocialite.g:1:34: ANY_OTHER_CHAR
+                // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:1:34: ANY_OTHER_CHAR
                 {
                 mANY_OTHER_CHAR(); 
 

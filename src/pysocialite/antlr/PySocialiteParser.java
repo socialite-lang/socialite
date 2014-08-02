@@ -1,4 +1,4 @@
-// $ANTLR 3.4 /x/jiwon/workspace/socialite/grammar/PySocialite.g 2014-05-04 00:33:08
+// $ANTLR 3.4 /Users/jiwon/workspace/socialite/grammar/PySocialite.g 2014-07-28 13:00:29
 
     package pysocialite.antlr;    
     import java.util.List;
@@ -48,12 +48,12 @@ public class PySocialiteParser extends Parser {
     }
 
     public String[] getTokenNames() { return PySocialiteParser.tokenNames; }
-    public String getGrammarFileName() { return "/x/jiwon/workspace/socialite/grammar/PySocialite.g"; }
+    public String getGrammarFileName() { return "/Users/jiwon/workspace/socialite/grammar/PySocialite.g"; }
 
 
 
     // $ANTLR start "prog"
-    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:69:1: prog returns [String str] : (t= . )* EOF ;
+    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:191:1: prog returns [String str] : (t= . )* EOF ;
     public final String prog() throws RecognitionException {
         String str = null;
 
@@ -62,10 +62,10 @@ public class PySocialiteParser extends Parser {
 
         StringBuilder builder = new StringBuilder();
         try {
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:71:5: ( (t= . )* EOF )
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:71:7: (t= . )* EOF
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:193:5: ( (t= . )* EOF )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:193:7: (t= . )* EOF
             {
-            // /x/jiwon/workspace/socialite/grammar/PySocialite.g:71:7: (t= . )*
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:193:7: (t= . )*
             loop1:
             do {
                 int alt1=2;
@@ -78,7 +78,7 @@ public class PySocialiteParser extends Parser {
 
                 switch (alt1) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/PySocialite.g:71:8: t= .
+            	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:193:8: t= .
             	    {
             	    t=(Token)input.LT(1);
 

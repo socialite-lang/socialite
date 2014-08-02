@@ -1,7 +1,4 @@
-from pyparsing import *
-from pyparsing import _ustr, _flatten
 import time
-import sys
 import pysocialite.Preprocess as Preprocess
 
 __all__ = ["compiler", "compileStr", "getModuleVar"]
@@ -31,32 +28,44 @@ import SociaLite as %s
     return socialiteEngineCode
 
 ### Tokens used for extracting SociaLite queries
-_ws = ' \t'
-ParserElement.setDefaultWhitespaceChars(_ws)
+#_ws = ' \t'
+#ParserElement.setDefaultWhitespaceChars(_ws)
+#
+#ident = Word(alphas+"_", alphanums+"_")
+#
+##EOL = LineEnd()  #.suppress()
+##SOL = LineStart().leaveWhitespace()
+#
+##backtik = Literal("`")
+#lparen = Literal("(")
+##rparen = Literal(")")
+##lbracket = Literal("[")
+##rbracket = Literal("]")
+##comma = Literal(",")
+#dot = Literal(".")
+##ws = ZeroOrMore(White(_ws))
+#dollar = Literal("$")
 
-ident = Word(alphas+"_", alphanums+"_")
-
-EOL = LineEnd()  #.suppress()
-SOL = LineStart().leaveWhitespace()
-
-backtik = Literal("`")
-lparen = Literal("(")
-rparen = Literal(")")
-lbracket = Literal("[")
-rbracket = Literal("]")
-comma = Literal(",")
-dot = Literal(".")
-ws = ZeroOrMore(White(_ws))
-dollar = Literal("$")
-
-import time
 class Compiler:
     def __init__(self):
-        self.pythonVar = Suppress(dollar) + ident + ~FollowedBy((dot+ident) | lparen)
-        self.pythonVar.setParseAction(self.onPythonVar)
+        self._pythonVar = None
         self.varNames = []
         Preprocess.setSocialiteModule(getModuleVar())
-        Preprocess.setSubstFunc(self.processPythonVars)
+
+    def pythonVar(self):
+        if not self._pythonVar:
+            from pyparsing import (ParserElement, Word, alphas, alphanums,
+                                   Literal, Suppress, FollowedBy)
+            _ws = ' \t'
+            ParserElement.setDefaultWhitespaceChars(_ws)
+            ident = Word(alphas+"_", alphanums+"_")
+            lparen = Literal("(")
+            dot = Literal(".")
+            dollar = Literal("$")
+
+            self._pythonVar = Suppress(dollar) + ident + ~FollowedBy((dot+ident) | lparen)
+            self._pythonVar.setParseAction(self.onPythonVar)
+        return self._pythonVar
 
     def compile(self, src):
         gen=Preprocess.run(src)
@@ -65,7 +74,8 @@ class Compiler:
     def processPythonVars(self, query):
         query = '('+query+')'
 
-        tmp = self.pythonVar.transformString(query)
+        tmp = query
+        if tmp.find("$") >= 0: tmp = self.pythonVar().transformString(query)
         if self.varNames:
             query = ''.join([tmp, "%"+getPassVarsFunc()+"(", ','.join(self.varNames), ")"])
         else: query = tmp

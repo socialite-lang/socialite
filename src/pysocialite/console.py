@@ -1,49 +1,13 @@
-import cmd
-import sys
-import os
-
 import SociaLite
+
+import sys
 from SociaLite import SociaLiteException
-
-from pysoc import *
-
-from org.python.core import Py
 
 from impSocialite import SocialiteImporter
 import __builtin__
 
 from code import InteractiveConsole
 import org.python.util.PythonInterpreter as PythonInterpInJava
-import traceback
-
-class _Helper(object):
-    """Define the built-in 'help'.
-    This is a wrapper around pydoc.help (with a twist).
-
-    """
-    def __init__(self, socialite):
-        self.socialite = socialite
-        self.socialiteExamples = socialite.examples
-
-    def __repr__(self):
-        return "Type help(socialite) for help on SociaLite, " \
-               "or help(object) for help about object." 
-    def __call__(self, *args, **kwds):
-        if args and args[0]==self.socialite:
-            print self.socialite.__doc__
-            return
-        elif args and args[0]==self.socialiteExamples:
-            print self.socialite.examples
-            return
-
-        import pydoc
-        return pydoc.help(*args, **kwds)
-
-def sethelper():
-    socialite = __import__(__name__)
-    __builtin__.socialite = SociaLite
-    __builtin__.help = _Helper(SociaLite)
-sethelper()
 
 class PythonInterpAdapter(PythonInterpInJava):
     def __init__(self, socialite):
@@ -60,25 +24,20 @@ class PythonInterpAdapter(PythonInterpInJava):
     def get(self, name):
         return self.socialite.locals[name]
     def getSystemState(self):
+        from org.python.core import Py
         if not self.realInterp: return Py.getSystemState()
         return self.realInterp.getSystemState()
 
-import pyparsing as p
 class SociaLiteConsole(InteractiveConsole):
     def __init__(self, cpu=None, verbose=False):
         InteractiveConsole.__init__(self)
         self.filename="<stdin>"
 
         self.inQuery = False # True if the shell is in SociaLite query
-        self.compiler = compiler
+        self.compiler = None
 
-        self.declBegin = p.stringStart+p.Literal("`")
-        self.declBegin.ignore(p.pythonStyleComment)
-        self.declBegin.ignore(p.quotedString)
-
-        self.declEnd = p.Literal("`") + p.stringEnd
-        self.declEnd.ignore(p.pythonStyleComment)
-        self.declEnd.ignore(p.quotedString)
+        self.declBegin = None
+        self.declEnd = None
 
         self.locals={}
 
@@ -95,7 +54,21 @@ class SociaLiteConsole(InteractiveConsole):
             for k,v in _locals.iteritems():
                 self.locals[k] = v
 
+    def asyncImportPyparsing(self):
+        def importPyparsing():
+            import time
+            time.sleep(0.001)
+            import pyparsing
+
+        from threading import Thread
+        t=Thread(target=importPyparsing)
+        t.start()
+
     def runsource(self, source, filename="<stdin>", symbol="single"):
+        if not self.compiler:
+            from pysoc import compiler
+            self.compiler = compiler
+
         source = self.compiler.compile(source)
         try :
             return InteractiveConsole.runsource(self, source, filename, symbol)
@@ -104,6 +77,7 @@ class SociaLiteConsole(InteractiveConsole):
         except SociaLiteException, e:
             print e.getMessage()
         except:
+            import traceback
             try:
                 tp, value, tb = sys.exc_info()
                 sys.last_type = tp
@@ -119,12 +93,37 @@ class SociaLiteConsole(InteractiveConsole):
                 tblist = tb = None
             map(sys.stderr.write, list)
 
+
     def hasDeclBegin(self, line):
-        if self.declBegin.searchString(line.strip()):
+        if line.lstrip().find("`") == 0:
             return True
         return False
 
     def hasDeclEnd(self, line):
+        l = line.rstrip()
+        if l.find("`") == len(l)-1:
+            return True
+
+        return False
+
+    def __hasDeclBegin(self, line):
+        if not self.declBegin:
+            import pyparsing as p
+            self.declBegin = p.stringStart+p.Literal("`")
+            self.declBegin.ignore(p.pythonStyleComment)
+            self.declBegin.ignore(p.quotedString)
+
+        if self.declBegin.searchString(line.strip()):
+            return True
+        return False
+
+    def __hasDeclEnd(self, line):
+        if not self.declEnd: 
+            import pyparsing as p
+            self.declEnd = p.Literal("`") + p.stringEnd
+            self.declEnd.ignore(p.pythonStyleComment)
+            self.declEnd.ignore(p.quotedString)
+
         if self.declEnd.searchString(line.strip()):
             return True
         return False
@@ -167,10 +166,9 @@ class SociaLiteConsole(InteractiveConsole):
             
 def getBanner():
     banner = """
-PySociaLite (Python integrated SociaLite) 0.8.0-alpha
+SociaLite 0.8.0-alpha
 Type "help" for more information.
-Type "quit()" to quit.
-"""
+Type "quit()" to quit."""
     return banner
 
 def interact(verbose=0):
@@ -191,8 +189,8 @@ def run_files(args, verbose=0, inspect=False):
     sys.path.insert(0, path)
 
     program=open(filename).read()
+    from pysoc import compiler
     src = compiler.compile(program)
-
 
     from impSocialite import addMod, loadMod, setSocialiteVars
     sys.modules.pop("__main__", None)
@@ -217,6 +215,7 @@ def run_files(args, verbose=0, inspect=False):
         sys.exit(0)
     except:
         # adapted from code.py::InteractiveInterpreter::showtraceback
+        import traceback
         try:
             tp, value, tb = sys.exc_info()
             sys.last_type = tp
@@ -238,12 +237,11 @@ def run_files(args, verbose=0, inspect=False):
         console.initLocals(mod.__dict__)
         console.interact("")
 
-import signal
-import traceback
 def installKeyboardInterruptHandler():
     def handler(signum, frame):
         print "Enter quit() or Ctrl-D to exit"
 
+    import signal
     signal.signal(signal.SIGINT, handler)
 
 def show_cluster_status():
@@ -273,14 +271,13 @@ def main():
 
     if opts.dist: show_cluster_status()
 
-    installKeyboardInterruptHandler()
-
     import atexit
     atexit.register(SociaLite.cleanupOnExit)
 
     sys.meta_path.insert(0, SocialiteImporter())
 
     if interactive: 
+        installKeyboardInterruptHandler()
         interact(verbose=opts.v)
     else:  
         run_files(args, verbose=opts.v, inspect = opts.inspect)

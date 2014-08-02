@@ -1,4 +1,4 @@
-package pysocialite;
+	package pysocialite;
 
 import pysocialite.antlr.PySocialiteLexer;
 import pysocialite.antlr.PySocialiteParser;
@@ -14,14 +14,15 @@ import socialite.util.SociaLiteException;
 import org.python.core.PyObject;
 
 public class Preprocess {
-	public static void setSocialiteModule(String mod) { 
+	static String socialiteModule = null;
+	public static void setSocialiteModule(String mod) {
+		socialiteModule = mod;
 		PySocialiteLexer.setSocialiteModule(mod);
 	}
-	public static void setSubstFunc(PyObject subst) {
-		PySocialiteLexer.setSubstFunc(subst);
+	public static String getSocialiteModule() {
+		return socialiteModule;
 	}
-
-	public static String run(String src) throws Exception {
+	public static synchronized String run(String src) {
 		if (src.indexOf('`') < 0) return src;
 		try {
 			PySocialiteLexer lexer = new PySocialiteLexer(new ANTLRStringStream(src));
@@ -29,7 +30,11 @@ public class Preprocess {
 			String processed = parser.prog();
 			return processed;
 		} catch(Exception e) {
-			throw new SociaLiteException(e);
+			if (e instanceof SociaLiteException) {
+				throw (SociaLiteException)e;
+			} else {
+				throw new SociaLiteException(e);
+			}
 		}
 	}
 	public static void main(String[] args) throws Exception {
