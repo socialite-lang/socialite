@@ -12,6 +12,7 @@ import socialite.parser.Rule;
 import socialite.tables.*;
 import socialite.resource.*;
 import socialite.util.Assert;
+import socialite.util.SociaLiteException;
 
 import socialite.eval.Manager;
 
@@ -20,9 +21,14 @@ public class <name> extends <evalBaseClass> {
 
 	public <name>(SRuntime _runtime, Epoch _epoch, Config _conf) {
 		super(_runtime, _epoch, _conf);
-		<tableInsts; separator=";\n">;	
-		<tableRegs; separator=";\n">;
-		<tableStmts; separator=";\n">;
+		try {
+			<tableInsts; separator=";\n">;
+			<tableRegs; separator=";\n">;
+			<tableStmts; separator=";\n">;
+		} catch (Throwable t) {
+			EvalParallel.L.fatal("Exception while table instantiation:"+t.getMessage());
+			throw new SociaLiteException(t.getMessage());
+		}
 	}
 
 	public void init() {
