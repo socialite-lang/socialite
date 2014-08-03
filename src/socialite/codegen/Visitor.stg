@@ -69,11 +69,12 @@ if (<cond>) {
 }
 >>
 
-synchronized(monitor, stmts, endstmt) ::= <<
+synchronized(monitor, stmts, endstmt, finally) ::= <<
 synchronized(<monitor>) {
    <stmts; separator=";\n">;
    <endstmt>;
 }
+<finally; separator=";\n">;
 >>
 
 

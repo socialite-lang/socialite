@@ -350,6 +350,7 @@ public class CodeGen {
 		try_.add("finally", lockMapVar+".arrayunlock("+tableid+","+arrayIndex+")");
 		return try_;*/
 	}
+	/*
 	public static ST withLock(String lockMapVar, Object tableId, String sliceExpr) {
 		assert tableId instanceof Integer ||tableId instanceof String;
 		STGroup group = getVisitorGroup();
@@ -360,7 +361,15 @@ public class CodeGen {
 		try_.add("stmts", lockMapVar+".lock("+tableId+", "+var+")");
 		try_.add("finally", lockMapVar+".unlock("+tableId+", "+var+")");
 		return try_;
-	}	
+	}*/
+	public static ST withLock(String lockMapVar, Object tableId, String sliceExpr) {
+		assert tableId instanceof Integer ||tableId instanceof String;
+		STGroup group = getVisitorGroup();
+		ST sync = group.getInstanceOf("synchronized");
+		sync.add("monitor", lockMapVar+".getTableMonitor("+tableId+","+sliceExpr+")");
+		return sync;
+	}
+	
 	public static ST withoutLock(String lockMapVar, Object tableId, String sliceExpr) {
 		assert tableId instanceof Integer ||tableId instanceof String;
 		STGroup group = getVisitorGroup();

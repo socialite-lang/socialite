@@ -32,6 +32,7 @@ package socialite.tables;
 	int base;
 	byte filled[];
 	<rest(columns):{c|<c.type> col<i>[];<\n>}>
+	<idxCols:{ic|SIndex index<ic.relPos>;<\n>}>
 	 
 	//int tupleNum = 0; 
 	boolean isEmpty = true;
@@ -137,13 +138,19 @@ package socialite.tables;
 	
 	public boolean insert(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
 		int i=(int)(a0-base); rangeCheck(i);
-	<if(!multiSet)>
-		if (filled[i]==1 && contains(a0<rest(columns): {c|, a<i>}>)) return false;
-	<endif>
+		if (filled[i]==1) {
+			if (contains(a0<rest(columns): {c|, a<i>}>)) return false;
+		
+			String msg = "Cannot insert the tuple {"+a0<rest(columns):{c|+","+a<i>}> +"} to <tableName>\n";
+	 		msg += "<tableName> already contains {"+a0<rest(columns):{c|+","+col<i>(i)}> +"} with the same 1st (array index) column\n";
+	 		msg += "To insert the tuple, declare <tableName> with nested columns.\n";
+	 		throw new SociaLiteException(msg);
+		}
 				
 		if (isEmpty) isEmpty = false;	
 		filled[i]=1;
 		<rest(columns):{c|col<i>[i] = a<i>;<\n>}>		
+		<idxCols:{ic|index<ic.relPos>.add(a<ic.relPos>, i);<\n>}>
 		return true;
 	}
 	
@@ -174,7 +181,18 @@ package socialite.tables;
 			if (!$cont) return;
 		}
 	}
-	
+<idxCols:{c|
+	public void iterate_by_<c.absPos>(<c.type> a, <visitorClass> v) {
+		TIntArrayList posList=(TIntArrayList)index<c.relPos>.get(a);
+		if (posList==null) return;
+		for (int i=0; i\<posList.size(); i++) {
+			int pos=posList.getQuick(i);
+			boolean cont=v.visit(pos+base, <rest(columns):{c2|col<i>(pos)};separator=", ">);
+			if (!cont) return;		
+		\}
+	\}
+}>
+
 <if(gbColumns)>	
 	public <gbAggrColumn.type> groupby(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
 		int i=(int)(a0-base); rangeCheck(i);

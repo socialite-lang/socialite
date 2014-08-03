@@ -7,7 +7,6 @@ arrayNestedTable(tableName, name, visitorClass, nestedTable, classes, methods,
 				 columns, nestedColumns, nestedNestedColumns, gbColumns, gbNestedColumns, gbAggrColumn, 
 				 sortedCol, idxCols,
 				 multiSet=false, isNested=false) ::= <<
-// idxCols is empty for ArrayTable			 
 <rest(columns):{c|<if(c.sorted)>ERROR, Cannot have sorted column for array table!<endif>}>				 
 <if(!isNested)>
 package socialite.tables;
@@ -35,6 +34,7 @@ package socialite.tables;
 
 	<first(columns).type> base;	
 	<rest(columns): {c|<c.type> col<i>[];<\n>}>
+	<idxCols:{ic|SIndex index<ic.relPos>;<\n>}>
 		
 	<nestedTable> nestedTables[];
 	int tupleNum = 0;
@@ -47,6 +47,7 @@ package socialite.tables;
 	public <name>(<first(columns).type> _base, int size, boolean allocNested) {
 		base = _base;		
 		<rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[size][]<else><c.type>[size]<endif>;<\n>}>;
+		<idxCols:{ic|index<ic.relPos> = new SIndex(size/8, <length(columns)>);<\n>}>
 		nestedTables = new <nestedTable>[size];
 		if (allocNested) {
 			for (int i=0; i\<size; i++) {
@@ -250,19 +251,21 @@ package socialite.tables;
 		if (cont) nestedTables[i].iterate_part_<c.absPos>(v, val, cmpOp);
 	\}
 <endif>}>
-	
-	public boolean contains(int n<rest(columns):{c|, <c.type> a<i>}><nestedColumns:{c|, <c.type> b<i>}>) {
+	public boolean contains_prefix(int n<rest(columns):{c|, <c.type> a<i>}>) {
 		int i=(int)(n-base); rangeCheck(i);
 		if (nestedTables[i]==null) return false;
 		if (nestedTables[i].isEmpty()) return false;
-		
-		<if(rest(columns))>
-		if (<rest(columns): {c|(col<i>[i]<EqOpMap.(c.type)>(a<i>))}; separator="&& ">)		
-			return nestedTables[i].contains(<nestedColumns:{c|b<i>}; separator=", ">);
+	
+		if (true<rest(columns): {c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)		
+			return true;
 		else return false;
-		<else>
-		return nestedTables[i].contains(<nestedColumns:{t|b<i>}; separator=", ">);
-		<endif>
+	}
+	public boolean contains(int n<rest(columns):{c|, <c.type> a<i>}><nestedColumns:{c|, <c.type> b<i>}>) {
+		boolean contains_prefix=contains_prefix(n<rest(columns):{c|, a<i>}>);
+		if (!contains_prefix) return false;
+		
+		int i=(int)(n-base);
+		return nestedTables[i].contains(<nestedColumns:{c|b<i>}; separator=", ">);
 	}
 	public boolean contains(int n<rest(columns):{c|, <c.type> a<i>}><nestedColumns:{c|, <c.type> b<i>}>, boolean[] dontcare) {
 		if (dontcare[0]) {
@@ -270,7 +273,7 @@ package socialite.tables;
 			for (int i=0; i\<nestedTables.length; i++) {
 				if (nestedTables[i]==null) continue;
 				if (nestedTables[i].isEmpty()) continue;			
-				if (true<rest(columns): {c|&& (dontcare[<i>] || col<i>[i]<EqOpMap.(c.type)>(a<i>))}>)		
+				if (true<rest(columns): {c|&& (dontcare[<i>] || col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)		
 					contains = nestedTables[i].contains(<nestedColumns:{c|b<i>}; separator=", ">, Arrays.copyOfRange(dontcare, <length(columns)>, dontcare.length));
 			
 				if (contains) return true;
@@ -282,7 +285,7 @@ package socialite.tables;
 		if (nestedTables[i].isEmpty()) return false;
 		
 		<if(rest(columns))>
-		if (<rest(columns): {c|(dontcare[<i>] || col<i>[i]<EqOpMap.(c.type)>(a<i>))}; separator="&& ">)		
+		if (<rest(columns): {c|(dontcare[<i>] || col<i>(i)<EqOpMap.(c.type)>(a<i>))}; separator="&& ">)		
 			return nestedTables[i].contains(<nestedColumns:{c|b<i>}; separator=", ">);
 		else return false;
 		<else>
@@ -296,14 +299,22 @@ package socialite.tables;
 	<endif>		
 		int i=(int)(a0-base); rangeCheck(i);
 		
+		if (nestedTables[i]!=null && !nestedTables[i].isEmpty()) {
+			if (!contains_prefix(<columns:{c|a<i0>};separator=",">)) { 
+				String msg = "Cannot insert the tuple {"+a0<rest(columns):{c|+","+a<i>}> +", ...} to <tableName>\n";
+	 			msg += "<tableName> already contains {"+a0<rest(columns):{c|+","+col<i>(i)}> +", ...} with the same 1st (array index) column\n";
+	 			msg += "To insert the tuple, add the columns to the nested columns.\n";
+	 			throw new SociaLiteException(msg);
+	 		}
+		}
 		// inserting the values
 		<rest(columns): {c|col<i>[i] = a<i>;};separator="\n">	
 		
 		// insert into the nested table
 		if (nestedTables[i]==null) nestedTables[i] = <nestedTable>.create();
-		nestedTables[i].insert(<nestedColumns:{c|b<i>};separator=", ">);
-		
 		if (isEmpty) isEmpty = false;
+		nestedTables[i].insert(<nestedColumns:{c|b<i>};separator=", ">);
+		<idxCols:{ic|index<ic.relPos>.add(a<ic.relPos>, i);<\n>}>
 		return true;
 	}	
 		
