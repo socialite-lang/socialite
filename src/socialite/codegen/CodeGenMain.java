@@ -24,6 +24,7 @@ import socialite.parser.PrivateTable;
 import socialite.parser.Query;
 import socialite.parser.Rule;
 import socialite.parser.Table;
+import socialite.parser.Variable;
 import socialite.resource.SRuntime;
 import socialite.resource.TableInstRegistry;
 import socialite.tables.QueryRunnable;
@@ -241,6 +242,7 @@ public class CodeGenMain {
 		Table t=tableMap.get(p.name());		
 		String queryClsName=queryClass.getName();		
 		QueryRunnable qr = runtime.getQueryInst(t.id(), queryClsName, queryVisitor);
+		
 		qr.setArgs(args);
 		qr.setQueryVisitor(queryVisitor);
 		//queryInst$.put(p, qr);
@@ -328,19 +330,21 @@ public class CodeGenMain {
 class QuerySignature {
 	String name;
 	TIntArrayList constIdx;
-	public QuerySignature(String _name, TIntArrayList _constIdx) {
+	TIntArrayList dontcareIdx;
+	public QuerySignature(String _name, TIntArrayList _constIdx, TIntArrayList _dontcareIdx) {
 		name = _name;
 		constIdx = _constIdx;
+		dontcareIdx = _dontcareIdx;
 	}
 	public int hashCode() { return name.hashCode() ^ constIdx.hashCode(); }
 	public boolean equals(Object o) {
 		if (!(o instanceof QuerySignature)) return false;
 		
 		QuerySignature sig = (QuerySignature)o;
-		return name.equals(sig.name) && constIdx.equals(sig.constIdx);
+		return name.equals(sig.name) && constIdx.equals(sig.constIdx) && dontcareIdx.equals(sig.dontcareIdx);
 	}
 	public QuerySignature clone() {
-		return new QuerySignature(name, new TIntArrayList(constIdx));
+		return new QuerySignature(name, new TIntArrayList(constIdx), new TIntArrayList(dontcareIdx));
 	}
 }
 
@@ -371,7 +375,7 @@ class CodeClassCache {
 class QueryCache<T> {
 	int size=0;
 	Map<QuerySignature, T> queryMap;
-	QuerySignature sig$ = new QuerySignature("tmp-name", new TIntArrayList());
+	QuerySignature sig$ = new QuerySignature("tmp-name", new TIntArrayList(), new TIntArrayList());
 	QueryCache() {
 		queryMap = new HashMap<QuerySignature, T>();
 		size=0;
@@ -401,14 +405,22 @@ class QueryCache<T> {
 	}
 	QuerySignature getQuerySig(Predicate p, Map<String, Table> tableMap) {
 		sig$.name = tableMap.get(p.name()).className();
-		//sig$.name = p.name();
 		sig$.constIdx.resetQuick();
+		sig$.dontcareIdx.resetQuick();
 		int i=0;
 		for (Object o:p.getAllParamsExpanded()) {
 			if (o instanceof Const)
 				sig$.constIdx.add(i);
+			if (isDontCare(o)) 
+				sig$.dontcareIdx.add(i);
 			i++;
 		}
 		return sig$;
+	}
+	boolean isDontCare(Object o) {
+		if (o instanceof Variable) {
+			Variable v=(Variable) o;
+			return v.dontCare;
+		} else { return false; }
 	}
 }

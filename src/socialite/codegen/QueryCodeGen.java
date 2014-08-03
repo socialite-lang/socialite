@@ -323,6 +323,16 @@ public class QueryCodeGen {
 		return method;
 	}
 	
+	boolean allDontCares(int from) {
+		Predicate p = queryP;
+		Object[] params=p.getAllParams();
+		for (int i=from; i<params.length; i++) {
+			if (!(params[i] instanceof Const)) {
+				return false;
+			}
+		}
+		return true;
+	}
 	void generateVisitMethod() {
 		List<ColumnGroup> columnGroups = table.getColumnGroups();		
 		int arity = table.numColumns();		
@@ -333,6 +343,10 @@ public class QueryCodeGen {
 		for (ColumnGroup g: columnGroups) {
 			int startCol = g.startIdx();
 			int endCol = g.endIdx();
+			if (allDontCares(startCol)) {
+				method.add("stmts", "return false");
+				break;
+			}
 			method = getVisitMethod(startCol, endCol, arity);
 			CodeGen.fillVisitMethodBody(method, p, 
 										startCol, endCol, 
