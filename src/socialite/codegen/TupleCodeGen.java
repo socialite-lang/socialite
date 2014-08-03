@@ -17,6 +17,7 @@ import socialite.engine.LocalEngine;
 import socialite.parser.AssignOp;
 import socialite.parser.DeltaPredicate;
 import socialite.parser.Expr;
+import socialite.parser.IterTable;
 import socialite.parser.MyType;
 import socialite.parser.Predicate;
 import socialite.parser.Rule;
@@ -161,15 +162,27 @@ public class TupleCodeGen {
 			}
 		}
 	}
-
+	static void _findTuplesToGenForIterTable(Table t, TupleDecls required) {
+		if (t instanceof IterTable && t.numColumns()+1 > PREGEN_WIDTH) {
+			ArrayList<Class<?>> types = new ArrayList<Class<?>>(t.numColumns()+1);
+			for (int i = 0; i < t.numColumns(); i++)
+				types.add(t.getColumn(i).type());
+			IterTable itable=(IterTable)t;
+			types.add(itable.iterColumn(), int.class);
+			required.add(types.toArray(new Class<?>[]{}));
+		}
+	}
 	static void _findTuplesToGen(Table t, TupleDecls required) {
-		if (t.numColumns() <= PREGEN_WIDTH)
+		if (t.numColumns() <= PREGEN_WIDTH) {
+			_findTuplesToGenForIterTable(t, required);
 			return;
+		}
 
 		Class<?>[] types = new Class[t.numColumns()];
 		for (int i = 0; i < t.numColumns(); i++)
 			types[i] = t.getColumn(i).type();
 		required.add(types);
+		_findTuplesToGenForIterTable(t, required);
 
 		if (t.groupbyColNum() > PREGEN_WIDTH) {
 			types = new Class[t.groupbyColNum()];
