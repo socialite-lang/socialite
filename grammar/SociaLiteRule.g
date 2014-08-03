@@ -239,7 +239,7 @@ rule returns [Object result]
 	    } else {
 	        ArrayList<RuleDecl> list = new ArrayList<RuleDecl>();
 	        list.add((RuleDecl)rd);
-	        rd = new RuleDecl($predicate.result, $body2.result);
+	        rd = new RuleDecl($predicate.result.clone(), $body2.result);
 	        list.add((RuleDecl)rd);
 	        $result = list;
 	    }
