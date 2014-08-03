@@ -39,7 +39,7 @@ public final class SIndex implements Externalizable {
 	public SIndex(int capacity, int columnNum) {
 		this(columnNum);
 		if (singleIndex) initCapacity = capacity;
-		else initCapacity = capacity/16;
+		else initCapacity = capacity/8;
 	}
 	public SIndex(int columnNum) {
 		initSingleIndex(columnNum);		
