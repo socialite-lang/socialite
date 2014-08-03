@@ -25,7 +25,7 @@ public class UnaryMinus extends Op implements UnaryOp {
 	}
 	public ST codegen() {
 		ST expr=CodeGen.expr();
-		expr.add("expr", codeStr(arg));
+		expr.add("expr", "(-"+codeStr(arg)+")");
 		return expr;
 	}
 
