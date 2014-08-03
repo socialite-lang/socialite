@@ -144,6 +144,10 @@ public class LockMap /*implements Externalizable*/ {
 	public void unlock(int tableId, int sliceIdx) {
 		locks[tableId][sliceIdx].unlock();
 	}
+	
+	public Object getTableMonitor(int tableId, int sliceIdx) {
+		return locks[tableId][sliceIdx]; 
+	}
 /*
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,

@@ -91,7 +91,7 @@ public class VisitorBuilder implements Serializable {
 		}
 	}
 	
-	int findSlicingColumn(Rule r) {
+	int OLD_findSlicingColumn(Rule r) {
 		if (!isParallel) return 0;
 		
 		if (!Analysis.isParallelRule(r, tableMap)) return -1;
@@ -105,6 +105,23 @@ public class VisitorBuilder implements Serializable {
 			return column;
 		} else {
 			assert firstT.isModTable();
+			return 0;
+		}
+	}
+	int findSlicingColumn(Rule r) {
+		if (!isParallel) return 0;
+		
+		if (!Analysis.isParallelRule(r, tableMap)) return -1;
+		
+		Predicate firstP=(Predicate)r.getBody().get(0);
+		Object f = firstP.getAllInputParams()[0]; 
+		Table firstT=tableMap.get(firstP.name());
+		if (firstT.getColumn(0).isIndexed() && f instanceof Const) return -1;
+		
+		int column=Analysis.firstShardedColumnWithVar(firstP, firstT);
+		if (column >= 0) {
+			return column;
+		} else {
 			return 0;
 		}
 	}
@@ -425,7 +442,7 @@ class RuleInfo {
 		if (slicingColumn==-1) {
 			Object param = firstP.getAllInputParams()[0];
 			if (param instanceof Variable) 
-				return 0; // table with an order-by option
+				return 0; // this table has an order-by option
 			
 			assert param instanceof Const;
 			Const c=(Const)param;

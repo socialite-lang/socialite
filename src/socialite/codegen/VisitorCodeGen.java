@@ -1264,12 +1264,12 @@ public class VisitorCodeGen {
 		code.add("stmts", currentPredicateVar() + "=" + iterStartP.getPos());
 
 		String invokeIter = null;
-		if (iterStartWithFirstP && doDynamicIterateRange()) {
+		if (isIndexColResolved(iterStartP)) {
+			invokeIter = tableVar+".iterate"+getIteratebySuffix(iterStartP, "");
+		} else if (iterStartWithFirstP && doDynamicIterateRange()) {
 			invokeIter = iterateRangeDynamic(tableVar);
 		} else if (iterStartWithFirstP && doIterateRange()) {
 			invokeIter = iterateRange(iterStartT, tableVar);
-		} else if (isIndexColResolved(iterStartP)) {
-			invokeIter = tableVar+".iterate"+getIteratebySuffix(iterStartP, "");
 		} else {
 			invokeIter = tableVar + ".iterate(this)";
 		}
@@ -1398,9 +1398,9 @@ public class VisitorCodeGen {
 		int nestedArrayIdx = resolvedSingleNestedArrayIndex(iterStartP);
 		Object nestedArrayIdxVal = nestedArrayIdx>rangeCol ? params[nestedArrayIdx]:null;
 		String invokeIter = tableVar+".iterate_range_"+rangeCol;		
-		if (nestedArrayIdx > rangeCol) 
+		if (nestedArrayIdx > rangeCol) { 
 			invokeIter += "_by_"+nestedArrayIdx+"("+nestedArrayIdxVal+",";
-		else invokeIter += "(";
+		} else invokeIter += "(";
 		
 		invokeIter += begin + "," + end + ",this)";
 		return invokeIter;
@@ -1788,6 +1788,10 @@ public class VisitorCodeGen {
 		}
 	}
 
+	boolean isNextId(AggrFunction f) {
+		String n=f.name();
+		return n.equals("Builtin.nextId") || n.equals("NextId.invoke");
+	}
 	boolean isMinOrMax(AggrFunction f) {
 		String n=f.name();
 		return n.equals("Builtin.min") || n.equals("Builtin.max") ||
@@ -1834,33 +1838,38 @@ public class VisitorCodeGen {
 		if (priorTestForMinMax())
 			genPriorTestForMinMax(code, _headTable);			
 		
+		ST prevCode=code;
 		if (headTableLockAtEnd()) {		
 			int column = headTableWriteLockColumn();
 			Object param = headP.getAllParamsExpanded()[column];
-			ST if_ = tmplGroup.getInstanceOf("if");
+			/*ST if_ = tmplGroup.getInstanceOf("if");
 			if_.add("cond", isUpdatedVar());
-			if_.add("stmts", ifUpdated);
+			if_.add("stmts", ifUpdated);*/
 			ST withLock, withLock2;
 			if (useArrayTableLock()) {
 				String arrayIndex="("+param+"-"+sliceMapVar()+".localBeginIndex("+headT.id()+"))";
 				withLock = CodeGen.withArrayLock(lockMapVar(), headT.id(), arrayIndex);
 				withLock2 = CodeGen.withArrayLock(lockMapVar(), headT.id(), arrayIndex);
-				withLock.add("endstmt", if_);
-				withLock2.add("endstmt", if_);
+			//	withLock.add("endstmt", if_);
+			//	withLock2.add("endstmt", if_);
 			} else {
 				withLock = CodeGen.withLock(lockMapVar(), headT.id(),sliceIdxGetter(headT, column, param));				
 				withLock2 = CodeGen.withLock(lockMapVar(), headT.id(),sliceIdxGetter(headT, column, param));
-				withLock.add("finally", if_);								
-				withLock2.add("finally", if_);
+			//	withLock.add("finally", if_);								
+			//	withLock2.add("finally", if_);
 			}
 			code.add("stmts", withLock);			
 			code = withLock;			
-		}
+		} 
 
 		if (headP.hasFunctionParam()) {
 			genAggrCode(code, _headTable, ifUpdated);
 		} else genInsertCode(code, _headTable, ifUpdated);
 
+		ST if_ = tmplGroup.getInstanceOf("if");
+		if_.add("cond", isUpdatedVar());
+		if_.add("stmts", ifUpdated);
+		prevCode.add("stmts", if_);
 		return ifUpdated;
 	}
 	
@@ -1886,40 +1895,6 @@ public class VisitorCodeGen {
 		contains += ")";
 		return contains;
 	}
-	/*
-	void genAggrValueCode(ST code, String headTable, ST ifUpdated) {
-		AggrValueFunction f = (AggrValueFunction)headP.getAggrF();		
-		
-		String contains = containsGroupbyPrefix(headTable, f);
-		ST if_ = tmplGroup.getInstanceOf("if");
-		if_.add("cond", "!" + contains);
-		 
-		String aggrValType = f.getAggrColumnType().getSimpleName();
-		assert f.getReturns().size()==1;
-		Variable v=(Variable)f.getReturns().get(0);
-		if_.add("stmts", aggrValType + " "+v+"=new "+aggrValType+"("+")");
-		if_.add("stmts", isUpdatedVar()+"="+f.codegen(""+v).render());
-		if_.add("stmts", insertHeadParamsTo(headTable));
-		if_.add("stmts", "break");
-		code.add("stmts", if_);
-		
-		genAggrValueUpdateCode(code, headTable, ifUpdated);
-	}
-	void genAggrValueUpdateCode(ST code, String headTable, ST ifUpdated) {
-		AggrValueFunction f = (AggrValueFunction)headP.getAggrF();
-		String aggrValType = f.getAggrColumnType().getSimpleName();
-		code.add("stmts", aggrValType + " _$aggrVal");
-		String groupby = invokeGroupby(headTable, headP);
-		code.add("stmts", "_$aggrVal="+groupby);
-		code.add("stmts", isUpdatedVar()+"="+f.codegen("_$aggrVal").render());
-			
-		ST if_ = tmplGroup.getInstanceOf("if");
-		if_ = tmplGroup.getInstanceOf("if");
-		if_.add("cond", isUpdatedVar());				
-		if_.add("stmts", ifUpdated);
-		if_.add("stmts", "break");
-		code.add("stmts", if_);
-	}*/
 	
 	void genPriorTestForMinMax(ST code, String headTable) {
 		AggrFunction f=headP.getAggrF();
@@ -1941,35 +1916,41 @@ public class VisitorCodeGen {
 		AggrFunction f = headP.getAggrF();
 		  
 		String contains = containsGroupbyPrefix(headTable, f);
-		ST if_ = tmplGroup.getInstanceOf("if");
+		ST ifElse = tmplGroup.getInstanceOf("ifElse");
 		if (f.isSimpleAggr()) {
 			// if the groupby prefix params don't exist in the table, we insert the params.				
-			if_.add("cond", "!" + contains);
-			if_.add("stmts", assignVars(Arrays.asList(new Object[]{aggrVar()}), f.getArgs()));
-			if_.add("stmts", insertHeadParamsTo(headTable));
-			if_.add("stmts", isUpdatedVar()+"=true");
-			if_.add("stmts", ifUpdated);		
-			if_.add("stmts", "continue");
-			code.add("stmts", if_);
+			ifElse.add("cond", "!" + contains);
+			if (isNextId(f)) {
+				String nextId="Builtin.nextId("+f.getArgs().get(0)+")";
+				ifElse.add("stmts", assignVars(Arrays.asList(new Object[]{aggrVar()}), Arrays.asList(new Object[]{nextId})));
+			} else {
+				ifElse.add("stmts", assignVars(Arrays.asList(new Object[]{aggrVar()}), f.getArgs()));
+			}
+			ifElse.add("stmts", insertHeadParamsTo(headTable));
+			ifElse.add("stmts", isUpdatedVar()+"=true");
+			//ifElse.add("stmts", ifUpdated);		
+			//ifElse.add("stmts", "continue");
+			code.add("stmts", ifElse);
 		} else {
-			if_.add("cond", "!" + contains);
+			ifElse.add("cond", "!" + contains);
 			if (f.getAggrColumnType().isArray()) {
 				String aggrValType = f.getAggrColumnType().getComponentType().getSimpleName();
 				Variable v=(Variable)f.getArgs().get(0);				
-				if_.add("stmts", aggrValType+"[] "+aggrVar()+"=new "+aggrValType+"["+v+".length]");
-				if_.add("stmts", "for(int _$$i=0;_$$i<"+aggrVar()+".length;_$$i++)"+aggrVar()+"[_$$i]=new "+aggrValType+"()");
+				ifElse.add("stmts", aggrValType+"[] "+aggrVar()+"=new "+aggrValType+"["+v+".length]");
+				ifElse.add("stmts", "for(int _$$i=0;_$$i<"+aggrVar()+".length;_$$i++)"+aggrVar()+"[_$$i]=new "+aggrValType+"()");
 			} else {
 				String aggrValType = f.getAggrColumnType().getSimpleName();			
-				if_.add("stmts", aggrValType + " "+aggrVar()+"=new "+aggrValType+"("+")");
+				ifElse.add("stmts", aggrValType + " "+aggrVar()+"=new "+aggrValType+"("+")");
 			}
-			if_.add("stmts", isUpdatedVar()+"="+f.codegen(aggrVar()).render());
-			if_.add("stmts", insertHeadParamsTo(headTable));
-			if_.add("stmts", "continue");
-			code.add("stmts", if_);
+			ifElse.add("stmts", isUpdatedVar()+"="+f.codegen(aggrVar()).render());
+			ifElse.add("stmts", insertHeadParamsTo(headTable));
+			ifElse.add("stmts", "continue");
+			code.add("stmts", ifElse);
 		}
+		ST elseStmts = tmplGroup.getInstanceOf("simpleStmts");
+		ifElse.add("elseStmts", elseStmts);
 		
-		genAggrUpdateCode(code, headTable, ifUpdated);	
-		
+		genAggrUpdateCode(elseStmts, headTable);	
 		if (useChoice()) {
 			ifUpdated.add("stmts", choiceMadeVar()+"=true");
 			if (hasOnlyChoiceVar(rule.getHead())) {
@@ -1977,7 +1958,7 @@ public class VisitorCodeGen {
 			}
 		}		
 	}
-	void genAggrUpdateCode(ST code, String headTable, ST ifUpdated) {
+	void genAggrUpdateCode(ST code, String headTable) {
 		AggrFunction f = headP.getAggrF();
 		boolean aggrPrimType= MyType.javaType(f.getArgs().get(0)).isPrimitive();	
 		String groupbyRetType = MyType.javaTypeName(f.getAggrColumnType());
@@ -2270,7 +2251,7 @@ public class VisitorCodeGen {
 		if (headT instanceof PrivateTable) return false;
 		if (headT instanceof DeltaTable) return false;
 		
-		if (Analysis.isSequentialRule(rule, tableMap) && !conf.isDistributed()) 
+		if (Analysis.isSequentialRule(rule, tableMap) && !conf.isDistributed())
 			return false;
 		
 		return true;
@@ -2525,41 +2506,6 @@ public class VisitorCodeGen {
 		if_.add("stmts", actionStmt);
 		return code;
 	}
-
-	/*
-	ST genVisitMethodFor(Predicate p, Set<Variable> resolved) {
-		Table t = getTable(p);
-		List<ColumnGroup> columnGroups = t.getColumnGroups();
-
-		int prefix = getPrefixParamsForIter(resolved, p);
-		ST m = null;
-		int arity = t.numColumns();
-		for (ColumnGroup g : columnGroups) {
-			if (g.endIdx() + 1 < prefix)
-				continue;
-
-			int startCol = g.startIdx();
-			int endCol = g.endIdx();
-			if (startCol + 1 <= prefix && prefix < endCol + 1)
-				startCol = prefix;
-
-			if (startCol == resolved1stNestedIndex(p))
-				startCol++;
-
-			m = getVisitMethod(p, startCol, endCol, arity);
-			CodeGen.fillVisitMethodBody(m, p, startCol, endCol, resolved);
-			if (allDontCaresWithin(p.getAllParams(), g.endIdx() + 1, arity - 1)) {
-				// stop iteration after the visit method m.
-				ST if_ = tmplGroup.getInstanceOf("if");
-				if_.add("cond", currentPredicateVar() + "==" + p.getPos());
-				if_.add("stmts", "return false");
-				CodeGen.findCodeBlockFor(m, p).add("stmts", if_);
-				break;
-			}
-		}
-		ST code = CodeGen.findCodeBlockFor(m, p);
-		return code;
-	}*/
 
 	ST genVisitMethodFor(Predicate p, Set<Variable> resolved) {
 		TIntArrayList idxbyCols = getIndexByCols(p);		
