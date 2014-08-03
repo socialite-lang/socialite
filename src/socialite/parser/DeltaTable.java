@@ -83,11 +83,11 @@ public class DeltaTable extends Table implements GeneratedT {
 			int[] range=t.getColumn(0).getRange();
 			size=(range[1]-range[0])/10;
 		} else if (t.getColumn(0).hasSize()) {
-			size = t.getColumn(0).getSize()/16;	
-		} else { size = 1024;}
+			size = t.getColumn(0).getSize()/4;	
+		} else { size = 64*1024;}
 		//if (r.isDeltaStepOpt()) size/=2;
 		assert size>=0;
-		if (size<1024) size=1024;
+		if (size<16*1024) size=16*1024;
 		ColSize optSize = new ColSize(size);
 		first.setOption(optSize);
 	}

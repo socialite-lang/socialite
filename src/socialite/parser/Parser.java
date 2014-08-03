@@ -272,7 +272,8 @@ public class Parser {
 	}
 	void adjustIterColumn(Rule r) {
 		for (Predicate p:r.getAllP()) {
-			TableDecl tdecl = tableDeclMap.get(p.name());
+			TableDecl tdecl = tableDeclMap.get(p.name());			
+			if (tdecl==null) {throw new AnalysisException("Table "+p.name()+" not declared");}
 			if (!tdecl.hasIterColumn()) continue;
 			int iterCol = tdecl.iterColumn();
 			if (iterCol==0 && tdecl.locationColDecl()!=null) {
@@ -285,7 +286,7 @@ public class Parser {
 			}
 			
 			p.setName(IterTable.name(p.name(), iterColumnVal(iterParam)%tdecl.maxIter()));
-			p.removeParamAt(tdecl.iterColumn());			
+			p.removeParamAt(tdecl.iterColumn());
 		}
 	}
 	public Rule getCanonRule(Rule r) {

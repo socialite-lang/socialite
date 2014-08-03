@@ -1,4 +1,4 @@
-// $ANTLR 3.4 /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g 2014-05-07 21:24:55
+// $ANTLR 3.4 /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g 2014-07-16 13:21:29
 
     package socialite.parser.antlr;    
     import socialite.parser.Query;
@@ -166,7 +166,7 @@ public TreeAdaptor getTreeAdaptor() {
     return adaptor;
 }
     public String[] getTokenNames() { return SociaLiteRule.tokenNames; }
-    public String getGrammarFileName() { return "/x/jiwon/workspace/socialite/grammar/SociaLiteRule.g"; }
+    public String getGrammarFileName() { return "/Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g"; }
 
 
         public Parser parser;
@@ -255,7 +255,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "prog"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:118:1: prog returns [List result] : ( stat )+ EOF ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:118:1: prog returns [List result] : ( stat )+ EOF ;
     public final SociaLiteRule.prog_return prog() throws RecognitionException {
         SociaLiteRule.prog_return retval = new SociaLiteRule.prog_return();
         retval.start = input.LT(1);
@@ -273,15 +273,15 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree EOF2_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:119:2: ( ( stat )+ EOF )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:119:4: ( stat )+ EOF
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:119:2: ( ( stat )+ EOF )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:119:4: ( stat )+ EOF
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             retval.result = new ArrayList();
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:120:2: ( stat )+
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:120:2: ( stat )+
             int cnt1=0;
             loop1:
             do {
@@ -295,7 +295,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt1) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:120:3: stat
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:120:3: stat
             	    {
             	    _last = (CommonTree)input.LT(1);
             	    pushFollow(FOLLOW_stat_in_prog65);
@@ -359,7 +359,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "stat"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:127:1: stat returns [Object result] : ( table_decl | rule | query | table_stmt );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:127:1: stat returns [Object result] : ( table_decl | rule | query | table_stmt );
     public final SociaLiteRule.stat_return stat() throws RecognitionException {
         SociaLiteRule.stat_return retval = new SociaLiteRule.stat_return();
         retval.start = input.LT(1);
@@ -381,7 +381,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:128:2: ( table_decl | rule | query | table_stmt )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:128:2: ( table_decl | rule | query | table_stmt )
             int alt2=4;
             switch ( input.LA(1) ) {
             case DECL:
@@ -415,7 +415,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt2) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:128:3: table_decl
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:128:3: table_decl
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -434,7 +434,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:129:3: rule
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:129:3: rule
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -453,7 +453,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:130:3: query
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:130:3: query
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -472,7 +472,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:131:3: table_stmt
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:131:3: table_stmt
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -516,7 +516,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "table_stmt"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:133:1: table_stmt returns [TableStmt result] : ( ^( CLEAR ID ) | ^( DROP ( ID )? ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:133:1: table_stmt returns [TableStmt result] : ( ^( CLEAR ID ) | ^( DROP ( ID )? ) );
     public final SociaLiteRule.table_stmt_return table_stmt() throws RecognitionException {
         SociaLiteRule.table_stmt_return retval = new SociaLiteRule.table_stmt_return();
         retval.start = input.LT(1);
@@ -538,7 +538,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree ID10_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:134:2: ( ^( CLEAR ID ) | ^( DROP ( ID )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:134:2: ( ^( CLEAR ID ) | ^( DROP ( ID )? ) )
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -557,7 +557,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt4) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:134:4: ^( CLEAR ID )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:134:4: ^( CLEAR ID )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -595,7 +595,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:135:3: ^( DROP ( ID )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:135:3: ^( DROP ( ID )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -615,7 +615,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     if ( input.LA(1)==Token.DOWN ) {
                         match(input, Token.DOWN, null); 
-                        // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:135:10: ( ID )?
+                        // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:135:10: ( ID )?
                         int alt3=2;
                         int LA3_0 = input.LA(1);
 
@@ -624,7 +624,7 @@ public TreeAdaptor getTreeAdaptor() {
                         }
                         switch (alt3) {
                             case 1 :
-                                // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:135:10: ID
+                                // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:135:10: ID
                                 {
                                 _last = (CommonTree)input.LT(1);
                                 ID10=(CommonTree)match(input,ID,FOLLOW_ID_in_table_stmt137); 
@@ -677,7 +677,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "query"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:137:1: query returns [Query result] : ^( QUERY predicate ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:137:1: query returns [Query result] : ^( QUERY predicate ) ;
     public final SociaLiteRule.query_return query() throws RecognitionException {
         SociaLiteRule.query_return retval = new SociaLiteRule.query_return();
         retval.start = input.LT(1);
@@ -695,8 +695,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree QUERY11_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:138:2: ( ^( QUERY predicate ) )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:138:3: ^( QUERY predicate )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:138:2: ( ^( QUERY predicate ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:138:3: ^( QUERY predicate )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -763,7 +763,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "table_decl"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:145:1: table_decl returns [TableDecl result] : ^( DECL ( KIND1 | KIND2 ) ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:145:1: table_decl returns [TableDecl result] : ^( DECL ( KIND1 | KIND2 ) ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) ) ;
     public final SociaLiteRule.table_decl_return table_decl() throws RecognitionException {
         SociaLiteRule.table_decl_return retval = new SociaLiteRule.table_decl_return();
         retval.start = input.LT(1);
@@ -795,8 +795,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree OPTION20_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:2: ( ^( DECL ( KIND1 | KIND2 ) ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) ) )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:3: ^( DECL ( KIND1 | KIND2 ) ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:2: ( ^( DECL ( KIND1 | KIND2 ) ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:3: ^( DECL ( KIND1 | KIND2 ) ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -815,7 +815,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             match(input, Token.DOWN, null); 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:10: ( KIND1 | KIND2 )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:10: ( KIND1 | KIND2 )
             int alt5=2;
             int LA5_0 = input.LA(1);
 
@@ -834,7 +834,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt5) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:11: KIND1
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:11: KIND1
                     {
                     _last = (CommonTree)input.LT(1);
                     KIND114=(CommonTree)match(input,KIND1,FOLLOW_KIND1_in_table_decl177); 
@@ -849,7 +849,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:28: KIND2
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:28: KIND2
                     {
                     _last = (CommonTree)input.LT(1);
                     KIND215=(CommonTree)match(input,KIND2,FOLLOW_KIND2_in_table_decl182); 
@@ -890,7 +890,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             if ( input.LA(1)==Token.DOWN ) {
                 match(input, Token.DOWN, null); 
-                // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:57: ( col_decl )?
+                // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:57: ( col_decl )?
                 int alt6=2;
                 int LA6_0 = input.LA(1);
 
@@ -899,7 +899,7 @@ public TreeAdaptor getTreeAdaptor() {
                 }
                 switch (alt6) {
                     case 1 :
-                        // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:57: col_decl
+                        // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:57: col_decl
                         {
                         _last = (CommonTree)input.LT(1);
                         pushFollow(FOLLOW_col_decl_in_table_decl193);
@@ -947,7 +947,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             if ( input.LA(1)==Token.DOWN ) {
                 match(input, Token.DOWN, null); 
-                // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:84: ( table_opts )?
+                // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:84: ( table_opts )?
                 int alt7=2;
                 int LA7_0 = input.LA(1);
 
@@ -956,7 +956,7 @@ public TreeAdaptor getTreeAdaptor() {
                 }
                 switch (alt7) {
                     case 1 :
-                        // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:84: table_opts
+                        // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:84: table_opts
                         {
                         _last = (CommonTree)input.LT(1);
                         pushFollow(FOLLOW_table_opts_in_table_decl203);
@@ -1041,7 +1041,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "table_opts"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:177:1: table_opts returns [List<TableOpt> result] : opt1= t_opt (opt2= t_opt )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:177:1: table_opts returns [List<TableOpt> result] : opt1= t_opt (opt2= t_opt )* ;
     public final SociaLiteRule.table_opts_return table_opts() throws RecognitionException {
         SociaLiteRule.table_opts_return retval = new SociaLiteRule.table_opts_return();
         retval.start = input.LT(1);
@@ -1059,8 +1059,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:178:2: (opt1= t_opt (opt2= t_opt )* )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:178:3: opt1= t_opt (opt2= t_opt )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:178:2: (opt1= t_opt (opt2= t_opt )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:178:3: opt1= t_opt (opt2= t_opt )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -1076,7 +1076,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             retval.result = new ArrayList<TableOpt>(); retval.result.add((opt1!=null?opt1.result:null));
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:179:2: (opt2= t_opt )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:179:2: (opt2= t_opt )*
             loop8:
             do {
                 int alt8=2;
@@ -1089,7 +1089,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt8) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:179:3: opt2= t_opt
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:179:3: opt2= t_opt
             	    {
             	    _last = (CommonTree)input.LT(1);
             	    pushFollow(FOLLOW_t_opt_in_table_opts237);
@@ -1137,7 +1137,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "t_opt"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:181:1: t_opt returns [TableOpt result] : ( ^( SORT_BY col= ID (order= SORT_ORDER )? ) | ^( ORDER_BY ID ) | ^( INDEX_BY ID ) | ^( GROUP_BY INT ) | PREDEFINED | MULTISET );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:181:1: t_opt returns [TableOpt result] : ( ^( SORT_BY col= ID (order= SORT_ORDER )? ) | ^( ORDER_BY ID ) | ^( INDEX_BY ID ) | ^( GROUP_BY INT ) | PREDEFINED | MULTISET );
     public final SociaLiteRule.t_opt_return t_opt() throws RecognitionException {
         SociaLiteRule.t_opt_return retval = new SociaLiteRule.t_opt_return();
         retval.start = input.LT(1);
@@ -1173,7 +1173,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree MULTISET30_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:182:2: ( ^( SORT_BY col= ID (order= SORT_ORDER )? ) | ^( ORDER_BY ID ) | ^( INDEX_BY ID ) | ^( GROUP_BY INT ) | PREDEFINED | MULTISET )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:182:2: ( ^( SORT_BY col= ID (order= SORT_ORDER )? ) | ^( ORDER_BY ID ) | ^( INDEX_BY ID ) | ^( GROUP_BY INT ) | PREDEFINED | MULTISET )
             int alt10=6;
             switch ( input.LA(1) ) {
             case SORT_BY:
@@ -1216,7 +1216,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt10) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:182:3: ^( SORT_BY col= ID (order= SORT_ORDER )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:182:3: ^( SORT_BY col= ID (order= SORT_ORDER )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1243,7 +1243,7 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_1, col_tree);
 
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:182:20: (order= SORT_ORDER )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:182:20: (order= SORT_ORDER )?
                     int alt9=2;
                     int LA9_0 = input.LA(1);
 
@@ -1252,7 +1252,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt9) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:182:21: order= SORT_ORDER
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:182:21: order= SORT_ORDER
                             {
                             _last = (CommonTree)input.LT(1);
                             order=(CommonTree)match(input,SORT_ORDER,FOLLOW_SORT_ORDER_in_t_opt265); 
@@ -1283,7 +1283,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:187:3: ^( ORDER_BY ID )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:187:3: ^( ORDER_BY ID )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1321,7 +1321,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:188:3: ^( INDEX_BY ID )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:188:3: ^( INDEX_BY ID )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1359,7 +1359,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:189:3: ^( GROUP_BY INT )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:189:3: ^( GROUP_BY INT )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1397,7 +1397,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:190:4: PREDEFINED
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:190:4: PREDEFINED
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1415,7 +1415,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 6 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:191:4: MULTISET
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:191:4: MULTISET
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1458,7 +1458,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "decls"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:193:1: decls returns [NestedTableDecl result] : ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:193:1: decls returns [NestedTableDecl result] : ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) ) ;
     public final SociaLiteRule.decls_return decls() throws RecognitionException {
         SociaLiteRule.decls_return retval = new SociaLiteRule.decls_return();
         retval.start = input.LT(1);
@@ -1480,8 +1480,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree DECL33_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:194:2: ( ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) ) )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:194:3: ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:194:2: ( ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:194:3: ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -1524,7 +1524,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             if ( input.LA(1)==Token.DOWN ) {
                 match(input, Token.DOWN, null); 
-                // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:194:38: (nested= decls )?
+                // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:194:38: (nested= decls )?
                 int alt11=2;
                 int LA11_0 = input.LA(1);
 
@@ -1533,7 +1533,7 @@ public TreeAdaptor getTreeAdaptor() {
                 }
                 switch (alt11) {
                     case 1 :
-                        // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:194:38: nested= decls
+                        // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:194:38: nested= decls
                         {
                         _last = (CommonTree)input.LT(1);
                         pushFollow(FOLLOW_decls_in_decls338);
@@ -1592,7 +1592,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "col_decls"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:197:1: col_decls returns [List<ColumnDecl> result] : d1= col_decl (d2= col_decl )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:197:1: col_decls returns [List<ColumnDecl> result] : d1= col_decl (d2= col_decl )* ;
     public final SociaLiteRule.col_decls_return col_decls() throws RecognitionException {
         SociaLiteRule.col_decls_return retval = new SociaLiteRule.col_decls_return();
         retval.start = input.LT(1);
@@ -1610,8 +1610,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:198:2: (d1= col_decl (d2= col_decl )* )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:198:3: d1= col_decl (d2= col_decl )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:198:2: (d1= col_decl (d2= col_decl )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:198:3: d1= col_decl (d2= col_decl )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -1627,7 +1627,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             retval.result = new ArrayList<ColumnDecl>(); retval.result.add((d1!=null?d1.result:null));
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:199:3: (d2= col_decl )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:199:3: (d2= col_decl )*
             loop12:
             do {
                 int alt12=2;
@@ -1640,7 +1640,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt12) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:199:4: d2= col_decl
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:199:4: d2= col_decl
             	    {
             	    _last = (CommonTree)input.LT(1);
             	    pushFollow(FOLLOW_col_decl_in_col_decls367);
@@ -1688,7 +1688,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "col_decl"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:201:1: col_decl returns [ColumnDecl result] : ^( COL_DECL type ID ( col_opt )? ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:201:1: col_decl returns [ColumnDecl result] : ^( COL_DECL type ID ( col_opt )? ) ;
     public final SociaLiteRule.col_decl_return col_decl() throws RecognitionException {
         SociaLiteRule.col_decl_return retval = new SociaLiteRule.col_decl_return();
         retval.start = input.LT(1);
@@ -1710,8 +1710,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree ID36_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:202:2: ( ^( COL_DECL type ID ( col_opt )? ) )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:202:4: ^( COL_DECL type ID ( col_opt )? )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:202:2: ( ^( COL_DECL type ID ( col_opt )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:202:4: ^( COL_DECL type ID ( col_opt )? )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -1747,7 +1747,7 @@ public TreeAdaptor getTreeAdaptor() {
             adaptor.addChild(root_1, ID36_tree);
 
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:202:23: ( col_opt )?
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:202:23: ( col_opt )?
             int alt13=2;
             int LA13_0 = input.LA(1);
 
@@ -1756,7 +1756,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt13) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:202:23: col_opt
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:202:23: col_opt
                     {
                     _last = (CommonTree)input.LT(1);
                     pushFollow(FOLLOW_col_opt_in_col_decl394);
@@ -1809,7 +1809,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "col_opt"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:206:1: col_opt returns [ColOpt result] : ( ^( RANGE i1= INT i2= INT ) | ^( SIZE i1= INT ) | ITER );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:206:1: col_opt returns [ColOpt result] : ( ^( RANGE i1= INT i2= INT ) | ^( SIZE i1= INT ) | ITER );
     public final SociaLiteRule.col_opt_return col_opt() throws RecognitionException {
         SociaLiteRule.col_opt_return retval = new SociaLiteRule.col_opt_return();
         retval.start = input.LT(1);
@@ -1833,7 +1833,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree ITER40_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:207:2: ( ^( RANGE i1= INT i2= INT ) | ^( SIZE i1= INT ) | ITER )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:207:2: ( ^( RANGE i1= INT i2= INT ) | ^( SIZE i1= INT ) | ITER )
             int alt14=3;
             switch ( input.LA(1) ) {
             case RANGE:
@@ -1861,7 +1861,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt14) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:207:3: ^( RANGE i1= INT i2= INT )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:207:3: ^( RANGE i1= INT i2= INT )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1909,7 +1909,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:210:3: ^( SIZE i1= INT )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:210:3: ^( SIZE i1= INT )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1949,7 +1949,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:213:4: ITER
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:213:4: ITER
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1994,7 +1994,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "type"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:217:1: type returns [Class result] : ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:217:1: type returns [Class result] : ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? );
     public final SociaLiteRule.type_return type() throws RecognitionException {
         SociaLiteRule.type_return retval = new SociaLiteRule.type_return();
         retval.start = input.LT(1);
@@ -2050,7 +2050,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree char_literal61_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:218:2: ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:218:2: ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? )
             int alt22=7;
             switch ( input.LA(1) ) {
             case 93:
@@ -2098,7 +2098,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt22) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:218:3: 'int' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:218:3: 'int' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2113,7 +2113,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = int.class;
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:218:32: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:218:32: ( '[' ']' )?
                     int alt15=2;
                     int LA15_0 = input.LA(1);
 
@@ -2122,7 +2122,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt15) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:218:33: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:218:33: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
                             char_literal42=(CommonTree)match(input,85,FOLLOW_85_in_type460); 
@@ -2151,7 +2151,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:219:3: 'long' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:219:3: 'long' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2166,7 +2166,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result =long.class;
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:219:31: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:219:31: ( '[' ']' )?
                     int alt16=2;
                     int LA16_0 = input.LA(1);
 
@@ -2175,7 +2175,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt16) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:219:32: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:219:32: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
                             char_literal45=(CommonTree)match(input,85,FOLLOW_85_in_type477); 
@@ -2204,7 +2204,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:220:3: 'float' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:220:3: 'float' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2219,7 +2219,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = float.class;
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:220:36: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:220:36: ( '[' ']' )?
                     int alt17=2;
                     int LA17_0 = input.LA(1);
 
@@ -2228,7 +2228,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt17) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:220:37: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:220:37: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
                             char_literal48=(CommonTree)match(input,85,FOLLOW_85_in_type493); 
@@ -2257,7 +2257,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:221:3: 'double' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:221:3: 'double' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2272,7 +2272,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = double.class;
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:221:38: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:221:38: ( '[' ']' )?
                     int alt18=2;
                     int LA18_0 = input.LA(1);
 
@@ -2281,7 +2281,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt18) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:221:39: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:221:39: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
                             char_literal51=(CommonTree)match(input,85,FOLLOW_85_in_type510); 
@@ -2310,7 +2310,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:222:3: 'String' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:222:3: 'String' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2325,7 +2325,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = String.class;
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:222:38: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:222:38: ( '[' ']' )?
                     int alt19=2;
                     int LA19_0 = input.LA(1);
 
@@ -2334,7 +2334,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt19) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:222:39: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:222:39: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
                             char_literal54=(CommonTree)match(input,85,FOLLOW_85_in_type527); 
@@ -2363,7 +2363,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 6 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:223:3: 'Object' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:223:3: 'Object' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2378,7 +2378,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = Object.class;
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:223:37: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:223:37: ( '[' ']' )?
                     int alt20=2;
                     int LA20_0 = input.LA(1);
 
@@ -2387,7 +2387,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt20) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:223:38: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:223:38: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
                             char_literal57=(CommonTree)match(input,85,FOLLOW_85_in_type543); 
@@ -2416,7 +2416,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 7 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:224:4: ID ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:224:4: ID ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2437,7 +2437,7 @@ public TreeAdaptor getTreeAdaptor() {
                     	    }
                     	
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:230:4: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:230:4: ( '[' ']' )?
                     int alt21=2;
                     int LA21_0 = input.LA(1);
 
@@ -2446,7 +2446,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt21) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:230:5: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:230:5: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
                             char_literal60=(CommonTree)match(input,85,FOLLOW_85_in_type561); 
@@ -2500,7 +2500,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "rule"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:232:1: rule returns [Object result] : ^( RULE ^( HEAD predicate ) ^( BODY body1= litlist ) ^( BODY (body2= litlist )? ) ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:232:1: rule returns [Object result] : ^( RULE ^( HEAD predicate ) ^( BODY body1= litlist ) ^( BODY (body2= litlist )? ) ) ;
     public final SociaLiteRule.rule_return rule() throws RecognitionException {
         SociaLiteRule.rule_return retval = new SociaLiteRule.rule_return();
         retval.start = input.LT(1);
@@ -2528,8 +2528,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree BODY66_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:2: ( ^( RULE ^( HEAD predicate ) ^( BODY body1= litlist ) ^( BODY (body2= litlist )? ) ) )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:3: ^( RULE ^( HEAD predicate ) ^( BODY body1= litlist ) ^( BODY (body2= litlist )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:2: ( ^( RULE ^( HEAD predicate ) ^( BODY body1= litlist ) ^( BODY (body2= litlist )? ) ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:3: ^( RULE ^( HEAD predicate ) ^( BODY body1= litlist ) ^( BODY (body2= litlist )? ) )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -2621,7 +2621,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             if ( input.LA(1)==Token.DOWN ) {
                 match(input, Token.DOWN, null); 
-                // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:62: (body2= litlist )?
+                // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:62: (body2= litlist )?
                 int alt23=2;
                 int LA23_0 = input.LA(1);
 
@@ -2630,7 +2630,7 @@ public TreeAdaptor getTreeAdaptor() {
                 }
                 switch (alt23) {
                     case 1 :
-                        // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:62: body2= litlist
+                        // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:62: body2= litlist
                         {
                         _last = (CommonTree)input.LT(1);
                         pushFollow(FOLLOW_litlist_in_rule603);
@@ -2668,7 +2668,7 @@ public TreeAdaptor getTreeAdaptor() {
             	    } else {
             	        ArrayList<RuleDecl> list = new ArrayList<RuleDecl>();
             	        list.add((RuleDecl)rd);
-            	        rd = new RuleDecl((predicate64!=null?predicate64.result:null), (body2!=null?body2.result:null));
+            	        rd = new RuleDecl((predicate64!=null?predicate64.result:null).clone(), (body2!=null?body2.result:null));
             	        list.add((RuleDecl)rd);
             	        retval.result = list;
             	    }
@@ -2702,7 +2702,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "litlist"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:250:1: litlist returns [List result] :l1= literal (l2= literal )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:250:1: litlist returns [List result] :l1= literal (l2= literal )* ;
     public final SociaLiteRule.litlist_return litlist() throws RecognitionException {
         SociaLiteRule.litlist_return retval = new SociaLiteRule.litlist_return();
         retval.start = input.LT(1);
@@ -2720,8 +2720,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:251:2: (l1= literal (l2= literal )* )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:251:4: l1= literal (l2= literal )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:251:2: (l1= literal (l2= literal )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:251:4: l1= literal (l2= literal )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -2754,7 +2754,7 @@ public TreeAdaptor getTreeAdaptor() {
             	    } else { retval.result.add((l1!=null?l1.result:null)); }
             	
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:268:2: (l2= literal )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:268:2: (l2= literal )*
             loop24:
             do {
                 int alt24=2;
@@ -2767,7 +2767,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt24) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:268:3: l2= literal
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:268:3: l2= literal
             	    {
             	    _last = (CommonTree)input.LT(1);
             	    pushFollow(FOLLOW_literal_in_litlist637);
@@ -2830,7 +2830,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "literal"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:285:1: literal returns [Object result] : ( ^( PREDICATE ( NOT )? predicate ) | ^( EXPR expr ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:285:1: literal returns [Object result] : ( ^( PREDICATE ( NOT )? predicate ) | ^( EXPR expr ) );
     public final SociaLiteRule.literal_return literal() throws RecognitionException {
         SociaLiteRule.literal_return retval = new SociaLiteRule.literal_return();
         retval.start = input.LT(1);
@@ -2854,7 +2854,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree EXPR70_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:286:2: ( ^( PREDICATE ( NOT )? predicate ) | ^( EXPR expr ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:286:2: ( ^( PREDICATE ( NOT )? predicate ) | ^( EXPR expr ) )
             int alt26=2;
             int LA26_0 = input.LA(1);
 
@@ -2873,7 +2873,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt26) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:286:3: ^( PREDICATE ( NOT )? predicate )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:286:3: ^( PREDICATE ( NOT )? predicate )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2892,7 +2892,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     match(input, Token.DOWN, null); 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:286:15: ( NOT )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:286:15: ( NOT )?
                     int alt25=2;
                     int LA25_0 = input.LA(1);
 
@@ -2901,7 +2901,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt25) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:286:15: NOT
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:286:15: NOT
                             {
                             _last = (CommonTree)input.LT(1);
                             NOT68=(CommonTree)match(input,NOT,FOLLOW_NOT_in_literal657); 
@@ -2949,7 +2949,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:298:5: ^( EXPR expr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:298:5: ^( EXPR expr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3023,7 +3023,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "predicate"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:310:1: predicate returns [Predicate result] : ID ^( INDEX ( param )? ) paramlist ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:310:1: predicate returns [Predicate result] : ID ^( INDEX ( param )? ) paramlist ;
     public final SociaLiteRule.predicate_return predicate() throws RecognitionException {
         SociaLiteRule.predicate_return retval = new SociaLiteRule.predicate_return();
         retval.start = input.LT(1);
@@ -3045,8 +3045,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree INDEX73_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:311:2: ( ID ^( INDEX ( param )? ) paramlist )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:311:4: ID ^( INDEX ( param )? ) paramlist
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:311:2: ( ID ^( INDEX ( param )? ) paramlist )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:311:4: ID ^( INDEX ( param )? ) paramlist
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -3074,7 +3074,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             if ( input.LA(1)==Token.DOWN ) {
                 match(input, Token.DOWN, null); 
-                // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:311:15: ( param )?
+                // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:311:15: ( param )?
                 int alt27=2;
                 int LA27_0 = input.LA(1);
 
@@ -3083,7 +3083,7 @@ public TreeAdaptor getTreeAdaptor() {
                 }
                 switch (alt27) {
                     case 1 :
-                        // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:311:15: param
+                        // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:311:15: param
                         {
                         _last = (CommonTree)input.LT(1);
                         pushFollow(FOLLOW_param_in_predicate692);
@@ -3155,7 +3155,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "function"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:325:1: function returns [Function result] : ^( FUNC dotname ( fparamlist )? ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:325:1: function returns [Function result] : ^( FUNC dotname ( fparamlist )? ) ;
     public final SociaLiteRule.function_return function() throws RecognitionException {
         SociaLiteRule.function_return retval = new SociaLiteRule.function_return();
         retval.start = input.LT(1);
@@ -3175,8 +3175,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree FUNC76_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:326:2: ( ^( FUNC dotname ( fparamlist )? ) )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:326:4: ^( FUNC dotname ( fparamlist )? )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:326:2: ( ^( FUNC dotname ( fparamlist )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:326:4: ^( FUNC dotname ( fparamlist )? )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -3204,7 +3204,7 @@ public TreeAdaptor getTreeAdaptor() {
             adaptor.addChild(root_1, dotname77.getTree());
 
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:326:19: ( fparamlist )?
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:326:19: ( fparamlist )?
             int alt28=2;
             int LA28_0 = input.LA(1);
 
@@ -3213,7 +3213,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt28) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:326:19: fparamlist
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:326:19: fparamlist
                     {
                     _last = (CommonTree)input.LT(1);
                     pushFollow(FOLLOW_fparamlist_in_function719);
@@ -3266,7 +3266,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "param"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:330:1: param returns [Object result] : simpleExpr ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:330:1: param returns [Object result] : simpleExpr ;
     public final SociaLiteRule.param_return param() throws RecognitionException {
         SociaLiteRule.param_return retval = new SociaLiteRule.param_return();
         retval.start = input.LT(1);
@@ -3282,8 +3282,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:331:2: ( simpleExpr )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:331:4: simpleExpr
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:331:2: ( simpleExpr )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:331:4: simpleExpr
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -3345,7 +3345,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "fparam"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:352:1: fparam returns [Object result] : simpleExpr ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:352:1: fparam returns [Object result] : simpleExpr ;
     public final SociaLiteRule.fparam_return fparam() throws RecognitionException {
         SociaLiteRule.fparam_return retval = new SociaLiteRule.fparam_return();
         retval.start = input.LT(1);
@@ -3361,8 +3361,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:353:2: ( simpleExpr )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:353:4: simpleExpr
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:353:2: ( simpleExpr )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:353:4: simpleExpr
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -3404,7 +3404,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "paramlist"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:355:1: paramlist returns [List result] :p1= param (p2= param )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:355:1: paramlist returns [List result] :p1= param (p2= param )* ;
     public final SociaLiteRule.paramlist_return paramlist() throws RecognitionException {
         SociaLiteRule.paramlist_return retval = new SociaLiteRule.paramlist_return();
         retval.start = input.LT(1);
@@ -3422,8 +3422,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:356:2: (p1= param (p2= param )* )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:356:3: p1= param (p2= param )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:356:2: (p1= param (p2= param )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:356:3: p1= param (p2= param )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -3452,7 +3452,7 @@ public TreeAdaptor getTreeAdaptor() {
             	    } else { retval.result.add((p1!=null?p1.result:null)); }
             	
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:369:2: (p2= param )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:369:2: (p2= param )*
             loop29:
             do {
                 int alt29=2;
@@ -3465,7 +3465,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt29) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:369:3: p2= param
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:369:3: p2= param
             	    {
             	    _last = (CommonTree)input.LT(1);
             	    pushFollow(FOLLOW_param_in_paramlist778);
@@ -3524,7 +3524,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "fparamlist"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:383:1: fparamlist returns [List result] :p1= fparam (p2= fparam )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:383:1: fparamlist returns [List result] :p1= fparam (p2= fparam )* ;
     public final SociaLiteRule.fparamlist_return fparamlist() throws RecognitionException {
         SociaLiteRule.fparamlist_return retval = new SociaLiteRule.fparamlist_return();
         retval.start = input.LT(1);
@@ -3542,8 +3542,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:384:2: (p1= fparam (p2= fparam )* )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:384:3: p1= fparam (p2= fparam )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:384:2: (p1= fparam (p2= fparam )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:384:3: p1= fparam (p2= fparam )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -3570,7 +3570,7 @@ public TreeAdaptor getTreeAdaptor() {
             	    } else { retval.result.add((p1!=null?p1.result:null)); }
             	
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:395:2: (p2= fparam )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:395:2: (p2= fparam )*
             loop30:
             do {
                 int alt30=2;
@@ -3583,7 +3583,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt30) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:395:3: p2= fparam
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:395:3: p2= fparam
             	    {
             	    _last = (CommonTree)input.LT(1);
             	    pushFollow(FOLLOW_fparam_in_fparamlist809);
@@ -3640,7 +3640,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "term"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:408:1: term returns [Object result] : ( ^( T_INT INT ) | ^( T_FLOAT FLOAT ) | ^( T_STR STRING ) | ^( T_UTF8 UTF8 ) | ^( T_VAR dotname ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:408:1: term returns [Object result] : ( ^( T_INT INT ) | ^( T_FLOAT FLOAT ) | ^( T_STR STRING ) | ^( T_UTF8 UTF8 ) | ^( T_VAR dotname ) );
     public final SociaLiteRule.term_return term() throws RecognitionException {
         SociaLiteRule.term_return retval = new SociaLiteRule.term_return();
         retval.start = input.LT(1);
@@ -3674,7 +3674,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree T_VAR89_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:409:2: ( ^( T_INT INT ) | ^( T_FLOAT FLOAT ) | ^( T_STR STRING ) | ^( T_UTF8 UTF8 ) | ^( T_VAR dotname ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:409:2: ( ^( T_INT INT ) | ^( T_FLOAT FLOAT ) | ^( T_STR STRING ) | ^( T_UTF8 UTF8 ) | ^( T_VAR dotname ) )
             int alt31=5;
             switch ( input.LA(1) ) {
             case T_INT:
@@ -3712,7 +3712,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt31) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:409:3: ^( T_INT INT )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:409:3: ^( T_INT INT )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3758,7 +3758,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:417:6: ^( T_FLOAT FLOAT )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:417:6: ^( T_FLOAT FLOAT )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3807,7 +3807,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:429:3: ^( T_STR STRING )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:429:3: ^( T_STR STRING )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3845,7 +3845,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:430:3: ^( T_UTF8 UTF8 )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:430:3: ^( T_UTF8 UTF8 )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3883,7 +3883,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:431:3: ^( T_VAR dotname )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:431:3: ^( T_VAR dotname )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3952,7 +3952,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "expr"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:437:1: expr returns [Object result] : ( ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr ) | ^(eq= '=' e1= simpleExpr e2= simpleExpr ) | ^( MULTI_ASSIGN varlist function (c= cast )? ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:437:1: expr returns [Object result] : ( ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr ) | ^(eq= '=' e1= simpleExpr e2= simpleExpr ) | ^( MULTI_ASSIGN varlist function (c= cast )? ) );
     public final SociaLiteRule.expr_return expr() throws RecognitionException {
         SociaLiteRule.expr_return retval = new SociaLiteRule.expr_return();
         retval.start = input.LT(1);
@@ -3982,7 +3982,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree MULTI_ASSIGN91_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:438:2: ( ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr ) | ^(eq= '=' e1= simpleExpr e2= simpleExpr ) | ^( MULTI_ASSIGN varlist function (c= cast )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:438:2: ( ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr ) | ^(eq= '=' e1= simpleExpr e2= simpleExpr ) | ^( MULTI_ASSIGN varlist function (c= cast )? ) )
             int alt33=3;
             switch ( input.LA(1) ) {
             case 63:
@@ -4015,7 +4015,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt33) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:438:3: ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:438:3: ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4077,7 +4077,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:443:5: ^(eq= '=' e1= simpleExpr e2= simpleExpr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:443:5: ^(eq= '=' e1= simpleExpr e2= simpleExpr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4140,7 +4140,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:458:6: ^( MULTI_ASSIGN varlist function (c= cast )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:458:6: ^( MULTI_ASSIGN varlist function (c= cast )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4177,7 +4177,7 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_1, function93.getTree());
 
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:458:39: (c= cast )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:458:39: (c= cast )?
                     int alt32=2;
                     int LA32_0 = input.LA(1);
 
@@ -4186,7 +4186,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt32) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:458:39: c= cast
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:458:39: c= cast
                             {
                             _last = (CommonTree)input.LT(1);
                             pushFollow(FOLLOW_cast_in_expr944);
@@ -4251,7 +4251,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "simpleExpr"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:471:1: simpleExpr returns [Object result] : ( multExpr | ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:471:1: simpleExpr returns [Object result] : ( multExpr | ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr ) );
     public final SociaLiteRule.simpleExpr_return simpleExpr() throws RecognitionException {
         SociaLiteRule.simpleExpr_return retval = new SociaLiteRule.simpleExpr_return();
         retval.start = input.LT(1);
@@ -4273,7 +4273,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree op_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:472:2: ( multExpr | ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:472:2: ( multExpr | ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr ) )
             int alt34=2;
             int LA34_0 = input.LA(1);
 
@@ -4292,7 +4292,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt34) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:472:3: multExpr
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:472:3: multExpr
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4311,7 +4311,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:473:3: ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:473:3: ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4402,7 +4402,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "multExpr"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:483:1: multExpr returns [Object result] : ( exprValue | ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:483:1: multExpr returns [Object result] : ( exprValue | ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr ) );
     public final SociaLiteRule.multExpr_return multExpr() throws RecognitionException {
         SociaLiteRule.multExpr_return retval = new SociaLiteRule.multExpr_return();
         retval.start = input.LT(1);
@@ -4424,7 +4424,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree op_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:484:2: ( exprValue | ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:484:2: ( exprValue | ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr ) )
             int alt35=2;
             int LA35_0 = input.LA(1);
 
@@ -4443,7 +4443,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt35) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:484:4: exprValue
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:484:4: exprValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4462,7 +4462,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:485:3: ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:485:3: ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4553,7 +4553,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "compExpr"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:495:1: compExpr returns [Object result] : e1= simpleExpr ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:495:1: compExpr returns [Object result] : e1= simpleExpr ;
     public final SociaLiteRule.compExpr_return compExpr() throws RecognitionException {
         SociaLiteRule.compExpr_return retval = new SociaLiteRule.compExpr_return();
         retval.start = input.LT(1);
@@ -4569,8 +4569,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:496:2: (e1= simpleExpr )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:496:4: e1= simpleExpr
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:496:2: (e1= simpleExpr )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:496:4: e1= simpleExpr
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -4612,7 +4612,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "varlist"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:498:1: varlist returns [Object result] : id1= dotname (id2= dotname )+ ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:498:1: varlist returns [Object result] : id1= dotname (id2= dotname )+ ;
     public final SociaLiteRule.varlist_return varlist() throws RecognitionException {
         SociaLiteRule.varlist_return retval = new SociaLiteRule.varlist_return();
         retval.start = input.LT(1);
@@ -4630,8 +4630,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:499:2: (id1= dotname (id2= dotname )+ )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:499:3: id1= dotname (id2= dotname )+
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:499:2: (id1= dotname (id2= dotname )+ )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:499:3: id1= dotname (id2= dotname )+
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -4649,7 +4649,7 @@ public TreeAdaptor getTreeAdaptor() {
             	    List<Variable> vars = new ArrayList<Variable>();
             	    vars.add(Variable.getVariable((id1!=null?id1.result:null))); retval.result = vars; 
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:502:2: (id2= dotname )+
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:502:2: (id2= dotname )+
             int cnt36=0;
             loop36:
             do {
@@ -4663,7 +4663,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt36) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:502:3: id2= dotname
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:502:3: id2= dotname
             	    {
             	    _last = (CommonTree)input.LT(1);
             	    pushFollow(FOLLOW_dotname_in_varlist1062);
@@ -4716,7 +4716,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "exprValue"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:505:1: exprValue returns [Object result] : ( ^( TERM term (neg= '-' )? (c= cast )? ) | ^( FUNCTION function (c= cast )? ) | ^( COMPOUND_EXPR compExpr (c= cast )? ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:505:1: exprValue returns [Object result] : ( ^( TERM term (neg= '-' )? (c= cast )? ) | ^( FUNCTION function (c= cast )? ) | ^( COMPOUND_EXPR compExpr (c= cast )? ) );
     public final SociaLiteRule.exprValue_return exprValue() throws RecognitionException {
         SociaLiteRule.exprValue_return retval = new SociaLiteRule.exprValue_return();
         retval.start = input.LT(1);
@@ -4746,7 +4746,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree COMPOUND_EXPR100_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:2: ( ^( TERM term (neg= '-' )? (c= cast )? ) | ^( FUNCTION function (c= cast )? ) | ^( COMPOUND_EXPR compExpr (c= cast )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:2: ( ^( TERM term (neg= '-' )? (c= cast )? ) | ^( FUNCTION function (c= cast )? ) | ^( COMPOUND_EXPR compExpr (c= cast )? ) )
             int alt41=3;
             switch ( input.LA(1) ) {
             case TERM:
@@ -4774,7 +4774,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt41) {
                 case 1 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:3: ^( TERM term (neg= '-' )? (c= cast )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:3: ^( TERM term (neg= '-' )? (c= cast )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4802,7 +4802,7 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_1, term97.getTree());
 
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:15: (neg= '-' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:15: (neg= '-' )?
                     int alt37=2;
                     int LA37_0 = input.LA(1);
 
@@ -4811,7 +4811,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt37) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:16: neg= '-'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:16: neg= '-'
                             {
                             _last = (CommonTree)input.LT(1);
                             neg=(CommonTree)match(input,70,FOLLOW_70_in_exprValue1086); 
@@ -4827,7 +4827,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:27: (c= cast )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:27: (c= cast )?
                     int alt38=2;
                     int LA38_0 = input.LA(1);
 
@@ -4836,7 +4836,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt38) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:27: c= cast
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:506:27: c= cast
                             {
                             _last = (CommonTree)input.LT(1);
                             pushFollow(FOLLOW_cast_in_exprValue1092);
@@ -4880,7 +4880,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:523:3: ^( FUNCTION function (c= cast )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:523:3: ^( FUNCTION function (c= cast )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4908,7 +4908,7 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_1, function99.getTree());
 
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:523:24: (c= cast )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:523:24: (c= cast )?
                     int alt39=2;
                     int LA39_0 = input.LA(1);
 
@@ -4917,7 +4917,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt39) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:523:24: c= cast
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:523:24: c= cast
                             {
                             _last = (CommonTree)input.LT(1);
                             pushFollow(FOLLOW_cast_in_exprValue1107);
@@ -4952,7 +4952,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:531:3: ^( COMPOUND_EXPR compExpr (c= cast )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:531:3: ^( COMPOUND_EXPR compExpr (c= cast )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4980,7 +4980,7 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_1, compExpr101.getTree());
 
 
-                    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:531:29: (c= cast )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:531:29: (c= cast )?
                     int alt40=2;
                     int LA40_0 = input.LA(1);
 
@@ -4989,7 +4989,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt40) {
                         case 1 :
-                            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:531:29: c= cast
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:531:29: c= cast
                             {
                             _last = (CommonTree)input.LT(1);
                             pushFollow(FOLLOW_cast_in_exprValue1122);
@@ -5048,7 +5048,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "cast"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:539:1: cast returns [Class result] : type ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:539:1: cast returns [Class result] : type ;
     public final SociaLiteRule.cast_return cast() throws RecognitionException {
         SociaLiteRule.cast_return retval = new SociaLiteRule.cast_return();
         retval.start = input.LT(1);
@@ -5064,8 +5064,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:540:2: ( type )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:540:3: type
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:540:2: ( type )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:540:3: type
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -5107,7 +5107,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "dotname"
-    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:542:1: dotname returns [String result] : ID ( DOT_ID )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:542:1: dotname returns [String result] : ID ( DOT_ID )* ;
     public final SociaLiteRule.dotname_return dotname() throws RecognitionException {
         SociaLiteRule.dotname_return retval = new SociaLiteRule.dotname_return();
         retval.start = input.LT(1);
@@ -5125,8 +5125,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree DOT_ID104_tree=null;
 
         try {
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:543:2: ( ID ( DOT_ID )* )
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:543:3: ID ( DOT_ID )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:543:2: ( ID ( DOT_ID )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:543:3: ID ( DOT_ID )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -5141,7 +5141,7 @@ public TreeAdaptor getTreeAdaptor() {
 
              retval.result = new String((ID103!=null?ID103.getText():null)); 
 
-            // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:544:3: ( DOT_ID )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:544:3: ( DOT_ID )*
             loop42:
             do {
                 int alt42=2;
@@ -5154,7 +5154,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt42) {
             	case 1 :
-            	    // /x/jiwon/workspace/socialite/grammar/SociaLiteRule.g:544:4: DOT_ID
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:544:4: DOT_ID
             	    {
             	    _last = (CommonTree)input.LT(1);
             	    DOT_ID104=(CommonTree)match(input,DOT_ID,FOLLOW_DOT_ID_in_dotname1160); 
