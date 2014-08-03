@@ -55,6 +55,7 @@ import socialite.parser.antlr.RuleDecl;
 import socialite.parser.antlr.TableDecl;
 import socialite.parser.antlr.TableStmt;
 import socialite.resource.RuleMap;
+import socialite.resource.SRuntime;
 import socialite.util.AnalysisException;
 import socialite.util.Assert;
 import socialite.util.InternalException;
@@ -677,6 +678,7 @@ public class Analysis {
 		Predicate firstP = (Predicate)first;
 		Table firstT = tableMap.get(firstP.name());
 		if (firstT.hasOrderBy()) return true;
+		if (firstT instanceof PrivateTable) return false;
 		
 		int column=firstShardedColumnWithVar(firstP, firstT);
 		if (column<0) return true; // no sharded column with variables
@@ -1569,7 +1571,27 @@ outer:	for (Variable v:sortedVars) {
 				}						
 			}
 		}
+		prepareNextId();
 	}	
+	void prepareNextId() {
+		for (Rule r: rules) {
+			if (r.getHead().hasFunctionParam() && 
+					r.getHead().getAggrF().name().equals("Builtin.nextId")) {
+				prepareNextIdReally(r.getHead());				
+			}
+		}
+	}
+	void prepareNextIdReally(Predicate h) {
+		AggrFunction aggr = h.getAggrF();
+		if (aggr.getArgs().size()==0) {
+			List<Object> args=new ArrayList<Object>(1);
+			if (conf.isDistributed()) {
+				 int clusterSize=SRuntime.masterRt().getWorkerAddrMap().size();
+				 args.add(clusterSize);
+			} else { args.add(1); }
+			aggr.setArgs(args);
+		}
+	}
 	void prepareAggrFunction(Predicate p) {
 		Table t = tableMap.get(p.name());
 		prepareAggrFunction(p, t);
