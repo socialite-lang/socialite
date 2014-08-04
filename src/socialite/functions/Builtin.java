@@ -46,8 +46,6 @@ public class Builtin {
 	public static String toStr(boolean b) { return ""+b; }
 	public static String toStr(Object o) { return ""+o; }
 
-	public static Utf8 toUtf8(String s) { return new Utf8(s); }
-	
 	public static int inc(int a, int b) { return Sum.invoke(a,b); }
 	public static long inc(long a, long b) { return Sum.invoke(a,b); }
 	public static float inc(float a, float b) { return Sum.invoke(a,b); }
