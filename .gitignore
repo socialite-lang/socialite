@@ -1,6 +1,7 @@
 *.class
 classes/
 gen/
+grammar/output/
 jython/cachedir/
 gen_master/
 logs/
