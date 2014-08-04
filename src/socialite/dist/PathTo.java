@@ -104,6 +104,14 @@ public class PathTo {
 	}
 	
 	public static String concat(String base, String file) {
-		return base + sep + file;
+		return base+sep+file;
+	}
+	public static String concat(String base, String dir, String file) {
+		return base+sep+dir+sep+file;
+	}
+	public static String concat(String base, String...dir) {
+		String s=base;
+		for (String d:dir) { s += sep+d; }
+		return s;
 	}
 }

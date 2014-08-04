@@ -18,6 +18,8 @@ import socialite.dist.PortMap;
 import socialite.dist.master.WorkerRequest;
 import socialite.engine.Config;
 import socialite.eval.Manager;
+import socialite.functions.MyId;
+import socialite.functions.NextId;
 import socialite.resource.SRuntime;
 import socialite.resource.Sender;
 import socialite.util.ByteBufferPool;
@@ -51,11 +53,16 @@ public class WorkerNode extends Thread {
 	
 	public void serve() {
 		initCmdListener();				
-		register();				
+		register();
+		initIdent();
 		initManagerAndWorkers();
 		initNetworkResources();
 		initRecvThread();
 		startListen();
+	}
+	void initIdent() {
+		int myid = MyId.invoke();
+		NextId.set(myid);
 	}
 
 	void maybeEarlyInitNetworkResources() {
