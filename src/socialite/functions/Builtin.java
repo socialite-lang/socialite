@@ -19,7 +19,8 @@ import socialite.type.Utf8;
 import socialite.util.SociaLiteException;
 
 public class Builtin {
-	public static int nextId() { return NextId.invoke(); }
+	public static int nextId(int inc) { return NextId.invoke(inc); }
+	public static int nextId(int prevId, int ignored) { return prevId; }
 	public static int resetId() { NextId.reset(); return 0; }
 	
 	public static Object choice(Object a, Object b) { return Choice.invoke(a, b); }
@@ -43,6 +44,8 @@ public class Builtin {
 	public static String toStr(short s) { return ""+s; }
 	public static String toStr(boolean b) { return ""+b; }
 	public static String toStr(Object o) { return ""+o; }
+
+	public static Utf8 toUtf8(String s) { return new Utf8(s); }
 	
 	public static int inc(int a, int b) { return Sum.invoke(a,b); }
 	public static long inc(long a, long b) { return Sum.invoke(a,b); }
@@ -139,13 +142,17 @@ public class Builtin {
 	public static float[] arraynew(int len, float init) { return ArrayUtil.fill(new float[len], init); }
 	public static double[] arraynew(int len, double init) { return ArrayUtil.fill(new double[len], init); }	
 	
-	
+	public static Object itemAt(Object[] arr, int idx) { return arr[idx]; }
+	public static String itemAt(String[] arr, int idx) { return arr[idx]; }
+	public static Utf8 itemAt(Utf8[] arr, int idx) { return arr[idx]; } 
+	public static int itemAt(int[] arr, int idx) { return arr[idx]; } 
+	public static long itemAt(long[] arr, int idx) { return arr[idx]; } 
+	public static float itemAt(float[] arr, int idx) { return arr[idx]; } 
+	public static double itemAt(double[] arr, int idx) { return arr[idx]; } 
+		
 	public static Object[] unpack(Object o) {
-		if (o.getClass().isArray())
-			return (Object[] )o;
-		else {
-			throw new SociaLiteException("Cannot unpack non-array type object:"+o);
-		}
+		if (o.getClass().isArray()) return (Object[] )o;
+		else throw new SociaLiteException("Cannot unpack non-array type object:"+o);
 	}
 	public static Avg[] unpack(Avg[] d) { return d; }	
 	public static Count[] unpack(Count[] d) { return d; }

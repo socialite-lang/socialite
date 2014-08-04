@@ -26,9 +26,10 @@ import socialite.util.SocialiteOutputStream;
 public class PyInterp extends PythonInterpreter {
 	public static final Log L=LogFactory.getLog(PyInterp.class);
 			
-	static PythonInterpreter interp = new PythonInterpreter();
+	static PythonInterpreter interp = null;
 	
 	public static PythonInterpreter get() {
+		assert interp!=null;
 		return interp;
 	}
 	public static void set(PythonInterpreter _interp) {

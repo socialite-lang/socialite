@@ -18,10 +18,10 @@ public class Str {
 	}
 	public static String[] split(String str, char d, int maxsplit) {
 		ArrayList<String> splitted = new ArrayList<String>();
-		str = trim(str, d);
 		int idx = 0, newIdx = -1;
 		int splitnum=0;
 		while ((newIdx = str.indexOf(d, idx)) != -1) {
+			if (newIdx==idx) splitted.add("");
 			if (newIdx > idx) splitted.add(str.substring(idx, newIdx));
 			idx = newIdx + 1;
 			splitnum++;
@@ -41,7 +41,6 @@ public class Str {
 		if (delimLength==1) { return split(str, delim.charAt(0), maxsplit); }
 		
 		ArrayList<String> splitted = new ArrayList<String>();
-		str = str.trim();
 		int idx = 0, newIdx = -1;
 		int splitnum=0;
 		while ((newIdx = str.indexOf(delim, idx)) != -1) {

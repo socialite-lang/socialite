@@ -15,4 +15,7 @@ public class MyId {
 		int id = runtime.getWorkerAddrMap().myIndex();
 		return id;
 	}
+	public static int get() {
+		return invoke();
+	}
 }
