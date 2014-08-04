@@ -65,11 +65,12 @@ def internal(f):
     return f
 internal.internal = True
 
+isInteractive = False
 isClusterEngine = False
 engine = None
 @internal
 def init(cpu=None, dist=False, interactive=False, verbose=None):
-    global engine, isClusterEngine
+    global engine, isClusterEngine, isInteractive
     if engine==None:
         if dist:
             engine = ClientEngine()
@@ -82,6 +83,7 @@ def init(cpu=None, dist=False, interactive=False, verbose=None):
             if verbose: conf.setVerbose()
             engine = LocalEngine(conf)
     if interactive:
+        isInteractive = True
         engine = AsyncEngine(engine)
 
 cleanupFuncs =[]
@@ -444,5 +446,15 @@ def install_funcs():
     setquit()       
     import atexit
     atexit.register(cleanupOnExit)
+
+#    def handler(signum, frame):
+#        if not isInteractive:
+#            raise SystemExit()
+#
+#        import org.python.util.JLineSociaLiteConsole as JLineSociaLiteConsole
+#        JLineSociaLiteConsole.setKeyboardInterrupt();
+#
+#    import signal
+#    signal.signal(signal.SIGINT, handler)
 
 install_funcs()

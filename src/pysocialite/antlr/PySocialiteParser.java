@@ -1,4 +1,4 @@
-// $ANTLR 3.4 /Users/jiwon/workspace/socialite/grammar/PySocialite.g 2014-07-28 13:00:29
+// $ANTLR 3.4 /Users/jiwon/workspace/socialite/grammar/PySocialite.g 2014-08-03 16:22:02
 
     package pysocialite.antlr;    
     import java.util.List;
@@ -53,7 +53,7 @@ public class PySocialiteParser extends Parser {
 
 
     // $ANTLR start "prog"
-    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:191:1: prog returns [String str] : (t= . )* EOF ;
+    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:195:1: prog returns [String str] : (t= . )* EOF ;
     public final String prog() throws RecognitionException {
         String str = null;
 
@@ -62,10 +62,10 @@ public class PySocialiteParser extends Parser {
 
         StringBuilder builder = new StringBuilder();
         try {
-            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:193:5: ( (t= . )* EOF )
-            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:193:7: (t= . )* EOF
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:197:5: ( (t= . )* EOF )
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:197:7: (t= . )* EOF
             {
-            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:193:7: (t= . )*
+            // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:197:7: (t= . )*
             loop1:
             do {
                 int alt1=2;
@@ -78,7 +78,7 @@ public class PySocialiteParser extends Parser {
 
                 switch (alt1) {
             	case 1 :
-            	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:193:8: t= .
+            	    // /Users/jiwon/workspace/socialite/grammar/PySocialite.g:197:8: t= .
             	    {
             	    t=(Token)input.LT(1);
 
