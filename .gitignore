@@ -2,6 +2,7 @@
 classes/
 gen/
 grammar/output/
+ext/cachedir/
 jython/cachedir/
 gen_master/
 logs/
