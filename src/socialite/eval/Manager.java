@@ -96,7 +96,8 @@ public class Manager extends Thread {
 		if (workers == null) {
 			urgentWorkers = _workerNum/2;
 			if (_workerNum==1) urgentWorkers=0;
-			else if (urgentWorkers<2) urgentWorkers=2;
+			else if (urgentWorkers<2) 
+				urgentWorkers=2;
 			
 			Worker.initLocalQueues(_workerNum+urgentWorkers);
 			TmpTablePool.init(_workerNum+urgentWorkers);
