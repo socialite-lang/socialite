@@ -44,6 +44,7 @@ public class Str {
 		int idx = 0, newIdx = -1;
 		int splitnum=0;
 		while ((newIdx = str.indexOf(delim, idx)) != -1) {
+			if (newIdx==idx) splitted.add("");
 			if (newIdx > idx) splitted.add(str.substring(idx, newIdx));
 			idx = newIdx + delimLength;
 			splitnum++;

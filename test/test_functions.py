@@ -68,6 +68,23 @@ class TestFunctions(unittest.TestCase):
         else:
             self.fail("Expected exception is not raised from $pyerr")
 
+    def test_builtin_split(self):
+        `Str(String a, String b, String c).
+         Str(a,b,c) :- (a,b,c) = $split("11::::22::33", "::", 3). `
+
+        a,b,c = `Str(a,b,c)`.next()
+        self.assertEqual(a, "11")
+        self.assertEqual(b, "")
+        self.assertEqual(c, "22::33")
+
+        `clear Str.`
+
+        `Str(a,b,c) :- (a,b,c) = $split("AA::BB::CC ::DD", "::", 3).`
+        a,b,c = `Str(a,b,c)`.next()
+        self.assertEqual(a, "AA")
+        self.assertEqual(b, "BB")
+        self.assertEqual(c, "CC ::DD")
+
 
 if __name__ == '__main__':
     unittest.main()
