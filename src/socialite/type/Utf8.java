@@ -105,9 +105,9 @@ public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
 	public int hashCode() {
 		int h = hash;
 		if (h==0 && bytes.length>0) {
-			/*for (int i = 0; i < bytes.length; i++)
-				h = h * 31 + bytes[i];*/
-			h = hash32(bytes);
+			for (int i = 0; i < bytes.length; i++)
+				h = h * 31 + bytes[i];
+			//h = hash32(bytes);
 			hash = h;
 		}
 		return h;
