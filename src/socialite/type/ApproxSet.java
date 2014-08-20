@@ -17,10 +17,11 @@ public class ApproxSet implements Externalizable {
 	List<BloomFilter> prevSets;
 	BloomFilter set;
 	public ApproxSet() {
-		set = new BloomFilter(8, 16, 4);
-	}
-	
-	public ApproxSet(double bitsPerElem, int expectedSize, int numHash) {
+		int numHash = getOptimalNumHash(10);
+		set = new BloomFilter(10, 1024, numHash);
+	}	
+	public ApproxSet(double bitsPerElem, int expectedSize) {
+		int numHash = getOptimalNumHash(bitsPerElem);
 		set = new BloomFilter(bitsPerElem, expectedSize, numHash);
 	}
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -45,28 +46,49 @@ public class ApproxSet implements Externalizable {
     	}
     	set = (BloomFilter) in.readObject();
 	}
-    BloomFilter set() {
-    	if (set==null) set = new BloomFilter(8, 16, 4);
-    	return set;
+    
+    int getOptimalNumHash(double bitsPerElem) {
+    	// See http://corte.si/posts/code/bloom-filter-rules-of-thumb/index.html
+    	int numHash = (int) Math.round(bitsPerElem*0.71f); 
+    	if (numHash<=0) numHash = 1;
+    	return numHash;
     }
     public ApproxSet get() { return this; }
 
 	public boolean add(int v) {		
-		if (set.isFull()) {
-			if (prevSets==null) prevSets = new ArrayList<BloomFilter>(2);
-			
-			prevSets.add(set);
-			int expandby= 4;			
-			int expectedSize = set.size()*expandby;			
-			double bitsPerElm = set.getExpectedBitsPerElement()+0.25;
-			if (bitsPerElm > 10) bitsPerElm = 10;
-			int numHash = (int)(bitsPerElm*0.7f);
-			set = new BloomFilter(bitsPerElm, expectedSize, numHash);
-		}
+		if (set.isFull()) expand();
+
 		return set.add(v);		
+	}
+	public boolean add(long v) {		
+		if (set.isFull()) expand();
+
+		return set.add(v);		
+	}
+
+	void expand() {
+		if (prevSets==null) prevSets = new ArrayList<BloomFilter>(2);
+		
+		prevSets.add(set);
+		int expandby= 4;			
+		int expectedSize = set.getNumExpectedElements()*expandby;
+		double bitsPerElm = set.getExpectedBitsPerElement()+2*(1+prevSets.size());
+		int numHash = getOptimalNumHash(bitsPerElm);
+		set = new BloomFilter(bitsPerElm, expectedSize, numHash);
 	}
 	
 	public boolean contains(int v) {
+		if (set.contains(v)) 
+			return true;
+		if (prevSets!=null) {
+			for (BloomFilter prevSet:prevSets) {
+				if (prevSet.contains(v))
+					return true;
+			}
+		}
+		return false;
+	}
+	public boolean contains(long v) {
 		if (set.contains(v)) 
 			return true;
 		if (prevSets!=null) {
@@ -88,16 +110,19 @@ public class ApproxSet implements Externalizable {
 	}
 	
 	public static void main(String[] args) {
-		ApproxSet set = new ApproxSet(5.0, 500, 3);
+		ApproxSet set = new ApproxSet(10, 1024);
 		for (int i=-5000; i<5000; i++) {
-			set.add(i);
+			boolean added=set.add(i);
+			if (!added) {
+				System.out.println("added:"+added);
+			}
 		}
 		
 		int cnt=0;
-		for (int i=5001; i<105000; i++) {
+		for (int i=5001; i<1005000; i++) {
 			if (set.contains(i))
 				cnt++;
 		}
-    	System.out.println("False positives:"+cnt+" ratio:"+(cnt/100000.0));
+    	System.out.println("False positives:"+cnt+" ratio:"+(cnt/1000000.0));
 	}
 }

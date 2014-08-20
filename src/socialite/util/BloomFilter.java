@@ -16,25 +16,22 @@ public class BloomFilter implements Externalizable {
 	static final long serialVersionUID = 1L;
 
 	private BitSet bitset;
-	private int bitSetSize;
 	private float bitsPerElement;
-	private int numOfElements;
+	private int numElements;
 	private short k; // # of hash functions
 
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(bitset);
-		out.writeInt(bitSetSize);
 		out.writeFloat(bitsPerElement);
-		out.writeInt(numOfElements);
+		out.writeInt(numElements);
 		out.writeShort(k);
 	}
 
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
 		bitset = (BitSet) in.readObject();
-		bitSetSize = in.readInt();
 		bitsPerElement = in.readFloat();
-		numOfElements = in.readInt();
+		numElements = in.readInt();
 		k = in.readShort();
 	}
 
@@ -46,8 +43,8 @@ public class BloomFilter implements Externalizable {
 	public BloomFilter(float c, int n, int k) {
 		this.k = (short) k;
 		this.bitsPerElement = (float) c;
-		this.bitSetSize = (int) Math.ceil(c * n);
-		numOfElements = 0;
+		int bitSetSize = (int) Math.ceil(c * n);
+		numElements = 0;
 		this.bitset = new BitSet(bitSetSize);
 	}
 
@@ -56,19 +53,9 @@ public class BloomFilter implements Externalizable {
 	}
 
 	/**
-	 * @param bitSetSize defines how many bits should be used in total for the filter.
-	 * @param expectedNum defines the maximum number of elements the filter is expected to contain.
-	 */
-	public BloomFilter(int bitSetSize, int expectedNum) {
-		this(bitSetSize / (float) expectedNum, expectedNum, 
-				(int) Math.round((bitSetSize/(float)expectedNum)*Math.log(2.0)));
-	}
-
-	/**
 	 * Compares the contents of two instances to see if they are equal.
 	 * 
-	 * @param obj
-	 *            is the object to compare to.
+	 * @param obj is the object to compare to.
 	 * @return True if the contents of the objects are equal.
 	 */
 	@Override
@@ -82,20 +69,19 @@ public class BloomFilter implements Externalizable {
 		final BloomFilter other = (BloomFilter) obj;
 
 		if (this.k != other.k) return false;
-		if (this.bitSetSize != other.bitSetSize) return false;
-		if (this.bitset != other.bitset
-				&& (this.bitset == null || !this.bitset.equals(other.bitset))) {
-			return false;
-		}
-		return true;
+		if (this.bitsPerElement != other.bitsPerElement) return false;
+		if (this.numElements != other.numElements) return false;
+		return this.bitset.equals(other.bitset);
 	}
 
 	@Override
 	public int hashCode() {
 		int hash = 7;
 		hash = 61 * hash + (this.bitset != null ? this.bitset.hashCode() : 0);
-		hash = 61 * hash + this.bitSetSize;
+		hash = 61 * hash + this.getBitSetSize();
 		hash = 61 * hash + this.k;
+		hash = 61 * hash + HashCode.get(bitsPerElement);
+		hash = 61 * hash + HashCode.get(numElements);
 		return hash;
 	}
 
@@ -108,7 +94,7 @@ public class BloomFilter implements Externalizable {
 
 	public void clear() {
 		bitset.clear();
-		numOfElements = 0;
+		numElements = 0;
 	}
 
 
@@ -145,9 +131,9 @@ public class BloomFilter implements Externalizable {
 		int[] h = new int[k];
 		int h0=hash0(val);
 		int h1=hash1(val);
-		for (int i=1; i<k; i++) {
+		for (int i=0; i<k; i++) {
 			int x=h0+i*h1;
-			h[i] = Math.abs(x%bitSetSize);
+			h[i] = Math.abs(x)%getBitSetSize();
 		}
 		return h;
 	}
@@ -157,35 +143,36 @@ public class BloomFilter implements Externalizable {
 		long h1=hash1(val);
 		for (int i=0; i<k; i++) {
 			long x=h0+i*h1;
-			h[i] = Math.abs((int)(x%bitSetSize));
+			if (x<0) x = -x;
+			h[i] = (int)(x%getBitSetSize());
 		}
 		return h;
 	}
 
 	public boolean isFull() {
-		if (bitset.cardinality() * 2 > bitSetSize)
+		if (bitset.cardinality()*2+1 >= getBitSetSize())
 			return true;
 		return false;
 	}
 
 	public boolean add(int v) {
-		boolean added = true;
+		boolean added = false;
 		for (int h:hash(v)) {
 			if (!bitset.get(h))
-				added = false;
+				added = true;
 			bitset.set(h, true);
 		}
-		numOfElements++;
+		numElements++;
 		return added;		
 	}
 	public boolean add(long v) {
-		boolean added = true;
+		boolean added = false;
 		for (int h:hash(v)) {
 			if (!bitset.get(h))
-				added = false;
+				added = true;
 			bitset.set(h, true);
 		}
-		numOfElements++;
+		numElements++;
 		return added;
 	}
 	public boolean add(float f) {
@@ -197,7 +184,7 @@ public class BloomFilter implements Externalizable {
 		return add(l);
 	}
 	public boolean add(Object o) {
-		throw new SociaLiteException("Adding object to BloomFilter is not supported yet");
+		throw new SociaLiteException("Object type is not supported by BloomFilter yet.");
 	}
 
 	public boolean contains(int v) {
@@ -226,15 +213,14 @@ public class BloomFilter implements Externalizable {
 		throw new SociaLiteException("Adding object to BloomFilter is not supported yet");
 	}
 
+	public int bitSetSize() { return this.getBitSetSize(); }
+	public int size() { return this.numElements; }
 
-	public int size() { return this.bitSetSize; }
+	public int count() { return this.numElements; }
 
-	public int count() { return this.numOfElements; }
-
+	public int getNumExpectedElements() { return (int)(this.getBitSetSize()/bitsPerElement); }
+	
 	public double getExpectedBitsPerElement() { return (double)this.bitsPerElement; }
 
-	public double getBitsPerElement() {
-		return this.bitSetSize/(double)numOfElements;
-	}
-
+	int getBitSetSize() { return bitset.size(); }
 }
