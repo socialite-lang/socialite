@@ -313,6 +313,7 @@ public class Parser {
 	}
 	public void dropTable(String name) {
 		TableDecl decl = tableDeclMap.get(name);
+		if (decl==null) return;
 		if (decl.hasIterColumn()) {
 			for (int i=0; i<decl.maxIter(); i++) {						
 				tableMap.remove(IterTable.name(decl.name(), i));

@@ -85,6 +85,24 @@ class TestFunctions(unittest.TestCase):
         self.assertEqual(b, "BB")
         self.assertEqual(c, "CC ::DD")
 
+    def test_prim_array_ret(self):
+        `TestX(int a, int b).
+         TestX(a,b) :- (a,b)=$TestFunc.getIntArray(42, 43).`
+
+        (a,b) = `TestX(a,b)`.next()
+        self.assertEqual(a, 42)
+        self.assertEqual(b, 43)
+        `drop TestX.`
+
+    def test_prim_array_ret_as_array(self):
+        `TestX(int a, int b).
+         TestX(a,b) :- x=$TestFunc.getIntArray(42, 43), a=$itemAt(x, 0), b=$itemAt(x, 1).`
+
+        (a,b) = `TestX(a,b)`.next()
+        self.assertEqual(a, 42)
+        self.assertEqual(b, 43)
+        `drop TestX.`
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -347,8 +347,7 @@ public class Rule implements Serializable {
 		String sig="";
 		Predicate p=getHead();
 		Table t=tableMap.get(p.name());
-		//sig += p.signature(t.signature());
-		sig += p.signature(p.name());
+		sig += p.signature(t.signature()); //sig += p.signature(p.name());
 		sig += ":-";
 		boolean first=true;
 		for (Object o:getBody()) {
