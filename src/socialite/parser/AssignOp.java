@@ -127,7 +127,7 @@ public class AssignOp extends Op {
 	public ST codegen() {
 		ST stmts=CodeGen.stmts();
 		if (arg2 instanceof Function) {
-			return genFunctionAssign(stmts);			
+			return genFunctionAssign(stmts);
 		} else {
 			String assign="";
 			String type= MyType.javaTypeName(arg1);
@@ -146,9 +146,9 @@ public class AssignOp extends Op {
 			else withIter.add("iterGetter", f.codegen().render());
 			withIter.add("iterVar", CodeGen.uniqueVar("$iter"));
 			String funcRet=CodeGen.uniqueVar("$v");
-			withIter.add("var", funcRet);			
-			
-			if (isMultipleAssign() && f.isArrayType()) {
+			withIter.add("var", funcRet);
+
+            if (isMultipleAssign() && f.isArrayType()) {
 				@SuppressWarnings("unchecked")
 				List<Variable> lhs=(List<Variable>)arg1;
 				if (f.isPrimArrayType()) withIter.add("iterType", MyType.javaType(lhs.get(0))+"[]");
@@ -170,8 +170,11 @@ public class AssignOp extends Op {
 					withIter.add("stmts", lhs+"=("+pyToJava+")"+funcRet);				
 				}
 			} else {
-				Variable lhs = (Variable)arg1;				
-				String lhsType = MyType.javaType(lhs).getName();
+				Variable lhs = (Variable)arg1;
+                String lhsType;
+                if (MyType.javaType(lhs).isArray()) {
+                    lhsType = MyType.javaType(lhs).getComponentType().getName()+"[]";
+                } else { lhsType = MyType.javaType(lhs).getName(); }
 				withIter.add("iterType", lhsType);
 				withIter.add("stmts", lhs+"=("+lhsType+")"+funcRet);
 			}

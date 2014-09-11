@@ -283,21 +283,21 @@ public class Function implements Externalizable {
 			if (!(genRetType instanceof ParameterizedType)) {
 				String msg = "Require parameterized Iterator type such as Iterator<String>.";
 				throw new InternalException(msg);
-			}			
-			Type paramType = ((ParameterizedType) genRetType).getActualTypeArguments()[0];			
+			}
+            Type paramType = ((ParameterizedType) genRetType).getActualTypeArguments()[0];
 			if (paramType instanceof GenericArrayType) {
-				Type compType=((GenericArrayType)paramType).getGenericComponentType();
-				retType = (Class<?>)compType;
+            	Type compType=((GenericArrayType)paramType).getGenericComponentType();
+            	retType = (Class<?>)compType;
 				computeJavaArrayReturnVarTypes(cast, retType);	
 			} else {
-				retType = (Class<?>)paramType;
-				if (retType.isArray() && getReturns().size()>=2) {
+            	retType = (Class<?>)paramType;
+            	if (retType.isArray() && getReturns().size()>=2) {
 					computeJavaArrayReturnVarTypes(cast, retType);
 				} else {
 					retType = doTypeCast(cast, retType);
 					Variable v=getReturns().get(0);
 					v.setType(retType);
-				}
+            	}
 			}
 		} else if (TIterator.class.isAssignableFrom(retType)) {
 			String msg="Unexpected return type from $"+name;
