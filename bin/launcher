@@ -68,19 +68,21 @@ fi
 case $kind in
   (master)
     CLASS=socialite.dist.master.MasterNode
-    JAVA_HEAP_MAX=-Xmx128m
-    JAVA_HEAP_MIN=-Xms8m
+    JAVA_HEAP_MAX=-Xmx1024m
+    JAVA_HEAP_MIN=-Xms16m
   ;;
   (worker)
     CLASS=socialite.dist.worker.WorkerNode
   ;;
   (client)
-    CLASS=socialite.dist.client.Run
+    CLASS=$1; shift
+    JAVA_HEAP_MAX=-Xmx4096m
+    JAVA_HEAP_MIN=-Xms16m
   ;;
   (query)
     CLASS=$1; shift
-    JAVA_HEAP_MAX=-Xmx12m
-    JAVA_HEAP_MIN=-Xms4m
+    JAVA_HEAP_MAX=-Xmx1024m
+    JAVA_HEAP_MIN=-Xms16m
   ;;
   (*)
     CLASS=$kind
@@ -88,5 +90,5 @@ case $kind in
     #exit 1
   ;;
 esac
-
-exec "$JAVA" $JVM_OPTS $SOCIALITE_OPTS -classpath "$CLASSPATH" $CLASS  "$@"
+JVM_HEAP_OPTS="$JAVA_HEAP_MAX $JAVA_HEAP_MIN"
+exec "$JAVA" $JVM_HEAP_OPTS $JVM_OPTS $SOCIALITE_OPTS -classpath "$CLASSPATH" $CLASS  "$@"

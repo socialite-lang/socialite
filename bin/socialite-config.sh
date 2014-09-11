@@ -35,6 +35,9 @@ CLASSPATH=${CLASSPATH}:${EXT}/commons-logging-1.1.1.jar:${EXT}/commons-logging-a
 CLASSPATH=${CLASSPATH}:${EXT}/log4j-1.2.16.jar
 CLASSPATH=${CLASSPATH}:${EXT}/jython.jar
 CLASSPATH=${CLASSPATH}:${EXT}/ST-4.0.7.jar:${EXT}/antlr-3.5.2-complete-no-st3.jar:${EXT}/trove-3.0.3.jar 
+CLASSPATH=${CLASSPATH}:${EXT}/linkedin/linkedin-all.jar
+CLASSPATH=${CLASSPATH}:${EXT}/tusk-examples-0.0.4.jar
+CLASSPATH=${CLASSPATH}:${EXT}/slf4j-api-1.7.7.jar
 
 #CLASSPATH=${CLASSPATH}:${EXT}/jfreechart-1.0.14-all.jar
 
@@ -56,7 +59,7 @@ fi
 # Determine the JVM type and version
 JAVA="${JAVA_HOME}/bin/java"
 
-java_ver_output=`"${JAVA}" -version 2>&1`
+java_ver_output=`"${JAVA}" -Xmx48m -Xms16m -version 2>&1`
 
 jvm_ver_long=`echo "$java_ver_output" | awk -F'"' 'NR==1 {print $2}'`
 JVM_VERSION=`echo $jvm_ver_long | sed 's/\(.*\)\.\(.*\)\..*/\1\2/; 1q'`
@@ -97,7 +100,7 @@ if [ "x$JAVA_HEAP_MIN" == "x" ]; then
 fi
 
 JVM_OPTS="$JVM_OPTS -da"
-JVM_OPTS="$JVM_OPTS -server $JAVA_HEAP_MAX $JAVA_HEAP_MIN -Xss1024k"
+JVM_OPTS="$JVM_OPTS -server -Xss1024k"
 JVM_OPTS="$JVM_OPTS -XX:MaxInlineSize=128"
 JVM_OPTS="$JVM_OPTS -XX:+UseParallelGC -XX:+UseTLAB -XX:TLABSize=8M -XX:+ResizeTLAB"
 
