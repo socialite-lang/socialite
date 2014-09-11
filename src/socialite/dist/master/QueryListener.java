@@ -503,6 +503,8 @@ public class QueryListener implements QueryProtocol {
 		return Status.toWritable(summary);
 	}
 	void tableStatus(Status summary) {
+		if (!engineExists()) return;
+		DistEngine engine = getEngine();
 		Parser p = getEngine().getParser();
 		Map<String, Table> tableMap = p.getTableMap();
 		String tableInfo="";
