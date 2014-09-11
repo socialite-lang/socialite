@@ -62,9 +62,14 @@ public class PyInterp extends PythonInterpreter {
 	}
 	
 	public static List<PyFunction> getFunctions() {				
-		PyDictionary locals=(PyDictionary)interp.getLocals();
-		List<PyFunction> funcs = new ArrayList<PyFunction>(locals.size());
-		PyIterator it=(PyIterator)locals.itervalues();
+		PyObject _locals=interp.getLocals();
+		List<PyFunction> funcs=new ArrayList<PyFunction>(_locals.__len__());
+		PyIterator it=null;
+		if (_locals instanceof PyDictionary) {
+			it=(PyIterator)((PyDictionary)_locals).itervalues();
+		} else {
+			it=(PyIterator)((PyStringMap)_locals).itervalues();
+		}
 		while (true) {
 			PyObject p=it.__iternext__();
 			if (p==null) break;
