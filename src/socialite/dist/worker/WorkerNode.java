@@ -54,7 +54,7 @@ public class WorkerNode extends Thread {
 	public void serve() {
 		initCmdListener();				
 		register();
-		initIdent();
+		//initIdent();
 		initManagerAndWorkers();
 		initNetworkResources();
 		initRecvThread();
