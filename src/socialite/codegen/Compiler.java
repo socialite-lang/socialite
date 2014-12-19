@@ -8,10 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.security.SecureClassLoader;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -24,14 +21,12 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
-import javax.tools.JavaFileManager.Location;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import socialite.dist.PathTo;
-import socialite.engine.Config;
-import socialite.util.Assert;
 import socialite.util.Loader;
 import socialite.util.SociaLiteException;
 
@@ -42,27 +37,27 @@ public class Compiler {
 		File f = new File(path);
 		defaultClassPaths.add(f);
 	}
-	
-	JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+	static LinkedHashMap<String, byte[]> EMPTY_MAP = new LinkedHashMap<String, byte[]>(0);
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 	DiagnosticCollector<JavaFileObject> dc = new DiagnosticCollector<JavaFileObject>();
-	String errorMsg="";
+    LinkedHashMap<String, byte[]> compiledClasses = EMPTY_MAP;
+    String errorMsg="";
 	boolean verbose = false;
-	Config conf;
 
-	public Compiler(Config _conf) {
-		conf=_conf;
-		verbose = conf.isVerbose();		
+    public Compiler() { }
+	public Compiler(boolean _verbose) {
+		verbose = _verbose;
 	}
-	
-	public String getErrorMsg() { return errorMsg; }
+
+    public LinkedHashMap<String, byte[]> getCompiledClasses() { return compiledClasses; }
+    public String getErrorMsg() { return errorMsg; }
 
 	public boolean compile(String name, String sourceCode) {
 		JavaFileObject javaSrc = new JavaSourceFromString(name, sourceCode);
-		StandardJavaFileManager fileManager = compiler.getStandardFileManager(dc, null, null);
+        JavaMemFileManager fileManager = new JavaMemFileManager(compiler.getStandardFileManager(dc, null, null));
 		try {
 			File outputDir = new File(PathTo.classOutput());
 			Loader.addClassPath(outputDir);
-			
 			fileManager.setLocation(StandardLocation.CLASS_OUTPUT,Arrays.asList(outputDir));
 
 			// classpath the compiler uses to compile sourceCode
@@ -79,27 +74,93 @@ public class Compiler {
 
 		Iterable<? extends JavaFileObject> compUnit = Arrays.asList(javaSrc);
 		Iterable<String> options = null; //Arrays.asList(new String[] { "-g:none"});
-		JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager,
-				dc, options, null, compUnit);
-
+		JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, dc, options, null, compUnit);
 		boolean success = task.call();
+        if (success) {
+            compiledClasses = fileManager.getCompiledClasses();
+            Loader.loadFromBytes(compiledClasses);
+        }
 		if (!success || verbose) {
 			errorMsg = "";
 			for (Diagnostic diag : dc.getDiagnostics()) {
-				//errorMsg += diag.getCode()+"\n"; 
-				errorMsg += "\n";
-				errorMsg += diag.getKind()+"\n";
-				//errorMsg += diag.getPosition()+"\n";  
-				//errorMsg += diag.getStartPosition()+"\n";
-				//errorMsg += diag.getEndPosition()+"\n";
-				errorMsg += diag.getSource()+"\n";
-				errorMsg += diag.getMessage(null)+"\n";
+                if (diag.getKind().equals(Diagnostic.Kind.ERROR)) {
+                    errorMsg += "in "+name+"\n";
+                    errorMsg += diag.getKind() + ", line:" + diag.getLineNumber() + ", pos:" + diag.getColumnNumber() + "\n";
+                    errorMsg += diag.getMessage(null);
+                    errorMsg += "\n";
+                }
 			}
 		}
 		try { fileManager.close(); }
 		catch (IOException e) { L.warn("Error while closing FileManager:"+e); }
 		return success;
 	}
+}
+
+class JavaMemFileManager extends ForwardingJavaFileManager {
+    static class ClassMemFileObject extends SimpleJavaFileObject {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        ClassMemFileObject(String className) {
+            super(URI.create("mem:///" + className + Kind.CLASS.extension), Kind.CLASS);
+        }
+        byte[] getBytes() { return os.toByteArray(); }
+        public OutputStream openOutputStream() throws IOException { return os; }
+    }
+    static boolean isAnonymousClass(String name) {
+        int lastDollarIndex = name.lastIndexOf('$');
+        if (lastDollarIndex<0) return false;
+
+        String suffix = name.substring(lastDollarIndex+1);
+        for (int i=0; i<suffix.length(); i++) {
+            if (!Character.isDigit(suffix.charAt(i)))
+                return false;
+        }
+        return true;
+    }
+    TreeMap<String, ClassMemFileObject> topoSortedClasses =
+                new TreeMap<String, ClassMemFileObject>(
+                        new Comparator<String>() {
+                        // classes are sorted so that outmost class comes first
+                            public int compare(String a, String b) {
+                                /** "$Nested" in a class name indicates nested table.
+                                 *  @see TableCodeGen#nestedTableName(int) */
+                                int nestLevelA = StringUtils.countMatches(a, "$Nested");
+                                int nestLevelB = StringUtils.countMatches(b, "$Nested");
+                                if (nestLevelA == nestLevelB) {
+                                    if (isAnonymousClass(a)) return -1;
+                                    if (isAnonymousClass(b)) return 1;
+
+                                    return StringUtils.countMatches(a, "$")- StringUtils.countMatches(b, "$");
+                                } else {
+                                    return nestLevelA - nestLevelB;
+                                }
+
+                            }
+                        });
+    protected JavaMemFileManager(JavaFileManager _fileManager) {
+        super(_fileManager);
+    }
+    @Override
+    public JavaFileObject getJavaFileForOutput(Location location,
+                                               String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
+        ClassMemFileObject clazz = new ClassMemFileObject(className);
+        if (!Loader.exists(className)) {
+            topoSortedClasses.put(className, clazz);
+        }
+        return clazz;
+    }
+    public LinkedHashMap<String, byte[]> getCompiledClasses() {
+        LinkedHashMap<String, byte[]> compiledClasses = new LinkedHashMap<String, byte[]>();
+        for (Map.Entry<String, ClassMemFileObject> entry: topoSortedClasses.entrySet()) {
+Compiler.L.info(" NOTICE adding to compiledClasses:"+entry.getKey());
+            compiledClasses.put(entry.getKey(), entry.getValue().getBytes());
+        }
+        return compiledClasses;
+    }
+
+    public void setLocation(JavaFileManager.Location location, Iterable<? extends File> path) throws IOException {
+        ((StandardJavaFileManager)fileManager).setLocation(location, path);
+    }
 }
 
 class JavaSourceFromString extends SimpleJavaFileObject {

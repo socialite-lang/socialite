@@ -26,7 +26,6 @@ import socialite.parser.DeltaTable;
 import socialite.parser.Expr;
 import socialite.parser.Function;
 import socialite.parser.GeneratedT;
-import socialite.parser.PrivPredicate;
 import socialite.parser.MyType;
 import socialite.parser.Op;
 import socialite.parser.Predicate;
@@ -37,13 +36,11 @@ import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.parser.Variable;
 import socialite.parser.antlr.ColumnGroup;
-import socialite.resource.SRuntime;
+import socialite.resource.SRuntimeMaster;
 import socialite.tables.TableUtil;
 import socialite.util.Assert;
 import socialite.functions.Choice;
 import socialite.functions.Max;
-import socialite.functions.Min;
-import socialite.functions.Min2;
 
 //import org.antlr.stringtemplate.StringTemplate;
 //import org.antlr.stringtemplate.StringTemplateGroup;
@@ -208,7 +205,8 @@ public class VisitorCodeGen {
 		}
 		declareDeltaTableIfAny();
 
-		visitorTmpl.add("fieldDecls", "SRuntime " + runtimeVar());		
+		visitorTmpl.add("fieldDecls", "SRuntime " + runtimeVar());
+        visitorTmpl.add("fieldDecls", "final int " + epochIdVar());
 		visitorTmpl.add("fieldDecls", "final int " + ruleIdVar());
 		visitorTmpl.add("fieldDecls", "TableInstRegistry " + registryVar());
 		visitorTmpl.add("fieldDecls", "TableSliceMap " + sliceMapVar());
@@ -293,35 +291,11 @@ public class VisitorCodeGen {
 			t = ((PrivateTable) t).origT();
 
 		String tableCls = tableMap.get(RemoteHeadTable.name(t, rule)).className();
-		int clusterSize = SRuntime.masterRt().getWorkerAddrMap().size();
+		int clusterSize = SRuntimeMaster.getInst().getWorkerAddrMap().size();
 		
 		String decl = tableCls + "[] " + remoteTableVar("head") + "=new "
 							+ tableCls + "[" + clusterSize + "]";
 		visitorTmpl.add("fieldDecls", decl);
-	}
-
-	/*
-	void declareAggrVarsAndAlloc() {
-		if (!headP.hasFunctionParam()) return;
-		
-		AggrFunction f = headP.getAggrF();
-		assert f.singleRow();
-		
-		if (headT.groupbyRestColNum() == 1)
-			return; // No need to declare tuple vars for temporary ans
-
-		String tupleType = groupbyTupleType(headP);
-		String declAndAlloc = tupleType + " " + groupbyRetVar(headP);
-		declAndAlloc += "=new " + tupleType + "()";
-		visitorTmpl.add("fieldDecls", declAndAlloc);
-		//declAndAlloc = tupleType+" "+aggrNewAnsVar(headP)+"=new "+tupleType+"()";
-		//visitorTmpl.add("fieldDecls", declAndAlloc);
-	}
-	*/
-
-	String groupbyRetVar(Predicate p) {
-		if (p.isHeadP()) return "$ans_";
-		return "$ans_" + p.getPos();
 	}
 
 	String deltaTableReturnVar() {
@@ -410,6 +384,7 @@ public class VisitorCodeGen {
 		ST code = getNewMethodTmpl(visitorName, "");
 		visitorTmpl.add("methodDecls", code);
 
+        code.add("args", "int _$epochId");
 		code.add("args", "int _$ruleId");
 		for (Const c:rule.getConsts()) {
 			String argVar = "_$"+c;
@@ -442,7 +417,8 @@ public class VisitorCodeGen {
 		}
 		code.add("args", "SRuntime _$runtime");
 		code.add("args", "int _$firstTableIdx");
-		
+
+        code.add("stmts", epochIdVar()+"=_$epochId");
 		code.add("stmts", ruleIdVar()+"=_$ruleId");
 		code.add("stmts", runtimeVar()+"=_$runtime");
 		code.add("stmts", sliceMapVar() + " = _$runtime.getSliceMap()");
@@ -546,7 +522,7 @@ public class VisitorCodeGen {
 
 	void generateMethods() {
 		generatePrivateTableGetter();
-		generateRuleIdGetter();
+		generateIdGetters();
 		generateRunMethod();
 		generateVisitMethods();
 		generateRemoteTableMethods();
@@ -557,7 +533,7 @@ public class VisitorCodeGen {
 	void generateToString() {
 		ST code = getNewMethodTmpl("toString", "String");
 		String ruleStr = StringEscapeUtils.escapeJava(rule.toString());
-		code.add("stmts", "String str=\"" + ruleStr + "\"");
+		code.add("stmts", "String str=\"" + ruleStr + " epoch:\"+"+epochIdVar());
 		code.add("ret", "return str");
 		visitorTmpl.add("methodDecls", code);
 	}
@@ -903,10 +879,10 @@ public class VisitorCodeGen {
 	}
 	
 	void sendToRemoteHead(ST code, String table, String sliceIdx, String machineIdx) {
-		code.add("stmts", "SRuntime _$rt=SRuntime.workerRt()");		
+		code.add("stmts", "SRuntime _$rt=SRuntimeWorker.getInst()");
 		code.add("stmts", "RuleMap _$rm=_$rt.getRuleMap(getRuleId())");
-		code.add("stmts", "int _$ruleId=_$rm.getRemoteHeadDep(getRuleId())");
-		code.add("stmts", "EvalWithTable _$cmd=new EvalWithTable(_$ruleId,"+table+","+sliceIdx+")");
+		code.add("stmts", "int _$depRuleId=_$rm.getRemoteHeadDep(getRuleId())");
+		code.add("stmts", "EvalWithTable _$cmd=new EvalWithTable("+epochIdVar()+", _$depRuleId,"+table+","+sliceIdx+")");
 		String send = "boolean _$reuse = _$rt.sender().send("+machineIdx+","+"_$cmd)";
 		code.add("stmts", send);
 		code.add("stmts", "if(!_$reuse)"+nullifyRemoteTableMethod("head")+"("+machineIdx+")");
@@ -947,19 +923,19 @@ public class VisitorCodeGen {
 	}
 
 	void broadcastToRemoteBody(ST code, String table, String pos) {
-		code.add("stmts", "SRuntime _$rt=SRuntime.workerRt()");
+		code.add("stmts", "SRuntime _$rt=SRuntimeWorker.getInst()");
 		code.add("stmts", "RuleMap _$rm=_$rt.getRuleMap(getRuleId())");
-		code.add("stmts", "int _$ruleId=_$rm.getRemoteBodyDep(getRuleId(),"+pos+")");
-		code.add("stmts", "EvalWithTable _$cmd=new EvalWithTable(_$ruleId,"+table+",0)");
+		code.add("stmts", "int _$depRuleId=_$rm.getRemoteBodyDep(getRuleId(),"+pos+")");
+		code.add("stmts", "EvalWithTable _$cmd=new EvalWithTable("+epochIdVar()+",_$depRuleId,"+table+",0)");
 		String send = "boolean _$reuse = _$rt.sender().send(-1, _$cmd)";
 		code.add("stmts", send);	
 		code.add("stmts", "if(!_$reuse)"+nullifyRemoteTableMethod(pos)+"(0)");
 	}
 	void sendToRemoteBody(ST code, String table, String machineIdx, String pos) {
-		code.add("stmts", "SRuntime _$rt=SRuntime.workerRt()");
+		code.add("stmts", "SRuntime _$rt=SRuntimeWorker.getInst()");
 		code.add("stmts", "RuleMap _$rm=_$rt.getRuleMap(getRuleId())");
-		code.add("stmts", "int _$ruleId=_$rm.getRemoteBodyDep(getRuleId(),"+pos+")");
-		code.add("stmts", "EvalWithTable _$cmd=new EvalWithTable(_$ruleId,"+table+",0)");
+		code.add("stmts", "int _$depRuleId=_$rm.getRemoteBodyDep(getRuleId(),"+pos+")");
+		code.add("stmts", "EvalWithTable _$cmd=new EvalWithTable("+epochIdVar()+",_$depRuleId,"+table+",0)");
 		String send = "boolean _$reuse = _$rt.sender().send("+machineIdx+", _$cmd)";
 		code.add("stmts", send);	
 		code.add("stmts", "if(!_$reuse)"+nullifyRemoteTableMethod(pos)+"("+machineIdx+")");
@@ -999,10 +975,14 @@ public class VisitorCodeGen {
 		visitorTmpl.add("methodDecls", code);
 	}
 
-	void generateRuleIdGetter() {
+	void generateIdGetters() {
 		ST getter = getNewMethodTmpl("getRuleId", "int");
 		getter.add("stmts", "return " + ruleIdVar());
 		visitorTmpl.add("methodDecls", getter);
+
+        getter = getNewMethodTmpl("getEpochId", "int");
+        getter.add("stmts", "return " + epochIdVar());
+        visitorTmpl.add("methodDecls", getter);
 	}
 
 	void initPrivT(ST code) {
@@ -1056,7 +1036,6 @@ public class VisitorCodeGen {
 	void generateRunMethod() {
 		ST run = getNewMethodTmpl("run", "void");
 		visitorTmpl.add("methodDecls", run);
-		
 		maybeInitDeltaStepWindow(run);
 		initPrivT(run);
 		
@@ -1074,7 +1053,6 @@ public class VisitorCodeGen {
 					Table t = getTable(p);
 					String tableVar = getVarName(p);
 					if (isTableSliced(t)) {
-						//boolean first = rule.firstP().equals(p);
 						boolean first = rule.getBody().get(0).equals(p);
 						if (first) tableVar += "[" + firstTableIdx() + "]";
 						else if (isResolved(p, p.first())) {
@@ -1096,7 +1074,14 @@ public class VisitorCodeGen {
 			} else assert false:"Expecting Expr or Predicate, but got:"+o;
 		}
 		if (iterStartP == null) {
-			insertUpdateAccumlOrPipelining(code);
+            if (headTableLockAtStart()) {
+                int column = headTableWriteLockColumn();
+                Object param = headP.getAllParamsExpanded()[column];
+                ST withlock = CodeGen.withLock(lockMapVar(), headT.id(), sliceIdxGetter(headT, column, param));
+                code.add("stmts", withlock);
+                code = withlock;
+            }
+            insertUpdateAccumlOrPipelining(code);
 			genRunMethodFini(run);
 			return;
 		}
@@ -1263,8 +1248,21 @@ public class VisitorCodeGen {
 		}
 		code.add("stmts", currentPredicateVar() + "=" + iterStartP.getPos());
 
-		String invokeIter = null;
-		if (isIndexColResolved(iterStartP)) {
+		String invokeIter;
+        Set<Variable> resolvedVars = resolvedVarsArray[iterStartP.getPos()];
+        if (updateFromRemoteHeadT()) {
+            invokeIter = tableVar+".iterate_slice("+sliceMapVar()+","+headT.id()+","+firstTableIdx()+",this)";
+        } else if (iterStartWithFirstP && doIterateRange()) {
+            invokeIter = iterateRange(iterStartT, tableVar);
+        } else if (iterStartWithFirstP && doDynamicIterateRange()) {
+            invokeIter = iterateRangeDynamic(tableVar);
+        } else {
+            invokeIter = tableVar+invokeIterate(iterStartP, resolvedVars);
+        }
+
+        /*if (iteratePart(iterStartP, resolvedVars)) {
+
+        } else if (isIndexColResolved(iterStartP)) {
 			invokeIter = tableVar+".iterate"+getIteratebySuffix(iterStartP, "");
 		} else if (iterStartWithFirstP && doDynamicIterateRange()) {
 			invokeIter = iterateRangeDynamic(tableVar);
@@ -1272,7 +1270,7 @@ public class VisitorCodeGen {
 			invokeIter = iterateRange(iterStartT, tableVar);
 		} else {
 			invokeIter = tableVar + ".iterate(this)";
-		}
+		}*/
 		code.add("stmts", invokeIter);
 	}
 	
@@ -1315,6 +1313,23 @@ public class VisitorCodeGen {
 		}
 		return idxCols;
 	}
+    boolean isOutmostIdxColResolved(Predicate p) {
+        return getOutmostResolvedIdxCol(p) >= 0;
+    }
+    int getOutmostResolvedIdxCol(Predicate p) {
+        Table t = getTable(p);
+        if (!t.hasNestedT())
+            return -1;
+        ColumnGroup outmostGroup = t.getColumnGroups().get(0);
+        ArrayList<Column> resolvedIdxCols = getResolvedIndexCols(p);
+        for (Column c:resolvedIdxCols) {
+            if (c.position() >= outmostGroup.startIdx() &&
+                    c.position() <= outmostGroup.endIdx())
+                return c.position();
+        }
+        return -1;
+    }
+
 	boolean isIndexColResolved(Predicate p) {
 		if (getResolvedIndexCols(p).size()==0) 
 			return false;
@@ -1340,8 +1355,7 @@ public class VisitorCodeGen {
 
 	boolean doDynamicIterateRange() {
 		if (iterStartP instanceof DeltaPredicate) return true;
-		
-		if (updateFromRemoteHeadT() /*&& !shardedRemoteHeadT(rule.firstP().name())*/) return true;
+		if (updateFromRemoteHeadT()) return true;
 		return false;
 	}
 	String iterateRangeDynamic(String tableVar) {
@@ -1463,7 +1477,8 @@ public class VisitorCodeGen {
 		int pos = getPosInParams(p, v);
 		if (pos >= 0) {
 			Column c = t.getColumn(pos);
-			if (c.isSorted())
+			//if (c.isSorted())
+            if (c.isIndexed())
 				return c;
 		}
 		return null;
@@ -1473,7 +1488,7 @@ public class VisitorCodeGen {
 		return getSortedColumn(p, v) != null;
 	}
 
-	int cmpOpForIteratePart(Predicate p) {
+	CmpOp.CmpType cmpTypeForIteratePart(Predicate p) {
 		Object next = rule.getBody().get(p.getPos() + 1);
 		Op op = ((Expr) next).root;
 		CmpOp cmpOp = (CmpOp) op;
@@ -1482,13 +1497,12 @@ public class VisitorCodeGen {
 		Object lhs = cmpOp.getLHS();
 		Object rhs = cmpOp.getRHS();
 
-		Object val = cmpValForIteratePart(p);
-		if (val.equals(rhs))
-			return ((CmpOp) op).opId();
-		else
-			return ((CmpOp) op).opIdReversed();
+        Object val = cmpValForIteratePart(p);
+        if (val.equals(rhs))
+            return cmpOp.cmpType();
+        else
+            return cmpOp.cmpType().reverse();
 	}
-
 	Object cmpValForIteratePart(Predicate p) {
 		Object next = rule.getBody().get(p.getPos() + 1);
 		Op op = ((Expr) next).root;
@@ -1525,7 +1539,7 @@ public class VisitorCodeGen {
 			assert (c != null && c.isSorted());
 			return c.getAbsPos();
 		}
-		assert (false) : "Should not reach here";
+        Assert.impossible("VisitorCodeGen.idxForIteratePart(): Should not reach here!");
 		return -1;
 	}
 
@@ -1544,29 +1558,50 @@ public class VisitorCodeGen {
 			return null;
 		return (CmpOp)op;
 	}
+
+    int getNestingLevel(Predicate p, int col) {
+        Table t = getTable(p);
+        int level=0;
+        for (int pos:t.nestPos()) {
+            if (pos <= col)
+                level++;
+        }
+        return level;
+    }
+    int getNestingLevel(Predicate p, Column c) {
+        return getNestingLevel(p, c.position());
+    }
 	boolean iteratePart(Predicate p, Set<Variable> resolved) {
 		if (!hasCmpNext(p)) return false;
-		
+
 		CmpOp cmpOp = getNextCmpOp(p);
 		if (cmpOp.getOp().equals("!="))
 			return false; // not worth extra effort, so don't optimize for this.
+        if (cmpOp.getOp().equals("=="))
+            return false; // should be handled by iterate_by
 
 		Object lhs = cmpOp.getLHS();
 		Object rhs = cmpOp.getRHS();
 		if (lhs instanceof Variable) {
 			Variable v = (Variable) lhs;
-			if (isSortedColumn(p, v))
-				return isConstOrResolved(resolved, rhs)
-						|| isInPrevColGroup(p, v, rhs);
+            return canBinarySearch(p, v, rhs, resolved);
 		}
 		if (rhs instanceof Variable) {
 			Variable v = (Variable) rhs;
-			if (isSortedColumn(p, v))
-				return isConstOrResolved(resolved, lhs)
-						|| isInPrevColGroup(p, v, lhs);
+            return canBinarySearch(p, v, lhs, resolved);
 		}
 		return false;
 	}
+    boolean canBinarySearch(Predicate p, Variable v, Object cmp, Set<Variable> resolved) {
+        if (!isSortedColumn(p, v))
+            return false;
+        Column sortedCol = getSortedColumn(p, v);
+        if (getNestingLevel(p, sortedCol) >= 2) {
+            // nesting level too deep, see table code templates (e.g. DynamicNestedTable.stg).
+            return false;
+        }
+        return isConstOrResolved(resolved, cmp) || isInPrevColGroup(p, v, cmp);
+    }
 
 	boolean isInPrevColGroup(Predicate p, Variable v, Object param) {
 		Table t = getTable(p);
@@ -1985,25 +2020,6 @@ public class VisitorCodeGen {
 			code.add("stmts", isUpdatedVar()+"="+f.codegen("_$oldAns").render());
 		}	
 	}
-	
-	String groupbyTupleType(Predicate p) {
-		Table t = getTable(p);
-		Assert.true_(p.hasFunctionParam());
-		Class[] groupbyRestTypes = 
-			Arrays.copyOfRange(t.types(), t.groupbyColNum(), t.types().length);
-		return CodeGen.tupleClass(groupbyRestTypes);
-	}
-
-	/*
-	String aggrNewAnsVar(Predicate p) {
-		Table t = getTable(p);
-		AggrFunction f = p.getAggrF();
-		Assert.true_(p.hasFunctionParam());
-		//Assert.true_(t.groupbyRestColNum() >= 2);
-		if (p.isHeadP())
-			return "$gb_tuple_";
-		return "$gb_tuple_" + p.getPos();
-	}*/
 
 	String invokeGroupby(String tableVar, Predicate p, Object... rest) {
 		AggrFunction f = p.getAggrF();
@@ -2175,20 +2191,14 @@ public class VisitorCodeGen {
 			if (assign.fromFunction()) {
 				code = handleErrorFor(assign, code);
 			}
-						
 			ST code2 = assign.codegen();
 			code.add("stmts", code2);
 			
 			if (assign.multiRows())
 				code = code2; // returning body of an iterator-loop			
 		} else {
-			ST if_ ;
-			/*synchronized(tmplGroup)*/ {
-				if_ = tmplGroup.getInstanceOf("if");
-			}
-			/*synchronized(tmplGroup)*/ {
-				if_.add("cond", "!" + expr.codegen().render());
-			}
+			ST if_  = tmplGroup.getInstanceOf("if");
+			if_.add("cond", "!" + expr.codegen().render());
 			if_.add("stmts", "continue");
 			code.add("stmts", if_);
 		}		
@@ -2251,23 +2261,24 @@ public class VisitorCodeGen {
 		if (headT instanceof PrivateTable) return false;
 		if (headT instanceof DeltaTable) return false;
 		
-		if (Analysis.isSequentialRule(rule, tableMap) && !conf.isDistributed())
-			return false;
+		/*if (Analysis.isSequentialRule(rule, tableMap) && !conf.isDistributed())
+			return false;*/
 		
 		return true;
 	}
 	
 	boolean headTableLockAtStart() {
-		if (!isParallel()) return false;
+		if (!isParallel()) { return false; }
 		
-		if (!headTableLockNeeded())	return false;
+		if (!headTableLockNeeded())	{ return false; }
 				
 		if (updateFromRemoteHeadT()) return false;
 
 		if (updateFromPrivateT()) return true;
 
 		if (Analysis.updateParallelShard(rule, tableMap)) return true;
-		
+        if (Analysis.isSequentialRule(rule, tableMap)) { return true; }
+
 		return false;
 	}
 
@@ -2291,6 +2302,32 @@ public class VisitorCodeGen {
 		return false;
 	}
 
+    String invokeIterate(Predicate p, Set<Variable> resolvedVars) {
+        String invokeIterate = null;
+        if (iteratePart(p, resolvedVars)) {
+            int idx = idxForIteratePart(p);
+            CmpOp.CmpType cmpType = cmpTypeForIteratePart(p);
+            boolean inclusive = cmpType.inclusive();
+            Object cmpVal = cmpValForIteratePart(p);
+            if (cmpType.greaterThan()) {
+                invokeIterate = ".iterate_part_from_"+idx;
+            } else {
+                invokeIterate = ".iterate_part_to_"+idx;
+            }
+            if (getNestingLevel(p, idx) >= 1 && isOutmostIdxColResolved(p)) {
+                int idxCol = getOutmostResolvedIdxCol(p);
+                Object[] params = p.getAllParamsExpanded();
+                invokeIterate += "_by_"+idxCol+"("+params[idxCol]+",";
+            } else { invokeIterate += "("; }
+            invokeIterate += cmpVal+","+inclusive+", this)";
+        } else if (isIndexColResolved(p)) {
+            invokeIterate = ".iterate"+getIteratebySuffix(p, "");
+        } else {
+            invokeIterate = ".iterate(this)";
+        }
+        return invokeIterate;
+    }
+
 	// returns true if continuation inserted
 	boolean insertContinuationCode(ST code, Predicate prevp, Predicate p,
 			Set<Variable> resolved) {
@@ -2307,23 +2344,8 @@ public class VisitorCodeGen {
 		code.add("stmts", currentPredicateVar() + "=" + p.getPos());
 		
 		Table t = getTable(p);
-		
-		String invokeIterate = null;
-		String funcBegin = ".iterate", trailingArgs = "";
-		if (iteratePart(p, resolved)) {
-			int idx = idxForIteratePart(p);
-			int cmpOp = cmpOpForIteratePart(p);
-			Object val = cmpValForIteratePart(p);
-			funcBegin = ".iterate_part_" + idx;
-			trailingArgs = ", " + val + ", " + cmpOp;
-		} 
-		
-		if (isIndexColResolved(p)) {
-			invokeIterate = funcBegin+getIteratebySuffix(p, trailingArgs);
-		} else {
-			invokeIterate = funcBegin+"(this"+trailingArgs+")";
-		}
-		
+        String invokeIterate = invokeIterate(p, resolved);
+
 		String tableVar = getVarName(p);
 		if (isTableSliced(t)) {
 			boolean sliceSelected = Analysis.isResolved(resolvedVarsArray, p, p.first());
@@ -2585,7 +2607,7 @@ public class VisitorCodeGen {
 	}
 
 	int machineNum() {
-		return SRuntime.masterRt().getWorkerAddrMap().size();
+		return SRuntimeMaster.getInst().getWorkerAddrMap().size();
 	}
 
 	String remoteTableVar(Object suffix) {
@@ -2605,6 +2627,7 @@ public class VisitorCodeGen {
 	String sliceMapVar() { return "$sliceMap"; }
 	String runtimeVar() { return "$runtime"; }
 	String ruleIdVar() { return "$ruleId"; }
+    String epochIdVar() { return "$epochId"; }
 	String choiceMadeVar() { return "$choiceMade"; }	
 	String remoteBodyTableMapVar() { return "$remoteBodyTableMap"; }
 	String remoteHeadTableMapVar() { return "$remoteHeadTableMap"; }

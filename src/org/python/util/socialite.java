@@ -171,7 +171,7 @@ public class socialite {
         if (opts.interactive) {
         	return new JLineSociaLiteConsole(opts);
         } else {
-            return new SocialiteConsole(opts);
+            return new JLineSociaLiteConsole(opts);
         }
     }
 

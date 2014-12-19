@@ -47,7 +47,7 @@ public class JLineSociaLiteConsole extends JLineConsole {
 	}
 
 	public void initSocialite(SocialiteCommandLineOptions opt) {
-		mod = new SocialiteMod(opt.threadNum, opt.dist, true);
+		mod = new SocialiteMod(opt.threadNum, opt.dist, opt.interactive);
 		getLocals().__setitem__(new PyString(mod.modName()), mod.getModule());
 		getLocals().__setitem__(new PyString(mod.modUniqueName()), mod.getModule());
 		PyList all = (PyList)mod.__all__();

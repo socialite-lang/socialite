@@ -4,6 +4,7 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 import java.nio.channels.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,15 +22,17 @@ import socialite.eval.Manager;
 import socialite.functions.MyId;
 import socialite.functions.NextId;
 import socialite.resource.SRuntime;
+import socialite.resource.SRuntimeWorker;
 import socialite.resource.Sender;
 import socialite.util.ByteBufferPool;
 import socialite.util.FastQueue;
 
 public class WorkerNode extends Thread {
 	public static final Log L=LogFactory.getLog(WorkerNode.class);
-		
+
+    volatile Config conf;
+    AtomicBoolean isReady = new AtomicBoolean(false);
 	WorkerConnPool connPool;
-	Config conf;
 	CmdListener cmdListener;
 	WorkerRequest request;
 	Manager manager;
@@ -40,56 +43,34 @@ public class WorkerNode extends Thread {
 		super("WorkerNode Thread");
 		connPool = new WorkerConnPool(PortMap.get());
 	}
-	
-	public synchronized void setConf(Config _conf) {
-		assert conf == null;
-		conf = _conf;		
-	}
-	public Config getConf() {
-		// no syncronization is required since 
-		// getConf() is called by threads that are started after setConf().
-		return conf; 
-	}
+
+    public Config getConf() { return conf; }
 	
 	public void serve() {
-		initCmdListener();				
+		initCmdListener();
+        initNetworkResources();
 		register();
-		initIdent();
-		initManagerAndWorkers();
-		initNetworkResources();
 		initRecvThread();
 		startListen();
 	}
-	void initIdent() {
-		int myid = MyId.invoke();
-		NextId.set(myid);
-	}
 
-	void maybeEarlyInitNetworkResources() {
-		// for faster bootstraping of SociaLite cluster
-		if (Math.random()<0.5) {
-			initNetworkResources();	
-			networkInitDone=true;
-		}
-	}
 	void initNetworkResources() {
-		if (!networkInitDone) {
-			ByteBufferPool.get();
-		}
+		ByteBufferPool.get();
 	}
 	void initCmdListener() {
 		cmdListener = new CmdListener(this);
 		cmdListener.start();
 	}
-	void initManagerAndWorkers() {
-		manager = Manager.getInst(conf);				
+	public void initManagerAndWorkers(Config _conf) {
+        conf = _conf;
+		manager = Manager.getInst(conf);
 	}
 	void initRecvThread() {
 		recvQ = Receiver.recvQ();
 		int recvNum = Runtime.getRuntime().availableProcessors()/2;
 		if (recvNum < 8) recvNum = 8;
 		if (recvNum > 64) recvNum = 64;
-		recvNum += 2;
+
 		recvThreads = new Thread[recvNum];
 		for (int i=0; i<recvThreads.length; i++) {
 			Receiver recv=new Receiver(recvQ, connPool, manager, cmdListener);
@@ -97,11 +78,13 @@ public class WorkerNode extends Thread {
 			recvThreads[i].start();
 		}
 	}
-	
+	public boolean isReady() { return isReady.get(); }
 	public FastQueue recvQ() { return recvQ; }
 	
-	void startListen() {		
-		start();	
+	void startListen() {
+L.info(" NOTICE startListen()");
+		start();
+        isReady.set(true);
 	}
 	
 	public WorkerConnPool getConnPool() { return connPool; }
@@ -121,7 +104,6 @@ public class WorkerNode extends Thread {
 					}
 					
 					if (key.isAcceptable()) {
-					//	L.info("Accepting connection from:"+key);
 						connPool.acceptConn(key);
 					} else if (key.isReadable()) {
 						SocketChannel selectedChannel = (SocketChannel) (key.channel());
@@ -138,7 +120,6 @@ public class WorkerNode extends Thread {
 					
 						RecvTask recv = new RecvTask(nodeAddr, selectedChannel);
 						recvQ.add(recv);
-						cmdListener.setEpochBusy();
 					} else {
 						L.error("Unexpected key operation(!acceptable, !readable):"+key);
 					}
@@ -168,38 +149,12 @@ public class WorkerNode extends Thread {
 		request.register(new Text(Host.get()));
 		synchronized(this) { /* make conf visible */}
 		assert conf!=null;
-		//L.info("Finished worker registration");
-	}
-	
-	public boolean likelyIdle() {
-		if (manager.likelyIdle() && Sender.sendQ().isLikelyEmpty() && recvQ.isLikelyEmpty())
-			return true;
-		return false;
-	}
-	
-	public boolean idle() {
-		Object addCmdLock = manager.addCmdLock();
-		synchronized(addCmdLock) {
-			if (manager.idle() && Sender.sendQ().isEmpty() && recvQ.isEmpty()) {
-				return true;
-			}
-		}
-		return false;
 	}
 
-	public boolean doIfIdle(Runnable r) {
-		Object addCmdLock = manager.addCmdLock();
-		synchronized(addCmdLock) {
-			if (manager.idle() && Sender.sendQ().isEmpty() && recvQ.isEmpty()) {
-				r.run();
-				return true;
-			}
-		}
-		return false;
-	}
-	
 	public void reportError(int ruleid, Throwable t) {
-		SRuntime runtime=SRuntime.workerRt();
+        L.warn("Worker node error:"+ExceptionUtils.getStackTrace(t));
+
+		SRuntime runtime=SRuntimeWorker.getInst();
 		if (runtime==null) {
 			L.error("reportError(): Worker runtime is null.");
 			return;
@@ -211,12 +166,11 @@ public class WorkerNode extends Thread {
 		request.handleError(workerid, new IntWritable(ruleid), new Text(msg));
 	}
 		
-	public void reportIdle(int time) {
-		SRuntime runtime = SRuntime.workerRt();
-		if (runtime==null) return;
-		
+	public void reportIdle(int epochId, int ts) {
+        L.info("reportIdle(epoch-id:"+epochId+", time-stamp:"+ts+")");
+        SRuntime runtime = SRuntimeWorker.getInst();
 		int id=runtime.getWorkerAddrMap().myIndex();
-		request.reportIdle(new IntWritable(id), new IntWritable(time));
+		request.reportIdle(new IntWritable(epochId), new IntWritable(id), new IntWritable(ts));
 	}
 	
 	public boolean connect(String[] workerAddrs) {
@@ -234,18 +188,17 @@ public class WorkerNode extends Thread {
 		return true;
 	}	
 
-	public static void haltOthers() {
-		if (theWorkerNode==null) return;
-		int myid = SRuntime.workerRt().getWorkerAddrMap().myIndex();		
-		theWorkerNode.request.haltEpoch(new IntWritable(myid));
-	}
 	static WorkerNode theWorkerNode;	
 	public static WorkerNode getInst() {
 		return theWorkerNode;
 	}
 	static void startWorkerNode() {
 		theWorkerNode = new WorkerNode();
-		theWorkerNode.serve();
+		try {
+            theWorkerNode.serve();
+        } catch (Exception e) {
+            L.error("Exception while runining worker node:"+ExceptionUtils.getStackTrace(e));
+        }
 	}
 	public static void main(String[] args) {
 		startWorkerNode();

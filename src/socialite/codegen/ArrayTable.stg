@@ -2,10 +2,10 @@ group array-table;
 
 import "TableCommon.stg"
 
-arrayTable(tableName, name, visitorClass, columns, gbColumns, gbAggrColumn,		
+arrayTable(tableName, name, byteArrayClass, visitorClass, columns, gbColumns, gbAggrColumn,
 		sortedCol, idxCols,
 		methods, base, size, id, 
-		multiSet=false, isNested=false) ::= <<
+		concurrent=false, multiSet=false, isNested=false) ::= <<
 <if(!isNested)>
 package socialite.tables;
 
@@ -13,7 +13,7 @@ package socialite.tables;
 <endif>
 
 // ArrayTable
-<if(isNested)>static<else>public<endif> class <name> extends AbstractTableInst {
+<if(isNested)>static<else>public<endif> class <name> extends AbstractTableInst <if(concurrent)>implements ConcurrentTableInst<endif> {
 	private static final long serialVersionUID = 1;
 	
 	public static double theRowSize() {
@@ -29,18 +29,17 @@ package socialite.tables;
 	public static <name> create(Long base, Integer size) { return new <name>(base.longValue(), size.intValue()); }
 <endif>
 
-	int base;
-	byte filled[];
+	<first(columns).type> base;
+	<byteArrayClass> filled;
 	<rest(columns):{c|<c.type> col<i>[];<\n>}>
 	<idxCols:{ic|SIndex index<ic.relPos>;<\n>}>
 	 
-	//int tupleNum = 0; 
-	boolean isEmpty = true;
+	<if(concurrent)>volatile<endif> boolean isEmpty = true;
 	
 	public <name>() { }
 	public <name>(<first(columns).type> _base, int size) {
 		base = _base;
-		filled = new byte[size];
+		filled = new <byteArrayClass>(size);
 		<rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[size][]<else><c.type>[size]<endif>;<\n>}>;
 		<idxCols:{ic|index<ic.relPos> = new SIndex(size/8, <length(columns)>);<\n>}>
 	}
@@ -54,10 +53,11 @@ package socialite.tables;
 	public int size() { throw new UnsupportedOperationException(); }
 	public boolean isEmpty() { return isEmpty; }
 	public int id() { return <id>; }
+	public String name() { return "<tableName>"; }
 	
 	public void init(<rest(columns):{c|<c.type> init<i>};separator=", ">) {
-		for (int i=0; i\<filled.length; i++) {
-			filled[i]=1;
+		for (int i=0; i\<filled.length(); i++) {
+		    filled.set(i, (byte)1);
 			<rest(columns):{t| col<i>[i]=init<i>;<\n>}>;
 		}
 	}
@@ -78,18 +78,17 @@ package socialite.tables;
 	public void clearQuick() { clear(); }
 	
 	public void clear() {
-		Arrays.fill(filled, (byte)0);
+	    filled.fill((byte)0);
 	<if(rest(columns) && !rest(rest(columns)) && IsPrimitive.(rest(columns).type) && gbColumns)> // two-column table
 		Arrays.fill(col1, 0);
 	<endif>
-	
 		isEmpty = true;
 	}
 	
 	public void clear(int from, int to) {
 		from -= base;
-		to -= base;		
-		Arrays.fill(filled, from, to, (byte)0);	
+		to -= base;
+	    filled.fill(from-(from%4), to+4, (byte)0);
 	<if(rest(columns) && !rest(rest(columns)) && IsPrimitive.(rest(columns).type) && gbColumns)> // two-column table
 		Arrays.fill(col1, from, to, 0);
 	<endif>
@@ -102,18 +101,18 @@ package socialite.tables;
 	}
 	
 	public int totalAllocSize() {
-		int totalAlloc = 4+filled.length;
-		<columns:{c|totalAlloc += 12+<c.typeSize>*filled.length;<\n>}>
+		int totalAlloc = 8+filled.length();
+		<columns:{c|totalAlloc += 12+<c.typeSize>*filled.length();<\n>}>
 		return totalAlloc;
 	}
 	void rangeCheck(<first(columns).type> i) {
-		if (i\<0 || i>=filled.length) {
+		if (i\<0 || i>=filled.length()) {
 			throw new SociaLiteException("Value out of range for <tableName> <first(columns).absPos>'th column: "+(i+base));
 		}
 	}
 	public boolean contains(<first(columns).type> a0<rest(columns):{c|, <c.type> a<i>}>) {
 		int i=(int)(a0-base); rangeCheck(i);
-		if (filled[i]==0) return false;
+		if (filled.get(i)!=1) return false;
 		
 		if (true<rest(columns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
 			return true;
@@ -121,43 +120,70 @@ package socialite.tables;
 	}
 	public boolean contains(<first(columns).type> a0<rest(columns):{c|, <c.type> a<i>}>, boolean[] dontcare) {
 		if (dontcare[0]) {
-			for (int i=0; i\<filled.length; i++) {
-				if (filled[i]==0) continue;
+			for (int i=0; i\<filled.length(); i++) {
+				if (filled.get(i)!=1) continue;
 				if (true<rest(columns):{c|&&(dontcare[<i>] || col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
 					return true;
 			}
 			return false;
 		}
 		int i=(int)(a0-base); rangeCheck(i);
-		if (filled[i]==0) return false;
+		if (filled.get(i)!=1) return false;
 		
 		if (true<rest(columns):{c|&&(dontcare[<i>] || col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
 			return true;
 		return false;
 	}
-	
+
 	public boolean insert(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
-		int i=(int)(a0-base); rangeCheck(i);
-		if (filled[i]==1) {
+        int i=(int)(a0-base); rangeCheck(i);
+		if (filled.get(i)==1) {
 			if (contains(a0<rest(columns): {c|, a<i>}>)) return false;
-		
+
 			String msg = "Cannot insert the tuple {"+a0<rest(columns):{c|+","+a<i>}> +"} to <tableName>\n";
 	 		msg += "<tableName> already contains {"+a0<rest(columns):{c|+","+col<i>(i)}> +"} with the same 1st (array index) column\n";
 	 		msg += "To insert the tuple, declare <tableName> with nested columns.\n";
 	 		throw new SociaLiteException(msg);
 		}
-				
-		if (isEmpty) isEmpty = false;	
-		filled[i]=1;
-		<rest(columns):{c|col<i>[i] = a<i>;<\n>}>		
+		if (isEmpty) isEmpty = false;
+
+		<rest(columns):{c|col<i>[i] = a<i>;<\n>}>
 		<idxCols:{ic|index<ic.relPos>.add(a<ic.relPos>, i);<\n>}>
+		filled.unsafeSet(i, (byte)1);
+		return true;
+    }
+
+    public void insertAtomic(Iterator\<Tuple> iterator) {
+        Tuple<columns:{c|_<TupleMap.(c.type)>}> tuple;
+        while (iterator.hasNext()) {
+            tuple = (Tuple<columns:{c|_<TupleMap.(c.type)>}>)iterator.next();
+            insertAtomic(<columns:{c|tuple._<i0>};separator=",">);
+        }
+    }
+	public boolean insertAtomic(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
+		int i=(int)(a0-base); rangeCheck(i);
+		if (!filled.compareAndSet(i, (byte)0, (byte)-1)) {
+		    while(filled.get(i)!=1) {}
+			if (filled.get(i)==1 && contains(a0<rest(columns): {c|, a<i>}>)) return false;
+
+			String msg = "Cannot insert the tuple {"+a0<rest(columns):{c|+","+a<i>}> +"} to <tableName>\n";
+	 		msg += "<tableName> already contains {"+a0<rest(columns):{c|+","+col<i>(i)}> +"} with the same 1st (array index) column\n";
+	 		msg += "To insert the tuple, declare <tableName> with nested columns.\n";
+	 		throw new SociaLiteException(msg);
+		}
+
+		if (isEmpty) isEmpty = false;
+
+		<rest(columns):{c|col<i>[i] = a<i>;<\n>}>
+		<idxCols:{ic|index<ic.relPos>.addAtomic(a<ic.relPos>, i);<\n>}>
+		filled.compareAndSet(i, (byte)-1, (byte)1);
 		return true;
 	}
 	
 	public void iterate(<visitorClass> v) {
 		if (isEmpty) return;
-		for (int i=0; i\<filled.length; i++) {
-			if (filled[i]==1) {			
+		for (int i=0; i\<filled.length(); i++) {
+			if (filled.get(i)==1) {
 				boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
 				if (!$cont) return;
 			}
@@ -167,7 +193,7 @@ package socialite.tables;
 		int from=(int)(_from-base); rangeCheck(from);
 		int to=(int)(_to-base); rangeCheck(to);
 		for (int i=from; i\<=to; i++) {
-			if (filled[i]==1) {
+			if (filled.get(i)==1) {
 				boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
 				if (!$cont) return;
 			}
@@ -175,28 +201,36 @@ package socialite.tables;
 	}
 	public void iterate_by_<first(columns).absPos>(<first(columns).type> n, <visitorClass> v) {
 		int i=(int)(n-base); rangeCheck(i);
-		if (i\<0||i>=filled.length) return;
-		if (filled[i]==1) {
+		if (i\<0||i>=filled.length()) return;
+		if (filled.get(i)==1) {
 			boolean $cont=v.visit(n <rest(columns): {c|,col<i>(i)}>);
 			if (!$cont) return;
 		}
 	}
 <idxCols:{c|
-	public void iterate_by_<c.absPos>(<c.type> a, <visitorClass> v) {
+	public void iterate_by_<c.absPos>(<c.type> a, final <visitorClass> v) {
+	    final int _base = base;
+	    index<c.relPos>.iterateBy(a,
+	        new IntVisitor() {
+	            public boolean visit(int pos) {
+	                return v.visit(pos+_base, <rest(columns):{c2|col<i>(pos)};separator=", ">);
+	            \}\});
+	\}
+    /*
 		TIntArrayList posList=(TIntArrayList)index<c.relPos>.get(a);
 		if (posList==null) return;
 		for (int i=0; i\<posList.size(); i++) {
 			int pos=posList.getQuick(i);
 			boolean cont=v.visit(pos+base, <rest(columns):{c2|col<i>(pos)};separator=", ">);
-			if (!cont) return;		
+			if (!cont) return;
 		\}
-	\}
+	\}*/
 }>
 
 <if(gbColumns)>	
 	public <gbAggrColumn.type> groupby(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
 		int i=(int)(a0-base); rangeCheck(i);
-		assert filled[i]==1;		
+		assert filled.get(i)==1;
 		
 		if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
 			return col<gbAggrColumn.relPos>[i];
@@ -208,14 +242,14 @@ package socialite.tables;
 	// group-by only with the array index
 	public <gbAggrColumn.type> groupby(<first(gbColumns).type> a0) { 
 		int i=(int)(a0-base); rangeCheck(i);
-		assert filled[i]==1;		
+		assert filled.get(i)==1;
 		
 		return col<gbAggrColumn.relPos>[i];
 	}
 	<endif>
 	public boolean contains(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
 		int i=(int)(a0-base); rangeCheck(i);
-		if (filled[i]==0) return false;
+		if (filled.get(i)!=1) return false;
 		
 		if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>)
 			return true;
@@ -223,7 +257,7 @@ package socialite.tables;
 	}
 	public boolean update(<columns:{c|<c.type> a<i0>};separator=", ">) {
 		int i=(int)(a0-base); rangeCheck(i);
-		assert filled[i]==1;
+		assert filled.get(i)==1;
 		<rest(columns): {c|col<i>[i] = a<i>;<\n>}>;		
 		return true;
 	}
@@ -233,25 +267,28 @@ package socialite.tables;
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeInt(base);
+	    <if(IsInt.(first(columns).type))>out.writeInt(base);
+	    <else>out.writeLong(base);<endif>
 		
-		out.writeInt(filled.length);
-		for (int i=0; i\<filled.length; i++)
-			out.writeByte(filled[i]);		
+		out.writeInt(filled.length());
+		for (int i=0; i\<filled.length(); i++)
+			out.writeByte(filled.get(i));
 		
 		<rest(columns):
-		{c|for (int i=0; i\<filled.length; i++)
+		{c|for (int i=0; i\<filled.length(); i++)
 			out.<WriteF.(c.type)>(col<i>[i]);
 		}>	
 	}
 	
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		base=in.readInt();
+		<if(IsInt.(first(columns).type))>base=in.readInt();
+     	<else>base=in.readLong();<endif>
+
 		int len=in.readInt();
-		filled = new byte[len];		
+		filled = new <byteArrayClass>(len);
 		for (int i=0; i\<len; i++) 
-			filled[i]=in.readByte();
+			filled.set(i, in.readByte());
 			
 		<rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[len][]<else><c.type>[len]<endif>;<\n>}>
 		<rest(columns):{c|for(int i=0; i\<len; i++) col<i>[i]=(<c.type>)in.<ReadF.(c.type)>();<\n>}>	

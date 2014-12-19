@@ -6,36 +6,30 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.python.core.PyFunction;
-import org.python.core.PyObject;
 
 import socialite.codegen.Analysis;
 import socialite.codegen.CodeGenMain;
 import socialite.dist.PathTo;
 import socialite.dist.Status;
 import socialite.eval.Eval;
-import socialite.eval.EvalProgress;
 import socialite.eval.Manager;
-import socialite.functions.PyInterp;
 import socialite.functions.PyInvoke;
+import socialite.parser.GeneratedT;
 import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.Table;
-import socialite.parser.antlr.TableDecl;
 import socialite.resource.SRuntime;
 import socialite.resource.TableInstRegistry;
-import socialite.tables.QueryRunnable;
 import socialite.tables.QueryVisitor;
-import socialite.util.Assert;
+import socialite.tables.TableRefLocal;
 import socialite.util.Loader;
 import socialite.util.ParseException;
 import socialite.util.SociaLiteException;
@@ -47,27 +41,26 @@ public class LocalEngine {
 	Parser parser;
 	Config conf;
 	SRuntime runtime;
-	ConcurrentHashMap<Long, QueryRunnable> runningQueryMap = 
-						new ConcurrentHashMap<Long, QueryRunnable>();
-	
-	public LocalEngine() { this(Config.par()); }
+
+    public LocalEngine() { this(Config.par()); }
 	public LocalEngine(Config _conf) {		
 		conf = _conf;		
 		init();
-		Manager.getInst(conf).updateRuntime(runtime);
+		Manager.getInst(conf).setRuntime(runtime);
 	}
 	void init() {
 		parser=new Parser();
-		runtime = new SRuntime(conf);
+		runtime = SRuntime.create(conf);
 	}
-	
+
+    public TableRefLocal getTableRef(String name) {
+        Table t = runtime.getTableMap().get(name);
+        if (t==null)
+            return null;
+        return new TableRefLocal(t);
+    }
 	public Config getConf() { return conf; }
 	
-	@Deprecated
-	public void reconfig(Config _conf) {
-		Assert.die("Not supported!");
-	}	
-		
 	public CodeGenMain compile(String program) {
 		CodeGenMain codeGen;
 		try {
@@ -87,6 +80,7 @@ public class LocalEngine {
 	}
 	
 	static class TimesUp extends Thread {
+        /*
 		Manager m;
 		long limit;
 		long start;
@@ -110,7 +104,7 @@ public class LocalEngine {
 					break;
 				}
 			}
-		}
+		}*/
 	}
 	
 	public void run(String program) {
@@ -118,9 +112,9 @@ public class LocalEngine {
 			List<Eval> evals = compile(program).getEvalInsts();
 			for (Eval e:evals) {
 			    e.run();
-			    if (runtime.getException()!=null) {
+			   /* if (runtime.getException()!=null) {
 			    	throw new SociaLiteException(runtime.getException());
-			    }
+			    }*/
 			}
 		} catch (Exception e) {
 			if (conf.isVerbose()) {
@@ -130,7 +124,7 @@ public class LocalEngine {
 			throw new SociaLiteException(e);
 		}
 	}
-	public void run(String program, long millis) {
+	/*public void run(String program, long millis) {
 		try {
 			List<Eval> evals = compile(program).getEvalInsts();
 			TimesUp timesUp = new TimesUp(millis);
@@ -145,7 +139,7 @@ public class LocalEngine {
 			}
 			throw new SociaLiteException(e);
 		}		
-	}		
+	}	*/
 	public void run(String program, QueryVisitor qv, int id) {
 		run(program, qv);
 	}
@@ -316,12 +310,14 @@ public class LocalEngine {
 		return s;	
 	}
 	void tableStatus(Status s) {
-		Map<String, TableDecl> tableDeclMap = parser.getTableDeclMap();
+        Map<String, Table> tableMap = parser.getTableMap();
 		String tableInfo="";
 		boolean first=true;
-		for (String name:tableDeclMap.keySet()) {
+		for (String name:tableMap.keySet()) {
+            if (tableMap.get(name) instanceof GeneratedT) continue;
 			if (!first) tableInfo += "\n";
-			tableInfo += tableDeclMap.get(name);
+			Table t=tableMap.get(name);
+            tableInfo += t.decl()+" id="+t.id();
 			first=false;
 		}
 		s.putTableStatus(tableInfo);
