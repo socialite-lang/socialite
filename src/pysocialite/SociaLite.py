@@ -70,6 +70,7 @@ isClusterEngine = False
 engine = None
 @internal
 def init(cpu=None, dist=False, interactive=False, verbose=None):
+    verbose = True
     global engine, isClusterEngine, isInteractive
     if engine==None:
         if dist:
@@ -182,6 +183,9 @@ class AsyncEngine:
             t.start()
             self.reqThreads.append(t)
         registerCleanupOnExit(self.cleanupReqThreads)
+
+    def getTableRef(self, name):
+        return self.engine.getTableRef(name)
 
     def cleanupReqThreads(self):
         try:
