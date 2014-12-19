@@ -49,7 +49,8 @@ public class Function implements Externalizable {
 	protected List<Variable> returns;	
 	protected List<?> args;
 
-	boolean isArrayType=false;	
+	boolean isArrayType=false;
+	boolean isPrimArrayType=false;
 	int pyfuncIdx=-1;
 	transient String pyname;
 	transient Class<?> klass;
@@ -93,6 +94,10 @@ public class Function implements Externalizable {
 	public boolean isArrayType() {
 		assert isLoaded();
 		return isArrayType;
+	}
+	public boolean isPrimArrayType() {
+		assert isLoaded();
+		return isPrimArrayType;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -163,7 +168,7 @@ public class Function implements Externalizable {
 		if (name.startsWith("Builtin.")) pyname = name.substring("Builtin.".length());
 		else pyname = name;
 		
-		if (pyname.indexOf('.')>=0) throw new InternalException("Attribute lookup is not yet supported for Python functions");
+		if (pyname.indexOf('.')>=0) throw new InternalException("Cannot find $"+pyname);
 
 		pyfunc = PyInterp.load(pyname);			
 		if (pyfunc==null) throw new InternalException("Cannot find $"+name);
@@ -282,13 +287,17 @@ public class Function implements Externalizable {
 			Type paramType = ((ParameterizedType) genRetType).getActualTypeArguments()[0];			
 			if (paramType instanceof GenericArrayType) {
 				Type compType=((GenericArrayType)paramType).getGenericComponentType();
-        retType = (Class<?>)compType;
+				retType = (Class<?>)compType;
 				computeJavaArrayReturnVarTypes(cast, retType);	
 			} else {
-        retType = (Class<?>)paramType;
-				retType = doTypeCast(cast, retType);
-				Variable v=getReturns().get(0);
-				v.setType(retType);
+				retType = (Class<?>)paramType;
+				if (retType.isArray() && getReturns().size()>=2) {
+					computeJavaArrayReturnVarTypes(cast, retType);
+				} else {
+					retType = doTypeCast(cast, retType);
+					Variable v=getReturns().get(0);
+					v.setType(retType);
+				}
 			}
 		} else if (TIterator.class.isAssignableFrom(retType)) {
 			String msg="Unexpected return type from $"+name;
@@ -318,7 +327,10 @@ public class Function implements Externalizable {
 			Class<?>[] types=getTypesFromJavaAnnotation();
 			isArrayType=true;
 			if (types==null) {
-				Class<?> arrType = getMethodReturnType();
+				Class<?> arrType = methodRetType;
+				if (methodRetType.getComponentType().isPrimitive()) {
+					isPrimArrayType=true;
+				}
 				if (!arrType.isArray()) {
 					String msg = "Expecting an array return from $"+name;
 					throw new InternalException(msg);

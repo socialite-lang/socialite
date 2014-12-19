@@ -253,7 +253,7 @@ public class SRuntime {
 		final public Map<String, Table> map;
 		MergeTableMap(Map<String, Table> old, Map<String, Table> newMap) {
 			if (old.keySet().equals(newMap.keySet())) {
-				map = old;
+				map = newMap;
 			} else {
 				map = new HashMap<String, Table>(old);
 				map.putAll(newMap);

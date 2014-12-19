@@ -151,7 +151,8 @@ public class AssignOp extends Op {
 			if (isMultipleAssign() && f.isArrayType()) {
 				@SuppressWarnings("unchecked")
 				List<Variable> lhs=(List<Variable>)arg1;
-				withIter.add("iterType", "Object[]");
+				if (f.isPrimArrayType()) withIter.add("iterType", MyType.javaType(lhs.get(0))+"[]");
+				else withIter.add("iterType", "Object[]");
 				for (int i=0; i<lhs.size(); i++) {
 					Variable v=lhs.get(i);
 					String varType = MyType.javaObjectTypeName(v);
@@ -180,7 +181,9 @@ public class AssignOp extends Op {
 				String arrayVar=CodeGen.uniqueVar("$array");
 				@SuppressWarnings("unchecked")
 				List<Variable> lhs=(List<Variable>)arg1;
-				stmts.add("stmts", "Object[] "+arrayVar+"=(Object[])"+f.codegen().render());
+				String arrType = "Object[]";
+				if (f.isPrimArrayType()) arrType = MyType.javaType(lhs.get(0))+"[]";
+				stmts.add("stmts", arrType+" "+arrayVar+"=("+arrType+")"+f.codegen().render());
 				for (int i=0; i<lhs.size(); i++) {
 					Variable v=lhs.get(i);
 					String varType = MyType.javaObjectTypeName(v);

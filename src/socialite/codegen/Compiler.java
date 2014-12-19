@@ -89,6 +89,7 @@ public class Compiler {
 				//errorMsg += diag.getCode()+"\n"; 
 				errorMsg += "\n";
 				errorMsg += diag.getKind()+"\n";
+				errorMsg += "line:"+diag.getLineNumber()+"\n";
 				//errorMsg += diag.getPosition()+"\n";  
 				//errorMsg += diag.getStartPosition()+"\n";
 				//errorMsg += diag.getEndPosition()+"\n";

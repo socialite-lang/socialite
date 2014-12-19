@@ -29,7 +29,7 @@ package socialite.tables;
 	public static <name> create(Long base, Integer size) { return new <name>(base.longValue(), size.intValue()); }
 <endif>
 
-	int base;
+	<first(columns).type> base;
 	byte filled[];
 	<rest(columns):{c|<c.type> col<i>[];<\n>}>
 	<idxCols:{ic|SIndex index<ic.relPos>;<\n>}>
@@ -233,7 +233,8 @@ package socialite.tables;
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeInt(base);
+		<if(IsInt.(first(columns).type))>out.writeInt(base);
+		<else>out.writeLong(base);<endif>
 		
 		out.writeInt(filled.length);
 		for (int i=0; i\<filled.length; i++)
@@ -247,7 +248,9 @@ package socialite.tables;
 	
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		base=in.readInt();
+		<if(IsInt.(first(columns).type))>base=in.readInt();
+		<else>base=in.readLong();<endif>
+
 		int len=in.readInt();
 		filled = new byte[len];		
 		for (int i=0; i\<len; i++) 

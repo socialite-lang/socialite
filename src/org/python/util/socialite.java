@@ -67,7 +67,6 @@ public class socialite {
             warnoptions.append(new PyString(wopt));
         }
         Py.getSystemState().setWarnoptions(warnoptions);
-
         PySystemState systemState = Py.getSystemState();  
 
         // Now create an interpreter
