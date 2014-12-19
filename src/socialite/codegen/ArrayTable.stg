@@ -267,8 +267,8 @@ package socialite.tables;
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-	    <if(IsInt.(first(columns).type))>out.writeInt(base);
-	    <else>out.writeLong(base);<endif>
+		<if(IsInt.(first(columns).type))>out.writeInt(base);
+		<else>out.writeLong(base);<endif>
 		
 		out.writeInt(filled.length());
 		for (int i=0; i\<filled.length(); i++)
@@ -283,7 +283,7 @@ package socialite.tables;
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		<if(IsInt.(first(columns).type))>base=in.readInt();
-     	<else>base=in.readLong();<endif>
+		<else>base=in.readLong();<endif>
 
 		int len=in.readInt();
 		filled = new <byteArrayClass>(len);

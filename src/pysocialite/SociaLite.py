@@ -5,10 +5,12 @@ import socialite.tables.QueryVisitor as QueryVisitor
 import socialite.tables.Tuple as Tuple
 import socialite.util.SociaLiteException as SociaLiteException
 import socialite.type.Utf8 as Utf8
-
+import sys
 import java.util.concurrent.atomic.AtomicBoolean as AtomicBool
+import java.lang.InterruptedException as JavaInterruptedException
 from threading import Thread, InterruptedException, Condition, Lock
 from Queue import Queue
+
 
 __all__ = ['returns', 'cwd', 'chdir', 'store', 'load', 'tables', 'status', 'engine', 'SociaLiteException', 'double']
 __doc__ = """
@@ -57,8 +59,61 @@ def randInt(s, e):        # to access it from SociaLite queries
 
 """
 
+# Initialize useful functions (help, quit, ...)
+import __builtin__
+class _Helper(object):
+    def __init__(self):
+        global examples
+        self.socialite = sys.modules[__name__]
+        self.socialiteExamples = examples
+
+    def __repr__(self):
+        return "Type help(socialite) for help on SociaLite, " \
+               "or help(object) for help about object." 
+    def __call__(self, *args, **kwds):
+        if args and args[0]==self.socialite:
+            print self.socialite.__doc__
+            return
+        elif args and args[0]==self.socialiteExamples:
+            print self.socialite.examples
+            return
+        import pydoc
+        return pydoc.help(*args, **kwds)
+
+def sethelper():
+    __builtin__.socialite = sys.modules[__name__]
+    __builtin__.help = _Helper()
+
+import os
+def setquit():
+    """Define new built-ins 'quit' and 'exit'.
+    These are simply strings that display a hint on how to exit.
+
+    """
+    if os.sep == ':':
+        eof = 'Cmd-Q'
+    elif os.sep == '\\':
+        eof = 'Ctrl-Z plus Return'
+    else:
+        eof = 'Ctrl-D (i.e. EOF)'
+
+    class Quitter(object):
+        def __init__(self, name):
+            self.name = name
+        def __repr__(self):
+            return 'Use %s() or %s to exit' % (self.name, eof)
+        def __call__(self, code=None):
+            # Shells like IDLE catch the SystemExit, but listen when their
+            # stdin wrapper is closed.
+            try:
+                sys.stdin.close()
+            except:
+                pass
+            raise SystemExit(code)
+    __builtin__.quit = Quitter('quit')
+    __builtin__.exit = Quitter('exit')
+
 double = float
-import sys
 
 def internal(f):
     f.internal = True
@@ -87,34 +142,48 @@ def init(cpu=None, dist=False, interactive=False, verbose=None):
         isInteractive = True
         engine = AsyncEngine(engine)
 
-cleanupFuncs =[]
+cleanupFuncsBefore =[]
+cleanupFuncsAfter =[]
 cleanupLock = Lock()
 @internal
-def registerCleanupOnExit(f):
+def registerCleanupOnExit(f, before=True):
     try:
         cleanupLock.acquire()
-        cleanupFuncs.append(f)
+        if before: cleanupFuncsBefore.append(f)
+        else: cleanupFuncsAfter.append(f)
     finally:
         cleanupLock.release()
 @internal
 def unregisterCleanupOnExit(f):
     try:
         cleanupLock.acquire()
-        cleanupFuncs.remove(f)
+        cleanupFuncsBefore.remove(f)
+        cleanupFuncsAfter.remove(f)
     finally:
         cleanupLock.release()
 
 cleanupDone = AtomicBool()
 import time
+
 @internal
 def cleanupOnExit():
     if cleanupDone.compareAndSet(False, True):
-        for f in cleanupFuncs:
-            f()
+        for f in cleanupFuncsBefore: f()
 
-        time.sleep(0.02)
+        #time.sleep(0.02)
         engine.shutdown()
-        time.sleep(0.02)
+
+        for f in cleanupFuncsAfter: f()
+        #time.sleep(0.02)
+
+def install_funcs():
+    sethelper()
+    setquit()       
+    import atexit
+    atexit.register(cleanupOnExit)
+
+install_funcs()
+
 
 @internal
 def cwd(): return engine.cwd()
@@ -171,6 +240,7 @@ def _removeStackTrace(msg):
         msg = msg[len(magic):].strip()
     return msg
 
+
 class AsyncEngine:
     END = None
     def __init__(self, engine):
@@ -179,7 +249,7 @@ class AsyncEngine:
         self.reqThreads = []
         reqThreadNum = 2
         for i in xrange(reqThreadNum):
-            t=Thread(target=self.asyncRequest)
+            t=Thread(target=self.asyncRequest, name="Async Request Thread")
             t.start()
             self.reqThreads.append(t)
         registerCleanupOnExit(self.cleanupReqThreads)
@@ -189,32 +259,36 @@ class AsyncEngine:
 
     def cleanupReqThreads(self):
         try:
+            #for t in self.reqThreads:
+            #    self.q.put(self.END)
             for t in self.reqThreads:
-                self.q.put(self.END)
-                #t._thread.interrupt()
+                t._thread.interrupt()
         except:
             print "Exception in cleanupReqThreads"
 
     def asyncRequest(self):
-        while True:
-            tup = self.q.get()
-            if tup == self.END: break
+        try:
+            while True:
+                tup = self.q.get()
+                if tup == self.END: break
 
-            query, visitor, id, checker = tup
-            try:
-                if visitor: self.engine.run(query, visitor, id)
-                else: self.engine.run(query)
-            except:
-                type, inst, tb = sys.exc_info()
-                errhead="Error while running:" 
-                print "\n"+errhead+indent(query, width=len(errhead), indentFirst=False)
-                print indent(_removeStackTrace(inst.getMessage()))
+                query, visitor, id, checker = tup
+                try:
+                    if visitor: self.engine.run(query, visitor, id)
+                    else: self.engine.run(query)
+                except:
+                    type, inst, tb = sys.exc_info()
+                    errhead="Error while running:" 
+                    print "\n"+errhead+indent(query, width=len(errhead), indentFirst=False)
+                    print indent(_removeStackTrace(inst.getMessage()))
 
-                if visitor:
-                    visitor.raiseError(inst)
+                    if visitor:
+                        visitor.raiseError(inst)
 
-            checker.done=True
-            self._notify(checker.cv)
+                checker.done=True
+                self._notify(checker.cv)
+        except JavaInterruptedException:
+            pass
 
     def _notify(self, cv):
         cv.acquire()
@@ -307,8 +381,8 @@ class TableIterator(QueryVisitor):
 
     def startThread(self):
         if self.thread: return
-        self.thread = t = Thread(target=self.run)
-        registerCleanupOnExit(self.cleanupIterThread)
+        self.thread = t = Thread(target=self.run, name="Table Iterator Thread query="+self.query)
+        registerCleanupOnExit(self.cleanupIterThread, False)
 
         t.start()
 
@@ -323,14 +397,7 @@ class TableIterator(QueryVisitor):
 
             self.finished = True
             self.engine.cleanupTableIter(self.id)
-            while True:
-                try:
-                    try: self.q.get_nowait()
-                    except: pass # Empty, ignored.
-
-                    self.q.put_nowait(self.END)
-                    break
-                except: pass # Full, we dequeue and try again.
+            self.thread._thread.interrupt()
         except:
             print "Exception in cleanupIterThread"
 
@@ -358,13 +425,15 @@ class TableIterator(QueryVisitor):
         try:
             self.engine.run(self.query, self, self.id)
         except SociaLiteException, e1:
+            e1.printStackTrace()
             self.q.put(self.END)
             raise e1
-        except Exception, e2:
-            self.q.put(self.END)
-            raise e2
         except InterruptedException, e3:
             return
+        except Exception, e2:
+            e2.printStackTrace()
+            self.q.put(self.END)
+            raise e2
 
     def __next__(self):
         return self.next()
@@ -391,74 +460,3 @@ class TableIterator(QueryVisitor):
         return self
 
 
-# Initialize useful functions (help, quit, ...)
-import __builtin__
-class _Helper(object):
-    def __init__(self):
-        global examples
-        self.socialite = sys.modules[__name__]
-        self.socialiteExamples = examples
-
-    def __repr__(self):
-        return "Type help(socialite) for help on SociaLite, " \
-               "or help(object) for help about object." 
-    def __call__(self, *args, **kwds):
-        if args and args[0]==self.socialite:
-            print self.socialite.__doc__
-            return
-        elif args and args[0]==self.socialiteExamples:
-            print self.socialite.examples
-            return
-        import pydoc
-        return pydoc.help(*args, **kwds)
-
-def sethelper():
-    __builtin__.socialite = sys.modules[__name__]
-    __builtin__.help = _Helper()
-
-import os
-def setquit():
-    """Define new built-ins 'quit' and 'exit'.
-    These are simply strings that display a hint on how to exit.
-
-    """
-    if os.sep == ':':
-        eof = 'Cmd-Q'
-    elif os.sep == '\\':
-        eof = 'Ctrl-Z plus Return'
-    else:
-        eof = 'Ctrl-D (i.e. EOF)'
-
-    class Quitter(object):
-        def __init__(self, name):
-            self.name = name
-        def __repr__(self):
-            return 'Use %s() or %s to exit' % (self.name, eof)
-        def __call__(self, code=None):
-            # Shells like IDLE catch the SystemExit, but listen when their
-            # stdin wrapper is closed.
-            try:
-                sys.stdin.close()
-            except:
-                pass
-            raise SystemExit(code)
-    __builtin__.quit = Quitter('quit')
-    __builtin__.exit = Quitter('exit')
-
-def install_funcs():
-    sethelper()
-    setquit()       
-    import atexit
-    atexit.register(cleanupOnExit)
-
-#    def handler(signum, frame):
-#        if not isInteractive:
-#            raise SystemExit()
-#
-#        import org.python.util.JLineSociaLiteConsole as JLineSociaLiteConsole
-#        JLineSociaLiteConsole.setKeyboardInterrupt();
-#
-#    import signal
-#    signal.signal(signal.SIGINT, handler)
-
-install_funcs()

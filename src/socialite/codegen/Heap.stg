@@ -1,6 +1,6 @@
-heap(type, tableClass, f) ::= <<
+heap(type, tableClass, f, fname) ::= <<
 
-private static final class Heap_<f> {
+private static final class Heap_<fname> {
 	private static final int EMPTY=-1;
 	
 	private int[] array; // holds index to the table entry
@@ -8,7 +8,7 @@ private static final class Heap_<f> {
 	private int currentSize;
 	private <tableClass> table;
 	
-	public Heap_<f>(int size, <tableClass> _table) {
+	public Heap_<fname>(int size, <tableClass> _table) {
 		if (size > 1024*1024*512) {
 			Assert.die("This heap cannot handle this size:"+size+
 					   "\nMake another one using a hash table");			
@@ -40,7 +40,7 @@ private static final class Heap_<f> {
 		<type> xVal = table.groupby(xIdx);
 		int hole=++currentSize;
 		
-		for ( ; hole>1 && <f>.invoke(xVal, table.groupby(array[hole/2]))!=table.groupby(array[hole/2]); hole /= 2) {
+		for ( ; hole>1 && <f>(xVal, table.groupby(array[hole/2]))!=table.groupby(array[hole/2]); hole /= 2) {
 			array[hole] = array[hole/2];
 			position[xIdx] = hole;
 		}
@@ -88,12 +88,12 @@ private static final class Heap_<f> {
 			<type> childVal2=table.groupby(array[child+1]);
 
 
-			if (child!=currentSize && <f>.invoke(childVal2, childVal1)==childVal2) {
+			if (child!=currentSize && <f>(childVal2, childVal1)==childVal2) {
 				child++;
 				childVal1=childVal2;
 			}
 		
-			if (<f>.invoke(childVal1, tmpVal)!=tmpVal) {			
+			if (<f>(childVal1, tmpVal)!=tmpVal) {			
 				array[hole] = array[child];
 				position[array[hole]] = hole;
 			} else {
@@ -112,7 +112,7 @@ private static final class Heap_<f> {
 		for ( ; hole>1; hole=parent) {
 			parent=hole/2;
 			<type> parentVal=table.groupby(array[parent]);
-			if (<f>.invoke(xVal, parentVal)!=parentVal) {
+			if (<f>(xVal, parentVal)!=parentVal) {
 				swap(hole, parent);
 			} else {
 				break;

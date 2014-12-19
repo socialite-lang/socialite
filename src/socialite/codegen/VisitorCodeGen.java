@@ -351,6 +351,7 @@ public class VisitorCodeGen {
 			}
 		}
 		heap.add("type", type);
+		heap.add("fname", f.name().replace('.', '_'));
 		heap.add("f", f.name());
 		heap.add("tableClass", headT.className());
 

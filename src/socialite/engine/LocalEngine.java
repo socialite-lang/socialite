@@ -14,6 +14,10 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.python.core.PyFunction;
+import org.python.core.PyObject;
+import org.python.core.PyException;
+import org.python.core.Py;
+import org.python.core.PyJavaType;
 
 import socialite.codegen.Analysis;
 import socialite.codegen.CodeGenMain;
@@ -171,12 +175,20 @@ public class LocalEngine {
 			//System.out.println("Query running:"+(System.currentTimeMillis()-start)+"ms");
 			//L.debug("All exec time:"+(System.currentTimeMillis()-start)+"ms");
 		} catch (Exception e) {
-			if (Thread.currentThread().isInterrupted()) {
-				return;
-			}
 			if (conf.isVerbose()) {
 				L.error("Exception while running "+program);
 				L.error(ExceptionUtils.getStackTrace(e));
+			}
+			if (Thread.currentThread().isInterrupted()) {
+				return;
+			} 
+			if (e instanceof PyException) {
+				PyException pye = ((PyException)e);
+				if (pye.type instanceof PyJavaType) {
+					Object error = pye.value.__tojava__(Throwable.class);
+					if (error instanceof InterruptedException) { return; }
+					if (Py.matchException(pye, Py.KeyboardInterrupt)) { return; }
+				}
 			}
 			throw new SociaLiteException(e);
 		}

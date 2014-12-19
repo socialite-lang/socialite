@@ -48,7 +48,7 @@ public class WorkerNode extends Thread {
 	
 	public void serve() {
 		initCmdListener();
-        initNetworkResources();
+		initNetworkResources();
 		register();
 		initRecvThread();
 		startListen();
@@ -62,7 +62,7 @@ public class WorkerNode extends Thread {
 		cmdListener.start();
 	}
 	public void initManagerAndWorkers(Config _conf) {
-        conf = _conf;
+		conf = _conf;
 		manager = Manager.getInst(conf);
 	}
 	void initRecvThread() {

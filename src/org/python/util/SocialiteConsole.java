@@ -60,6 +60,9 @@ public class SocialiteConsole extends InteractiveConsole {
 	
 	@Override
 	public boolean push(String line) {
+		return super.push(line);
+	}
+	public boolean OLD_push(String line) {
 		if (inQuery) {
 			if (hasDeclEnd(line)) {
 				inQuery = false;

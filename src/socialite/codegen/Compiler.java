@@ -76,19 +76,19 @@ public class Compiler {
 		Iterable<String> options = null; //Arrays.asList(new String[] { "-g:none"});
 		JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, dc, options, null, compUnit);
 		boolean success = task.call();
-        if (success) {
-            compiledClasses = fileManager.getCompiledClasses();
-            Loader.loadFromBytes(compiledClasses);
-        }
+		if (success) {
+			compiledClasses = fileManager.getCompiledClasses();
+			Loader.loadFromBytes(compiledClasses);
+    		}
 		if (!success || verbose) {
 			errorMsg = "";
 			for (Diagnostic diag : dc.getDiagnostics()) {
-                if (diag.getKind().equals(Diagnostic.Kind.ERROR)) {
-                    errorMsg += "in "+name+"\n";
-                    errorMsg += diag.getKind() + ", line:" + diag.getLineNumber() + ", pos:" + diag.getColumnNumber() + "\n";
-                    errorMsg += diag.getMessage(null);
-                    errorMsg += "\n";
-                }
+				if (diag.getKind().equals(Diagnostic.Kind.ERROR)) {
+					errorMsg += "in "+name+"\n";
+					errorMsg += diag.getKind() + ", line:" + diag.getLineNumber() + ", pos:" + diag.getColumnNumber() + "\n";
+					errorMsg += diag.getMessage(null);
+					errorMsg += "\n";
+				}
 			}
 		}
 		try { fileManager.close(); }
