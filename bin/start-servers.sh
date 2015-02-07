@@ -10,3 +10,5 @@ echo "Starting master node"
 sleep 0.1
 echo "Starting worker nodes"
 "$bin"/socialite-daemons.sh worker start
+
+#"$bin/remote.sh" master bash -c 'tail -n +1 -F ../logs/socialite-master*.log | { sed "/Ready/ q" && kill $$ ;}'

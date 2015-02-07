@@ -35,9 +35,7 @@ CLASSPATH=${CLASSPATH}:${EXT}/commons-logging-1.1.1.jar:${EXT}/commons-logging-a
 CLASSPATH=${CLASSPATH}:${EXT}/log4j-1.2.16.jar
 CLASSPATH=${CLASSPATH}:${EXT}/jython.jar
 CLASSPATH=${CLASSPATH}:${EXT}/ST-4.0.7.jar:${EXT}/antlr-3.5.2-complete-no-st3.jar:${EXT}/trove-3.0.3.jar 
-CLASSPATH=${CLASSPATH}:${EXT}/linkedin/linkedin-all.jar
-CLASSPATH=${CLASSPATH}:${EXT}/tusk-examples-0.0.4.jar
-CLASSPATH=${CLASSPATH}:${EXT}/slf4j-api-1.7.7.jar
+CLASSPATH=${CLASSPATH}:${EXT}/concurrent-prim-map-1.0.0.jar
 
 #CLASSPATH=${CLASSPATH}:${EXT}/jfreechart-1.0.14-all.jar
 

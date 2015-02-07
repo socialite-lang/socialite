@@ -76,7 +76,7 @@ case $kind in
   ;;
   (client)
     CLASS=$1; shift
-    JAVA_HEAP_MAX=-Xmx4096m
+    JAVA_HEAP_MAX=-Xmx1024m
     JAVA_HEAP_MIN=-Xms16m
   ;;
   (query)

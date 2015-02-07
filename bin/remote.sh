@@ -45,4 +45,4 @@ for remote in `cat "$HOSTLIST"|sed "s/#.*$//;/^$/d"`; do
     fi
 done
 
-wait
+#wait
