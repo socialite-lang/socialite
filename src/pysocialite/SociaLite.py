@@ -264,7 +264,8 @@ class AsyncEngine:
             for t in self.reqThreads:
                 t._thread.interrupt()
         except:
-            print "Exception in cleanupReqThreads"
+            pass
+            #print "Exception in cleanupReqThreads"
 
     def asyncRequest(self):
         try:
@@ -399,7 +400,8 @@ class TableIterator(QueryVisitor):
             self.engine.cleanupTableIter(self.id)
             self.thread._thread.interrupt()
         except:
-            print "Exception in cleanupIterThread"
+            pass
+            #print "Exception in cleanupIterThread"
 
     def visit(self, t):
         if self.finished: return False
@@ -436,9 +438,6 @@ class TableIterator(QueryVisitor):
             raise e2
 
     def __next__(self):
-        return self.next()
-
-    def next(self):
         if not self.thread: 
             self.startThread()
 
@@ -454,6 +453,11 @@ class TableIterator(QueryVisitor):
             self.finished = True
             raise StopIteration
         return v
+
+    def next(self):
+        n = self.__next__()
+        self.cleanupIterThread()
+        return n
         
     def __iter__(self):
         self.startThread()
