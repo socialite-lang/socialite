@@ -40,9 +40,9 @@ tokens {
     INDEX_BY;
     GROUP_BY;
     RANGE;
-    SIZE;
     ITER;
     PREDEFINED;
+    CONCURRENT;
     APPROX;
     MULTISET;
     TABLE_OPT;
@@ -97,9 +97,11 @@ table_stmt	: 'clear' ID DOT_END -> ^(CLEAR ID)
 query	:'?-' predicate DOT_END -> ^(QUERY predicate)
 	;
 
-rule    : predicate ':-' body1=litlist 
+rule    : head ':-' body1=litlist 
                 (DOT_END | (';' ':-' body2=litlist DOT_END)) 
-          -> ^(RULE ^(HEAD predicate) ^(BODY $body1) ^(BODY  $body2?));
+          -> ^(RULE ^(HEAD head) ^(BODY $body1) ^(BODY  $body2?));
+
+head : predicate;
 
 litlist	:literal (','! literal)*;
 
@@ -145,7 +147,8 @@ t_opt	: 'sortby' col=ID (order=SORT_ORDER)? -> ^(SORT_BY $col $order?)
 	|'indexby' ID -> ^(INDEX_BY ID)
 	|'groupby' '(' INT ')' -> ^(GROUP_BY INT)
 	|'predefined' -> PREDEFINED
-	|'multiset' ->MULTISET
+	|'concurrent' -> CONCURRENT
+	|'multiset' -> MULTISET
 	;
 SORT_ORDER: 'asc'|'desc'
 	;
@@ -156,7 +159,6 @@ col_decls	:col_decl (','! col_decl)*
 col_decl	: type ID (':' col_opt)?-> ^(COL_DECL type ID col_opt?)
 	;
 col_opt	:  i1=INT '..' i2=INT -> ^(RANGE $i1 $i2)
-	|  i1=INT -> ^(SIZE $i1)
 	| ITER_DECL -> ITER
 	;
 

@@ -8,6 +8,8 @@ options {
 @header {
     package socialite.parser.antlr;    
     import socialite.parser.Query;
+    import socialite.parser.Literal;
+    import socialite.parser.Param;
     import socialite.parser.Variable;
     import socialite.parser.Const;
     import socialite.parser.Predicate;
@@ -41,6 +43,7 @@ options {
     public Parser parser;
     public Map<String, TableDecl> tableDeclMap = new HashMap<String, TableDecl>();
     Set<Variable> dotVars = new LinkedHashSet<Variable>();
+    List<AssignOp> headTmpVarAssigns = new ArrayList<AssignOp>();
     List<AssignOp> tmpVarAssigns = new ArrayList<AssignOp>();
     int kind=0;
     public Parser getParser() { return parser; }
@@ -188,6 +191,7 @@ t_opt returns [TableOpt result]
 	|^(INDEX_BY ID) {$result = new IndexBy($ID.text);}
 	|^(GROUP_BY INT) { $result = new GroupBy(Integer.parseInt($INT.text));}
 	| PREDEFINED {$result = new Predefined(); }
+	| CONCURRENT {$result = new Concurrent(); }
 	| MULTISET {$result = new MultiSet();}	
 	;
 decls returns [NestedTableDecl result]
@@ -206,9 +210,6 @@ col_decl returns [ColumnDecl result]
 col_opt returns [ColOpt result]
 	:^(RANGE i1=INT i2=INT) {
 	    $result = new ColRange(Integer.parseInt($i1.text), Integer.parseInt($i2.text));
-	}
-	|^(SIZE i1=INT) {
-	  $result = new ColSize(Integer.parseInt($i1.text));
 	}
 	| ITER {
 	 $result = new ColIter();
@@ -230,16 +231,21 @@ type returns [Class result]
 	} ('[' ']' {$result = Array.newInstance((Class)$result,0).getClass();})? 
 	;
 rule returns [Object result]
-	:^(RULE ^(HEAD predicate) ^(BODY body1=litlist) ^(BODY body2=litlist?))
+	:^(RULE ^(HEAD head) ^(BODY body1=litlist) ^(BODY body2=litlist?))
 	{   
-	    ArrayList body = new ArrayList($body1.result);
-	    RuleDecl rd = new RuleDecl($predicate.result, body);
+	    ArrayList<Literal> body = new ArrayList<Literal>($body1.result);
+        if (!headTmpVarAssigns.isEmpty()) {
+	        for (AssignOp op:headTmpVarAssigns)
+                body.add(new Expr(op));
+            headTmpVarAssigns.clear();
+        }
+	    RuleDecl rd = new RuleDecl($head.result, body);
 	    if ($body2.result==null) {
 	        $result = rd;
 	    } else {
 	        ArrayList<RuleDecl> list = new ArrayList<RuleDecl>();
 	        list.add((RuleDecl)rd);
-	        rd = new RuleDecl($predicate.result.clone(), $body2.result);
+	        rd = new RuleDecl($head.result.clone(), $body2.result);
 	        list.add((RuleDecl)rd);
 	        $result = list;
 	    }
@@ -247,8 +253,17 @@ rule returns [Object result]
 	    Const.nextRule();
 	}
 	;
-litlist returns [List result]
-	: { $result = new ArrayList(); }
+head returns [Predicate result]
+    : predicate {
+        $result = $predicate.result;
+	    if (!tmpVarAssigns.isEmpty()) {
+            headTmpVarAssigns.addAll(tmpVarAssigns);
+            tmpVarAssigns.clear();
+        }
+    }
+    ;
+litlist returns [List<Literal> result]
+	: { $result = new ArrayList<Literal>(); }
 	l1=literal  {
 	    for (Variable v: dotVars) {
 	        String root=v.name.substring(0, v.name.indexOf('.'));
@@ -261,9 +276,9 @@ litlist returns [List result]
 	    dotVars.clear();
 
 	    if ($l1.result instanceof List) {
-	        for(Object o:(List)$l1.result) 
+	        for(Literal o:(List<Literal>)$l1.result) 
 	            $result.add(o);
-	    } else { $result.add($l1.result); }
+	    } else { $result.add((Literal)($l1.result)); }
 	}
 	(l2=literal {
 	    for (Variable v: dotVars) {
@@ -277,9 +292,9 @@ litlist returns [List result]
 	    dotVars.clear();
 
 	    if ($l2.result instanceof List) {
-	        for(Object o:(List)$l2.result) 
+	        for(Literal o:(List<Literal>)$l2.result) 
 	            $result.add(o);
-	    } else { $result.add($l2.result); }
+	    } else { $result.add((Literal)$l2.result); }
 	})*
 	;
 literal returns [Object result]
@@ -289,39 +304,39 @@ literal returns [Object result]
 	        ((Predicate)$predicate.result).setNegated(); 
 	    }
 	    if (!tmpVarAssigns.isEmpty()) {
-	        $result = new ArrayList();
+	        $result = new ArrayList<Literal>();
 	        for (AssignOp op:tmpVarAssigns)
-	            ((List)$result).add(new Expr(op));
-	        ((List)$result).add($predicate.result);
+	            ((List<Literal>)$result).add(new Expr(op));
+	        ((List<Literal>)$result).add($predicate.result);
 	        tmpVarAssigns.clear();
 	    }
 	} |^(EXPR expr)  {
 	    Expr e = new Expr((Op)$expr.result);
 	    $result = e;
 	    if (!tmpVarAssigns.isEmpty()) {
-	        $result = new ArrayList();
+	        $result = new ArrayList<Literal>();
 	        for (AssignOp op:tmpVarAssigns)
-	            ((List)$result).add(new Expr(op));
-	        ((List)$result).add(e);
+	            ((List<Literal>)$result).add(new Expr(op));
+	        ((List<Literal>)$result).add(e);
 	        tmpVarAssigns.clear();
 	    }
 	}
 	;
 predicate returns [Predicate result]
 	: ID ^(INDEX param?) paramlist
-	{   TableDecl decl=tableDeclMap.get($ID.text);
+		{   TableDecl decl=tableDeclMap.get($ID.text);
 	    if (decl==null) {
  	        throw new ParseException(getParser(), $ID.line-1, $ID.pos, "Table "+$ID.text+" is not declared");	 
 	    } else {
 	       try {
-	           decl.checkTypes($param.result, $paramlist.result);
+	           decl.checkTypes((Param)$param.result, $paramlist.result);
 	       } catch(InternalException e) {
 	           throw new ParseException(getParser(), $ID.line-1, $ID.pos, e.getMessage());
 	       }
 	    }
-	    $result = new Predicate($ID.text, $param.result, $paramlist.result);
+	    $result = new Predicate($ID.text, (Param)$param.result, $paramlist.result);
 	}
-	;	
+	;
 function returns [Function result]
 	: ^(FUNC dotname fparamlist?) {
 	    $result = new Function($dotname.result, $fparamlist.result);
@@ -352,8 +367,8 @@ param returns [Object result]
 fparam returns [Object result]
 	: simpleExpr { $result = $simpleExpr.result; };
 
-paramlist returns [List result]
-	:{ $result = new ArrayList(); }
+paramlist returns [List<Param> result]
+	:{ $result = new ArrayList<Param>(); }
 	p1=param { 
 	    if (isSimpleIntValue($p1.result)) {
 	        $result.add(new Const(getSimpleIntValue($p1.result)));
@@ -364,7 +379,7 @@ paramlist returns [List result]
 	        throw new ParseException(getParser(), 
 	                        $p1.tree.getLine()-1, $p1.tree.getCharPositionInLine()+1, 
 	                        "Cannot use "+$p1.result+" in parameter list"); 
-	    } else { $result.add($p1.result); }
+	    } else { $result.add((Param)($p1.result)); }
 	}
 	(p2=param { 
 	    if (isSimpleIntValue($p2.result)) {
@@ -376,12 +391,12 @@ paramlist returns [List result]
 	        throw new ParseException(getParser(),
 	                        $p2.tree.getLine()-1, $p2.tree.getCharPositionInLine()+1, 
 	                        "Cannot use "+$p2.result+" in parameter list"); 
-	    } else { $result.add($p2.result); }
+	    } else { $result.add((Param)($p2.result)); }
 	})*
 	;
 
-fparamlist returns [List result]
-	:{ $result = new ArrayList(); }
+fparamlist returns [List<Param> result]
+	:{ $result = new ArrayList<Param>(); }
 	p1=fparam { 
 	    if (($p1.result instanceof BinOp)||($p1.result instanceof UnaryOp)||($p1.result instanceof Function)) {
 	        Variable tmpVar = addTmpVarAssign($p1.result);
@@ -390,7 +405,7 @@ fparamlist returns [List result]
 	        throw new ParseException(getParser(), 
 	                        $p1.tree.getLine()-1, $p1.tree.getCharPositionInLine()+1, 
 	                        "Cannot use "+$p1.result+" in parameter list"); 
-	    } else { $result.add($p1.result); }
+	    } else { $result.add((Param)($p1.result)); }
 	}
 	(p2=fparam { 
 	    if (($p2.result instanceof BinOp)||($p2.result instanceof UnaryOp)||($p2.result instanceof Function)) {
@@ -400,7 +415,7 @@ fparamlist returns [List result]
 	        throw new ParseException(getParser(),
 	                        $p2.tree.getLine()-1, $p2.tree.getCharPositionInLine()+1, 
 	                        "Cannot use "+$p2.result+" in parameter list"); 
-	    } else { $result.add($p2.result); }
+	    } else { $result.add((Param)($p2.result)); }
 	})*
 	;
 
