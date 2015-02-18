@@ -14,15 +14,18 @@ import socialite.visitors.IVisitor;
 
 public class EvalCommand implements Command, Externalizable {
 	private static final long serialVersionUID = 1;	
-	
+
+    public int epochId;
 	public int ruleId;
-	transient boolean received;
+	transient boolean received=false;
 	
 	public EvalCommand() {}
-	public EvalCommand(int _ruleId) {
+	public EvalCommand(int _epochId, int _ruleId) {
+        epochId = _epochId;
 		ruleId = _ruleId;
 	}
-		
+
+    public int getEpochId() {return epochId;}
 	public int getRuleId() {return ruleId;}
 	public String toString() { return "Eval rule["+ruleId+"]";}
 	
@@ -33,12 +36,14 @@ public class EvalCommand implements Command, Externalizable {
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
-		ruleId = in.readInt();
+        epochId = in.readInt();
+        ruleId = in.readInt();
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeInt(ruleId);
+		out.writeInt(epochId);
+        out.writeInt(ruleId);
 	}
 	
 	@Override

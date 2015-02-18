@@ -219,12 +219,10 @@ public class ParserTest {
 		
 		String query2 ="Foo[a](b) :- Foo[a](c), Zoo[b](c).\n";
 		p.parse(query2);
-		Assert.true_(p.getNewTables().size()==3);// since the tables are not compiled
 		Assert.true_(p.getRules().get(0).name().startsWith("Foo"));
 		
 		String query3="Zoo[a](b) :- Foo[a](b).\n";
 		p.parse(query3);
-		Assert.true_(p.getNewTables().size()==3);
 		Assert.true_(p.getRules().get(0).name().startsWith("Zoo"));		
 	}
 	
@@ -297,9 +295,9 @@ public class ParserTest {
 		Parser p = new Parser();
 		p.parse(query);
 		
-		List<Table> relations = p.getNewTables();
-		Table edge = relations.get(0);
-		Table b = relations.get(1);
+		List<Table> tables = p.getNewTables();
+		Table edge = tables.get(0);
+		Table b = tables.get(1);
 		
 		Assert.true_(edge.isPredefined());
 		Assert.true_(b.sortbyCols().length==1);
@@ -465,14 +463,16 @@ public class ParserTest {
 		an.run();
 		List<Epoch> epochs=an.getEpochs();
 		Epoch e=epochs.get(0);
+
 		List<Rule> rules=e.getRules();
-		Rule r=rules.get(0);
-		Map<String,Table> tableMap=an.getTableMap();
-		Table t=tableMap.get(r.getHead().name());
-		Assert.true_(t instanceof PrivateTable);
-		r=rules.get(1);
-		t=tableMap.get(r.firstP().name());
-		Assert.true_(t instanceof PrivateTable);
+        boolean hasPrivateTable=false;
+        for (Rule r:rules) {
+            Map<String, Table> tableMap = an.getTableMap();
+            Table t = tableMap.get(r.getHead().name());
+            if (t instanceof PrivateTable)
+                hasPrivateTable=true;
+        }
+        Assert.true_(hasPrivateTable);
 	}
 	
 	static void testDistRule() {
@@ -490,7 +490,6 @@ public class ParserTest {
 			Assert.true_(t instanceof RemoteHeadTable);
 			Column c=t.getColumn(0);
 			Assert.not_true(c.hasRange(), "RemoteTables are not array-tables");
-			Assert.true_(c.hasSize());
 		}
 	}
 	
@@ -524,13 +523,13 @@ public class ParserTest {
 				"Foo(a, $min(b)) :- a=1, b=20.\n";
 		Parser p=new Parser();
 		p.parse(query);
-		Analysis an=new Analysis(p, Config.par());
+		Analysis an=new Analysis(p, Config.par(4));
 		an.run();
 		
 		query ="Bar(int a:0..100, (int i, double d)). \n" +
 				"Bar(a, $min(b), c) :- a=1, b=20, c=1.1.\n";
 		p.parse(query);
-		an=new Analysis(p, Config.par());
+		an=new Analysis(p, Config.par(4));
 		try { 
 			an.run();
 			assert false:"Expecting an exception";
@@ -544,7 +543,7 @@ public class ParserTest {
 				
 		Parser p=new Parser();
 		p.parse(query);
-		Analysis an=new Analysis(p, Config.par());
+		Analysis an=new Analysis(p, Config.par(4));
 		an.run();
 		
 		query ="Foo(int a:iter, int b). \n" +
@@ -553,7 +552,7 @@ public class ParserTest {
 				"Foo(1,b) :- Foo(0, c), b=c+1.\n";
 		p = new Parser();
 		p.parse(query);
-		an=new Analysis(p, Config.par());
+		an=new Analysis(p, Config.par(4));
 		an.run();
 		
 		query = "Baz(int a, String b, (int i:iterator)).\n";
@@ -568,17 +567,17 @@ public class ParserTest {
 				"Foo(1,b) :- Foo(0, c), b=c+1.\n";
 		p = new Parser();
 		p.parse(query);
-		an=new Analysis(p, Config.par());
+		an=new Analysis(p, Config.par(4));
 		an.run();
 		query = "Foo(2,b) :- Foo(1, c), b=c+1.\n";
 		p.parse(query);
-		an = new Analysis(p, Config.par());
+		an = new Analysis(p, Config.par(4));
 		an.run();
 		List<Rule> rules = an.getRules();
 		
 		query = "Foo(3,b) :- Foo(2, c), b=c+1.\n";
 		p.parse(query);
-		an = new Analysis(p, Config.par());
+		an = new Analysis(p, Config.par(4));
 		an.run();
 		rules = an.getRules();
 	}

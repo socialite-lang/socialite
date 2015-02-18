@@ -82,12 +82,6 @@ public final class <name> extends TmpTableInst {
 		assert isEmpty();
 	}
 	
-	public TmpTableInst copy() {
-		<name> copy = (<name>)TmpTablePool.get(<name>.class);
-		assert copy.isEmpty();
-		copy.addAll(this);
-		return copy;
-	}
 	public void addAll(TmpTableInst inst) {
 		// should be only used by Sender.java
 		if (inst==null) return;
@@ -125,48 +119,14 @@ public final class <name> extends TmpTableInst {
 		}
 	}	
 	public void iterate_range(int from, int to, <visitorClass> v) {
-		assert virtualSliceNum() > 1;
 		if (to >= size()) to = size()-1;
 		for (int i=from; i\<= to; i++) {
 			boolean cont=v.visit(<columns:{c|col<i0>.getQuick(i)}; separator=", ">);
 			if (!cont) return;
 		}
 	}
-	public void iterate_slice(Lock lock, TableSliceMap sliceMap, int tableId, int sliceIdx, <visitorClass> v) {
-		<columns:{c|<if(c.const)><ConstContainer.(c.type)> $col<i0>=null;<\n>
-					<else><getContainer(c.type)> $col<i0>=null;<\n><endif>}>
-		int _size = col0.size()/256;
-		if (_size==0) _size=16;
-		for (int i=0; i\< col0.size(); i++) {
-           	if (sliceMap.getIndex(tableId, col0.getQuick(i)) != sliceIdx) { continue; }
-			if ($col0 == null) {
-				<columns:{c|<if(c.const)>$col<i0>=new <ConstContainer.(c.type)>(_size);<\n>
-				<else>$col<i0>=new <ContainerMap.(c.type)>(_size);<\n><endif>}>
-			}
-			<columns:{c|$col<i0>.add(col<i0>.getQuick(i));<\n>}>
-        }
-        if ($col0 == null) return;
-        lock.lock();
-        try {
-        	for (int i=0; i\<$col0.size(); i++) {
-        		boolean cont=v.visit(<columns:{c|$col<i0>.getQuick(i)}; separator=",">);
-    			if (!cont) return;
-    		}
-    	} finally {
-    		lock.unlock();
-    	}        	
-	}
-    public void iterate_slice(TableSliceMap sliceMap, int tableId, int sliceIdx, <visitorClass> v) {
-        for (int i=0; i\< col0.size(); i++) {
-            if (sliceMap.getIndex(tableId, col0.getQuick(i)) != sliceIdx)
-                continue;
-    	    boolean cont=v.visit(<columns:{c|col<i0>.getQuick(i)}; separator=",">);
-    		if (!cont) return;
-        }
-    }
 
 	<methods;separator="\n">
-
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {

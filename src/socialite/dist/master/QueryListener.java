@@ -60,14 +60,11 @@ import socialite.eval.ClassFilesBlob;
 import socialite.eval.EvalProgress;
 import socialite.functions.PyInterp;
 import socialite.functions.PyInvoke;
+import socialite.parser.GeneratedT;
 import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.parser.Parser;
-import socialite.resource.WorkerAddrMap;
-import socialite.resource.WorkerAddrMapW;
-import socialite.resource.SRuntime;
-import socialite.resource.TableInstRegistry;
-import socialite.resource.TableSliceMap;
+import socialite.resource.*;
 import socialite.tables.QueryVisitor;
 import socialite.util.IdFactory;
 import socialite.util.Loader;
@@ -89,13 +86,15 @@ public class QueryListener implements QueryProtocol {
 		masterAddr = conf.portMap().masterAddr();
 		queryListenPort = conf.portMap().queryListen();
 		master = _master;
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() { cleanupGeneratedCode();}
+        });
 	}
 
 	public void start() {
 		try {
-			int numHandlers = Runtime.getRuntime().availableProcessors();
-			if (numHandlers < 4) numHandlers = 4;
-			if (numHandlers > 32) numHandlers = 32;			
+			int numHandlers = 16;
 			Configuration hConf = new Configuration();
 			Server server = RPC.getServer(this, masterAddr, queryListenPort,numHandlers, false, hConf);
 			server.start();
@@ -150,81 +149,6 @@ public class QueryListener implements QueryProtocol {
 		}
 	}
 
-	boolean prevSessionExists() {
-		if (SRuntime.masterRt() == null)
-			return false;
-		return true;
-	}
-
-	@Override
-	public synchronized BooleanWritable beginSession(Text _path,
-			IntWritable _workerNodeNum) {
-		boolean newSession = true;
-		String path = _path.toString();
-		if (prevSessionExists()) {
-			if (path.equals(PathTo.cwd()))
-				newSession = false;
-			else endSession();
-		}
-		boolean loadSession = false;		
-
-		int workerNodeNum = -1;
-		if (_workerNodeNum != null)
-			workerNodeNum = _workerNodeNum.get();
-
-		WorkerAddrMap workerAddrMap = master.makeWorkerAddrMap(workerNodeNum);
-		SRuntime.newMasterRt(master, workerAddrMap);
-
-		master.beginSession();
-		if (path.length() == 0)
-			path = PathTo.defaultDistCwd();
-		PathTo.setcwd(path);
-
-		prepareWorkSpace();
-		if (newSession) {
-			IdFactory.reset();
-			loadSession = loadTableMap(); // XXX: after loading, check the # of
-							// workers and table slices...
-		}
-		
-		try {
-			Method begin = WorkerCmd.class.getMethod("beginSession",
-					new Class[] { Text.class, WorkerAddrMapW.class,
-							boolean.class });
-			Object p[] = new Object[]{ _path, new WorkerAddrMapW(workerAddrMap), loadSession};
-			MasterNode.callWorkers(workerAddrMap, begin, p);
-		} catch (Exception e) {
-			L.fatal("Exception while calling beginSession for workers");
-		}
-		return new BooleanWritable(true);
-	}
-
-	@Override
-	public synchronized BooleanWritable beginSession(Text path) {
-		return beginSession(path, null);
-	}
-
-	@Override
-	public BooleanWritable storeWorkspace() {
-		storeTableMap();
-		try {
-			Method begin = WorkerCmd.class.getMethod("storeSession",
-					new Class[] { Text.class });
-			Object p[] = new Object[] { new Text(PathTo.cwd()) };
-			MasterNode.callWorkers(begin, p);
-		} catch (Exception e) {
-			L.fatal("Exception while calling storeSession for workers");
-		}
-		return new BooleanWritable(true);
-	}
-
-	@Override
-	public BooleanWritable storeWorkspace(Text _path) {
-		String path = _path.toString();
-		PathTo.setcwd(path);
-		return storeWorkspace();
-	}
-
 	void deleteRecur(File dir) {
 		if (!dir.exists()) return;
 		assert dir.isDirectory();
@@ -245,42 +169,24 @@ public class QueryListener implements QueryProtocol {
 		}		
 	}
 
-	void cleanupLocalWorkSpace(String path) {
+    void cleanupGeneratedCode() {
+        deleteRecur(new File(PathTo.classOutput()));
+    }
+
+	/*void cleanupLocalWorkSpace(String path) {
 		File ws = new File(path);
 		deleteRecur(ws);
-	}
+	}*/
 	@Override
 	public void cleanupTableIter(LongWritable id) {
 		try {
 			Method cleanup = WorkerCmd.class.getMethod("cleanupTableIter", new Class[] {LongWritable.class});
 			Object param[] = new Object[]{id};			
 			MasterNode.callWorkers(cleanup, param);
+			getEngine().cleanupTableIter(id.get());
 		} catch (Exception e) {
 			L.fatal("Exception while calling WorkerCmd.cleanupTableIter():" + e);
 		}
-		getEngine().cleanupTableIter(id.get());
-	}
-	@Override
-	public BooleanWritable endSession() {
-		shutdownEngine();
-
-		// 	cleanupLocalWorkSpace(PathTo.classOutput());
-		try {
-			Method endSession = WorkerCmd.class.getMethod("endSession", new Class[] {});
-			Object param[] = new Object[0];			
-			MasterNode.callWorkers(endSession, param);
-		} catch (Exception e) {
-			L.fatal("Exception while calling WorkerCmd.endSession():" + e);
-		}
-	
-		master.setEpochDone();
-		SRuntime.voidMasterRt();
-		PathTo.setcwd(null);
-		distEngine = null;
-		Loader.cleanup();
-		EvalProgress.getInst().clear();
-		CodeGenMain.clearCache();
-		return new BooleanWritable(true);
 	}
 
 	void printMemInfo(String prefix) {
@@ -295,46 +201,49 @@ public class QueryListener implements QueryProtocol {
 			distEngine = null;
 		}
 	}
-	boolean engineExists() { return distEngine!=null;}
-	synchronized DistEngine getEngine() {
-		if (distEngine==null) {
-			SRuntime runtime = SRuntime.masterRt();
-			Config workerConf = runtime.getConf();
-			WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
-			Map<InetAddress, WorkerCmd> workerMap = master.getWorkerCmdMap();
-			
-			distEngine = new DistEngine(workerConf, addrMap, workerMap);
-		}
-		return distEngine;
-	}
+
+    synchronized void init() {
+        WorkerAddrMap workerAddrMap = master.makeWorkerAddrMap();
+        SRuntimeMaster runtime = SRuntimeMaster.create(master, workerAddrMap);
+        Config workerConf = runtime.getConf();
+        WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
+        Map<InetAddress, WorkerCmd> workerMap = master.getWorkerCmdMap();
+
+        distEngine = new DistEngine(workerConf, addrMap, workerMap);
+    }
+
+	synchronized DistEngine getEngine() { return distEngine; }
 	
 	void runReally(Text prog, TupleSend qv) throws RemoteException {
 		DistEngine en = null;
 		CodeGenMain codeMain=null;
 		synchronized(this) {
-			if (!prevSessionExists()) {
-				beginSession(new Text(PathTo.defaultDistCwd()));
-			}
-			String program = prog.toString();			
+			String program = prog.toString();
 			en = getEngine();		
 						
 			try { codeMain = en.compile(program, qv); } 
 			catch (Exception e) {			
-			        L.error("Error while compiling:");
-			        L.error(ExceptionUtils.getStackTrace(e));
+			    L.error("Error while compiling:");
+			    L.error(ExceptionUtils.getStackTrace(e));
 				throw new RemoteException("SociaLiteException", e.getMessage());
 			}
 		}
 		String err=null;
+        long s=System.currentTimeMillis();
 		try {
 			en.run(codeMain, qv);
-			err = ErrorRecord.getInst().getErrorMsg(codeMain);
+            if (err==null) err = ErrorRecord.getInst().getErrorMsg(codeMain);
+            if (err!=null) {
+                L.warn("QueryListener::runReally: error while running:"+prog+", err="+err);
+            }
 			ErrorRecord.getInst().clearError(codeMain);			
 		} catch (Exception e) {			
 			L.error("Error while running query ("+prog+"):");
 			L.error(ExceptionUtils.getStackTrace(e));
 			throw new RemoteException("SociaLiteException", e.getMessage());
 		}
+        long e=System.currentTimeMillis();
+        L.info("Exec time:"+(e-s)+"ms for "+prog);
 		if (err!=null) throw new RemoteException("SociaLiteException", err);
 	}
 	@Override
@@ -377,7 +286,7 @@ public class QueryListener implements QueryProtocol {
 			Method get = WorkerCmd.class.getMethod("addPyFunctions",
 										new Class[]{BytesWritable.class, BytesWritable.class});
 			Object p[] = new Object[]{bytesClassFilesBlob, bytesPyfuncs};
-			MasterNode.callWorkers(get, p);			
+			MasterNode.callWorkers(get, p);
 		} catch (Exception e) {
 			throw new RemoteException("SociaLiteException", e.getMessage());
 		}		
@@ -389,14 +298,14 @@ public class QueryListener implements QueryProtocol {
 			Method add = WorkerCmd.class.getMethod("addClassFiles",
 													new Class[]{BytesWritable.class});
 			Object p[] = new Object[]{bytesClassFilesBlob};
-			MasterNode.callWorkers(add, p);			
+			MasterNode.callWorkers(add, p);
 		} catch (Exception e) {
 			throw new RemoteException("SociaLiteException", e.getMessage());
 		}
 	}	
 
 	void storeTableMap() {
-		SRuntime rt = SRuntime.masterRt();
+		SRuntimeMaster runtime = SRuntimeMaster.getInst();
 		try {
 			FileSystem fs = FileSystem.get(new Configuration());
 			String mapFile = PathTo.cwd(TableInstRegistry.tableMapFile());
@@ -404,7 +313,7 @@ public class QueryListener implements QueryProtocol {
 			FSDataOutputStream fsos = fs.create(mapFilePath, true);
 			SocialiteOutputStream sos = new SocialiteOutputStream(fsos);
 
-			TableInstRegistry reg = rt.getTableRegistry();
+			TableInstRegistry reg = runtime.getTableRegistry();
 			reg.storeTableMap(sos);
 			;
 
@@ -429,7 +338,7 @@ public class QueryListener implements QueryProtocol {
 	}
 
 	boolean loadTableMap() {
-		SRuntime rt = SRuntime.masterRt();
+		SRuntime runtime = SRuntimeMaster.getInst();
 		Map<String, Table> _tableMap = null;
 		try {
 			String mapFile = PathTo.cwd(TableInstRegistry.tableMapFile());
@@ -458,11 +367,11 @@ public class QueryListener implements QueryProtocol {
 			FSDataInputStream fsis = fs.open(mapFilePath);
 			SocialiteInputStream sis = new SocialiteInputStream(fsis);
 
-			TableInstRegistry reg = rt.getTableRegistry();
+			TableInstRegistry reg = runtime.getTableRegistry();
 			_tableMap = reg.loadTableMap(sis);
-			rt.getTableMap().putAll(_tableMap);
+			runtime.getTableMap().putAll(_tableMap);
 			for (Table t : _tableMap.values()) {
-				rt.getSliceMap().addTable(t);
+				runtime.getSliceMap().addTable(t);
 			}
 			fs.close();
 			return true;
@@ -480,11 +389,11 @@ public class QueryListener implements QueryProtocol {
 		Status summary=new Status();
 
 		Object[] _workerStats;
-		WorkerAddrMap workerAddrMap = MasterNode.getCurrentWorkerAddrMap();				
-		summary.putNodeNum(""+workerAddrMap.size());
+		summary.putNodeNum(""+Config.getWorkers().size());
+
 		try {
 			Method status = WorkerCmd.class.getMethod("status",new Class[]{IntWritable.class});
-			_workerStats=MasterNode.callWorkers(workerAddrMap, status, new Object[] {_verbose});
+			_workerStats=MasterNode.callWorkers(status, new Object[]{_verbose});
 		} catch (Exception e) {
 			L.error("Exception while getting status from workers:");
 			L.error(ExceptionUtils.getStackTrace(e));
@@ -495,7 +404,8 @@ public class QueryListener implements QueryProtocol {
 		for (int i=0; i<_workerStats.length; i++) {
 			Status s=(Status)Status.fromWritable((BytesWritable)_workerStats[i]);
 			workerStats[i] = s;
-		}		
+        }
+        WorkerAddrMap workerAddrMap = SRuntimeMaster.getInst().getWorkerAddrMap();
 		memStatus(summary, workerAddrMap, workerStats, verbose);
 		tableStatus(summary);
 		progressStatus(summary, workerAddrMap, workerStats, verbose);
@@ -503,15 +413,16 @@ public class QueryListener implements QueryProtocol {
 		return Status.toWritable(summary);
 	}
 	void tableStatus(Status summary) {
-		if (!engineExists()) return;
 		DistEngine engine = getEngine();
 		Parser p = getEngine().getParser();
 		Map<String, Table> tableMap = p.getTableMap();
 		String tableInfo="";
 		boolean first=true;
 		for (String name:tableMap.keySet()) {
+            if (tableMap.get(name) instanceof GeneratedT) continue;
 			if (!first) tableInfo += "\n";
-			tableInfo += name;
+            Table t=tableMap.get(name);
+			tableInfo += t.decl()+" id="+t.id();
 			first=false;
 		}
 		summary.putTableStatus(tableInfo);
@@ -539,8 +450,7 @@ public class QueryListener implements QueryProtocol {
 	}
 	void progressStatus(Status summary, WorkerAddrMap workerAddrMap, Status[] workerStats, int verbose) {
 		if (workerStats.length==0) return;
-		if (!engineExists()) return;
-		
+
 		TIntFloatHashMap progStats[] = new TIntFloatHashMap[workerStats.length];
 		for (int i=0; i<workerStats.length; i++)
 			progStats[i] = (TIntFloatHashMap )workerStats[i].getProgress();
@@ -579,43 +489,13 @@ public class QueryListener implements QueryProtocol {
 		if (verbose==0) summary.putProgress(aggrEvalStat);
 		else summary.putProgress(allEvalStat);
 	}
-
-	@Override
-	public void showTableMap() {
-		SRuntime r = SRuntime.masterRt();
-		Map<String, Table> map = r.getTableMap();
-		TableSliceMap sliceMap = r.getSliceMap();
-		for (String name : map.keySet()) {
-			Table t = map.get(name);
-			if (t.isDistributed()) {
-				int sliceNum = sliceMap.virtualSliceNum(t.id());
-				System.out.println("Table:" + t.name());
-				for (int i = 0; i < sliceNum; i++) {
-					int range[] = sliceMap.getRange(t.id(), i);
-					System.out.println("\t[" + i + "]:" + range[0] + " - "
-							+ range[1]);
-				}
-			}
-		}
-	}
-
+	
 	@Override
 	public void runGc() {
 		Method runGc = null;
 		try {
 			runGc = WorkerCmd.class.getMethod("runGc", new Class[] {});
-			int cmdPort = Config.dist().portMap().workerCmdListen();
-
-			WorkerAddrMap workerAddrMap = master.makeWorkerAddrMap(-1);
-			InetSocketAddress addrs[] = workerAddrMap.getSockAddrs(cmdPort)
-					.toArray(new InetSocketAddress[0]);
-			UserGroupInformation ugi;
-			ugi = UserGroupInformation.getCurrentUser();
-			Object params[][] = new Object[addrs.length][1];
-			Object p[] = new Object[] {};
-			Arrays.fill(params, p);
-			Configuration hconf = new Configuration();
-			RPC.call(runGc, params, addrs, ugi, hconf);
+            MasterNode.callWorkers(runGc, new Object[0]);
 		} catch (Exception e) {
 			L.error("Exception while calling WorkerCmd.runGc():" + e);
 		}
@@ -626,44 +506,26 @@ public class QueryListener implements QueryProtocol {
 
 	@Override
 	public void setVerbose(BooleanWritable verbose) {
-		Method setVerbose = null;
-		try {
-			setVerbose = WorkerCmd.class.getMethod("setVerbose",
-					new Class[] { BooleanWritable.class });
-			int cmdPort = Config.dist().portMap().workerCmdListen();
 
-			WorkerAddrMap workerAddrMap = master.makeWorkerAddrMap(-1);
-			InetSocketAddress addrs[] = workerAddrMap.getSockAddrs(cmdPort)
-					.toArray(new InetSocketAddress[0]);
-			UserGroupInformation ugi;
-			ugi = UserGroupInformation.getCurrentUser();
-			Object params[][] = new Object[addrs.length][1];
-			Object p[] = new Object[] { verbose };
-			Arrays.fill(params, p);
-			Configuration hconf = new Configuration();
-			RPC.call(setVerbose, params, addrs, ugi, hconf);
+		try {
+            Method setVerbose = WorkerCmd.class.getMethod("setVerbose",
+			    		                new Class[] { BooleanWritable.class });
+            Object param[] = new Object[0];
+            MasterNode.callWorkers(setVerbose, param);
 		} catch (Exception e) {
 			L.error("Exception while calling WorkerCmd.setVerbose():" + e);
 		}
 	}
+
+	@Override
+	public void info() {
+		try {
+            Method info = WorkerCmd.class.getMethod("info", new Class[] {});
+            Object param[] = new Object[0];
+            MasterNode.callWorkers(info, param);
+		} catch (Exception e) {
+			L.error("Exception while calling WorkerCmd.info():" + e);
+		}
+	}
 }
 
-
-class IntStringMap {
-	TIntObjectHashMap<String> map;
-	IntStringMap(int size) {
-		map = new TIntObjectHashMap<String>(size);
-	}
-	public synchronized String put(int k, String v) {
-		return map.put(k, v);
-	}
-	public synchronized boolean containsValue(String v) {
-		return map.containsValue(v);
-	}
-	public synchronized boolean containsKey(int k) {
-		return map.containsKey(k);
-	}
-	public synchronized String get(int k) {
-		return map.get(k);				
-	}
-}

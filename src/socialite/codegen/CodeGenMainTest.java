@@ -43,7 +43,7 @@ public class CodeGenMainTest {
 				+ "Edge(s, t) :- s=9,t=10.\n"
 				+ "Edge(s, t) :- s=10,t=8.\n"
 				+ "Triangle(x, y, z):-Edge(x, y),y>x,Edge(y, z),z>y,Edge(z, x).\n";
-		LocalEngine en = new LocalEngine(Config.par());	
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain c=en.compile(query);
 		
 		List<Eval> evals = c.getEvalInsts();
@@ -57,12 +57,15 @@ public class CodeGenMainTest {
 			Method m = FunctionLoader.loadMethod(triangle.getClass(), "iterate", new Class[]{VisitorImpl.class});
 			class TestVisitor extends VisitorImpl {			
 				int count=0;
-				public boolean visit(int x, int y, int z) {
+                public int getEpochId() { return 0; }
+                public int getRuleId() { return 0; }
+                public boolean visit(int x, int y, int z) {
 					count++;
 					Assert.true_((x==1 && y==2 && z==3)||(x==8 && y==9 && z==10));
 					return true;
 				}
 				public boolean success() { return count==2; }
+
 			}
 			TestVisitor v=new TestVisitor();
 			m.invoke(triangle, v);
@@ -86,7 +89,7 @@ public class CodeGenMainTest {
 				+ "Edge(s, t) :- s=10,t=8.\n"
 				+ "Triangle(x, y, z):-Edge(x, y),y>x,Edge(y, z),z>y,Edge(z, x).\n"
 				+ "Count(0, $inc(1)) :- Triangle(x, y, z).\n";
-		Config conf=Config.par();
+		Config conf=Config.par(4);
 		/*conf.setDebugOpt("GenerateTable", false);
 		conf.setDebugOpt("GenerateVisitor", false);
 		conf.setDebugOpt("GenerateEval", false);*/
@@ -104,6 +107,8 @@ public class CodeGenMainTest {
 			Method m = FunctionLoader.loadMethod(count.getClass(), "iterate", new Class[]{VisitorImpl.class});
 			class TestVisitor extends VisitorImpl {			
 				int count=0;
+                public int getEpochId() { return 0; }
+                public int getRuleId() { return 0; }
 				public boolean visit(int c, int x) {
 					count++;
 					Assert.true_(c==0 && x==2);
@@ -128,7 +133,7 @@ public class CodeGenMainTest {
 			+ "Count(0, $sum(1)) :-Edge(x, y),y>x,Edge(y, z),z>y,Edge(z, x).\n"
 			+ "?- Count(0, s).\n";
 		
-		LocalEngine en = new LocalEngine(Config.par());		
+		LocalEngine en = new LocalEngine(Config.par(4));
 		en.run(query, new QueryVisitor() {
 			int count=0;
 			public boolean visit(Tuple t) {
@@ -145,7 +150,7 @@ public class CodeGenMainTest {
 		System.out.println("Running shortest-path test on lastfm data. This test may take some time.");
 		String query = "Edge(int s:1..1768198, (int t)).\n"
 			+ "Edge(s, t) :- (s,t) = $LoadEdge(\"data/lastfm.txt\").\n";		
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		en.run(query);
 	
 		query = "SP(int x:1..1768198, int dist).\n"
@@ -199,7 +204,7 @@ public class CodeGenMainTest {
 			"Edge(s, t, d) :- line=$Read(\"data/rand-dist.txt\"), (s1, s2, s3)=$Split(line),"+
 			"                 s=$ToInt(s1), t=$ToInt(s2), d=$ToInt(s3).\n";
 		
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		en.run(query);
 	
 		query = "SP(int x:1..1768198, int dist).\n"
@@ -253,7 +258,7 @@ s:1768196, d:62
 					"Baz(int a, int b).\n" +
 					"Qux(int a, int b).\n" +
 				"Foo(a,b) :- a=$range(0, 1000), b=a+1 . \n";
-		final LocalEngine en = new LocalEngine(Config.par());
+		final LocalEngine en = new LocalEngine(Config.par(4));
 		en.run(query);	
 		final String query1 = "Bar(a,b) :- Foo(a,x), k=x+107, y=$range(x, k), Foo(y, b). \n"+
 							"?-Bar(a,b).\n";
@@ -321,7 +326,7 @@ s:1768196, d:62
 				"Rdf(s, p, o) :- s=u\"s1\",p=u\"p2\", o=u\"o2\".\n"+
 				"Rdf(s, p, o) :- s=u\"s2\",p=u\"p2\", o=u\"o3\".\n"+
 				"Result(Utf8 x1, Utf8 x1name) multiset.\n";
-		final LocalEngine en = new LocalEngine(Config.par());
+		final LocalEngine en = new LocalEngine(Config.par(4));
 		en.run(query);	
 		
 		query = "Result(x, y) :- Rdf(x, u\"p1\", y).\n";

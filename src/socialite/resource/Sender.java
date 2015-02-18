@@ -179,15 +179,16 @@ class SendReally implements Runnable {
 				synchronized(m) {
 					buffer = m.serialize();
 				}
-				if (m.getSlaveId()==-1) {
+                int epochId = m.getEpochId();
+                if (m.getSlaveId()==-1) {
 					int self = sender.workerAddrMap.myIndex();
 					for (int i=0; i<sender.sendChannel$.length; i++) {
 						if (i==self) continue;
-						sender.workerConn.send(sender.sendChannel$[i], buffer);	
+						sender.workerConn.send(sender.sendChannel$[i], epochId, buffer);
 					}						
 					buffer.rewind();
 				} else {
-					sender.workerConn.send(sender.sendChannel$[m.getSlaveId()], buffer);
+					sender.workerConn.send(sender.sendChannel$[m.getSlaveId()], epochId, buffer);
 				}
 			} catch (InterruptedException ie) {
 				break;

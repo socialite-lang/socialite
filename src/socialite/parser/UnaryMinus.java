@@ -8,6 +8,12 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
+
 import org.stringtemplate.v4.ST;
 
 import socialite.codegen.CodeGen;
@@ -15,7 +21,10 @@ import socialite.util.AnalysisException;
 import socialite.util.InternalException;
 
 public class UnaryMinus extends Op implements UnaryOp {
+    private static final long serialVersionUID = 1L;
+
 	Object arg;
+    public UnaryMinus() { }
 	public UnaryMinus(Object _arg) throws InternalException {
 		arg = _arg;
 		assert !(arg instanceof Function);
@@ -71,6 +80,16 @@ public class UnaryMinus extends Op implements UnaryOp {
 		v.visit(this);
 		if (arg instanceof Op)
 			v.visit((Op)arg);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		arg=in.readObject();
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(arg);
 	}
 	/*
 	public Set<Variable> getAllVariables() {

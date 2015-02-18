@@ -152,7 +152,6 @@ class JavaMemFileManager extends ForwardingJavaFileManager {
     public LinkedHashMap<String, byte[]> getCompiledClasses() {
         LinkedHashMap<String, byte[]> compiledClasses = new LinkedHashMap<String, byte[]>();
         for (Map.Entry<String, ClassMemFileObject> entry: topoSortedClasses.entrySet()) {
-Compiler.L.info(" NOTICE adding to compiledClasses:"+entry.getKey());
             compiledClasses.put(entry.getKey(), entry.getValue().getBytes());
         }
         return compiledClasses;

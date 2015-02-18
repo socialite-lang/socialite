@@ -12,6 +12,7 @@ import org.python.core.PyBaseCode;
 import org.stringtemplate.v4.ST;
 
 import socialite.codegen.CodeGen;
+import socialite.collection.SArrayList;
 import socialite.functions.PyInvoke;
 import socialite.util.Assert;
 import socialite.util.InternalException;
@@ -31,12 +32,12 @@ public class AggrFunction extends Function implements Externalizable {
 	public AggrFunction(Function f) {
 		name = f.name;
 		args = f.getArgs();
-		returns = null;
+        returns = null;
 	}
-	public AggrFunction(AggrFunction aggr, List _args) {
+	public AggrFunction(AggrFunction aggr, List<Param> _args) {
 		assert aggr.isLoaded();
 		name = aggr.name;
-		args = _args;
+		args = new SArrayList<Param>(_args);
 		returns = null;
 		isArrayType = aggr.isArrayType;
 		klass = aggr.klass();
@@ -96,16 +97,17 @@ public class AggrFunction extends Function implements Externalizable {
 	public void load() throws InternalException {
 		if (!allArgsTyped()) return;
 		
-		loadReally();	
+		loadReally();
 	}
 		
 	public List<Variable> getReturns() {
-		if (returns==null)
-			returns = makeReturnVars();
+		if (returns==null) {
+            returns = makeReturnVars();
+        }
 		return returns;
 	}
-	List<Variable> makeReturnVars() {
-		List<Variable> retVars = new ArrayList<Variable>(1);
+	SArrayList<Variable> makeReturnVars() {
+		SArrayList<Variable> retVars = new SArrayList<Variable>(1);
 		Variable v=new Variable("aggr$ret", getMethodReturnType());
 		retVars.add(v);
 		return retVars;
@@ -184,6 +186,7 @@ public class AggrFunction extends Function implements Externalizable {
 	}
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
+        getReturns();
 		out.writeInt(idxInParamList);
 		out.writeObject(table);
 		out.writeObject(predicate);		

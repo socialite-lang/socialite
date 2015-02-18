@@ -1,24 +1,30 @@
 package socialite.parser;
 
+import socialite.collection.SArrayList;
+
 import java.util.ArrayList;
 import java.util.List;
+import socialite.parser.Param;
 
 /* Private predicate (is mapped to PrivateTable) */
 public class PrivPredicate extends Predicate {
-	@Override
+    private static final long serialVersionUID = 1;
+
+    @Override
 	public PrivPredicate clone() {
 		return new PrivPredicate(name, idxParam, params);
 	}
 
-	public PrivPredicate(String _name, Object _idxParam, @SuppressWarnings("rawtypes")List _params, boolean rename) {
+    public PrivPredicate() {};
+    public PrivPredicate(String _name, Param _idxParam, List<Param> _params, boolean rename) {
 		super(_name, renameVar(_idxParam), renameVariables(_params));
 		assert rename;
 	}	
-	public PrivPredicate(String _name, Object _idxParam, @SuppressWarnings("rawtypes")List _params) {
+	public PrivPredicate(String _name, Param _idxParam, List<Param> _params) {
 		super(_name, _idxParam, _params);
 	}	
 	
-	static Object renameVar(Object param) {
+	static Param renameVar(Param param) {
 		if (param instanceof Variable) {
 			Variable v=(Variable)param;
 			Variable newV = new Variable(v.name+"$priv", v.type);
@@ -27,12 +33,12 @@ public class PrivPredicate extends Predicate {
 		}
 		return param;
 	}
-	@SuppressWarnings("rawtypes")
-	static List renameVariables(List _params) {
-		List<Object> params = new ArrayList<Object>(_params.size());
-		for (Object o:_params) {
+
+	static List<Param> renameVariables(List<Param> _params) {
+		List<Param> params = new SArrayList<Param>(_params.size());
+		for (Param o:_params) {
 			if (o instanceof Variable) {
-				params.add(renameVar(o));
+				params.add((Variable)renameVar(o));
 			} else {
 				params.add(o);			
 			}

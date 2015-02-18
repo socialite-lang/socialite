@@ -12,11 +12,6 @@ public class EvalTask implements Task {
 		visitor = _v;
 	}	
 	
-	public void setDeltaT(TableInst _deltaT) {
-		deltaT = _deltaT;
-	}
-	public TableInst getDeltaT() { return deltaT; }
-	
 	public void setPriority(int _priority) {
 		priority = _priority;
 	}
@@ -24,27 +19,19 @@ public class EvalTask implements Task {
 		return priority;
 	}
 	
-	public boolean safeToSteal() {
-		if (deltaT==null) return true;
-		if (deltaT.isAccessed()) return false;
-		else return true;		
-	}
 	@Override
 	public void run(Worker w) {
 		visitor.setWorker(w);		
 		visitor.run();
 	}
 	
-	public TableInst[] getHeadPrivateTable() {
-		return visitor.getPrivateTable();
-	}
 	public TableInst[] getResultDeltaTable() {
 		return visitor.getDeltaTables();
 	}
-	/*public TableInst[] getResultDeltaTable0() {
-		return visitor.getDeltaTable0();
-	}*/
-	
+
+    public int getEpochId() {
+        return visitor.getEpochId();
+    }
 	public int getRuleId() {
 		return visitor.getRuleId();
 	}

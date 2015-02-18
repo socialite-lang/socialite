@@ -1,4 +1,4 @@
-// $ANTLR 3.4 /Users/jiwon/workspace/socialite/grammar/SociaLite.g 2014-07-16 13:21:25
+// $ANTLR 3.4 /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g 2015-01-27 15:18:05
 
     package socialite.parser.antlr;
 
@@ -48,6 +48,7 @@ public class SociaLiteLexer extends Lexer {
     public static final int T__97=97;
     public static final int T__98=98;
     public static final int T__99=99;
+    public static final int T__100=100;
     public static final int APPROX=4;
     public static final int BODY=5;
     public static final int CHAR=6;
@@ -56,43 +57,43 @@ public class SociaLiteLexer extends Lexer {
     public static final int COL_DECLS=9;
     public static final int COMMENT=10;
     public static final int COMPOUND_EXPR=11;
-    public static final int DECL=12;
-    public static final int DOT_END=13;
-    public static final int DOT_ID=14;
-    public static final int DROP=15;
-    public static final int ESC_SEQ=16;
-    public static final int EXPONENT=17;
-    public static final int EXPR=18;
-    public static final int FALSE=19;
-    public static final int FLOAT=20;
-    public static final int FUNC=21;
-    public static final int FUNCTION=22;
-    public static final int FUNC_ARG=23;
-    public static final int GROUP_BY=24;
-    public static final int HEAD=25;
-    public static final int HEX_DIGIT=26;
-    public static final int ID=27;
-    public static final int INDEX=28;
-    public static final int INDEX_BY=29;
-    public static final int INT=30;
-    public static final int ITER=31;
-    public static final int ITER_DECL=32;
-    public static final int KIND1=33;
-    public static final int KIND2=34;
-    public static final int MULTISET=35;
-    public static final int MULTI_ASSIGN=36;
-    public static final int NOT=37;
-    public static final int OCTAL_ESC=38;
-    public static final int OPT=39;
-    public static final int OPTION=40;
-    public static final int ORDER_BY=41;
-    public static final int PREDEFINED=42;
-    public static final int PREDICATE=43;
-    public static final int PROG=44;
-    public static final int QUERY=45;
-    public static final int RANGE=46;
-    public static final int RULE=47;
-    public static final int SIZE=48;
+    public static final int CONCURRENT=12;
+    public static final int DECL=13;
+    public static final int DOT_END=14;
+    public static final int DOT_ID=15;
+    public static final int DROP=16;
+    public static final int ESC_SEQ=17;
+    public static final int EXPONENT=18;
+    public static final int EXPR=19;
+    public static final int FALSE=20;
+    public static final int FLOAT=21;
+    public static final int FUNC=22;
+    public static final int FUNCTION=23;
+    public static final int FUNC_ARG=24;
+    public static final int GROUP_BY=25;
+    public static final int HEAD=26;
+    public static final int HEX_DIGIT=27;
+    public static final int ID=28;
+    public static final int INDEX=29;
+    public static final int INDEX_BY=30;
+    public static final int INT=31;
+    public static final int ITER=32;
+    public static final int ITER_DECL=33;
+    public static final int KIND1=34;
+    public static final int KIND2=35;
+    public static final int MULTISET=36;
+    public static final int MULTI_ASSIGN=37;
+    public static final int NOT=38;
+    public static final int OCTAL_ESC=39;
+    public static final int OPT=40;
+    public static final int OPTION=41;
+    public static final int ORDER_BY=42;
+    public static final int PREDEFINED=43;
+    public static final int PREDICATE=44;
+    public static final int PROG=45;
+    public static final int QUERY=46;
+    public static final int RANGE=47;
+    public static final int RULE=48;
     public static final int SORT_BY=49;
     public static final int SORT_ORDER=50;
     public static final int STRING=51;
@@ -121,15 +122,15 @@ public class SociaLiteLexer extends Lexer {
     public SociaLiteLexer(CharStream input, RecognizerSharedState state) {
         super(input,state);
     }
-    public String getGrammarFileName() { return "/Users/jiwon/workspace/socialite/grammar/SociaLite.g"; }
+    public String getGrammarFileName() { return "/Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g"; }
 
     // $ANTLR start "T__63"
     public final void mT__63() throws RecognitionException {
         try {
             int _type = T__63;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:11:7: ( '!=' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:11:9: '!='
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:11:7: ( '!=' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:11:9: '!='
             {
             match("!="); 
 
@@ -151,8 +152,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__64;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:12:7: ( '$' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:12:9: '$'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:12:7: ( '$' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:12:9: '$'
             {
             match('$'); 
 
@@ -172,8 +173,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__65;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:13:7: ( '(' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:13:9: '('
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:13:7: ( '(' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:13:9: '('
             {
             match('('); 
 
@@ -193,8 +194,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__66;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:14:7: ( ')' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:14:9: ')'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:14:7: ( ')' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:14:9: ')'
             {
             match(')'); 
 
@@ -214,8 +215,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__67;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:15:7: ( '*' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:15:9: '*'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:15:7: ( '*' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:15:9: '*'
             {
             match('*'); 
 
@@ -235,8 +236,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__68;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:16:7: ( '+' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:16:9: '+'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:16:7: ( '+' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:16:9: '+'
             {
             match('+'); 
 
@@ -256,8 +257,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__69;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:17:7: ( ',' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:17:9: ','
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:17:7: ( ',' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:17:9: ','
             {
             match(','); 
 
@@ -277,8 +278,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__70;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:18:7: ( '-' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:18:9: '-'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:18:7: ( '-' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:18:9: '-'
             {
             match('-'); 
 
@@ -298,8 +299,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__71;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:19:7: ( '..' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:19:9: '..'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:19:7: ( '..' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:19:9: '..'
             {
             match(".."); 
 
@@ -321,8 +322,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__72;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:20:7: ( '/' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:20:9: '/'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:20:7: ( '/' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:20:9: '/'
             {
             match('/'); 
 
@@ -342,8 +343,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__73;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:21:7: ( ':' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:21:9: ':'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:21:7: ( ':' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:21:9: ':'
             {
             match(':'); 
 
@@ -363,8 +364,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__74;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:22:7: ( ':-' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:22:9: ':-'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:22:7: ( ':-' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:22:9: ':-'
             {
             match(":-"); 
 
@@ -386,8 +387,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__75;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:23:7: ( ';' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:23:9: ';'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:23:7: ( ';' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:23:9: ';'
             {
             match(';'); 
 
@@ -407,8 +408,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__76;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:24:7: ( '<' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:24:9: '<'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:24:7: ( '<' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:24:9: '<'
             {
             match('<'); 
 
@@ -428,8 +429,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__77;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:25:7: ( '<=' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:25:9: '<='
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:25:7: ( '<=' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:25:9: '<='
             {
             match("<="); 
 
@@ -451,8 +452,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__78;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:26:7: ( '=' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:26:9: '='
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:26:7: ( '=' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:26:9: '='
             {
             match('='); 
 
@@ -472,8 +473,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__79;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:27:7: ( '==' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:27:9: '=='
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:27:7: ( '==' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:27:9: '=='
             {
             match("=="); 
 
@@ -495,8 +496,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__80;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:28:7: ( '>' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:28:9: '>'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:28:7: ( '>' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:28:9: '>'
             {
             match('>'); 
 
@@ -516,8 +517,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__81;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:29:7: ( '>=' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:29:9: '>='
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:29:7: ( '>=' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:29:9: '>='
             {
             match(">="); 
 
@@ -539,8 +540,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__82;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:30:7: ( '?-' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:30:9: '?-'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:30:7: ( '?-' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:30:9: '?-'
             {
             match("?-"); 
 
@@ -562,8 +563,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__83;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:31:7: ( 'Object' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:31:9: 'Object'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:31:7: ( 'Object' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:31:9: 'Object'
             {
             match("Object"); 
 
@@ -585,8 +586,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__84;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:32:7: ( 'String' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:32:9: 'String'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:32:7: ( 'String' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:32:9: 'String'
             {
             match("String"); 
 
@@ -608,8 +609,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__85;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:33:7: ( '[' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:33:9: '['
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:33:7: ( '[' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:33:9: '['
             {
             match('['); 
 
@@ -629,8 +630,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__86;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:34:7: ( ']' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:34:9: ']'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:34:7: ( ']' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:34:9: ']'
             {
             match(']'); 
 
@@ -650,8 +651,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__87;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:35:7: ( 'clear' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:35:9: 'clear'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:35:7: ( 'clear' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:35:9: 'clear'
             {
             match("clear"); 
 
@@ -673,10 +674,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__88;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:36:7: ( 'double' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:36:9: 'double'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:36:7: ( 'concurrent' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:36:9: 'concurrent'
             {
-            match("double"); 
+            match("concurrent"); 
 
 
 
@@ -696,10 +697,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__89;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:37:7: ( 'drop' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:37:9: 'drop'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:37:7: ( 'double' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:37:9: 'double'
             {
-            match("drop"); 
+            match("double"); 
 
 
 
@@ -719,10 +720,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__90;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:38:7: ( 'float' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:38:9: 'float'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:38:7: ( 'drop' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:38:9: 'drop'
             {
-            match("float"); 
+            match("drop"); 
 
 
 
@@ -742,10 +743,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__91;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:39:7: ( 'groupby' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:39:9: 'groupby'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:39:7: ( 'float' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:39:9: 'float'
             {
-            match("groupby"); 
+            match("float"); 
 
 
 
@@ -765,10 +766,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__92;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:40:7: ( 'indexby' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:40:9: 'indexby'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:40:7: ( 'groupby' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:40:9: 'groupby'
             {
-            match("indexby"); 
+            match("groupby"); 
 
 
 
@@ -788,10 +789,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__93;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:41:7: ( 'int' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:41:9: 'int'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:41:7: ( 'indexby' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:41:9: 'indexby'
             {
-            match("int"); 
+            match("indexby"); 
 
 
 
@@ -811,10 +812,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__94;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:42:7: ( 'long' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:42:9: 'long'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:42:7: ( 'int' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:42:9: 'int'
             {
-            match("long"); 
+            match("int"); 
 
 
 
@@ -834,10 +835,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__95;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:43:7: ( 'mod' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:43:9: 'mod'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:43:7: ( 'long' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:43:9: 'long'
             {
-            match("mod"); 
+            match("long"); 
 
 
 
@@ -857,10 +858,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__96;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:44:7: ( 'multiset' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:44:9: 'multiset'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:44:7: ( 'mod' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:44:9: 'mod'
             {
-            match("multiset"); 
+            match("mod"); 
 
 
 
@@ -880,10 +881,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__97;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:45:7: ( 'orderby' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:45:9: 'orderby'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:45:7: ( 'multiset' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:45:9: 'multiset'
             {
-            match("orderby"); 
+            match("multiset"); 
 
 
 
@@ -903,10 +904,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__98;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:46:7: ( 'predefined' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:46:9: 'predefined'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:46:7: ( 'orderby' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:46:9: 'orderby'
             {
-            match("predefined"); 
+            match("orderby"); 
 
 
 
@@ -926,10 +927,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = T__99;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:47:7: ( 'sortby' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:47:9: 'sortby'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:47:7: ( 'predefined' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:47:9: 'predefined'
             {
-            match("sortby"); 
+            match("predefined"); 
 
 
 
@@ -944,12 +945,35 @@ public class SociaLiteLexer extends Lexer {
     }
     // $ANTLR end "T__99"
 
+    // $ANTLR start "T__100"
+    public final void mT__100() throws RecognitionException {
+        try {
+            int _type = T__100;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:48:8: ( 'sortby' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:48:10: 'sortby'
+            {
+            match("sortby"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__100"
+
     // $ANTLR start "SORT_ORDER"
     public final void mSORT_ORDER() throws RecognitionException {
         try {
             int _type = SORT_ORDER;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:150:11: ( 'asc' | 'desc' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:153:11: ( 'asc' | 'desc' )
             int alt1=2;
             int LA1_0 = input.LA(1);
 
@@ -968,7 +992,7 @@ public class SociaLiteLexer extends Lexer {
             }
             switch (alt1) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:150:13: 'asc'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:153:13: 'asc'
                     {
                     match("asc"); 
 
@@ -977,7 +1001,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:150:19: 'desc'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:153:19: 'desc'
                     {
                     match("desc"); 
 
@@ -1001,10 +1025,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = ITER_DECL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:174:10: ( ( 'iter' | 'iterator' ) )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:174:12: ( 'iter' | 'iterator' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:176:10: ( ( 'iter' | 'iterator' ) )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:176:12: ( 'iter' | 'iterator' )
             {
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:174:12: ( 'iter' | 'iterator' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:176:12: ( 'iter' | 'iterator' )
             int alt2=2;
             int LA2_0 = input.LA(1);
 
@@ -1060,7 +1084,7 @@ public class SociaLiteLexer extends Lexer {
             }
             switch (alt2) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:174:13: 'iter'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:176:13: 'iter'
                     {
                     match("iter"); 
 
@@ -1069,7 +1093,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:174:22: 'iterator'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:176:22: 'iterator'
                     {
                     match("iterator"); 
 
@@ -1097,10 +1121,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = NOT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:175:4: ( ( 'not' | '!' ) )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:175:6: ( 'not' | '!' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:177:4: ( ( 'not' | '!' ) )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:177:6: ( 'not' | '!' )
             {
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:175:6: ( 'not' | '!' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:177:6: ( 'not' | '!' )
             int alt3=2;
             int LA3_0 = input.LA(1);
 
@@ -1119,7 +1143,7 @@ public class SociaLiteLexer extends Lexer {
             }
             switch (alt3) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:175:7: 'not'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:177:7: 'not'
                     {
                     match("not"); 
 
@@ -1128,7 +1152,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:175:15: '!'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:177:15: '!'
                     {
                     match('!'); 
 
@@ -1154,8 +1178,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = ID;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:176:5: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )* )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:176:7: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:178:5: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )* )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:178:7: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
             {
             if ( (input.LA(1) >= 'A' && input.LA(1) <= 'Z')||input.LA(1)=='_'||(input.LA(1) >= 'a' && input.LA(1) <= 'z') ) {
                 input.consume();
@@ -1167,7 +1191,7 @@ public class SociaLiteLexer extends Lexer {
             }
 
 
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:176:31: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:178:31: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
             loop4:
             do {
                 int alt4=2;
@@ -1180,7 +1204,7 @@ public class SociaLiteLexer extends Lexer {
 
                 switch (alt4) {
             	case 1 :
-            	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
             	    {
             	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9')||(input.LA(1) >= 'A' && input.LA(1) <= 'Z')||input.LA(1)=='_'||(input.LA(1) >= 'a' && input.LA(1) <= 'z') ) {
             	        input.consume();
@@ -1217,8 +1241,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = DOT_ID;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:177:7: ( '.' ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )* )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:177:9: '.' ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:179:7: ( '.' ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )* )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:179:9: '.' ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
             {
             match('.'); 
 
@@ -1232,7 +1256,7 @@ public class SociaLiteLexer extends Lexer {
             }
 
 
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:177:36: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:179:36: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
             loop5:
             do {
                 int alt5=2;
@@ -1245,7 +1269,7 @@ public class SociaLiteLexer extends Lexer {
 
                 switch (alt5) {
             	case 1 :
-            	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
             	    {
             	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9')||(input.LA(1) >= 'A' && input.LA(1) <= 'Z')||input.LA(1)=='_'||(input.LA(1) >= 'a' && input.LA(1) <= 'z') ) {
             	        input.consume();
@@ -1282,11 +1306,11 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = DOT_END;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:179:8: ( ({...}?) '.' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:179:10: ({...}?) '.'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:181:8: ( ({...}?) '.' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:181:10: ({...}?) '.'
             {
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:179:10: ({...}?)
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:179:11: {...}?
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:181:10: ({...}?)
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:181:11: {...}?
             {
             if ( !((input.LA(2)=='\r'||input.LA(2)=='\n'||
                        input.LA(2)==' '||input.LA(2)=='\t'|| input.LA(2)==EOF)) ) {
@@ -1314,10 +1338,10 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = INT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:190:5: ( ( '0' .. '9' )+ ( 'l' | 'L' )? )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:190:7: ( '0' .. '9' )+ ( 'l' | 'L' )?
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:192:5: ( ( '0' .. '9' )+ ( 'l' | 'L' )? )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:192:7: ( '0' .. '9' )+ ( 'l' | 'L' )?
             {
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:190:7: ( '0' .. '9' )+
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:192:7: ( '0' .. '9' )+
             int cnt6=0;
             loop6:
             do {
@@ -1331,7 +1355,7 @@ public class SociaLiteLexer extends Lexer {
 
                 switch (alt6) {
             	case 1 :
-            	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
             	    {
             	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
             	        input.consume();
@@ -1356,7 +1380,7 @@ public class SociaLiteLexer extends Lexer {
             } while (true);
 
 
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:190:19: ( 'l' | 'L' )?
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:192:19: ( 'l' | 'L' )?
             int alt7=2;
             int LA7_0 = input.LA(1);
 
@@ -1365,7 +1389,7 @@ public class SociaLiteLexer extends Lexer {
             }
             switch (alt7) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
                     {
                     if ( input.LA(1)=='L'||input.LA(1)=='l' ) {
                         input.consume();
@@ -1399,14 +1423,14 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = FLOAT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:193:5: ( ( '0' .. '9' )+ ({...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )? |) | ( '0' .. '9' )+ EXPONENT )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:195:5: ( ( '0' .. '9' )+ ({...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )? |) | ( '0' .. '9' )+ EXPONENT )
             int alt14=2;
             alt14 = dfa14.predict(input);
             switch (alt14) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:193:7: ( '0' .. '9' )+ ({...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )? |)
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:195:7: ( '0' .. '9' )+ ({...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )? |)
                     {
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:193:7: ( '0' .. '9' )+
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:195:7: ( '0' .. '9' )+
                     int cnt8=0;
                     loop8:
                     do {
@@ -1420,7 +1444,7 @@ public class SociaLiteLexer extends Lexer {
 
                         switch (alt8) {
                     	case 1 :
-                    	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+                    	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
                     	    {
                     	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
                     	        input.consume();
@@ -1445,7 +1469,7 @@ public class SociaLiteLexer extends Lexer {
                     } while (true);
 
 
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:194:5: ({...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )? |)
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:196:5: ({...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )? |)
                     int alt12=2;
                     int LA12_0 = input.LA(1);
 
@@ -1459,7 +1483,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     switch (alt12) {
                         case 1 :
-                            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:194:7: {...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )?
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:196:7: {...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )?
                             {
                             if ( !((input.LA(2) != '.' &&
                                    input.LA(2) != ' ' && input.LA(2) != '\t' && input.LA(2) != '\r' && input.LA(2) != '\n' &&
@@ -1469,7 +1493,7 @@ public class SociaLiteLexer extends Lexer {
 
                             match('.'); 
 
-                            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:196:38: ( '0' .. '9' )+
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:198:38: ( '0' .. '9' )+
                             int cnt9=0;
                             loop9:
                             do {
@@ -1483,7 +1507,7 @@ public class SociaLiteLexer extends Lexer {
 
                                 switch (alt9) {
                             	case 1 :
-                            	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+                            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
                             	    {
                             	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
                             	        input.consume();
@@ -1508,7 +1532,7 @@ public class SociaLiteLexer extends Lexer {
                             } while (true);
 
 
-                            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:196:50: ( EXPONENT )?
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:198:50: ( EXPONENT )?
                             int alt10=2;
                             int LA10_0 = input.LA(1);
 
@@ -1517,7 +1541,7 @@ public class SociaLiteLexer extends Lexer {
                             }
                             switch (alt10) {
                                 case 1 :
-                                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:196:50: EXPONENT
+                                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:198:50: EXPONENT
                                     {
                                     mEXPONENT(); 
 
@@ -1528,7 +1552,7 @@ public class SociaLiteLexer extends Lexer {
                             }
 
 
-                            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:196:60: ( 'f' | 'F' | 'd' | 'D' )?
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:198:60: ( 'f' | 'F' | 'd' | 'D' )?
                             int alt11=2;
                             int LA11_0 = input.LA(1);
 
@@ -1537,7 +1561,7 @@ public class SociaLiteLexer extends Lexer {
                             }
                             switch (alt11) {
                                 case 1 :
-                                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+                                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
                                     {
                                     if ( input.LA(1)=='D'||input.LA(1)=='F'||input.LA(1)=='d'||input.LA(1)=='f' ) {
                                         input.consume();
@@ -1560,7 +1584,7 @@ public class SociaLiteLexer extends Lexer {
                             }
                             break;
                         case 2 :
-                            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:197:12: 
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:199:12: 
                             {
                             _type = INT;
 
@@ -1573,9 +1597,9 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:198:8: ( '0' .. '9' )+ EXPONENT
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:200:8: ( '0' .. '9' )+ EXPONENT
                     {
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:198:8: ( '0' .. '9' )+
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:200:8: ( '0' .. '9' )+
                     int cnt13=0;
                     loop13:
                     do {
@@ -1589,7 +1613,7 @@ public class SociaLiteLexer extends Lexer {
 
                         switch (alt13) {
                     	case 1 :
-                    	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+                    	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
                     	    {
                     	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
                     	        input.consume();
@@ -1635,7 +1659,7 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = COMMENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:207:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' | '/*' ( options {greedy=false; } : . )* '*/' | '#' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:209:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' | '/*' ( options {greedy=false; } : . )* '*/' | '#' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' )
             int alt20=3;
             int LA20_0 = input.LA(1);
 
@@ -1668,13 +1692,13 @@ public class SociaLiteLexer extends Lexer {
             }
             switch (alt20) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:207:9: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:209:9: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
                     {
                     match("//"); 
 
 
 
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:207:14: (~ ( '\\n' | '\\r' ) )*
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:209:14: (~ ( '\\n' | '\\r' ) )*
                     loop15:
                     do {
                         int alt15=2;
@@ -1687,7 +1711,7 @@ public class SociaLiteLexer extends Lexer {
 
                         switch (alt15) {
                     	case 1 :
-                    	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+                    	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
                     	    {
                     	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '\t')||(input.LA(1) >= '\u000B' && input.LA(1) <= '\f')||(input.LA(1) >= '\u000E' && input.LA(1) <= '\uFFFF') ) {
                     	        input.consume();
@@ -1708,7 +1732,7 @@ public class SociaLiteLexer extends Lexer {
                     } while (true);
 
 
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:207:28: ( '\\r' )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:209:28: ( '\\r' )?
                     int alt16=2;
                     int LA16_0 = input.LA(1);
 
@@ -1717,7 +1741,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     switch (alt16) {
                         case 1 :
-                            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:207:28: '\\r'
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:209:28: '\\r'
                             {
                             match('\r'); 
 
@@ -1734,13 +1758,13 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:208:9: '/*' ( options {greedy=false; } : . )* '*/'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:210:9: '/*' ( options {greedy=false; } : . )* '*/'
                     {
                     match("/*"); 
 
 
 
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:208:14: ( options {greedy=false; } : . )*
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:210:14: ( options {greedy=false; } : . )*
                     loop17:
                     do {
                         int alt17=2;
@@ -1765,7 +1789,7 @@ public class SociaLiteLexer extends Lexer {
 
                         switch (alt17) {
                     	case 1 :
-                    	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:208:42: .
+                    	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:210:42: .
                     	    {
                     	    matchAny(); 
 
@@ -1787,11 +1811,11 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:209:7: '#' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:211:7: '#' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
                     {
                     match('#'); 
 
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:209:12: (~ ( '\\n' | '\\r' ) )*
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:211:12: (~ ( '\\n' | '\\r' ) )*
                     loop18:
                     do {
                         int alt18=2;
@@ -1804,7 +1828,7 @@ public class SociaLiteLexer extends Lexer {
 
                         switch (alt18) {
                     	case 1 :
-                    	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+                    	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
                     	    {
                     	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '\t')||(input.LA(1) >= '\u000B' && input.LA(1) <= '\f')||(input.LA(1) >= '\u000E' && input.LA(1) <= '\uFFFF') ) {
                     	        input.consume();
@@ -1825,7 +1849,7 @@ public class SociaLiteLexer extends Lexer {
                     } while (true);
 
 
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:209:26: ( '\\r' )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:211:26: ( '\\r' )?
                     int alt19=2;
                     int LA19_0 = input.LA(1);
 
@@ -1834,7 +1858,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     switch (alt19) {
                         case 1 :
-                            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:209:26: '\\r'
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:211:26: '\\r'
                             {
                             match('\r'); 
 
@@ -1866,8 +1890,8 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = WS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:212:5: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:212:9: ( ' ' | '\\t' | '\\r' | '\\n' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:214:5: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:214:9: ( ' ' | '\\t' | '\\r' | '\\n' )
             {
             if ( (input.LA(1) >= '\t' && input.LA(1) <= '\n')||input.LA(1)=='\r'||input.LA(1)==' ' ) {
                 input.consume();
@@ -1897,14 +1921,14 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = UTF8;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:220:5: ( 'u' '\"' ( ESC_SEQ |~ ( '\\\\' | '\"' ) )* '\"' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:220:8: 'u' '\"' ( ESC_SEQ |~ ( '\\\\' | '\"' ) )* '\"'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:222:5: ( 'u' '\"' ( ESC_SEQ |~ ( '\\\\' | '\"' ) )* '\"' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:222:8: 'u' '\"' ( ESC_SEQ |~ ( '\\\\' | '\"' ) )* '\"'
             {
             match('u'); 
 
             match('\"'); 
 
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:220:16: ( ESC_SEQ |~ ( '\\\\' | '\"' ) )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:222:16: ( ESC_SEQ |~ ( '\\\\' | '\"' ) )*
             loop21:
             do {
                 int alt21=3;
@@ -1920,7 +1944,7 @@ public class SociaLiteLexer extends Lexer {
 
                 switch (alt21) {
             	case 1 :
-            	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:220:18: ESC_SEQ
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:222:18: ESC_SEQ
             	    {
             	    mESC_SEQ(); 
 
@@ -1928,7 +1952,7 @@ public class SociaLiteLexer extends Lexer {
             	    }
             	    break;
             	case 2 :
-            	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:220:28: ~ ( '\\\\' | '\"' )
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:222:28: ~ ( '\\\\' | '\"' )
             	    {
             	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '!')||(input.LA(1) >= '#' && input.LA(1) <= '[')||(input.LA(1) >= ']' && input.LA(1) <= '\uFFFF') ) {
             	        input.consume();
@@ -1967,12 +1991,12 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = STRING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:224:5: ( '\"' ( ESC_SEQ |~ ( '\\\\' | '\"' ) )* '\"' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:224:8: '\"' ( ESC_SEQ |~ ( '\\\\' | '\"' ) )* '\"'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:226:5: ( '\"' ( ESC_SEQ |~ ( '\\\\' | '\"' ) )* '\"' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:226:8: '\"' ( ESC_SEQ |~ ( '\\\\' | '\"' ) )* '\"'
             {
             match('\"'); 
 
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:224:12: ( ESC_SEQ |~ ( '\\\\' | '\"' ) )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:226:12: ( ESC_SEQ |~ ( '\\\\' | '\"' ) )*
             loop22:
             do {
                 int alt22=3;
@@ -1988,7 +2012,7 @@ public class SociaLiteLexer extends Lexer {
 
                 switch (alt22) {
             	case 1 :
-            	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:224:14: ESC_SEQ
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:226:14: ESC_SEQ
             	    {
             	    mESC_SEQ(); 
 
@@ -1996,7 +2020,7 @@ public class SociaLiteLexer extends Lexer {
             	    }
             	    break;
             	case 2 :
-            	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:224:24: ~ ( '\\\\' | '\"' )
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:226:24: ~ ( '\\\\' | '\"' )
             	    {
             	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '!')||(input.LA(1) >= '#' && input.LA(1) <= '[')||(input.LA(1) >= ']' && input.LA(1) <= '\uFFFF') ) {
             	        input.consume();
@@ -2035,12 +2059,12 @@ public class SociaLiteLexer extends Lexer {
         try {
             int _type = CHAR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:227:5: ( '\\'' ( ESC_SEQ |~ ( '\\'' | '\\\\' ) ) '\\'' )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:227:8: '\\'' ( ESC_SEQ |~ ( '\\'' | '\\\\' ) ) '\\''
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:229:5: ( '\\'' ( ESC_SEQ |~ ( '\\'' | '\\\\' ) ) '\\'' )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:229:8: '\\'' ( ESC_SEQ |~ ( '\\'' | '\\\\' ) ) '\\''
             {
             match('\''); 
 
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:227:13: ( ESC_SEQ |~ ( '\\'' | '\\\\' ) )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:229:13: ( ESC_SEQ |~ ( '\\'' | '\\\\' ) )
             int alt23=2;
             int LA23_0 = input.LA(1);
 
@@ -2059,7 +2083,7 @@ public class SociaLiteLexer extends Lexer {
             }
             switch (alt23) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:227:15: ESC_SEQ
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:229:15: ESC_SEQ
                     {
                     mESC_SEQ(); 
 
@@ -2067,7 +2091,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:227:25: ~ ( '\\'' | '\\\\' )
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:229:25: ~ ( '\\'' | '\\\\' )
                     {
                     if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '&')||(input.LA(1) >= '(' && input.LA(1) <= '[')||(input.LA(1) >= ']' && input.LA(1) <= '\uFFFF') ) {
                         input.consume();
@@ -2101,8 +2125,8 @@ public class SociaLiteLexer extends Lexer {
     // $ANTLR start "EXPONENT"
     public final void mEXPONENT() throws RecognitionException {
         try {
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:232:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:232:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:234:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:234:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
             {
             if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
                 input.consume();
@@ -2114,7 +2138,7 @@ public class SociaLiteLexer extends Lexer {
             }
 
 
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:232:22: ( '+' | '-' )?
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:234:22: ( '+' | '-' )?
             int alt24=2;
             int LA24_0 = input.LA(1);
 
@@ -2123,7 +2147,7 @@ public class SociaLiteLexer extends Lexer {
             }
             switch (alt24) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
                     {
                     if ( input.LA(1)=='+'||input.LA(1)=='-' ) {
                         input.consume();
@@ -2141,7 +2165,7 @@ public class SociaLiteLexer extends Lexer {
             }
 
 
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:232:33: ( '0' .. '9' )+
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:234:33: ( '0' .. '9' )+
             int cnt25=0;
             loop25:
             do {
@@ -2155,7 +2179,7 @@ public class SociaLiteLexer extends Lexer {
 
                 switch (alt25) {
             	case 1 :
-            	    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
             	    {
             	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
             	        input.consume();
@@ -2193,8 +2217,8 @@ public class SociaLiteLexer extends Lexer {
     // $ANTLR start "HEX_DIGIT"
     public final void mHEX_DIGIT() throws RecognitionException {
         try {
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:235:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:237:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:
             {
             if ( (input.LA(1) >= '0' && input.LA(1) <= '9')||(input.LA(1) >= 'A' && input.LA(1) <= 'F')||(input.LA(1) >= 'a' && input.LA(1) <= 'f') ) {
                 input.consume();
@@ -2219,7 +2243,7 @@ public class SociaLiteLexer extends Lexer {
     // $ANTLR start "ESC_SEQ"
     public final void mESC_SEQ() throws RecognitionException {
         try {
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:239:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UNICODE_ESC | OCTAL_ESC )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:241:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UNICODE_ESC | OCTAL_ESC )
             int alt26=3;
             int LA26_0 = input.LA(1);
 
@@ -2272,7 +2296,7 @@ public class SociaLiteLexer extends Lexer {
             }
             switch (alt26) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:239:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:241:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
                     {
                     match('\\'); 
 
@@ -2289,7 +2313,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:240:9: UNICODE_ESC
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:242:9: UNICODE_ESC
                     {
                     mUNICODE_ESC(); 
 
@@ -2297,7 +2321,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:241:9: OCTAL_ESC
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:243:9: OCTAL_ESC
                     {
                     mOCTAL_ESC(); 
 
@@ -2317,7 +2341,7 @@ public class SociaLiteLexer extends Lexer {
     // $ANTLR start "OCTAL_ESC"
     public final void mOCTAL_ESC() throws RecognitionException {
         try {
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:246:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:248:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
             int alt27=3;
             int LA27_0 = input.LA(1);
 
@@ -2368,7 +2392,7 @@ public class SociaLiteLexer extends Lexer {
             }
             switch (alt27) {
                 case 1 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:246:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:248:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
                     {
                     match('\\'); 
 
@@ -2405,7 +2429,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:247:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:249:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
                     {
                     match('\\'); 
 
@@ -2432,7 +2456,7 @@ public class SociaLiteLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:248:9: '\\\\' ( '0' .. '7' )
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:250:9: '\\\\' ( '0' .. '7' )
                     {
                     match('\\'); 
 
@@ -2461,8 +2485,8 @@ public class SociaLiteLexer extends Lexer {
     // $ANTLR start "UNICODE_ESC"
     public final void mUNICODE_ESC() throws RecognitionException {
         try {
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:253:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-            // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:253:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:255:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:255:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
             {
             match('\\'); 
 
@@ -2491,12 +2515,12 @@ public class SociaLiteLexer extends Lexer {
     // $ANTLR end "UNICODE_ESC"
 
     public void mTokens() throws RecognitionException {
-        // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:8: ( T__63 | T__64 | T__65 | T__66 | T__67 | T__68 | T__69 | T__70 | T__71 | T__72 | T__73 | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | T__85 | T__86 | T__87 | T__88 | T__89 | T__90 | T__91 | T__92 | T__93 | T__94 | T__95 | T__96 | T__97 | T__98 | T__99 | SORT_ORDER | ITER_DECL | NOT | ID | DOT_ID | DOT_END | INT | FLOAT | COMMENT | WS | UTF8 | STRING | CHAR )
-        int alt28=50;
+        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:8: ( T__63 | T__64 | T__65 | T__66 | T__67 | T__68 | T__69 | T__70 | T__71 | T__72 | T__73 | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | T__85 | T__86 | T__87 | T__88 | T__89 | T__90 | T__91 | T__92 | T__93 | T__94 | T__95 | T__96 | T__97 | T__98 | T__99 | T__100 | SORT_ORDER | ITER_DECL | NOT | ID | DOT_ID | DOT_END | INT | FLOAT | COMMENT | WS | UTF8 | STRING | CHAR )
+        int alt28=51;
         alt28 = dfa28.predict(input);
         switch (alt28) {
             case 1 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:10: T__63
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:10: T__63
                 {
                 mT__63(); 
 
@@ -2504,7 +2528,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 2 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:16: T__64
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:16: T__64
                 {
                 mT__64(); 
 
@@ -2512,7 +2536,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 3 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:22: T__65
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:22: T__65
                 {
                 mT__65(); 
 
@@ -2520,7 +2544,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 4 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:28: T__66
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:28: T__66
                 {
                 mT__66(); 
 
@@ -2528,7 +2552,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 5 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:34: T__67
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:34: T__67
                 {
                 mT__67(); 
 
@@ -2536,7 +2560,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 6 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:40: T__68
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:40: T__68
                 {
                 mT__68(); 
 
@@ -2544,7 +2568,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 7 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:46: T__69
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:46: T__69
                 {
                 mT__69(); 
 
@@ -2552,7 +2576,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 8 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:52: T__70
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:52: T__70
                 {
                 mT__70(); 
 
@@ -2560,7 +2584,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 9 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:58: T__71
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:58: T__71
                 {
                 mT__71(); 
 
@@ -2568,7 +2592,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 10 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:64: T__72
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:64: T__72
                 {
                 mT__72(); 
 
@@ -2576,7 +2600,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 11 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:70: T__73
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:70: T__73
                 {
                 mT__73(); 
 
@@ -2584,7 +2608,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 12 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:76: T__74
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:76: T__74
                 {
                 mT__74(); 
 
@@ -2592,7 +2616,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 13 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:82: T__75
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:82: T__75
                 {
                 mT__75(); 
 
@@ -2600,7 +2624,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 14 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:88: T__76
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:88: T__76
                 {
                 mT__76(); 
 
@@ -2608,7 +2632,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 15 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:94: T__77
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:94: T__77
                 {
                 mT__77(); 
 
@@ -2616,7 +2640,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 16 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:100: T__78
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:100: T__78
                 {
                 mT__78(); 
 
@@ -2624,7 +2648,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 17 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:106: T__79
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:106: T__79
                 {
                 mT__79(); 
 
@@ -2632,7 +2656,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 18 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:112: T__80
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:112: T__80
                 {
                 mT__80(); 
 
@@ -2640,7 +2664,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 19 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:118: T__81
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:118: T__81
                 {
                 mT__81(); 
 
@@ -2648,7 +2672,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 20 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:124: T__82
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:124: T__82
                 {
                 mT__82(); 
 
@@ -2656,7 +2680,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 21 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:130: T__83
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:130: T__83
                 {
                 mT__83(); 
 
@@ -2664,7 +2688,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 22 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:136: T__84
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:136: T__84
                 {
                 mT__84(); 
 
@@ -2672,7 +2696,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 23 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:142: T__85
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:142: T__85
                 {
                 mT__85(); 
 
@@ -2680,7 +2704,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 24 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:148: T__86
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:148: T__86
                 {
                 mT__86(); 
 
@@ -2688,7 +2712,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 25 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:154: T__87
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:154: T__87
                 {
                 mT__87(); 
 
@@ -2696,7 +2720,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 26 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:160: T__88
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:160: T__88
                 {
                 mT__88(); 
 
@@ -2704,7 +2728,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 27 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:166: T__89
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:166: T__89
                 {
                 mT__89(); 
 
@@ -2712,7 +2736,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 28 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:172: T__90
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:172: T__90
                 {
                 mT__90(); 
 
@@ -2720,7 +2744,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 29 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:178: T__91
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:178: T__91
                 {
                 mT__91(); 
 
@@ -2728,7 +2752,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 30 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:184: T__92
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:184: T__92
                 {
                 mT__92(); 
 
@@ -2736,7 +2760,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 31 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:190: T__93
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:190: T__93
                 {
                 mT__93(); 
 
@@ -2744,7 +2768,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 32 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:196: T__94
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:196: T__94
                 {
                 mT__94(); 
 
@@ -2752,7 +2776,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 33 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:202: T__95
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:202: T__95
                 {
                 mT__95(); 
 
@@ -2760,7 +2784,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 34 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:208: T__96
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:208: T__96
                 {
                 mT__96(); 
 
@@ -2768,7 +2792,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 35 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:214: T__97
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:214: T__97
                 {
                 mT__97(); 
 
@@ -2776,7 +2800,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 36 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:220: T__98
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:220: T__98
                 {
                 mT__98(); 
 
@@ -2784,7 +2808,7 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 37 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:226: T__99
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:226: T__99
                 {
                 mT__99(); 
 
@@ -2792,103 +2816,111 @@ public class SociaLiteLexer extends Lexer {
                 }
                 break;
             case 38 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:232: SORT_ORDER
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:232: T__100
+                {
+                mT__100(); 
+
+
+                }
+                break;
+            case 39 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:239: SORT_ORDER
                 {
                 mSORT_ORDER(); 
 
 
                 }
                 break;
-            case 39 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:243: ITER_DECL
+            case 40 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:250: ITER_DECL
                 {
                 mITER_DECL(); 
 
 
                 }
                 break;
-            case 40 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:253: NOT
+            case 41 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:260: NOT
                 {
                 mNOT(); 
 
 
                 }
                 break;
-            case 41 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:257: ID
+            case 42 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:264: ID
                 {
                 mID(); 
 
 
                 }
                 break;
-            case 42 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:260: DOT_ID
+            case 43 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:267: DOT_ID
                 {
                 mDOT_ID(); 
 
 
                 }
                 break;
-            case 43 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:267: DOT_END
+            case 44 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:274: DOT_END
                 {
                 mDOT_END(); 
 
 
                 }
                 break;
-            case 44 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:275: INT
+            case 45 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:282: INT
                 {
                 mINT(); 
 
 
                 }
                 break;
-            case 45 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:279: FLOAT
+            case 46 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:286: FLOAT
                 {
                 mFLOAT(); 
 
 
                 }
                 break;
-            case 46 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:285: COMMENT
+            case 47 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:292: COMMENT
                 {
                 mCOMMENT(); 
 
 
                 }
                 break;
-            case 47 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:293: WS
+            case 48 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:300: WS
                 {
                 mWS(); 
 
 
                 }
                 break;
-            case 48 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:296: UTF8
+            case 49 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:303: UTF8
                 {
                 mUTF8(); 
 
 
                 }
                 break;
-            case 49 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:301: STRING
+            case 50 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:308: STRING
                 {
                 mSTRING(); 
 
 
                 }
                 break;
-            case 50 :
-                // /Users/jiwon/workspace/socialite/grammar/SociaLite.g:1:308: CHAR
+            case 51 :
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:1:315: CHAR
                 {
                 mCHAR(); 
 
@@ -2952,54 +2984,57 @@ public class SociaLiteLexer extends Lexer {
             this.transition = DFA14_transition;
         }
         public String getDescription() {
-            return "192:1: FLOAT : ( ( '0' .. '9' )+ ({...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )? |) | ( '0' .. '9' )+ EXPONENT );";
+            return "194:1: FLOAT : ( ( '0' .. '9' )+ ({...}? => '.' ( '0' .. '9' )+ ( EXPONENT )? ( 'f' | 'F' | 'd' | 'D' )? |) | ( '0' .. '9' )+ EXPONENT );";
         }
     }
     static final String DFA28_eotS =
         "\1\uffff\1\51\7\uffff\1\54\1\55\1\57\1\uffff\1\61\1\63\1\65\1\uffff"+
-        "\2\45\2\uffff\15\45\1\111\23\uffff\22\45\3\uffff\11\45\1\147\2\45"+
-        "\1\152\4\45\1\157\1\51\4\45\1\164\1\157\3\45\1\uffff\1\171\1\172"+
-        "\1\uffff\4\45\1\uffff\2\45\1\u0081\1\45\1\uffff\1\u0083\3\45\2\uffff"+
-        "\4\45\1\u008b\1\u008c\1\uffff\1\u008d\1\uffff\6\45\1\u0094\3\uffff"+
-        "\1\u0095\1\u0096\2\45\1\u0099\1\45\3\uffff\1\171\1\u009b\1\uffff"+
-        "\1\45\1\uffff\1\45\1\u009e\1\uffff";
+        "\2\45\2\uffff\15\45\1\112\23\uffff\23\45\3\uffff\12\45\1\152\2\45"+
+        "\1\155\4\45\1\162\1\51\5\45\1\170\1\162\3\45\1\uffff\1\175\1\176"+
+        "\1\uffff\4\45\1\uffff\2\45\1\u0085\2\45\1\uffff\1\u0088\3\45\2\uffff"+
+        "\4\45\1\u0090\1\u0091\1\uffff\1\45\1\u0093\1\uffff\6\45\1\u009a"+
+        "\2\uffff\1\45\1\uffff\1\u009c\1\u009d\2\45\1\u00a0\1\45\1\uffff"+
+        "\1\45\2\uffff\1\175\1\u00a3\1\uffff\2\45\1\uffff\1\45\1\u00a7\1"+
+        "\u00a8\2\uffff";
     static final String DFA28_eofS =
-        "\u009f\uffff";
+        "\u00a9\uffff";
     static final String DFA28_minS =
         "\1\11\1\75\7\uffff\1\56\1\52\1\55\1\uffff\3\75\1\uffff\1\142\1\164"+
         "\2\uffff\1\154\1\145\1\154\1\162\1\156\2\157\2\162\1\157\1\163\1"+
-        "\157\1\42\1\56\23\uffff\1\152\1\162\1\145\1\165\1\157\1\163\2\157"+
-        "\1\144\1\145\1\156\1\144\1\154\1\144\1\145\1\162\1\143\1\164\3\uffff"+
-        "\1\145\1\151\1\141\1\142\1\160\1\143\1\141\1\165\1\145\1\60\1\162"+
-        "\1\147\1\60\1\164\1\145\1\144\1\164\2\60\1\143\1\156\1\162\1\154"+
-        "\2\60\1\164\1\160\1\170\1\uffff\2\60\1\uffff\1\151\1\162\1\145\1"+
-        "\142\1\uffff\1\164\1\147\1\60\1\145\1\uffff\1\60\2\142\1\164\2\uffff"+
-        "\1\163\1\142\1\146\1\171\2\60\1\uffff\1\60\1\uffff\2\171\1\157\1"+
-        "\145\1\171\1\151\1\60\3\uffff\2\60\1\162\1\164\1\60\1\156\3\uffff"+
-        "\2\60\1\uffff\1\145\1\uffff\1\144\1\60\1\uffff";
+        "\157\1\42\1\56\23\uffff\1\152\1\162\1\145\1\156\1\165\1\157\1\163"+
+        "\2\157\1\144\1\145\1\156\1\144\1\154\1\144\1\145\1\162\1\143\1\164"+
+        "\3\uffff\1\145\1\151\1\141\1\143\1\142\1\160\1\143\1\141\1\165\1"+
+        "\145\1\60\1\162\1\147\1\60\1\164\1\145\1\144\1\164\2\60\1\143\1"+
+        "\156\1\162\1\165\1\154\2\60\1\164\1\160\1\170\1\uffff\2\60\1\uffff"+
+        "\1\151\1\162\1\145\1\142\1\uffff\1\164\1\147\1\60\1\162\1\145\1"+
+        "\uffff\1\60\2\142\1\164\2\uffff\1\163\1\142\1\146\1\171\2\60\1\uffff"+
+        "\1\162\1\60\1\uffff\2\171\1\157\1\145\1\171\1\151\1\60\2\uffff\1"+
+        "\145\1\uffff\2\60\1\162\1\164\1\60\1\156\1\uffff\1\156\2\uffff\2"+
+        "\60\1\uffff\1\145\1\164\1\uffff\1\144\2\60\2\uffff";
     static final String DFA28_maxS =
         "\1\172\1\75\7\uffff\1\172\1\57\1\55\1\uffff\3\75\1\uffff\1\142\1"+
-        "\164\2\uffff\1\154\1\162\1\154\1\162\1\164\1\157\1\165\2\162\1\157"+
-        "\1\163\1\157\1\42\1\145\23\uffff\1\152\1\162\1\145\1\165\1\157\1"+
-        "\163\2\157\1\164\1\145\1\156\1\144\1\154\1\144\1\145\1\162\1\143"+
-        "\1\164\3\uffff\1\145\1\151\1\141\1\142\1\160\1\143\1\141\1\165\1"+
-        "\145\1\172\1\162\1\147\1\172\1\164\1\145\1\144\1\164\2\172\1\143"+
-        "\1\156\1\162\1\154\2\172\1\164\1\160\1\170\1\uffff\2\172\1\uffff"+
-        "\1\151\1\162\1\145\1\142\1\uffff\1\164\1\147\1\172\1\145\1\uffff"+
-        "\1\172\2\142\1\164\2\uffff\1\163\1\142\1\146\1\171\2\172\1\uffff"+
-        "\1\172\1\uffff\2\171\1\157\1\145\1\171\1\151\1\172\3\uffff\2\172"+
-        "\1\162\1\164\1\172\1\156\3\uffff\2\172\1\uffff\1\145\1\uffff\1\144"+
-        "\1\172\1\uffff";
+        "\164\2\uffff\1\157\1\162\1\154\1\162\1\164\1\157\1\165\2\162\1\157"+
+        "\1\163\1\157\1\42\1\145\23\uffff\1\152\1\162\1\145\1\156\1\165\1"+
+        "\157\1\163\2\157\1\164\1\145\1\156\1\144\1\154\1\144\1\145\1\162"+
+        "\1\143\1\164\3\uffff\1\145\1\151\1\141\1\143\1\142\1\160\1\143\1"+
+        "\141\1\165\1\145\1\172\1\162\1\147\1\172\1\164\1\145\1\144\1\164"+
+        "\2\172\1\143\1\156\1\162\1\165\1\154\2\172\1\164\1\160\1\170\1\uffff"+
+        "\2\172\1\uffff\1\151\1\162\1\145\1\142\1\uffff\1\164\1\147\1\172"+
+        "\1\162\1\145\1\uffff\1\172\2\142\1\164\2\uffff\1\163\1\142\1\146"+
+        "\1\171\2\172\1\uffff\1\162\1\172\1\uffff\2\171\1\157\1\145\1\171"+
+        "\1\151\1\172\2\uffff\1\145\1\uffff\2\172\1\162\1\164\1\172\1\156"+
+        "\1\uffff\1\156\2\uffff\2\172\1\uffff\1\145\1\164\1\uffff\1\144\2"+
+        "\172\2\uffff";
     static final String DFA28_acceptS =
         "\2\uffff\1\2\1\3\1\4\1\5\1\6\1\7\1\10\3\uffff\1\15\3\uffff\1\24"+
-        "\2\uffff\1\27\1\30\16\uffff\1\56\1\57\1\51\1\61\1\62\1\1\1\50\1"+
-        "\11\1\52\1\53\1\12\1\14\1\13\1\17\1\16\1\21\1\20\1\23\1\22\22\uffff"+
-        "\1\60\1\54\1\55\34\uffff\1\37\2\uffff\1\41\4\uffff\1\46\4\uffff"+
-        "\1\33\4\uffff\1\47\1\40\6\uffff\1\31\1\uffff\1\34\7\uffff\1\25\1"+
-        "\26\1\32\6\uffff\1\45\1\35\1\36\2\uffff\1\43\1\uffff\1\42\2\uffff"+
-        "\1\44";
+        "\2\uffff\1\27\1\30\16\uffff\1\57\1\60\1\52\1\62\1\63\1\1\1\51\1"+
+        "\11\1\53\1\54\1\12\1\14\1\13\1\17\1\16\1\21\1\20\1\23\1\22\23\uffff"+
+        "\1\61\1\55\1\56\36\uffff\1\40\2\uffff\1\42\4\uffff\1\47\5\uffff"+
+        "\1\34\4\uffff\1\50\1\41\6\uffff\1\31\2\uffff\1\35\7\uffff\1\25\1"+
+        "\26\1\uffff\1\33\6\uffff\1\46\1\uffff\1\36\1\37\2\uffff\1\44\2\uffff"+
+        "\1\43\3\uffff\1\32\1\45";
     static final String DFA28_specialS =
-        "\u009f\uffff}>";
+        "\u00a9\uffff}>";
     static final String[] DFA28_transitionS = {
             "\2\44\2\uffff\1\44\22\uffff\1\44\1\1\1\46\1\43\1\2\2\uffff\1"+
             "\47\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\12\42\1\13\1\14\1\15"+
@@ -3027,20 +3062,20 @@ public class SociaLiteLexer extends Lexer {
             "\1\67",
             "",
             "",
-            "\1\70",
-            "\1\73\11\uffff\1\71\2\uffff\1\72",
-            "\1\74",
+            "\1\70\2\uffff\1\71",
+            "\1\74\11\uffff\1\72\2\uffff\1\73",
             "\1\75",
-            "\1\76\5\uffff\1\77",
-            "\1\100",
-            "\1\101\5\uffff\1\102",
-            "\1\103",
+            "\1\76",
+            "\1\77\5\uffff\1\100",
+            "\1\101",
+            "\1\102\5\uffff\1\103",
             "\1\104",
             "\1\105",
             "\1\106",
             "\1\107",
             "\1\110",
-            "\1\112\1\uffff\12\42\13\uffff\1\112\37\uffff\1\112",
+            "\1\111",
+            "\1\113\1\uffff\12\42\13\uffff\1\113\37\uffff\1\113",
             "",
             "",
             "",
@@ -3060,7 +3095,6 @@ public class SociaLiteLexer extends Lexer {
             "",
             "",
             "",
-            "\1\113",
             "\1\114",
             "\1\115",
             "\1\116",
@@ -3068,9 +3102,9 @@ public class SociaLiteLexer extends Lexer {
             "\1\120",
             "\1\121",
             "\1\122",
-            "\1\123\17\uffff\1\124",
-            "\1\125",
-            "\1\126",
+            "\1\123",
+            "\1\124",
+            "\1\125\17\uffff\1\126",
             "\1\127",
             "\1\130",
             "\1\131",
@@ -3078,11 +3112,11 @@ public class SociaLiteLexer extends Lexer {
             "\1\133",
             "\1\134",
             "\1\135",
-            "",
-            "",
-            "",
             "\1\136",
             "\1\137",
+            "",
+            "",
+            "",
             "\1\140",
             "\1\141",
             "\1\142",
@@ -3090,80 +3124,91 @@ public class SociaLiteLexer extends Lexer {
             "\1\144",
             "\1\145",
             "\1\146",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\147",
             "\1\150",
             "\1\151",
             "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
             "\1\153",
             "\1\154",
-            "\1\155",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
             "\1\156",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\157",
             "\1\160",
             "\1\161",
-            "\1\162",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
             "\1\163",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\164",
             "\1\165",
             "\1\166",
             "\1\167",
-            "",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\1\170\31\45",
             "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
-            "",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\171",
+            "\1\172",
             "\1\173",
-            "\1\174",
-            "\1\175",
-            "\1\176",
+            "",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\1\174\31\45",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
             "",
             "\1\177",
             "\1\u0080",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\u0081",
             "\1\u0082",
             "",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\u0083",
             "\1\u0084",
-            "\1\u0085",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
             "\1\u0086",
-            "",
-            "",
             "\1\u0087",
-            "\1\u0088",
+            "",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
             "\1\u0089",
             "\1\u008a",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\u008b",
             "",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
             "",
+            "\1\u008c",
+            "\1\u008d",
             "\1\u008e",
             "\1\u008f",
-            "\1\u0090",
-            "\1\u0091",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "",
             "\1\u0092",
-            "\1\u0093",
             "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
             "",
-            "",
-            "",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\u0094",
+            "\1\u0095",
+            "\1\u0096",
             "\1\u0097",
             "\1\u0098",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
-            "\1\u009a",
-            "",
-            "",
-            "",
-            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\u0099",
             "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
             "",
-            "\1\u009c",
             "",
-            "\1\u009d",
+            "\1\u009b",
+            "",
             "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\u009e",
+            "\1\u009f",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\1\u00a1",
+            "",
+            "\1\u00a2",
+            "",
+            "",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "",
+            "\1\u00a4",
+            "\1\u00a5",
+            "",
+            "\1\u00a6",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "\12\45\7\uffff\32\45\4\uffff\1\45\1\uffff\32\45",
+            "",
             ""
     };
 
@@ -3197,7 +3242,7 @@ public class SociaLiteLexer extends Lexer {
             this.transition = DFA28_transition;
         }
         public String getDescription() {
-            return "1:1: Tokens : ( T__63 | T__64 | T__65 | T__66 | T__67 | T__68 | T__69 | T__70 | T__71 | T__72 | T__73 | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | T__85 | T__86 | T__87 | T__88 | T__89 | T__90 | T__91 | T__92 | T__93 | T__94 | T__95 | T__96 | T__97 | T__98 | T__99 | SORT_ORDER | ITER_DECL | NOT | ID | DOT_ID | DOT_END | INT | FLOAT | COMMENT | WS | UTF8 | STRING | CHAR );";
+            return "1:1: Tokens : ( T__63 | T__64 | T__65 | T__66 | T__67 | T__68 | T__69 | T__70 | T__71 | T__72 | T__73 | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | T__85 | T__86 | T__87 | T__88 | T__89 | T__90 | T__91 | T__92 | T__93 | T__94 | T__95 | T__96 | T__97 | T__98 | T__99 | T__100 | SORT_ORDER | ITER_DECL | NOT | ID | DOT_ID | DOT_END | INT | FLOAT | COMMENT | WS | UTF8 | STRING | CHAR );";
         }
     }
  

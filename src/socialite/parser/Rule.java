@@ -1,6 +1,9 @@
 package socialite.parser;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,29 +24,30 @@ import socialite.util.IdFactory;
 import socialite.util.InternalException;
 import gnu.trove.set.hash.TIntHashSet;
 
-public class Rule implements Serializable {
+public class Rule implements Externalizable {
 	private static final long serialVersionUID = 1;
 	
-	RuleDecl ruleDecl;
-	List<Rule> deps = new ArrayList<Rule>();
-	List<Rule> usedBy = new ArrayList<Rule>();
-	int id;
-	transient Epoch epoch=null;	
-	
+	transient List<Rule> deps = new ArrayList<Rule>();
+	transient List<Rule> usedBy = new ArrayList<Rule>();
+	transient Epoch epoch=null;
+
+    int epochId;
+    int id;
+    RuleDecl ruleDecl;
 	boolean isLeftRec=false; // indicates that this rule is (linearly) left-recursive
 	boolean isLeftRecOpt=false; // above plus array table is used for the rule-head
 	boolean deltaStepOpt=false; // use delta-step algorithm
-	Variable deltaStepVar=null;
+	transient Variable deltaStepVar=null;
 	boolean inScc=false; 
 	boolean simpleArrayInit=false;
 	boolean hasPipelined = false;
 	boolean useArrayTableLock = false;
-	
-	protected Rule() { id=IdFactory.nextRuleId(); }
+
+	public Rule() { }
 	
 	public Rule(RuleDecl _ruleDecl) {
 		ruleDecl = _ruleDecl;
-		id=IdFactory.nextRuleId();		
+		id = IdFactory.nextRuleId();
 	}		
 	
 	Set<Function> findFunctions() {
@@ -64,8 +68,7 @@ public class Rule implements Serializable {
 		return s;
 	}
 
-	public void useArrayTableLock(boolean f) { useArrayTableLock = f; }
-	public boolean useArrayTableLock() { return useArrayTableLock; }	
+    public int getEpochId() { return epochId; }
 	public void setInScc() { inScc=true; }
 	public boolean inScc() { return inScc; }
 	public void setDijkstraOpt() { 
@@ -86,7 +89,9 @@ public class Rule implements Serializable {
 	public boolean isSimpleUpdate() { return ruleDecl.isSimpleUpdate(); }
 	
 	public void copyRuleProperties(Rule r) {
+        epochId = r.epochId;
 		inScc = r.inScc;
+        simpleArrayInit = r.simpleArrayInit;
 		isLeftRecOpt = r.isLeftRecOpt;	
 		isLeftRec = r.isLeftRec;
 		deltaStepOpt = r.deltaStepOpt;
@@ -96,7 +101,10 @@ public class Rule implements Serializable {
 		// deps and usedBy fields should be updated later				
 	}
 	
-	public void setEpoch(Epoch _e) { epoch = _e; }
+	public void setEpoch(Epoch _e) {
+        epoch = _e;
+        epochId = epoch.id();
+    }
 	public void recomputeDeps() {
 		Iterator<Rule> it = deps.iterator();
 		while(it.hasNext()) {
@@ -119,17 +127,6 @@ public class Rule implements Serializable {
 		if (!(o instanceof Rule)) return false;
 		Rule r=(Rule)o;
 		return r.ruleDecl.equals(ruleDecl) && getClass().equals(r.getClass());
-	}
-
-	@Deprecated
-	public boolean equalsIgnoreClass(Object o) {
-		if (!(o instanceof Rule)) return false;
-		Rule r=(Rule)o;
-		RuleDecl ruleDecl1;
-		if (this instanceof DeltaRule) ruleDecl1 = ((DeltaRule)this).origRuleDecl;
-		else ruleDecl1 = ruleDecl;
-		if (r instanceof DeltaRule) return ((DeltaRule)r).origRuleDecl.equals(ruleDecl1);
-		else return r.ruleDecl.equals(ruleDecl1);
 	}
 	
 	public List<Expr> getExprs() {
@@ -272,7 +269,7 @@ public class Rule implements Serializable {
 		return ruleDecl.head;
 	}
 	
-	public List<?> getBody() {
+	public List<Literal> getBody() {
 		return ruleDecl.body;
 	}
 	
@@ -355,8 +352,8 @@ public class Rule implements Serializable {
 			if (o instanceof Predicate) {
 				Predicate p2=(Predicate)o;
 				t=tableMap.get(((Predicate)o).name());
-				//sig += p2.signature(t.signature());
-				sig += p2.signature(p2.name());
+				sig += p2.signature(t.signature());
+				//sig += p2.signature(p2.name());
 			} else {
 				Expr e=(Expr)o;
 				sig += e.sig();
@@ -384,4 +381,32 @@ public class Rule implements Serializable {
 		}
 		return descr;
 	}*/
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		ruleDecl = new RuleDecl();
+		ruleDecl.readExternal(in);
+		id = in.readInt();
+        epochId = in.readInt();
+		isLeftRec = in.readBoolean();
+		isLeftRecOpt = in.readBoolean();
+		deltaStepOpt = in.readBoolean();
+		inScc = in.readBoolean();
+		simpleArrayInit = in.readBoolean();
+		hasPipelined = in.readBoolean();
+		useArrayTableLock = in.readBoolean();
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		ruleDecl.writeExternal(out);
+		out.writeInt(id);
+        out.writeInt(epochId);
+		out.writeBoolean(isLeftRec);
+		out.writeBoolean(isLeftRecOpt);
+		out.writeBoolean(deltaStepOpt);
+		out.writeBoolean(inScc);
+		out.writeBoolean(simpleArrayInit);
+		out.writeBoolean(hasPipelined);
+		out.writeBoolean(useArrayTableLock);
+	}
 }

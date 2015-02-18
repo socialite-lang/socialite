@@ -1,5 +1,10 @@
 package socialite.parser;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -12,10 +17,11 @@ import org.stringtemplate.v4.ST;
 import socialite.codegen.CodeGen;
 
 public class TypeCast extends Op implements UnaryOp {
-	private static final long serialVersionUID = 1864131799421671063L;
+	private static final long serialVersionUID = 1L;
 	
 	public Class<?> type;
 	public Object arg;
+    public TypeCast() { }
 	public TypeCast(Class<?> _type, Object _arg) {
 		type = _type;
 		arg = _arg;
@@ -98,5 +104,35 @@ public class TypeCast extends Op implements UnaryOp {
 		String str="("+type.getSimpleName()+")";
 		str += arg;
 		return str;
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		char[] tmp = new char[in.readInt()];
+        for (int i=0; i<tmp.length; i++) {
+            tmp[i] = in.readChar();
+        }
+        String typeName = new String(tmp);
+        if (typeName.equals("int")) {
+            type = int.class;
+        } else if (typeName.equals("long")) {
+            type = long.class;
+        } else if (typeName.equals("float")) {
+            type = float.class;
+        } else if (typeName.equals("double")) {
+            type = double.class;
+        } else {
+            assert !typeName.contains("."):"Not supported type:"+typeName;
+            type = Class.forName(typeName);
+        }
+		arg = in.readObject();
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		String typeName = type.getName();
+		out.writeInt(typeName.length());
+		out.writeChars(typeName);
+		out.writeObject(arg);
 	}
 }

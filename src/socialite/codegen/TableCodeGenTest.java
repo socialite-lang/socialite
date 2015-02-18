@@ -33,7 +33,7 @@ public class TableCodeGenTest {
 				   "Attr2a[int i](String s, int i2).\n" +
 				   "Attr3a(String s, double d, int n) sortby d.\n" +
 				   "Attr4a[int i:0..100](String s, int i2).";
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain codeGen = en.compile(query);
 		Analysis an = codeGen.an;
 		for (Eval e:codeGen.getEvalInsts()) {
@@ -66,7 +66,7 @@ public class TableCodeGenTest {
 					   "Attr3b(String s, (double d, (int n))) sortby d, indexby n.\n"+
 					   "Attr4b[int i:0..100](String s, (int i2)).\n" +
 					   "Edge(int n:0..100, (int t)) sortby t.\n";
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain codeGen = en.compile(query);
 		Analysis an = codeGen.an;
 		for (Eval e:codeGen.getEvalInsts()) {
@@ -89,7 +89,7 @@ public class TableCodeGenTest {
 		String query = "Attr3c(String s, (double d, String s2, (int n))) sortby d, indexby n.\n"+
 						"Attr3c(s1,d,s2,i) :- s1=\"s1\", d=1.1, s2=\"s2\", i=1 .";
 		
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain codeGen = en.compile(query);
 		Analysis an = codeGen.an;
 		for (Eval e:codeGen.getEvalInsts()) {
@@ -113,7 +113,7 @@ public class TableCodeGenTest {
 		   "Attr2d[int i](String s, double d) indexby d.\n"+
 		   "Attr1d(n,t,s) :- n=1, t=42, s=\"s\".\n"+
 		   "Attr2d[i](s,d) :- i=1, s=\"s\", d=4.2 .";
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain codeGen = en.compile(query);
 		Analysis an = codeGen.an;
 		for (Eval e:codeGen.getEvalInsts()) {
@@ -147,7 +147,7 @@ public class TableCodeGenTest {
 		   "Nested1e(n,t,s) :- n=1, t=1, s=\"s\".\n"+
 		   "Nested2e[i](s,d) :- i=1, s=\"s\", d=4.2 .\n"+
 		   "Nested3e[i](n,s,d) :- i=1, n=1, s=\"s\", d=4.2.\n";		   
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain codeGen = en.compile(query);
 		Analysis an = codeGen.an;
 		for (Eval e:codeGen.getEvalInsts()) {
@@ -192,7 +192,7 @@ public class TableCodeGenTest {
 		   "UnNested2f(n,t,s) :- n=1, t=2, s=\"s\".\n"+
 		   "Nested1f[i](s,d) :- i=1, s=\"s\", d=4.2 .\n"+
 		   "Nested2f(i,s,d) :- i=1, s=\"s\", d=4.2 .\n";
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain codeGen = en.compile(query);
 		Analysis an = codeGen.an;
 		for (Eval e:codeGen.getEvalInsts()) { e.run(); }
@@ -245,7 +245,7 @@ public class TableCodeGenTest {
 			+ "SP(s, d) :- s=1, d=1.\n"
 			+ "SP(t, $min(d)) :- SP(s, d1), Edge(s, t), d=d1+1.\n"
 			+ "?- SP(5, d).";		
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain codeGen = en.compile(query);
 		for (Eval e:codeGen.getEvalInsts()) { e.run(); }
 		Analysis an = codeGen.an;		
@@ -271,7 +271,7 @@ public class TableCodeGenTest {
 			+ "SP(int x:1..15, int dist, int prev).\n"
 			+"SP(s, d, p) :- s=1, d=0, p=1.\n"				
 			+"SP(t, $min(d), s) :- SP(s, d1, _), Edge(s, t, d2), d=d1+d2.\n";
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		en.run(query);
 		en.shutdown();
 	}
@@ -288,7 +288,7 @@ public class TableCodeGenTest {
 			+ "SP(int x:1..15, int dist, int prev).\n"
 			+"SP(s, d, p) :- s=1, d=0, p=1.\n"				
 			+"SP(t, $min(d), s) :- SP(s, d1, _), Edge(s, t, d2), d=d1+d2.\n";
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain codeGen = en.compile(query);
 		for (Eval e:codeGen.getEvalInsts()) { e.run(); }
 		en.shutdown();
@@ -301,7 +301,7 @@ public class TableCodeGenTest {
 			"Edge[s](t) :- s=1, t=99.\n" +
 			"InEdge[t](s) :- Edge[s](t).\n" +
 			"Triangle[0](x, y, z) :- Edge[x](y), Edge[y](z), Edge[z](x).\n";
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		CodeGenMain codeGen = en.compile(query);
 		for (Eval e:codeGen.getEvalInsts()) { e.run(); }
 		en.shutdown();
@@ -423,7 +423,7 @@ public class TableCodeGenTest {
 				"Bar(int a, int b:iter). \n"+
 				"Foo(1,b) :- b=10. " +
 				"Foo(2,b) :- Foo(1, c), b=c+1.";
-		LocalEngine en = new LocalEngine(Config.par());
+		LocalEngine en = new LocalEngine(Config.par(4));
 		en.run(query);
 		en.shutdown();		
 	}

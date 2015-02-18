@@ -2,13 +2,7 @@ package socialite.parser;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
@@ -19,6 +13,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import socialite.parser.antlr.ClearTable;
+import socialite.parser.antlr.DropTable;
 import socialite.parser.antlr.RuleDecl;
 import socialite.parser.antlr.SociaLiteLexer;
 import socialite.parser.antlr.SociaLiteParser;
@@ -57,7 +53,7 @@ public class Parser {
 	Map<String, Rule> canonRuleMap = new HashMap<String, Rule>();
 	List<Rule> newRules = new ArrayList<Rule>();
 	List<Table> newTables = new ArrayList<Table>();
-	Map<String, Table> tableMap = new HashMap<String, Table>();
+	Map<String, Table> tableMap = new LinkedHashMap<String, Table>();
 	Query query;
 	TIntObjectHashMap<Rule> ruleMap = new TIntObjectHashMap<Rule>(128); 
 	
@@ -107,7 +103,7 @@ public class Parser {
 	public Object monitor() {
 		return monitor;
 	}
-	
+
 	void prepare(String program) {
 		this.program = program;		
 		SociaLiteLexer lexer = new SociaLiteLexer(new ANTLRStringStream(program));
@@ -230,7 +226,8 @@ public class Parser {
 					throw new SociaLiteException("Cannot have multiple query statements.");
 				createQuery((Query)decl);				
 			} else if (decl instanceof TableStmt) {
-				tableStmts.add((TableStmt)decl);
+				TableStmt stmt = (TableStmt)decl;
+				addTableStmt(stmt);
 			}
 		}
 	}	
@@ -263,6 +260,26 @@ public class Parser {
 		p.setName(IterTable.name(p.name(), iterColumnVal(iterParam)%tdecl.maxIter()));
 		q.setIterVal(iterColumnVal(iterParam));
 		p.removeParamAt(col);		
+	}
+	void addTableStmt(TableStmt stmt) {
+		String name = stmt.tableName();
+		TableDecl decl = tableDeclMap.get(name);
+		if (decl == null) { throw new AnalysisException("Table "+name+" not declared:"); }
+		if (!decl.hasIterColumn()) {
+			tableStmts.add(stmt);
+			return;
+		}
+		
+		for (int i=0; i<decl.maxIter(); i++) {
+			String tableName = IterTable.name(decl.name(), i);			
+			if (stmt instanceof ClearTable) {
+				tableStmts.add(new ClearTable(tableName));
+			} else if (stmt instanceof DropTable) {
+				tableStmts.add(new DropTable(tableName));
+			} else {
+				throw new AnalysisException("Unexpected table statment:"+stmt);
+			}
+		}
 	}
 	void createRule(RuleDecl ruledecl) {
 		Rule r = new Rule(ruledecl);
@@ -314,6 +331,7 @@ public class Parser {
 	public void dropTable(String name) {
 		TableDecl decl = tableDeclMap.get(name);
 		if (decl==null) return;
+
 		if (decl.hasIterColumn()) {
 			for (int i=0; i<decl.maxIter(); i++) {						
 				tableMap.remove(IterTable.name(decl.name(), i));

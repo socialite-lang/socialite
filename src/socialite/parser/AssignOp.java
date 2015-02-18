@@ -1,5 +1,9 @@
 package socialite.parser;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,7 +23,7 @@ public class AssignOp extends Op {
 	
 	public Object arg1, arg2;
 	TypeCast cast;
-	protected AssignOp() { }
+	public AssignOp() { }
 	public AssignOp(Object _arg1, Object _arg2) throws InternalException {	
 		this(_arg1, null, _arg2);
 	}
@@ -315,5 +319,23 @@ public class AssignOp extends Op {
 		v.visit(this);
 		if (arg2 instanceof Op) 
 			v.visit((Op)arg2);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		arg1=in.readObject();
+		arg2=in.readObject();
+		if (in.readBoolean()) {
+			cast = new TypeCast();
+			cast.readExternal(in);
+		}
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(arg1);
+		out.writeObject(arg2);
+		out.writeBoolean(cast!=null);
+		if (cast!=null) cast.writeExternal(out);
 	}
 }

@@ -4,31 +4,95 @@ import java.io.*;
 import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
-import java.nio.channels.*;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.*;
-import org.apache.hadoop.fs.*;
-import org.apache.hadoop.io.BooleanWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.ipc.RPC;
-import org.apache.hadoop.ipc.Server;
-import org.apache.hadoop.security.UserGroupInformation;
 
-import socialite.codegen.Epoch;
-import socialite.codegen.EpochW;
-import socialite.dist.msg.*;
+import socialite.dist.Host;
 import socialite.dist.worker.WorkerCmd;
-import socialite.dist.worker.WorkerNode;
 import socialite.engine.Config;
+import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
 import socialite.resource.SRuntime;
-import socialite.util.Assert;
+import socialite.resource.WorkerAddrMapW;
 import socialite.util.SociaLiteException;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicInteger;
+
+class Call {
+	public Method m;
+	public Object obj;
+	public Object[] params;
+    public ReturnHandler handler;
+	Call(Method _m, Object _obj, Object[] _params, ReturnHandler _handler) {
+		m = _m;
+		obj = _obj;
+		params = _params;
+        handler = _handler;
+	}
+    public void call() {
+        try {
+            Object ret = m.invoke(obj, params);
+            handler.addReturn(ret);
+        } catch (Exception e) {
+            handler.except(e);
+        }
+    }
+}
+class ReturnHandler {
+    private ArrayList<Object> retvals;
+    private String errorMsg;
+    AtomicInteger invokeCountDown;
+
+    ReturnHandler(int callCount) {
+        retvals = new ArrayList<Object>(callCount);
+        invokeCountDown = new AtomicInteger(callCount);
+    }
+
+    public synchronized void except(Throwable t) {
+        countInvocation();
+        if (errorMsg==null) errorMsg = "";
+        errorMsg += ExceptionUtils.getStackTrace(t);
+
+    }
+    void countInvocation() {
+        int count = invokeCountDown.decrementAndGet();
+        if (count==0) { notify(); }
+    }
+    public synchronized void waitForDone() throws InterruptedException {
+        wait();
+    }
+
+    public synchronized void addReturn(Object val) {
+        countInvocation();
+
+        if (val!=null) retvals.add(val);
+    }
+    public synchronized Object[] getReturns() { return retvals.toArray(); }
+    public synchronized boolean hasError() { return errorMsg!=null; }
+    public synchronized String getErrorMsg() { return errorMsg; }
+}
+
+class ParallelRPC implements Runnable {
+	ArrayBlockingQueue<Call> queue;
+	public ParallelRPC(ArrayBlockingQueue<Call> _queue) {
+		queue = _queue;
+	}
+	public void run()  {
+		while (true) {
+            Call call;
+            try { call = queue.take(); }
+            catch (InterruptedException e) { break; }
+            call.call();
+		}
+	}
+}
 
 public class MasterNode {
 	public static final Log L=LogFactory.getLog(MasterNode.class);
@@ -39,56 +103,129 @@ public class MasterNode {
 			theInstance = new MasterNode(Config.dist());
 		return theInstance;
 	}
-	
-	public static WorkerAddrMap getCurrentWorkerAddrMap() {
-		WorkerAddrMap workerAddrMap;
-		if (SRuntime.masterRt()==null) {
-			MasterNode master=getInstance();
-			workerAddrMap = master.makeWorkerAddrMap();
-		} else {
-			workerAddrMap = SRuntime.masterRt().getWorkerAddrMap();
-		}
-		return workerAddrMap;
-	}
-	public static Object[] callWorkers(WorkerAddrMap workerAddrMap, Method m, Object[] param) {
-		Config conf;
-		if (SRuntime.masterRt()==null) conf = getInstance().getWorkerConf();
-		else conf = SRuntime.masterRt().getConf();
-		
-		int cmdPort = conf.portMap().workerCmdListen();		
-		InetSocketAddress addrs[] = workerAddrMap.getSockAddrs(cmdPort).toArray(new InetSocketAddress[0]);
-		try {
-			UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-			Object params[][] = new Object[addrs.length][param.length];
-			Arrays.fill(params, param);
-			Configuration hconf = new Configuration();
-			return RPC.call(m, params, addrs, ugi, hconf);
-		} catch (Throwable e) {			
-			L.fatal("Exception while calling "+m.getName()+" (RPC):");
-			L.fatal(ExceptionUtils.getStackTrace(e));
-			return null;
-		}		
-	}
-	public static Object[] callWorkers(Method m, Object[] param) {
-		return callWorkers(getCurrentWorkerAddrMap(), m, param);		
-	}
-	
+
+    static ArrayBlockingQueue<Call> cmdQueue;
+    static {
+        int workerNum = Config.getWorkerNodeNum();
+        cmdQueue = new ArrayBlockingQueue<Call>(workerNum*256);
+        int cmdThreadNum = workerNum;
+        if (cmdThreadNum>32) cmdThreadNum = 32;
+        for (int i=0; i<cmdThreadNum; i++) {
+            Thread t = new Thread(new ParallelRPC(cmdQueue), "RPC Thread #"+i);            
+            t.start();
+        }
+    }
+
+    public static Object[] callWorkers(Method m, Object[][] params) throws InterruptedException {
+        Collection<WorkerCmd> workerCmds = getInstance().getWorkerCmdMap().values();
+        ReturnHandler handler = new ReturnHandler(workerCmds.size());
+        int i=0;
+        for (WorkerCmd cmd:workerCmds) {
+            Object[] param = params[i++];
+            Call call = new Call(m, cmd, param, handler);
+            cmdQueue.put(call);
+        }
+
+        handler.waitForDone();
+        if (handler.hasError()) {
+            throw new SociaLiteException(handler.getErrorMsg());
+        }
+        return handler.getReturns();
+    }
+    public static Object[] callWorkers(Method m, Object[] param, boolean async) throws InterruptedException {
+        Collection<WorkerCmd> workerCmds = getInstance().getWorkerCmdMap().values();
+        ReturnHandler handler = new ReturnHandler(workerCmds.size());
+        for (WorkerCmd cmd:workerCmds) {
+            Call call = new Call(m, cmd, param, handler);
+            cmdQueue.put(call);
+        }
+        if (async) return null;
+
+        handler.waitForDone();
+        if (handler.hasError()) {
+            throw new SociaLiteException(handler.getErrorMsg());
+        }
+        return handler.getReturns();
+    }
+    public static void callWorkersAsync(Method m, Object[] param) throws InterruptedException {
+        callWorkers(m, param, true);
+    }
+	public static Object[] callWorkers(Method m, Object[] param) throws InterruptedException {
+		return callWorkers(m, param, false);
+    }
+
 	Config conf; // master node conf
 	Config workerConf; // worker node may have different config (e.g. cpu #)
 	QueryListener queryListener;
 	WorkerReqListener workerListener;
 	Map<InetAddress, WorkerCmd> workerMap;
+    Set<InetAddress> workersToRegister;
 	
 	private MasterNode(Config _conf) {
 		conf=_conf;
-		workerMap=Collections.synchronizedMap(new HashMap<InetAddress, WorkerCmd>());
+		workerMap=Collections.synchronizedMap(new LinkedHashMap<InetAddress, WorkerCmd>());
+        workersToRegister = Collections.synchronizedSet(Host.getAddrs(Config.getWorkers()));
+        monitorWorkerRegistration();
 	}
 			
 	public void serve() {
 		initWorkerReqListener();
 		initQueryListener();
 	}
-	
+
+    void monitorWorkerRegistration() {
+        class MonitorRegistration implements Runnable {
+            public void run() {
+                long wait = 5*1000;
+                long maxWait = 60*1000;
+                int maxTry=20;
+                for (int _try=0; _try<maxTry; _try++) {
+                    try { Thread.sleep(wait); }
+                    catch (InterruptedException e) { break; }
+                    if (workersToRegister.isEmpty()) { break; }
+                    else {
+                        InetAddress[] workers = workersToRegister.toArray(new InetAddress[]{});
+                        String msg = "Waiting for "+workers.length+" worker(s):";
+                        for (InetAddress a:workers) {
+                            msg += " "+a;
+                        }
+                        L.info(msg);
+
+                        if (wait<maxWait) wait=wait*2;
+                    }
+                }
+                if (!workersToRegister.isEmpty()) {
+                    L.warn("Stopped monitoring worker registrations.");
+                }
+            }
+        }
+        Thread monitor = new Thread(new MonitorRegistration());
+        monitor.start();
+    }
+    public synchronized void addRegisteredWorker(InetAddress workerAddr) {
+        workersToRegister.remove(workerAddr);
+        if (!workersToRegister.isEmpty())
+            return;
+
+        // We are in the middle of worker registration.
+        // This is asynchronous, so that the registration can immediately terminate.
+        new Thread(new Runnable() {
+            public void run() {
+                // this needs to be asynchronous
+                queryListener.init();
+                SRuntimeMaster runtime = SRuntimeMaster.getInst();
+                WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
+                try {
+                    Method init = WorkerCmd.class.getMethod("init", new Class[]{WorkerAddrMapW.class});
+                    MasterNode.callWorkers(init, new Object[]{new WorkerAddrMapW(addrMap)});
+                    L.info("All workers registered. Ready to run queries.");
+                } catch (InterruptedException e) {
+                } catch (Exception e) {
+                    L.fatal("Exception while running WorkerCmd.init():" + ExceptionUtils.getStackTrace(e));
+                }
+            }
+        }).start();
+    }
 	void initWorkerReqListener() {
 		workerListener = new WorkerReqListener(conf, this);
 		workerListener.start();
@@ -143,47 +280,14 @@ public class MasterNode {
 		}
 		return true;		
 	}
-	
-	public void beginSession() {
-		prepareEpoch();
-	}
-	public void prepareEpoch() {
-		int clusterSize = SRuntime.masterRt().getWorkerAddrMap().size();
-		workerListener.initIdleStat(clusterSize);
-		halted = false;
-	}
-	volatile boolean halted=false;
-	public void setHalted() { halted = true; }
-	public boolean isHalted() { return halted; }
-	
-	public boolean isClusterIdle() { return epochDone; }
-	volatile boolean epochDone=false;
-	public void setEpochDone() { epochDone=true; }
-	public void waitForEpochDone() {
-		while(!epochDone)
-			sleep(8);
-		epochDone=false;
-	}
-	void sleep(long millis) {
-		try { Thread.sleep(millis);
-		} catch(InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
+
 	public Map<InetAddress, WorkerCmd> getWorkerCmdMap() {
 		return workerMap;
 	}
-	public WorkerAddrMap makeWorkerAddrMap() { return makeWorkerAddrMap(-1); }
-	public WorkerAddrMap makeWorkerAddrMap(int workerNodeNum) {
-		// XXX: should return only the addresses of available workers!
-		
+	public WorkerAddrMap makeWorkerAddrMap() {
 		WorkerAddrMap machineMap=new WorkerAddrMap();
-		Set<InetAddress> workerAddrs;
-		workerAddrs=workerMap.keySet();
-		if (workerNodeNum<=0) {
-			workerNodeNum = workerAddrs.size();
-		}
+		Set<InetAddress> workerAddrs=workerMap.keySet();
+		int workerNodeNum = workerAddrs.size();
 		int addedWorker=0;
 		
 		for (InetAddress addr:workerAddrs) {
@@ -195,11 +299,6 @@ public class MasterNode {
 		return machineMap;
 	}
 	
-	
-	public void finish() {
-		
-	}
-
 	static void startMasterNode() {
 		MasterNode master = MasterNode.getInstance();		
 		master.serve();
@@ -209,5 +308,4 @@ public class MasterNode {
 	public static void main(String[] args) {
 		startMasterNode();
 	}
-
 }

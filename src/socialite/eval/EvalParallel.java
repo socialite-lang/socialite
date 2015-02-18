@@ -1,7 +1,5 @@
 package socialite.eval;
 
-import gnu.trove.list.array.TIntArrayList;
-
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +12,12 @@ import org.apache.commons.logging.LogFactory;
 
 import socialite.codegen.Epoch;
 import socialite.codegen.RuleComp;
+import socialite.dist.EvalRefCount;
 import socialite.engine.Config;
 import socialite.parser.Const;
+import socialite.parser.GeneratedT;
 import socialite.parser.Rule;
+import socialite.parser.Table;
 import socialite.parser.antlr.ClearTable;
 import socialite.parser.antlr.DropTable;
 import socialite.parser.antlr.TableStmt;
@@ -24,6 +25,8 @@ import socialite.resource.SRuntime;
 import socialite.resource.TableInstRegistry;
 import socialite.resource.TableSliceMap;
 import socialite.tables.TableInst;
+import socialite.tables.TableUtil;
+import socialite.util.Loader;
 import socialite.util.SociaLiteException;
 
 class InitThread extends Thread {
@@ -42,8 +45,9 @@ class InitThread extends Thread {
 			try {
 				waitForTask();
 				r.run();
+                if (interrupted()) { break; }
 				barrier();
-			} catch (InterruptedException ie) { 
+			} catch (InterruptedException ie) {
 			    break; 
 			}
 		}
@@ -95,8 +99,8 @@ public class EvalParallel extends Eval {
 
 	protected void startInitThreads() {
 		if (initThreads == null) {
-			initThreads = new InitThread[conf.getWorkerNum()-1];
-			barrier = new CyclicBarrier(conf.getWorkerNum());
+			initThreads = new InitThread[conf.getWorkerThreadNum()-1];
+			barrier = new CyclicBarrier(conf.getWorkerThreadNum());
 			for (int i = 0; i < initThreads.length; i++) {
 				initThreads[i] = new InitThread(barrier, "InitThread #" + i);
 				initThreads[i].start();
@@ -130,7 +134,7 @@ public class EvalParallel extends Eval {
 		if (tableArray==null) return;
 		
 		startInitThreads();
-		final int threadNum = conf.getWorkerNum();
+		final int threadNum = conf.getWorkerThreadNum();
 		class ParClear implements Runnable {
 			int id;
 			ParClear(int _id) { id=_id; }
@@ -191,6 +195,9 @@ public class EvalParallel extends Eval {
 			initTable(init, consts);
 			idx++;
 		}
+
+        EvalRefCount.getInst().setReady(epoch.id());
+        shutdownInitThreads();
 	}
 	
 	void initTable(Class<?> init, List<Object> consts) {
@@ -203,7 +210,7 @@ public class EvalParallel extends Eval {
 			throw new SociaLiteException(e);
 		}
 
-		int threadNum = conf.getWorkerNum();
+		int threadNum = conf.getWorkerThreadNum();
 		try {
 			for (int i=0; i<threadNum-1; i++) {
 				InitRunnable r=(InitRunnable)c.newInstance(i, tableRegistry, sliceMap);
@@ -219,79 +226,60 @@ public class EvalParallel extends Eval {
 		}
 	}
 	
-	
-	void initDone() {
-		manager.setEvalInitDone();
-	}
-
 	public void finish() {
-		shutdownInitThreads();
+		/*for (Table t:epoch.getNewTables()) {
+			if (t instanceof GeneratedT) {
+				Class klass = TableUtil.load(t.className());
+				TmpTablePool.clear(klass);
+			}
+		}*/
 		manager.cleanup();
 		runtime.cleanup(epoch);
 	}
 
 	@Override
 	public void run() {
-		//long start= System.currentTimeMillis();
 		init();
-		initDone();
-		
-		Iterator<RuleComp> it = epoch.topologicalOrder();
-		while (it.hasNext()) {
-			RuleComp rc = it.next();
-			if (rc.scc()) evalSCC(rc);
-			else eval(rc);
-		}
+        boolean issued = runReally();
+        if (issued) { waitForEpochDone(); }
 		finish();
-		//L.info("Eval time:"+(System.currentTimeMillis()-start)+"ms");
 	}
+    void waitForEpochDone() {
+        try {
+            runtime.waitForIdle(epoch.id());
+        } catch (InterruptedException e) { }
+    }
+    boolean runReally() {
+        boolean issued=false;
+        Iterator<RuleComp> it = epoch.topologicalOrder();
 
-	void evalSCC(RuleComp scc) {		
-		for (Rule r:scc.getStartingRules()) {
-			if (r != null) {
-				manager.addCmd(new EvalCommand(r.id()));
-			}
-		}
-		waitForFinish(scc);
-	}
+        EvalRefCount.getInst().inc(epoch.id());
+        while (it.hasNext()) {
+            RuleComp rc = it.next();
+            issued |= eval(rc);
+        }
+        EvalRefCount.getInst().dec(epoch.id());
+        return issued;
+    }
 
-	void eval(RuleComp rc) {
+	boolean eval(RuleComp rc) {
+        boolean issued=false;
 		for (Rule r:rc.getStartingRules()) {
-			if (r != null) {
-				manager.addCmd(new EvalCommand(r.id()));				
+            if (r != null) {
+                assert r.getEpochId()==epoch.id();
+                try { manager.addCmd(new EvalCommand(epoch.id(), r.id())); }
+                catch (InterruptedException e) { break; }
+                issued = true;
 			}
 		}
-		waitForFinish(rc);
-	}
-
-	private void waitForFinish(RuleComp rc) {
-		shutdownInitThreads();
-
-		TIntArrayList _rules = new TIntArrayList();
-		for (Rule r:rc.getRules())
-			_rules.add(r.id());
-		int rules[] = _rules.toArray();
-		
-		while (true) {
-			boolean stillRunning=Worker.isRunningAny(rules);
-			if (!stillRunning) break;			
-			sleep(16);
-		}
-	}
-
-	void sleep(long millis) {
-		try {
-			Thread.sleep(millis);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-	}
+        return issued;
+    }
 
 	public String toString() {
 		String str = "Eval-parallel:";
-		for (Rule r : epoch.getRules()) {
+		/*for (Rule r : epoch.getRules()) {
 			str += r;
-		}
+		}*/
 		return str;
 	}
 }

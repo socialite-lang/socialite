@@ -17,7 +17,6 @@ import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.parser.Variable;
 import socialite.resource.SRuntime;
-import socialite.resource.TableSliceMap;
 
 public class InitCodeGen {
 	static String initPackage="socialite.eval";
@@ -119,10 +118,9 @@ public class InitCodeGen {
 		
 		String beginIdx=null;
 		String endIdx=null;
+
 		
-		
-		
-		String mySliceNum = "(sliceMap.virtualSliceNum("+t.id()+","+dontCare.getAbsPos()+")/"+conf.getWorkerNum()+")";
+		String mySliceNum = "(sliceMap.virtualSliceNum("+t.id()+","+dontCare.getAbsPos()+")/"+conf.getWorkerThreadNum()+")";
 		String beginSlice = "(id*"+mySliceNum+")";
 		String endSlice = "((id+1)*"+mySliceNum+"-1)";
 		

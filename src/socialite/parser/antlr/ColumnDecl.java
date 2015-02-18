@@ -15,15 +15,13 @@ import socialite.util.SociaLiteException;
 
 public class ColumnDecl implements Externalizable {
 	private static final long serialVersionUID = 1;
-
-	public static int guessRowSize(List<ColumnDecl> colDecls) {		
-		assert colDecls!=null;
-		int size=0;
-		for (ColumnDecl d:colDecls) {
-			size += d.getTypeSize();
-		}
-		return size;
+	static final int refSize;
+	static {
+		String arch = System.getProperty("sun.arch.data.model");
+		if (arch.equals("32")) { refSize = 4; }
+		else { refSize = 8; }
 	}
+	
 	public static int guessRowSizeFromTypes(List<Class> types) {
 		assert types!=null;
 		int size=0;
@@ -40,19 +38,12 @@ public class ColumnDecl implements Externalizable {
 	}
 	public static int getTypeSize(Class klass) {
 		klass = MyType.javaType(klass);
-		if (klass.isArray()) {
-			return getTypeSize(klass.getComponentType())*8;
-		} else if (klass.isPrimitive()) {
+		if (klass.isPrimitive()) {
 			return getPrimTypeSize(klass);			
-		} else if (klass.equals(Utf8.class)) {
-			return 10; 
-		} else if (klass.equals(String.class)) {
-			return 16; 
-		} else {			
-			return 32; 
-		}	
+		} else {
+			return refSize;
+		}
 	}
-	
 	
 	Class type;
 	String name;
@@ -92,12 +83,6 @@ public class ColumnDecl implements Externalizable {
 		return pos;
 	}
 	
-	public void setOption(ColOpt _opt) {
-		// only called by TableDecl.flatten() 
-		// and RemoteHeadTable.genDecl() and RemoteBodyTable.genDecl()
-		opt = _opt;
-	}
-	
 	public ColOpt option() { return opt; }	
 	
 	public int getTypeSize() { return getTypeSize(type); }
@@ -117,12 +102,7 @@ public class ColumnDecl implements Externalizable {
 		if (opt==null) {
 			if (vd.opt!=null) return false;
 		} else {
-			if (opt instanceof ColSize) {
-				if (!(vd.opt instanceof ColSize))
-					return false;
-			} else {
-				if (!opt.equals(vd.opt)) return false;	
-			}			
+			if (!opt.equals(vd.opt)) return false;
 		}
 		return type.equals(vd.type) && pos == vd.pos;
 	}
@@ -130,15 +110,26 @@ public class ColumnDecl implements Externalizable {
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
-		type=(Class)in.readObject();
-		name=(String)in.readObject();
+        char[] _typename = new char[in.readInt()];
+        for (int i=0; i<_typename.length; i++)
+            _typename[i] = in.readChar();
+        Class objType = Class.forName(new String(_typename));
+		type=MyType.javaType(objType);
+
+        char[] _name = new char[in.readInt()];
+        for (int i=0; i<_name.length; i++)
+            _name[i] = in.readChar();
+		name=new String(_name);
 		pos=in.readInt();
 		opt=(ColOpt)in.readObject();
 	}
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(type);
-		out.writeObject(name);
+        String typeName = MyType.javaObjectType(type).getName();
+		out.writeInt(typeName.length());
+        out.writeChars(typeName);
+        out.writeInt(name.length());
+		out.writeChars(name);
 		out.writeInt(pos);
 		out.writeObject(opt);		
 	}

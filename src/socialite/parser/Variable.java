@@ -1,14 +1,16 @@
 package socialite.parser;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.HashMap;
 
 import socialite.util.InternalException;
 import socialite.util.SociaLiteException;
 
-public class Variable implements Serializable {
+public class Variable implements Param {
 	private static final long serialVersionUID = 1L;
-
 
 	static HashMap<String, Variable> varMapInARule=new HashMap<String, Variable>();
 	public static Variable getVariable(String name) {
@@ -33,6 +35,7 @@ public class Variable implements Serializable {
 	public Class type;	
 	public boolean dontCare=false;
 
+    public Variable() { }
 	public Variable(String _name) {
 		if (_name.equals("_")) { // don't care variable
 			_name = "_$"+(varCountInARule++);
@@ -89,11 +92,36 @@ public class Variable implements Serializable {
 		Variable v = (Variable) o;
 		if (name.equals(v.name) && type.equals(v.type))
 			return true;
-		return false;
-	}
+            return false;
+        }
 
-	public String description() {
-		int id=System.identityHashCode(this);
-		return name + "@"+id+":" + type.getSimpleName();
+        public String description() {
+            int id=System.identityHashCode(this);
+            return name + "@"+id+":" + type.getSimpleName();
+        }
+
+        @Override
+        public void readExternal(ObjectInput in) throws IOException,
+                ClassNotFoundException {
+            char[] _name = new char[in.readInt()];
+		for (int i=0; i<_name.length; i++)
+			_name[i] = in.readChar();
+		name = new String(_name);
+
+		char[] _typename = new char[in.readInt()];
+		for (int i=0; i<_typename.length; i++)
+			_typename[i] = in.readChar();
+		Class objtype = Class.forName(new String(_typename));
+        type = MyType.javaType(objtype);
+		dontCare = in.readBoolean();
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(name.length());
+		out.writeChars(name);
+		String typeName = MyType.javaObjectType(type).getName();
+		out.writeInt(typeName.length());
+		out.writeChars(typeName);
+		out.writeBoolean(dontCare);
 	}
 }

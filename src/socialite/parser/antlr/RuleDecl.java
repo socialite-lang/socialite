@@ -1,27 +1,33 @@
 package socialite.parser.antlr;
 
-
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.List;
 import java.util.Set;
 
+import socialite.collection.SArrayList;
+import socialite.parser.Literal;
 import socialite.parser.Const;
 import socialite.parser.Function;
 import socialite.parser.Predicate;
 import socialite.parser.Variable;
 import socialite.type.Utf8;
 import socialite.util.Assert;
+import socialite.collection.SArrayList;
 
-public class RuleDecl implements Serializable {
+public class RuleDecl implements Externalizable {
 	private static final long serialVersionUID = 1;
 	
 	public Predicate head;
-	public List<?> body;
+	public SArrayList<Literal> body;
 	
 	boolean simpleUpdate=false;
-	public RuleDecl(Predicate _head, List<?> _body) {
+	public RuleDecl() {}
+	public RuleDecl(Predicate _head, List<Literal> _body) {
 		head = _head;
-		body = _body;
+		body = new SArrayList<Literal>(_body);
 	}
 	
 	public String toString() {
@@ -52,5 +58,17 @@ public class RuleDecl implements Serializable {
 		} else {
 			Assert.die("Unsupported annotation:"+ann);
 		}
+	}
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		head = (Predicate)in.readObject();
+		body = new SArrayList<Literal>(0);
+		body.readExternal(in);
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(head);
+		body.writeExternal(out);
 	}
 }

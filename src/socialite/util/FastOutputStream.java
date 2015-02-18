@@ -7,17 +7,17 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
 import socialite.resource.SRuntime;
-import socialite.tables.TableInst;
+import socialite.resource.SRuntimeWorker;
+import socialite.tables.TmpTableInst;
 
 public class FastOutputStream extends ObjectOutputStream {
 	OutputStream out;
     FastClassLookup lookup;
-    boolean usePool=true;
    
 	public FastOutputStream(OutputStream _out) throws IOException {
 		super();
 		out=_out;
-		lookup=SRuntime.workerRt().getClassLookup();
+		lookup= new FastClassLookup();
 	}
 	
 	@Override
@@ -73,8 +73,8 @@ public class FastOutputStream extends ObjectOutputStream {
 			writeInt(className.length());
 			writeClassName(className, obj.getClass());
 						
-			if (TableInst.class.isAssignableFrom(obj.getClass())) {				
-				TableInst inst = (TableInst)obj;
+			if (TmpTableInst.class.isAssignableFrom(obj.getClass())) {				
+				TmpTableInst inst = (TmpTableInst)obj;
 				writeTableInstSize(inst);	
 			}
 
@@ -93,11 +93,9 @@ public class FastOutputStream extends ObjectOutputStream {
 			
 	}
 	
-	void writeTableInstSize(TableInst inst) throws IOException {
+	void writeTableInstSize(TmpTableInst inst) throws IOException {
 		char size;
-		if (!usePool) size=4;
-		else if (inst.isTooSmall()) size=0;
-		else if (inst.isSmall()) size=1;
+		if (inst.isSmall()) size=1;
 		else size=2;		
 
 		writeChar(size);	
@@ -182,7 +180,7 @@ public class FastOutputStream extends ObjectOutputStream {
 			}
 		}
 		boolean tableArray=false;
-		if (TableInst.class.isAssignableFrom(itemType))
+		if (TmpTableInst.class.isAssignableFrom(itemType))
 			tableArray=true;
 
 		writeInt(1+className.length());
@@ -197,7 +195,7 @@ public class FastOutputStream extends ObjectOutputStream {
 				assert array[i] instanceof Externalizable ||
 						array[i] instanceof String;
 				if (tableArray) {
-					TableInst inst = (TableInst)array[i];
+					TmpTableInst inst = (TmpTableInst)array[i];
 					writeTableInstSize(inst);
 				}				
 				

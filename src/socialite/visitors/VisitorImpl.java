@@ -1,5 +1,8 @@
 package socialite.visitors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import socialite.eval.Worker;
 import socialite.tables.TableInst;
 import socialite.util.Assert;
@@ -9,6 +12,8 @@ import socialite.util.Assert;
  * Do not edit manually, unless you know what you're doing.
  */
 public abstract class VisitorImpl implements IVisitor {
+	public static final Log L = LogFactory.getLog(VisitorImpl.class);
+	
 	protected Worker worker=null;
 
 	private boolean priority=false;	
@@ -19,8 +24,9 @@ public abstract class VisitorImpl implements IVisitor {
 	public Worker getWorker() { return worker; }	
 	public int getWorkerId() { return worker.id(); }	
 
-	public void run() { Assert.not_implemented(); }	
-	public int getRuleId() { return -1; }	
+	public void run() { Assert.not_implemented(); }
+    public abstract int getEpochId();
+	public abstract int getRuleId();
 	public TableInst[] getDeltaTables() { return null; }
 	public TableInst[] getPrivateTable() { return null; }
 

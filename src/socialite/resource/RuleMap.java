@@ -5,21 +5,23 @@ import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.List;
 
 import socialite.parser.Rule;
 import socialite.util.Assert;
 
-// A map from a rule id A to delta rule ids which are dependent on the rule A 
-public class RuleMap implements Serializable {
+// Rule dependency map.
+public class RuleMap implements Externalizable {
 	private static final long serialVersionUID = 1;
 	
 	TIntObjectHashMap<TIntArrayList> ruleToDeltaRules1;
 	TIntObjectHashMap<TIntArrayList> ruleToDeltaRulesRest;
 	TIntObjectHashMap<TIntArrayList> ruleToDeltaRules;
 	
-	TIntIntHashMap privDepMap;
 	TIntIntHashMap remoteHeadDepMap;
 	TIntObjectHashMap<TIntArrayList> remoteBodyDepMap;
 	
@@ -43,7 +45,6 @@ public class RuleMap implements Serializable {
 		ruleToDeltaRulesRest = new TIntObjectHashMap<TIntArrayList>(8);
 		ruleToDeltaRules = new TIntObjectHashMap<TIntArrayList>(8);
 		
-		privDepMap = new TIntIntHashMap(8);
 		remoteHeadDepMap = new TIntIntHashMap(8);
 		remoteBodyDepMap = new TIntObjectHashMap<TIntArrayList>(8);
 	}
@@ -51,7 +52,6 @@ public class RuleMap implements Serializable {
 		ruleToDeltaRules1.putAll(map.ruleToDeltaRules1);
 		ruleToDeltaRulesRest.putAll(map.ruleToDeltaRulesRest);
 		
-		privDepMap.putAll(map.privDepMap);
 		remoteHeadDepMap.putAll(map.remoteHeadDepMap);
 		remoteBodyDepMap.putAll(map.remoteBodyDepMap);
 	}
@@ -81,15 +81,6 @@ public class RuleMap implements Serializable {
 		return remoteHeadDepMap.get(from);
 	}
 	
-	public void setPrivDep(int from, int to) {
-		assert !privDepMap.containsKey(from);
-		privDepMap.put(from, to);
-	}	
-	public int getPrivDepRule(int from) {		
-		assert privDepMap.containsKey(from);
-		return privDepMap.get(from);
-	}
-	
 	// if the rule(ruleId) triggers the delta rule(deltaRuleId), 
 	// add it to this rule map.
 	// For instance, say we have rule Foo(a,b) :- Bar(a,b). (rule1) and rule Zoo(a,b) :- Foo(a,b). (rule2)
@@ -112,11 +103,6 @@ public class RuleMap implements Serializable {
 			ilist.add(deltaRuleId);
 	}
 	
-	// returns the thread-local rule that is dependent on the given rule
-	public int getThreadLocalRule(int ruleId) {
-		return privDepMap.get(ruleId);
-	}
-	
 	// returns delta rules related to the given rule id
 	// where the delta tables are used in first predicate in the rule
 	public TIntArrayList getDeltaRules1(int ruleId) {
@@ -130,5 +116,55 @@ public class RuleMap implements Serializable {
 	
 	public TIntArrayList getDeltaRules(int ruleId) {
 		return ruleToDeltaRules.get(ruleId);
+	}
+
+	@Override
+        public void readExternal(ObjectInput in) throws IOException,
+                        ClassNotFoundException {
+
+		ruleToDeltaRules1 = new TIntObjectHashMap<TIntArrayList>(0);
+        if (in.readByte()==1) ruleToDeltaRules1.readExternal(in);
+		ruleToDeltaRulesRest = new TIntObjectHashMap<TIntArrayList>(0);
+        if (in.readByte()==1) ruleToDeltaRulesRest.readExternal(in);
+		ruleToDeltaRules = new TIntObjectHashMap<TIntArrayList>(0);
+        if (in.readByte()==1) ruleToDeltaRules.readExternal(in);
+		remoteHeadDepMap = new TIntIntHashMap(0);
+        if (in.readByte()==1) remoteHeadDepMap.readExternal(in);
+		remoteBodyDepMap = new TIntObjectHashMap(0);
+        if (in.readByte()==1) remoteBodyDepMap.readExternal(in);
+	}
+
+	@Override
+        public void writeExternal(ObjectOutput out) throws IOException {
+        if (ruleToDeltaRules1.isEmpty()) {
+            out.writeByte(0);
+        } else {
+            out.writeByte(1);
+            ruleToDeltaRules1.writeExternal(out);
+        }
+        if (ruleToDeltaRulesRest.isEmpty()) {
+            out.writeByte(0);
+        } else {
+            out.writeByte(1);
+            ruleToDeltaRulesRest.writeExternal(out);
+        }
+        if (ruleToDeltaRules.isEmpty()) {
+            out.writeByte(0);
+        } else {
+            out.writeByte(1);
+            ruleToDeltaRules.writeExternal(out);
+        }
+        if (remoteHeadDepMap.isEmpty()) {
+            out.writeByte(0);
+        } else {
+            out.writeByte(1);
+            remoteHeadDepMap.writeExternal(out);
+        }
+        if (remoteBodyDepMap.isEmpty()) {
+            out.writeByte(0);
+        } else {
+            out.writeByte(1);
+            remoteBodyDepMap.writeExternal(out);
+        }
 	}
 }

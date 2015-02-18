@@ -15,24 +15,7 @@ public class PathTo {
 	public static final Log L=LogFactory.getLog(PathTo.class);
 
 	static String sep=File.separator;
-	static String distHome;
-	static synchronized void distHomeInit() {
-		Configuration hConf=new Configuration();
-		try {
-			FileSystem hdfs=FileSystem.get(hConf);
-			Path home=hdfs.getHomeDirectory();
-			distHome = home.toString();
-			hdfs.close();
-		} catch (IOException e) {
-			L.error("Cannot access HDFS. Check the hadoop configuration:"+e);
-		}
-	}
-	
-	static String defaultDistCwd=null;
-	public static String defaultDistCwd() {
-		if (distHome==null) distHomeInit();
-		return distHome + Path.SEPARATOR+"tmp";
-	}
+
 	static String curDir=null;
 
 	// workspace

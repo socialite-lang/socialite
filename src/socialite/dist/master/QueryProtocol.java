@@ -14,13 +14,6 @@ import socialite.util.SociaLiteException;
 
 public interface QueryProtocol extends VersionedProtocol {
 	public static final long versionID = 1L;
-
-	public BooleanWritable beginSession(Text workspacePath);
-	// this is for benchmarking
-	public BooleanWritable beginSession(Text workspacePath, IntWritable workerNodeNum);
-	public BooleanWritable storeWorkspace(Text workspacePath);
-	public BooleanWritable storeWorkspace();
-	public BooleanWritable endSession();
 	
 	public void addPyFunctions(BytesWritable classFilesBlob, BytesWritable bytesPyfuncs) throws RemoteException;
 	public void addClassFiles(BytesWritable classFilesBlob) throws RemoteException;
@@ -32,11 +25,12 @@ public interface QueryProtocol extends VersionedProtocol {
 	
 	public BytesWritable status();
 	public BytesWritable status(IntWritable verbose);
+
 	public BooleanWritable addToClassPath(Text hdfsPath);
 	public BooleanWritable removeFromClassPath(Text hdfsPath);
-	
+
 	// for debugging
 	public void runGc();
-	public void showTableMap();
+	public void info();
 	void setVerbose(BooleanWritable verbose);
 }

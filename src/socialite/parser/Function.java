@@ -41,13 +41,14 @@ import socialite.util.IdFactory;
 import socialite.util.InternalException;
 import socialite.util.ReflectionUtil;
 import socialite.util.SociaLiteException;
+import socialite.collection.SArrayList;
 
-public class Function implements Externalizable {
+public class Function implements Param {
 	static final long serialVersionUID = 1;
 	
 	protected String name;
-	protected List<Variable> returns;	
-	protected List<?> args;
+	protected SArrayList<Variable> returns;	
+	protected SArrayList<Param> args;
 
 	boolean isArrayType=false;
 	boolean isPrimArrayType=false;
@@ -58,12 +59,13 @@ public class Function implements Externalizable {
 	transient PyFunction pyfunc;
 		
 	public Function() { }
-	public Function(String _name, List<?> _args) {
+	public Function(String _name, List<Param> _args) {
 		if (_name.indexOf('.')>=0) name = _name; 
 		else name = "Builtin."+_name;
-		setArgs(_args);
-		if (getArgs() == null)
-			setArgs(new ArrayList<Object>());
+
+		if (_args==null) args = new SArrayList<Param>(0);
+		else args = new SArrayList<Param>(_args);
+
 		returns = null;
 	}
 	
@@ -103,12 +105,12 @@ public class Function implements Externalizable {
 	@SuppressWarnings("unchecked")
 	public void setReturnVars(Object ret) throws InternalException {
 		assert ret instanceof Variable || ret instanceof List;
-		List<Variable> vars;
+		SArrayList<Variable> vars;
 		if (ret instanceof Variable) {
-			vars = new ArrayList<Variable>();
+			vars = new SArrayList<Variable>();
 			vars.add((Variable) ret);
 		} else {
-			vars = (List<Variable>) ret;
+			vars = new SArrayList<Variable>((List<Variable>)ret);
 		}
 		assert returns == null;
 		for (Object o : vars) {
@@ -505,16 +507,13 @@ public class Function implements Externalizable {
 		}
 		return set;
 	}
-	public void setReturns(List<Variable> returns) {
-		this.returns = returns;
-	}
 	public List<Variable> getReturns() {
 		return returns;
 	}
-	public void setArgs(List<?> args) {
+	public void setArgs(SArrayList<Param> args) {
 		this.args = args;
 	}
-	public List<?> getArgs() {
+	public SArrayList<Param> getArgs() {
 		return args;
 	}
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -526,8 +525,12 @@ public class Function implements Externalizable {
 		for (int i=0; i<len; i++) 
 			_name[i] = in.readChar();
 		name = new String(_name);
-		args = (List) in.readObject();
-		returns = (List<Variable>) in.readObject();
+		args = new SArrayList<Param>(0);
+		args.readExternal(in);
+		returns = new SArrayList<Variable>(0);
+		returns.readExternal(in);
+		//args = (List) in.readObject();
+		//returns = (List<Variable>) in.readObject();
 		pyfuncIdx = in.readInt();
 		try { load(); } 
 		catch (InternalException e) { throw new IOException(e); }		
@@ -536,8 +539,10 @@ public class Function implements Externalizable {
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeInt(name.length());
 		out.writeChars(name);
-		out.writeObject(args);
-		out.writeObject(returns);
+		args.writeExternal(out);
+		returns.writeExternal(out);
+		//out.writeObject(args);
+		//out.writeObject(returns);
 		out.writeInt(pyfuncIdx);
 	}
 	public String name() {

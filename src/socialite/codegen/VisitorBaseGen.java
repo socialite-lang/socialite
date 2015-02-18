@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -96,8 +97,8 @@ public class VisitorBaseGen {
 		}
 	}
 	
-	public static List<Class<?>> generate(Config conf, List<Table> tables) {
-		List<Class<?>> classes = new ArrayList<Class<?>>();
+	public static LinkedHashMap<String,byte[]> generate(Config conf, List<Table> tables) {
+		LinkedHashMap<String,byte[]> generatedClasses = new LinkedHashMap<String,byte[]>();
 		for (Table t:tables) {
 			if (t.numColumns()<=3) continue;
 		
@@ -114,7 +115,7 @@ public class VisitorBaseGen {
 			}		
 			if (decls.isEmpty()) continue;
 			
-			Compiler c = new Compiler(conf);			
+			Compiler c = new Compiler(conf.isVerbose());
 			VisitorBaseGen baseGen = new VisitorBaseGen(false);
 			String fullname = VisitorCodeGen.visitorPackage+"."+baseGen.name();
 			t.setVisitorInterface(fullname);
@@ -125,10 +126,9 @@ public class VisitorBaseGen {
 				String msg="Cannot compile "+fullname+".class";			
 				throw new SociaLiteException(msg);			
 			}
-			Class<?> klass=Loader.forName(fullname);
-			classes.add(klass);
+			generatedClasses.putAll(c.getCompiledClasses());
 		}
-		return classes;
+		return generatedClasses;
 	}	
 	
 	static boolean exists(Column[] columns, boolean last) {
@@ -144,7 +144,7 @@ public class VisitorBaseGen {
 		gen();
 	}
 	public static void gen() {
-		Compiler c = new Compiler(Config.seq());			
+		Compiler c = new Compiler();
 		//VisitorBaseGen baseGen = new VisitorBaseGen(true);
 		VisitorBaseGen baseGen = new VisitorBaseGen(false);
 		

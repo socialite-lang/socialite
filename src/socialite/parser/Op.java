@@ -1,7 +1,7 @@
 package socialite.parser;
 
 
-import java.io.Serializable;
+import java.io.Externalizable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +12,7 @@ import org.stringtemplate.v4.ST;
 
 import socialite.util.Assert;
 
-public abstract class Op implements Serializable {
+public abstract class Op implements Externalizable {
 	public abstract ST codegen();
 	@SuppressWarnings("rawtypes")
 	public void getTypes(Collection<Class> types) { Assert.not_implemented(); }

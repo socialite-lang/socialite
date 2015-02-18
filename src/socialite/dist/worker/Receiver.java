@@ -4,6 +4,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import socialite.dist.EvalRefCount;
 import socialite.dist.msg.WorkerMessage;
 import socialite.eval.Command;
 import socialite.eval.Manager;
@@ -24,10 +25,6 @@ public class Receiver implements Runnable {
 		connPool = _connPool;
 		cmdListener = _cmd;
 	}
-	
-	void waitForFastClassLookupInit() {
-		manager.waitForEvalInit();
-	}
 	@Override
 	public void run() {
 		while(true) {
@@ -35,12 +32,12 @@ public class Receiver implements Runnable {
 			WorkerMessage msg=null;
 			try {
 				t = recvQ.reserve();
-				waitForFastClassLookupInit();
 				msg=connPool.recv(t.nodeAddr, t.selectedChannel);
 				if (msg==null) continue;
 				Command cmd=msg.get();	
 				cmd.setReceived();
 				manager.addCmd(cmd);
+                EvalRefCount.getInst().dec(msg.getEpochId());
 			} catch (InterruptedException ie) {
 				break;
 			} catch (Exception e) {

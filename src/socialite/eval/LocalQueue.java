@@ -1,24 +1,19 @@
 package socialite.eval;
 
 
-import gnu.trove.TIntCollection;
-import gnu.trove.iterator.TIntIterator;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.map.hash.TIntIntHashMap;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import socialite.dist.EvalRefCount;
 import socialite.tables.TableInst;
 import socialite.util.ArrayQueue;
-import socialite.util.Assert;
 
-
+/*
+@Deprecated
 public class LocalQueue {
 	static final int maxLevel=4;
 	static { assert maxLevel>=2: "maxLevel should be larger than 2"; }
 	
-	TIntIntHashMap issuedRuleCounts;
 	ArrayQueue<Task> recvQ;
 	List<ArrayQueue<Task>> queues;
 	int capacity;
@@ -34,7 +29,6 @@ public class LocalQueue {
 		recvQ = new ArrayQueue<Task>(256);
 		reservedTasks = new ArrayList<Task>(4);
 		size = 0;
-		issuedRuleCounts = new TIntIntHashMap(32);
 		deltaStepWindow = new DeltaStepWindow(workerid);
 		initQueues();
 	}
@@ -55,14 +49,7 @@ public class LocalQueue {
 		if (level==-1) return recvQ.size();
 		return queues.get(level).size();
 	}
-	
-	public synchronized boolean containsAny(int[] rules) {
-		for (int rule:rules) {
-			if (issuedRuleCounts.containsKey(rule))
-				return true;
-		}
-		return false;		
-	}
+
 	public synchronized boolean canRotate() {
 		if (!deltaStepWindow.isEnabled()) return false;
 		if (size==0) return false;		
@@ -87,53 +74,46 @@ public class LocalQueue {
 	}
 	
 //	@Override
-	public synchronized void add(int priority, Task task) {
-		if (priority >= maxLevel) priority = maxLevel-1;
-		
-		ArrayQueue<Task> q;
-		if (priority==-1) q = recvQ;
-		else q = queues.get(priority);
-		task.setPriority(priority);
-		q.add(task);
-		addToIssuedRules(task.getRuleId());		
-		size++;
-	}
-	
-	void removeFromIssuedRules(int rule) {
-		if (!issuedRuleCounts.containsKey(rule)) 
-			return;
-		
-		int count = issuedRuleCounts.get(rule);
-		if (count==1) {
-			issuedRuleCounts.remove(rule);
-		} else {
-			assert count > 1:"Rule #"+rule+" is issued, not not in isseudRules";			
-			issuedRuleCounts.put(rule, count-1);
-		}
-	}
-	void addToIssuedRules(int rule) {		
-		if (!issuedRuleCounts.containsKey(rule)) {
-			issuedRuleCounts.put(rule, 1);
-		} else {
-			int count = issuedRuleCounts.get(rule);
-			issuedRuleCounts.put(rule, count+1);
-		}
+	public void add(int priority, Task task) {
+        EvalRefCount.getInst().inc(task.getEpochId());
+
+        synchronized(this) {
+            if (priority >= maxLevel) priority = maxLevel - 1;
+
+            ArrayQueue<Task> q;
+            if (priority == -1) q = recvQ;
+            else q = queues.get(priority);
+            task.setPriority(priority);
+            q.add(task);
+            size++;
+        }
 	}
 
+
 //	@Override
-	public synchronized void addAll(int priority, Task[] tasks) {
-		if (priority >= maxLevel) priority = maxLevel-1;
-		ArrayQueue<Task> q;
-		if (priority==-1) q = recvQ;
-		else q = queues.get(priority);
-		
-		for (Task t:tasks) {
-			if (t==null) continue;
-			t.setPriority(priority);
-			q.add(t);
-			addToIssuedRules(t.getRuleId());
-			size++;
-		}
+	public void addAll(int priority, Task[] tasks) {
+        boolean first=true;
+        for (Task t : tasks) {
+            if (t == null) continue;
+            EvalRefCount.getInst().inc(t.getEpochId());
+            if (!first) {
+                System.err.println("LocalQueue adding:"+t.getEpochId());
+                first=false;
+            }
+        }
+        synchronized (this) {
+            if (priority >= maxLevel) priority = maxLevel - 1;
+            ArrayQueue<Task> q;
+            if (priority == -1) q = recvQ;
+            else q = queues.get(priority);
+
+            for (Task t : tasks) {
+                if (t == null) continue;
+                t.setPriority(priority);
+                q.add(t);
+                size++;
+            }
+        }
 	}
 	//@Override
 	public synchronized void addAll(Task[] tasks) {
@@ -146,7 +126,6 @@ public class LocalQueue {
 			if (q!=null)
 				q.clear();
 		}
-		issuedRuleCounts.clear();
 		size = reservedTasks.size();
 	}
 	
@@ -165,7 +144,18 @@ public class LocalQueue {
 		return size <= 1;
 	}
 
-	public void printStat() {
+	public synchronized void print() {
+		for (int i=0; i<maxLevel; i++) {
+	        ArrayQueue<Task> q = queues.get(i);
+            if (q.size()>0) {
+                Task t= q.peek();
+                if (t!=null) {
+                    System.out.println("Queue["+i+"]:"+t);
+                }
+            }
+		}
+    }
+	public synchronized void printStat() {
 		System.out.println("    recvQ.size:"+recvQ.size());
 		
 		for (int i=0; i<maxLevel; i++) {
@@ -174,12 +164,14 @@ public class LocalQueue {
 		
 		System.out.println("    total size:"+size);
 	}
-	public synchronized void pop(Task task) {
-		boolean removed=reservedTasks.remove(task);		
-		assert removed;
-		removeFromIssuedRules(task.getRuleId());
-		size--;		
-		assert size>=0;
+	public void pop(Task task) {
+        synchronized (this) {
+            boolean removed = reservedTasks.remove(task);
+            assert removed;
+            size--;
+            assert size >= 0;
+        }
+        EvalRefCount.getInst().dec(task.getEpochId());
 	}		
 	public synchronized Task reserveQuick(int level) {
 		if (size==0) return null;		
@@ -206,7 +198,7 @@ public class LocalQueue {
 		assert deltaT!=null;		
 		if (!deltaT.isAccessed()) 
 			return;
-		TmpTablePool.invalidate(workerid, deltaT, priority);
+		//TmpTablePool.invalidate(workerid, deltaT, priority);
 	}
 	
 	public int likelySizeAt(int level) {
@@ -222,16 +214,15 @@ public class LocalQueue {
 	
 	public synchronized boolean steal(LocalQueue thief, int priorityLevel) {
 		if (size==0) return false;
+        //if (true) return false;
 		
 		Task t;
 		t = recvQ.peek();
 		if (t!=null && t.safeToSteal()) {
 			t = recvQ.get();
-			removeFromIssuedRules(t.getRuleId());
 			size--;
 			synchronized(thief) {
 				thief.recvQ.add(t);
-				thief.addToIssuedRules(t.getRuleId());
 				thief.size++;
 			}
 			return true;
@@ -243,16 +234,15 @@ public class LocalQueue {
 		t = q.peek();
 		if (!t.safeToSteal()) return false;
 	
-		removeFromIssuedRules(t.getRuleId());
 		size--;
 		t = q.get();
 		assert t!=null;
 		synchronized(thief) {
 			thief.queues.get(priorityLevel).add(t);
-			thief.addToIssuedRules(t.getRuleId());
 			thief.size++;
 		}
 		
 		return true;
 	}
 }
+*/

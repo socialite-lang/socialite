@@ -1,4 +1,4 @@
-evalClass(name, tableVars, tableDecls, tableInsts, tableRegs, tableInit, tableStmts, evalBaseClass) ::= <<
+evalClass(name, tableVars, tableDecls, tableInsts, tableRegs, tableInit, tableStmts, tableUnregs, evalBaseClass) ::= <<
 package socialite.eval;
 
 import java.lang.reflect.Constructor;

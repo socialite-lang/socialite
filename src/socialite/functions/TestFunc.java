@@ -1,6 +1,7 @@
 package socialite.functions;
 
 import socialite.collection.ArrayList;
+import socialite.util.SociaLiteException;
 
 import java.util.Iterator;
 
@@ -20,5 +21,13 @@ public class TestFunc {
 		ArrayList<int[]> list = new ArrayList<int[]>();
 		list.add(x);
 		return list.iterator();
+	}
+
+    public static int raiseError(String s) {
+        throw new SociaLiteException(s);
+    }
+	public static int print(String s) {
+		System.out.println(s);
+		return 1;
 	}
 }

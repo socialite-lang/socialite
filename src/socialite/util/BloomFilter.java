@@ -143,7 +143,11 @@ public class BloomFilter implements Externalizable {
 		long h1=hash1(val);
 		for (int i=0; i<k; i++) {
 			long x=h0+i*h1;
-			if (x<0) x = -x;
+			if (x<0) {
+				x = -x;
+				if (x==Long.MIN_VALUE)
+					x = 0;
+			}
 			h[i] = (int)(x%getBitSetSize());
 		}
 		return h;

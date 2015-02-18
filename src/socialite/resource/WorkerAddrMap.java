@@ -71,8 +71,8 @@ public class WorkerAddrMap implements Serializable {
 					break;
 				}
 			}
-			if (SRuntime.masterRt()==null)
-				assert(myIdx!=-1); // if it's not the master node, it must have a slave node index
+			if (SRuntimeMaster.getInst()==null)
+				assert(myIdx!=-1); // if it's worker node, it must have a node index
 		}
 		return myIdx;
 	}

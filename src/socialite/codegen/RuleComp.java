@@ -1,16 +1,18 @@
 package socialite.codegen;
 
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import socialite.parser.DeltaRule;
+import socialite.collection.SArrayList;
 import socialite.parser.Rule;
 import socialite.util.Assert;
 
@@ -19,7 +21,7 @@ import socialite.util.Assert;
 //              2. a single rule or
 //              3. rules that are pipelined from a rule (that is also included)
 
-public class RuleComp implements Serializable {
+public class RuleComp implements Externalizable {
 	private static final long serialVersionUID = 1;
 	
 	static Map<Rule, RuleComp> ruleToRuleComp = null;
@@ -37,34 +39,32 @@ public class RuleComp implements Serializable {
 		}
 		return result;
 	}
-	
+
+    transient List<RuleComp> deps, usedBy;
+    transient Rule pipeliningFrom = null;
+
 	Epoch epoch;
-	List<Rule> rules;
-	List<Rule> startingRules = new ArrayList<Rule>();	
-	List<RuleComp> deps, usedBy;
-	Rule pipeliningFrom = null;
-	
+    int epochId;
+	SArrayList<Rule> rules;
+	SArrayList<Rule> startingRules = new SArrayList<Rule>();
 	boolean scc;
 	boolean disabled=false;
+
+	public RuleComp() {
+		rules = new SArrayList<Rule>(0);
+		startingRules = new SArrayList<Rule>(0);
+	}
 	public RuleComp(List<Rule> _rules, boolean _scc) {
-		rules = _rules;
-		//int min=rules.get(0).id();
+		rules = new SArrayList<Rule>(_rules);
 		for (Rule r:rules) {
 			assert !ruleToRuleComp.containsKey(r);
 			ruleToRuleComp.put(r, this);
-			//min = Math.min(min, r.id());
 		}
-		//id = min;
 		scc = _scc;
 		if (rules.size()==1) addStartingRule(rules.get(0));
-	
-		/*Collections.sort(rules, new Comparator<Rule>() {
-			public int compare(Rule r1, Rule r2) {				
-				return r2.id() - r1.id();
-			}});*/
 	}
 	public RuleComp(Rule r, boolean _scc) {
-		rules = new ArrayList<Rule>();
+		rules = new SArrayList<Rule>();
 		rules.add(r);
 		scc = _scc;
 		if (!scc) addStartingRule(rules.get(0));
@@ -85,12 +85,13 @@ public class RuleComp implements Serializable {
 	
 	public void setEpoch(Epoch _e) {
 		epoch = _e;
+        epochId = epoch.id();
 		for (Rule r:rules) r.setEpoch(epoch);				
 	}	
-	public Epoch stratum() { return epoch; }
+	public Epoch epoch() { return epoch; }
 	
 	public void recomputeDeps() {
-		// recompute dependency considering the stratum.
+		// recompute dependency considering the epoch.
 		Assert.not_null(epoch);
 		if (deps!=null) filterByEpoch(deps);
 		if (usedBy!=null) filterByEpoch(usedBy);
@@ -99,11 +100,11 @@ public class RuleComp implements Serializable {
 	}
 	
 	void filterByEpoch(List<RuleComp> ruleComps) {// ruleComps: deps or UsedBy
-		Assert.not_null(stratum());
+		Assert.not_null(epoch());
 		Iterator<RuleComp> it = ruleComps.iterator();
 		while(it.hasNext()) {
 			RuleComp rc=it.next();
-			if (!stratum().equals(rc.stratum()))
+			if (!epoch().equals(rc.epoch()))
 				it.remove();
 		}
 	}
@@ -138,20 +139,16 @@ public class RuleComp implements Serializable {
 			if (!usedBy.contains(rc)) usedBy.add(rc);
 		}
 	}
-	
-	public boolean hasAggregate() {
-		for (Rule r:rules)
-			if (r.getHead().hasFunctionParam()) return true;
-		
-		return false;
-	}
-		
+
 	public void removeAllStartingRule() {
 		startingRules.clear();
 	}
 	public void addStartingRule(Rule r) {
 		if (r.isSimpleArrayInit()) return;
 		startingRules.add(r);
+        if (epoch!=null) {
+            r.setEpoch(epoch);
+        }
 	}
 	public List<Rule> getStartingRules() {
 		return startingRules;
@@ -175,5 +172,32 @@ public class RuleComp implements Serializable {
 		for (Rule r:rules) s += r +",";
 		s+="}";
 		return s;
+	}
+
+    static Rule getRule(List<Rule> rules, int rid) {
+        for (Rule r:rules) {
+            if (r.id()==rid)
+                return r;
+        }
+        return null;
+    }
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+        epochId = in.readInt();
+		rules = new SArrayList<Rule>(0);
+		rules.readExternal(in);
+		startingRules = new SArrayList<Rule>(0);
+		startingRules.readExternal(in);
+		scc = in.readBoolean();
+		disabled = in.readBoolean();
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(epochId);
+		rules.writeExternal(out);
+        startingRules.writeExternal(out);
+		out.writeBoolean(scc);
+		out.writeBoolean(disabled);
 	}
 }

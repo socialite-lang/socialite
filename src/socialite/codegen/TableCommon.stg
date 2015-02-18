@@ -59,6 +59,8 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.TIntCollection;
 import gnu.trove.TDoubleCollection;
 import socialite.eval.Manager;
+import socialite.visitors.IntVisitor;
+import socialite.visitors.ObjectVisitor;
 import socialite.visitors.VisitorImpl;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
@@ -73,10 +75,13 @@ import socialite.collection.SArrayList;
 import socialite.collection.SCollection;
 import socialite.collection.SCollectionTmpl;
 import socialite.collection.TupleVisitor;
-
 import socialite.eval.TmpTablePool;
-
+import socialite.util.concurrent.ConcurrentSoftQueue;
+import socialite.util.concurrent.ConcurrentWeakQueue;
+import socialite.resource.TableSliceMap;
+import socialite.resource.DistTableSliceMap;
 import socialite.type.*;
+import socialite.util.ByteBufferPool;
 
 import java.io.Externalizable;
 import java.io.ObjectInput;
@@ -84,5 +89,8 @@ import java.io.ObjectOutput;
 import java.io.IOException;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-//import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 >>

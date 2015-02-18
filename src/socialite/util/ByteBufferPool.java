@@ -16,12 +16,12 @@ public class ByteBufferPool {
 	public static final Log L=LogFactory.getLog(ByteBufferPool.class);
 	final static boolean verbose=false;
 	
-	final static int smallBufferSize=(160)*1024;
+	final static int smallBufferSize=132*1024;
 	final static int bufferSize=1280*1024; // see WorkerConnPool:ConnDesc.SOCK_BUFSIZE
 	
-	final static long directBufferAlloc=1024*1024*512;
+	final static long directBufferAlloc=1024*1024*256;
 	final static int directBufferAllocKB=(int)directBufferAlloc/1024;
-	final static int maxDynBufferNum=(int)(directBufferAlloc/bufferSize)/2;
+	final static int maxDynBufferNum=(int)(directBufferAlloc/bufferSize);
 	
 	static ByteBufferPool theInst=null;			
 	
@@ -39,11 +39,6 @@ public class ByteBufferPool {
 			theInst = new ByteBufferPool(directBufferAlloc);
 		}
 		return theInst;
-	}
-	public static void reset() {
-		if (theInst!=null) {
-			theInst._init();
-		}
 	}
 	
 	// for usage statistics
@@ -74,10 +69,6 @@ public class ByteBufferPool {
 		dynBufferList = new SoftRefArrayQueue<ByteBuffer>(maxDynBufferNum);
 	}
 	
-	void _init() {
-		//dynBufferList.clear();
-	}
-	
 	public static boolean bufferAvailable() {
 		return !get().bufferList.isEmpty() || !get().dynBufferList.isEmpty();
 	}
@@ -96,66 +87,40 @@ public class ByteBufferPool {
 	
 	ByteBuffer allocFrom(ConcurrentLinkedQueue<ByteBuffer> freeList, int _bufferSize, boolean limit) {
 		ByteBuffer bb=null;
-		int trycnt = 1;
-		int maxtry = 5;
 		
-		/*while (trycnt <= maxtry)*/ {
-			bb = freeList.poll();		
-			if (bb!=null) {
-				if (limit && _bufferSize<bb.capacity())
-					bb.limit(_bufferSize);
-				return bb;
-			}
-			/*if (SRuntime.hasEnoughFreeMem()) break;
-			try { Thread.sleep(1); }
-			catch (InterruptedException e) { break; }
-			trycnt++;
-			if (limit && trycnt > maxtry) break;*/
+		bb = freeList.poll();		
+		if (bb!=null) {
+			if (limit && _bufferSize<bb.capacity())
+				bb.limit(_bufferSize);
+			return bb;
 		}
-		if (verbose) {
-			allocedBuffer.addAndGet(_bufferSize);
-		}
+		if (verbose) { allocedBuffer.addAndGet(_bufferSize); }
 		return ByteBuffer.allocate(_bufferSize);
 	}
 	
 	ByteBuffer allocFromBuffer(int _bufferSize, boolean limit) {
 		ByteBuffer bb=null;
-		int trycnt = 1;
-		int maxtry = 5;
-		
-		/*while (true)*/ {
-			bb = bufferList.poll();		
-			if (bb!=null) {
-				if (limit && _bufferSize<bb.capacity())
-					bb.limit(_bufferSize);
-				return bb;
-			}
-			synchronized(dynBufferList) {
-				bb = dynBufferList.get();
-			}
-			if (bb!=null) {
-				if (limit && _bufferSize<bb.capacity())
-					bb.limit(_bufferSize);
-				return bb;
-			}		
-
-			assert bufferSize >= _bufferSize;
-			bb = ByteBuffer.allocate(bufferSize);
-			if (verbose) {
-				allocedBuffer.addAndGet(bb.capacity());
-			}
+		bb = bufferList.poll();		
+		if (bb!=null) {
 			if (limit && _bufferSize<bb.capacity())
 				bb.limit(_bufferSize);
 			return bb;
-			
-			/*if (SRuntime.hasEnoughFreeMem()) break;
-			try { Thread.sleep(1); }
-			catch (InterruptedException e) { break; }
-			trycnt++;				
-			if (limit && trycnt > maxtry) break;*/
-		}			
-		
-		//return ByteBuffer.allocate(_bufferSize);
+		}
+		synchronized(dynBufferList) {
+			bb = dynBufferList.get();
+		}
+		if (bb!=null) {
+			if (limit && _bufferSize<bb.capacity())
+				bb.limit(_bufferSize);
+			return bb;
+		}		
+
+		assert bufferSize >= _bufferSize;
+		bb = ByteBuffer.allocate(bufferSize);
+		if (verbose) { allocedBuffer.addAndGet(bb.capacity()); }
+		if (limit && _bufferSize<bb.capacity())
+			bb.limit(_bufferSize);
+		return bb;
 	}
 	
 	public ByteBuffer alloc(int size) {
@@ -183,7 +148,6 @@ public class ByteBufferPool {
 		if (bb.isDirect()) {
 			stats();
 			bb.clear();
-			//L.debug("Freeing byte-buffer("+bb.capacity()+")");
 			if (bb.capacity()==smallBufferSize) {
 				smallBufferList.add(bb);
 			} else if (bb.capacity()==bufferSize) {
@@ -192,9 +156,7 @@ public class ByteBufferPool {
 				assert false:"impossible!";
 			}			
 		} else {
-			if (verbose) {
-				allocedBuffer.addAndGet(-bb.capacity());
-			}
+			if (verbose) { allocedBuffer.addAndGet(-bb.capacity()); }
 			
 			stats();
 			if (bb.capacity() == bufferSize) {
@@ -217,10 +179,9 @@ public class ByteBufferPool {
 				L.info("    buffercnt:"+bufferCnt);
 				L.info("    dynBuffercnt:"+dynBufferList.size());
 				L.info("    largeBuffercnt:"+largeBufferCnt);
-				L.info("    veryLargeBuffercnt:"+largeBufferCnt);
 				L.info("    dynBufferList.size():"+dynBufferList.size());
 				
-				L.info("    NOTICE alloedBuffer:"+allocedBuffer.get()/1024/1024+"MB");
+				L.info("    NOTICE allocedBuffer:"+allocedBuffer.get()/1024/1024+"MB");
 			}
 		}
 	}

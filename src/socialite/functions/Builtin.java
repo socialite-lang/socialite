@@ -118,7 +118,6 @@ public class Builtin {
 	public static boolean argmin(socialite.type.ArgMin a, int i, double v) { return a.argmin(i,v); }
 	
 	public static Iterator<String> read(String file) { return Read.invoke(file); }
-	public static Iterator<String> hdfsRead(String file) { return SplitRead.invoke(file); }
 
 	public static String[] split(String s, String delim, int maxsplit) { return Str.split(s, delim, maxsplit); }
 	public static String[] split(String s, String delim) { return Str.split(s, delim); }

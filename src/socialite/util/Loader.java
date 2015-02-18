@@ -5,10 +5,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -94,7 +91,21 @@ public class Loader extends URLClassLoader {
     		}
     	}
     }
-    
+
+    public static void loadFromBytes(LinkedHashMap<String, byte[]> rawClasses) {
+        ((Loader)Loader.get())._loadFromBytes(rawClasses);
+    }
+    void _loadFromBytes(LinkedHashMap<String, byte[]> rawClasses) {
+    	ArrayList<Class<?>> classes = new ArrayList<Class<?>>(rawClasses.size());
+    	for (Map.Entry<String, byte[]> entry : rawClasses.entrySet()) {
+    		String n = entry.getKey();
+    		byte[] b = entry.getValue();
+    		classes.add(super.defineClass(n, b, 0, b.length));
+    	}
+    	for (int i = 0; i < classes.size(); i++) {
+    		resolveClass(classes.get(i));
+    	}
+    }
     public static void loadFromBytes(List<String> classNames, List<byte[]> classFiles) {
     	((Loader)Loader.get())._loadFromBytes(classNames, classFiles);
     }

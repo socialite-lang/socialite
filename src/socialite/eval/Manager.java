@@ -2,32 +2,56 @@ package socialite.eval;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryNotificationInfo;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import javax.management.Notification;
+import javax.management.NotificationEmitter;
+import javax.management.NotificationListener;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import socialite.dist.EvalRefCount;
 import socialite.dist.worker.WorkerNode;
 import socialite.engine.Config;
-import socialite.eval.EvalCommand;
-import socialite.resource.RuleMap;
 import socialite.resource.SRuntime;
-import socialite.resource.Sender;
 import socialite.resource.VisitorBuilder;
-import socialite.tables.TableInst;
 import socialite.util.Assert;
 import socialite.util.ByteBufferPool;
-import socialite.util.FastQueue;
-import socialite.util.SociaLiteException;
-import socialite.visitors.IVisitor;
-import gnu.trove.TIntCollection;
-import gnu.trove.iterator.TIntIterator;
-import gnu.trove.map.hash.TIntObjectHashMap;
 
+class LowMemoryDetector {
+	static MemoryPoolMXBean findTenuredGenPool() {
+		for (MemoryPoolMXBean pool: ManagementFactory.getMemoryPoolMXBeans()) {
+			if (pool.getType() == MemoryType.HEAP && pool.isUsageThresholdSupported()) {
+				return pool;
+			}
+		}
+		throw new AssertionError("Could not find tenured space");
+	}
+
+	static void install() {
+		/*MemoryPoolMXBean tenuredPool = findTenuredGenPool();
+		long maxTenuredPool = tenuredPool.getUsage().getMax();
+		long threshold = Math.max((long)(maxTenuredPool*0.9), maxTenuredPool-256*1024*1024);
+		System.out.println("threshold:"+threshold+", maxTenuredPool:"+maxTenuredPool);
+		tenuredPool.setCollectionUsageThreshold(threshold);
+
+		MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
+		NotificationEmitter emitter = (NotificationEmitter) mbean;
+		emitter.addNotificationListener(new NotificationListener() {
+				public void handleNotification(Notification n, Object hb) {
+					if (n.getType().equals(MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED)) {
+						System.out.println("Memory threshold exceeded! free memory:"+SRuntime.freeMemory()/1024/1024+"MB");
+					}
+				}}, null, null);
+				*/
+	}
+}
 public class Manager extends Thread {
 	public static final Log L=LogFactory.getLog(Manager.class);
 	
@@ -43,9 +67,7 @@ public class Manager extends Thread {
 	}
 	
 	public static void cleanupEpoch() {		
-		DeltaStepWindow.reset();
-		ByteBufferPool.reset();
-		TmpTablePool.freeAll();
+		//DeltaStepWindow.reset();
 	}
 
 	public static void shutdownAll() {
@@ -56,36 +78,33 @@ public class Manager extends Thread {
 	}
 
 	Config conf;
-	SRuntime runtime;
+	volatile SRuntime runtime;
 	TaskFactory taskFactory;
 	Random rand = new Random();
 	Worker[] workers;
 	int urgentWorkers=0;
 	Thread[] workerThreads;
 	final boolean verbose = false;
-	
-	volatile boolean evalInitDone = false;
 
 	public Manager(Config _conf) {
 		super("Manager");
 		conf = _conf;
-		initWorkers(conf.getWorkerNum());
+		initWorkers(conf.getWorkerThreadNum());
 		taskFactory = new TaskFactory();
+		LowMemoryDetector.install();
 	}
 	
 	public int getWorkerNum() { return workers.length; }
 
 	public void cleanup() {
-		resetEvalInitDone();
 		Manager.cleanupEpoch();		
 	}
 	
-	public void updateRuntime(SRuntime _runtime) {
+	public void setRuntime(SRuntime _runtime) {
 		runtime = _runtime;
 		for (int i=0; i<workers.length; i++) {
-			workers[i].updateRuntime(runtime);
+			workers[i].setRuntime(runtime);
 		}
-		synchronized (addCmdLock) {}
 	}
 	VisitorBuilder builder(int rule) {
 		assert runtime!=null:"runtime is null";
@@ -93,15 +112,16 @@ public class Manager extends Thread {
 	}
 	
 	void initWorkers(int _workerNum) {
+        assert _workerNum>0;
 		if (workers == null) {
-			urgentWorkers = _workerNum/2;
 			if (_workerNum==1) urgentWorkers=0;
-			else if (urgentWorkers<2) 
-				urgentWorkers=2;
-			
-			Worker.initLocalQueues(_workerNum+urgentWorkers);
+			else {
+                urgentWorkers = _workerNum/4;
+                if (urgentWorkers<2) urgentWorkers=2;
+                if (urgentWorkers>12) urgentWorkers=12;
+            }
+			Worker.initTaskQueues(_workerNum + urgentWorkers);
 			TmpTablePool.init(_workerNum+urgentWorkers);
-			TmpTablePool.setRealWorkerNum(_workerNum);
 			workers = new Worker[_workerNum+urgentWorkers];
 			workerThreads = new Thread[_workerNum+urgentWorkers];
 			for (int i=0; i<workers.length; i++) {
@@ -131,80 +151,67 @@ public class Manager extends Thread {
 			L.info("[Manager] free mem:"+(freeMem/1024/1024)+"M");
 		}
 	}
-	
-	public boolean likelyIdle() {
-		return Worker.likelyIdle();
-	}	
-	public boolean idle() {
-		synchronized(addCmdLock) {
-			return Worker.idle();
+
+
+    int rand(int upto) {
+        assert upto>0;
+        int randval = rand.nextInt();
+        if (randval<0) {
+        	randval = -randval;
+        	if (randval == Integer.MIN_VALUE)
+        		randval = 0;
+        }
+        return randval%upto;
+    }
+	void dispatch(Priority priority, Task[] tasks) {
+		TaskQueue[] workerQueues = Worker.getWorkerQueues();
+
+        int maxWorkerIdx;
+        if (priority==Priority.Top) {
+            maxWorkerIdx = workers.length;
+        } else {
+            maxWorkerIdx = workers.length-urgentWorkers;
+        }
+        int workerIdx = rand(maxWorkerIdx);
+
+		for (int i=0; i<tasks.length; i++) {
+			Task t = tasks[i];if (t==null) continue;
+
+			TaskQueue q = workerQueues[workers[workerIdx].id()];
+            q.add(priority, t);
+            workerIdx = (workerIdx+1)%maxWorkerIdx;
 		}
 	}
 
-	int pickWorker() {
-		int randval = rand.nextInt();
-		if (randval<0) randval = -randval;
-		randval = randval%workers.length;
-		return randval;
-	}
-	void dispatch(int priority, Task[] tasks) {
-		int workerIdx = pickWorker();
-		LocalQueue[] workerQueues = Worker.getWorkerQueues();
-		for (int i=0; i<tasks.length; i++) {
-			Task t = tasks[i];
-			if (t==null) continue;
-			
-			if (priority==-1) {
-				workerIdx = (workerIdx+1)%workers.length;	
-			} else {
-				workerIdx = (workerIdx+1)%(workers.length-urgentWorkers);
-			}
-			
-			LocalQueue q = workerQueues[workers[workerIdx].id()];
-			assert q != null;
-			q.add(priority, t);
-		}
-	}
-	
-	Object addCmdLock = new Object();
-	public Object addCmdLock() { return addCmdLock; }	
-	public void addCmd(Command cmd) {
-		SRuntime _runtime = runtime;
-		if (_runtime==null) return;
-		
-		waitForEvalInit();		
-		assert cmd instanceof EvalCommand;
-		if (cmd instanceof EvalCommand) {
-			EvalCommand eval = (EvalCommand)cmd;				
-			Task[] tasks=null;				
-			tasks = taskFactory.make(eval, builder(eval.getRuleId()), _runtime);
-			
-			if (cmd.isReceived()) dispatch(-1, tasks);
-			else dispatch(1, tasks);			
-		} else { Assert.die("Unsupported command:" + cmd); }	
-	}	
-	
-	public void setEvalInitDone() {	
-		synchronized (addCmdLock) {
-			evalInitDone=true;
-			addCmdLock.notifyAll();
-		}
-	}
-	public void resetEvalInitDone() {
-		synchronized (addCmdLock) {
-			evalInitDone=false;	
-		}		 
-	}
-	public void waitForEvalInit() {
-		synchronized (addCmdLock) {
-			if (!evalInitDone) {
-				try { addCmdLock.wait(); } 
-				catch (InterruptedException e) { 
-					throw new SociaLiteException(e); 
-				}
-			}
-		}
-	}
+    public void addEvalCmd(EvalCommand evalCmd) throws InterruptedException {
+        SRuntime _runtime = runtime;
+        EvalRefCount.getInst().waitUntilReady(evalCmd.getEpochId());
+        Task[] tasks=null;
+        tasks = taskFactory.make(evalCmd, builder(evalCmd.getRuleId()), _runtime);
+        int taskCount=0;
+        for (Task t:tasks) {
+            if (t==null) continue;
+            taskCount++;
+        }
+        EvalRefCount.getInst().incBy(evalCmd.getEpochId(), taskCount);
+        if (evalCmd.isReceived()) dispatch(Priority.Top, tasks);
+        else dispatch(Priority.Normal, tasks);
+        EvalRefCount.getInst().decBy(evalCmd.getEpochId(), taskCount);
+    }
+    public void addLoadCmd(ConcurrentLoadCommand loadCmd) throws InterruptedException {
+        SRuntime _runtime = runtime;
+        Task[] tasks=null;
+        tasks = taskFactory.make(loadCmd, _runtime);
+        if (loadCmd.isReceived()) dispatch(Priority.Top, tasks);
+        else dispatch(Priority.Normal, tasks);
+    }
+    public void addCmd(Command cmd) throws InterruptedException {
+        if (cmd instanceof EvalCommand) {
+            addEvalCmd((EvalCommand) cmd);
+        } else if (cmd instanceof ConcurrentLoadCommand) {
+            addLoadCmd((ConcurrentLoadCommand) cmd);
+        }
+    }
 
 	void shutdownWorkers() {
 		for (int i=0; i<workerThreads.length; i++) {
@@ -224,13 +231,6 @@ public class Manager extends Thread {
 		interrupt();
 	}
 
-	public synchronized void timesUp() {
-		LocalQueue[] workerQueues = Worker.getWorkerQueues();
-		for (int i=0; i<workerQueues.length; i++) {
-			workerQueues[i].empty();
-		}
-	}
-		
 	public void handleError(Task t, Throwable e) {
 		if (conf.isDistributed())
 			handleErrorDist(t, e);
@@ -241,17 +241,16 @@ public class Manager extends Thread {
 		WorkerNode.getInst().reportError(t.getRuleId(), e);
 	}
 	void handleErrorLocal(Task t, Throwable e) {
-		runtime.setException(e);
 		Worker.haltEpoch();
 		L.warn("While executing \""+t+"\",");
 		L.warn("  an error was thrown:"+e);		
 		L.warn("  Discarding all the remaining tasks.");
 	}
+	
+	
 	public void run() {
 		while (true) {	
 			try {
-				// In distributed setting, we should report heartbeat to Master node.
-				
 				Thread.sleep(200);
 				/*TmpTablePool.status();
 				Sender.sendQ().status();

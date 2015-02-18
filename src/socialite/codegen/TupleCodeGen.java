@@ -1,13 +1,6 @@
 package socialite.codegen;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
@@ -38,11 +31,7 @@ public class TupleCodeGen {
 
 	public TupleCodeGen(Class<?>[] _types) {
 		tupleTmpl = tmplGroup.getInstanceOf("tuple");
-		setTypes(_types);
-	}
-
-	public void setTypes(Class<?>[] _types) {
-		types = _types;
+        types = _types;
 	}
 
 	public String name() {
@@ -97,21 +86,19 @@ public class TupleCodeGen {
 		e.shutdown();
 	}
 
-	final static int PREGEN_WIDTH = 3; // Max # of columns of pre-generated
-										// tuples
-
-	public static List<Class<?>> generate(Config conf, List<Rule> rules,
+	final static int PREGEN_WIDTH = 3; // Max # of columns for pre-generated tuples
+	public static LinkedHashMap<String, byte[]> generate(Config conf, List<Rule> rules,
 			Map<String, Table> tableMap) {
-		Compiler c = new Compiler(conf);
+		Compiler c = new Compiler(conf.isVerbose());
 		TupleDecls toGen = new TupleDecls();
 		for (Rule r : rules) {
 			findTuplesToGen(r, tableMap, toGen);
 		}
 		if (toGen.isEmpty())
-			return Collections.emptyList();
+			return new LinkedHashMap<String, byte[]>(0);
 
-		List<Class<?>> generated = new ArrayList<Class<?>>();
-		for (TupleDecl tupDecl : toGen) {
+        LinkedHashMap<String, byte[]> generatedClasses = new LinkedHashMap<String, byte[]>();
+        for (TupleDecl tupDecl : toGen) {
 			TupleCodeGen tgen = new TupleCodeGen(tupDecl.types);
 			if (Loader.exists(tgen.name()))
 				continue;
@@ -122,10 +109,10 @@ public class TupleCodeGen {
 						+ c.getErrorMsg();
 				throw new SociaLiteException(msg);
 			}
-			Class<?> klass = Loader.forName(tgen.name());
-			generated.add(klass);
+            generatedClasses.putAll(c.getCompiledClasses());
+			Loader.forName(tgen.name());
 		}
-		return generated;
+		return generatedClasses;
 	}
 
 	static void findTuplesToGen(Rule rule, Map<String, Table> tableMap,

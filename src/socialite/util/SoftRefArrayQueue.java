@@ -20,15 +20,15 @@ public class SoftRefArrayQueue<E> {
 	public int size() { return size; }
     public boolean isEmpty() { return size == 0; }
 
-    public void clear() { empty(); }
-    public void empty() {
+    public synchronized void clear() { empty(); }
+    public synchronized void empty() {
         size = 0;
         front = 0;
         back = -1;
         Arrays.fill(items, null);
     }
 
-    public boolean contains(E e) {
+    public synchronized boolean contains(E e) {
     	if (e==null) return false;
     	int cnt=0;
     	int idx = front;
@@ -41,8 +41,8 @@ public class SoftRefArrayQueue<E> {
     	}
     	return false;
     }
-    public E get() { return dequeue(); }    
-    public E dequeue() {
+    public synchronized E get() { return dequeue(); }
+    public synchronized E dequeue() {
         if (isEmpty()) return null;
            
         E e=null;
@@ -57,8 +57,8 @@ public class SoftRefArrayQueue<E> {
         return e;
     }
     
-    public void add(E e) { enqueue(e); }   
-	public void enqueue(E e) {
+    public synchronized void add(E e) { enqueue(e); }
+	public synchronized void enqueue(E e) {
         if (size == items.length)
             expand( );
         back = incrementIdx( back );

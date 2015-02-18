@@ -12,6 +12,8 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.iterator.TLongObjectIterator;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import socialite.collection.*;
 
 import socialite.resource.*;

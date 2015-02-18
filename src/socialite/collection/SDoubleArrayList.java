@@ -39,24 +39,6 @@ public class SDoubleArrayList extends TDoubleArrayList {
 		_pos += other.size();
 	}
 	
-	public void ensureCapacity(int capacity) {
-		if (capacity > _data.length) {
-			int newCap;
-			/*if (_data.length < 128) {
-				newCap = Math.max((int) (_data.length * 2), capacity);
-			} else*/ if (_data.length < 16*1024) {
-				newCap = Math.max((int) (_data.length * 1.75f), capacity);
-			} else {
-				newCap = Math.max((int) (_data.length * 1.5f), capacity);
-			}
-			
-			//if (newCap < capacity) newCap = capacity;
-			double[] tmp = new double[newCap];
-			System.arraycopy(_data, 0, tmp, 0, _data.length);
-			_data = tmp;
-		}
-	}
-
 	public int binarySearch(double value) {
 		if (_pos==0) return -1;
 		else if (value > _data[_pos-1]) return -(_pos+1);

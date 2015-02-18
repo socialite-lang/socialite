@@ -48,24 +48,19 @@ public class CodeGen {
 	static {
 		visitorTmplGroup = new MySTGroupFile(VisitorCodeGen.class.getResource(visitorGroupFile),
 				"UTF-8", '<', '>');
-		synchronized(visitorTmplGroup) {
-			visitorTmplGroup.load();
-		}
+		visitorTmplGroup.load();
+
 		visitorBaseGroup = new MySTGroupFile(VisitorBaseGen.class.getResource(visitorBaseGroupFile),
 				"UTF-8", '<', '>');
-		synchronized(visitorBaseGroup) {
-			visitorBaseGroup.load();
-		}
+		visitorBaseGroup.load();
+
 		evalTmplGroup = new MySTGroupFile(EvalCodeGen.class.getResource(evalGroupFile), 
 				"UTF-8", '<', '>');
-		synchronized(evalTmplGroup) {
-			evalTmplGroup.load();
-		}
+		evalTmplGroup.load();
+
 		tupleGroup = new MySTGroupFile(TupleCodeGen.class.getResource(tupleGroupFile),
 				"UTF-8", '<', '>');
-		synchronized(tupleGroup) {
-			tupleGroup.load();
-		}
+		tupleGroup.load();
 	}
 	
 	public static String uniqueVar(String prefix) {
@@ -158,9 +153,7 @@ public class CodeGen {
 		
 		if (switch_==null) {
 			STGroup group=getVisitorGroup();
-			/* synchronized(group) */ {
-				switch_=group.getInstanceOf("switch");
-			}
+			switch_=group.getInstanceOf("switch");
 			switch_.add("cond", currentPredicateVar());
 			code.add("stmts", switch_);
 		}
@@ -213,30 +206,7 @@ public class CodeGen {
 		}
 		return body;
 	}
-	/*
-	public static void addToVisitMethodOrIterBody(ST methodOrIter, Predicate p, Object stmt) {
-		String name=methodOrIter.getName();
-		if (name.equals("method")) {
-			ST body=findCodeBlockFor(methodOrIter, p);
-			body.add("stmts", stmt);
-		} else if (name.equals("withIterator")) {
-			ST body=methodOrIter;
-			body.add("stmts", stmt);
-		} else {
-			Assert.impossible("Unexpected template:"+name);
-		}
-	}
-	
-	public static void addToVisitMethod(ST method, Predicate p, Object stmt) {
-		ST body=findCodeBlockFor(method, p);
-		body.add("stmts", stmt);
-	}
-	*/	
-	/*
-	static Set<Variable> emptySet=new HashSet<Variable>();
-	public static void fillVisitMethodBody(ST m, Predicate p, int startCol, int endCol) {
-		fillVisitMethodBody(m, p, startCol, endCol, emptySet);
-	}*/
+
 	/* startCol, endCol include the primary index column */
 	public static void fillVisitMethodBody(ST method, Predicate p, 
 			int startCol, int endCol, Collection<Variable> resolved) {
@@ -246,16 +216,17 @@ public class CodeGen {
 									int startCol, int endCol, 
 									Collection<Variable> resolved, TIntCollection idxbyCols) {
 		ST body=findCodeBlockFor(method, p);
-		//if (startCol>=1) addFilterForDontCares(body, p, startCol, endCol);
-			
+
 		Object[] params = p.getAllParamsExpanded();
-		for (int i=startCol; i<=endCol; ) {		
+		for (int i=startCol; i<=endCol; ) {
 			String arg="_"+(i-startCol); // same as fillArgTypes
 			if (params[i] instanceof Variable &&
 					((Variable)params[i]).dontCare) {				
 				i++; continue;
 			}
 			if (idxbyCols.contains(i)) {
+                ST if_=generateFilter(params[i], arg);
+                body.add("stmts", if_);
 				i++;
 			} else if (resolved.contains(params[i])) {	
 				assert !p.isNegated();
@@ -266,20 +237,7 @@ public class CodeGen {
 				Variable v=(Variable)params[i];
 				body.add("stmts", v+"=("+v.type.getSimpleName()+")"+arg);
 				i++;
-			} else if (params[i] instanceof Function) {
-				Function f = (Function)params[i];
-				for (Object o:f.getArgs()) {
-					if (o instanceof Variable) {
-						Variable v=(Variable)o;
-						if (!v.dontCare) {
-							String var=v.toString();
-							body.add("stmts", var+"="+arg);
-						}
-						i++;
-					}
-				}				
-			} else { // constants
-				assert !p.isNegated();
+			} else { // Constants
 				assert params[i] instanceof Const;
 				ST if_=generateFilter(params[i], arg);
 				body.add("stmts", if_);
@@ -287,7 +245,6 @@ public class CodeGen {
 			}
 		}
 	}
-	
 	static ST generateFilter(Object param, Object arg) {
 		ST if_=getVisitorGroup().getInstanceOf("if");
 		if (MyType.isPrimitive(param)) if_.add("cond", param+"!="+arg);	
@@ -295,63 +252,8 @@ public class CodeGen {
 		if_.add("stmts", "break");
 		return if_;
 	}
-	
-	public static ST withReadLock(String lockMapVar, Object tableId) {
-		assert tableId instanceof Integer ||tableId instanceof String;
-		STGroup group=getVisitorGroup();
-		ST try_ = getVisitorGroup().getInstanceOf("try");
-		try_.add("stmts", lockMapVar+".rlock("+tableId+")");
-		try_.add("finally", lockMapVar+".runlock("+tableId+")");
-		return try_;
-	}
-	
-	public static ST withReadLock(String lockMapVar, Object tableId, String sliceExpr) {
-		assert tableId instanceof Integer ||tableId instanceof String;
-		STGroup group=getVisitorGroup();
-		ST try_ = getVisitorGroup().getInstanceOf("try");
-		String var = uniqueVar("$_slice_");
-		try_.add("preStmts", "int "+var+"="+sliceExpr);
-		try_.add("stmts", lockMapVar+".rlock("+tableId+", "+var+")");
-		try_.add("finally", lockMapVar+".runlock("+tableId+", "+var+")");
-		return try_;
-	}
-	
-	@Deprecated
-	public static ST withWriteLock(String lockMapVar, Object tableId, String sliceExpr) {
-		assert tableId instanceof Integer ||tableId instanceof String;
-		STGroup group = getVisitorGroup();
-		ST try_ = group.getInstanceOf("try");
-		String var = uniqueVar("$_slice_"); 
-		try_.add("preStmts", "int "+var+"="+sliceExpr);
-		try_.add("stmts", lockMapVar+".wlock("+tableId+", "+var+")");
-		try_.add("finally", lockMapVar+".wunlock("+tableId+", "+var+")");
-		return try_;
-	}
-	@Deprecated
-	public static ST withoutWriteLock(String lockMapVar, Object tableId, String sliceExpr) {
-		assert tableId instanceof Integer ||tableId instanceof String;
-		STGroup group = getVisitorGroup();
-		ST try_ = group.getInstanceOf("try");
-		String var = uniqueVar("$_slice_"); 
-		try_.add("preStmts", "int "+var+"="+sliceExpr);
-		try_.add("stmts", lockMapVar+".wunlock("+tableId+", "+var+")");
-		try_.add("finally", lockMapVar+".wlock("+tableId+", "+var+")");
-		return try_;
-	}
-	
-	public static ST withArrayLock(String lockMapVar, int tableid, Object arrayIndex) {
-		STGroup group = getVisitorGroup();
-		ST sync = group.getInstanceOf("synchronized");
-		sync.add("monitor", lockMapVar+".arraylock("+tableid+", "+arrayIndex+")");		
-		return sync;
-		/*STGroup group = getVisitorGroup();
-		ST try_ = group.getInstanceOf("try");
-		try_.add("stmts", lockMapVar+".arraylock("+tableid+","+arrayIndex+")");
-		try_.add("finally", lockMapVar+".arrayunlock("+tableid+","+arrayIndex+")");
-		return try_;*/
-	}
-	/*
-	public static ST withLock(String lockMapVar, Object tableId, String sliceExpr) {
+
+  	public static ST withLock(String lockMapVar, Object tableId, String sliceExpr) {
 		assert tableId instanceof Integer ||tableId instanceof String;
 		STGroup group = getVisitorGroup();
 		ST try_ = group.getInstanceOf("try");
@@ -361,15 +263,7 @@ public class CodeGen {
 		try_.add("stmts", lockMapVar+".lock("+tableId+", "+var+")");
 		try_.add("finally", lockMapVar+".unlock("+tableId+", "+var+")");
 		return try_;
-	}*/
-	public static ST withLock(String lockMapVar, Object tableId, String sliceExpr) {
-		assert tableId instanceof Integer ||tableId instanceof String;
-		STGroup group = getVisitorGroup();
-		ST sync = group.getInstanceOf("synchronized");
-		sync.add("monitor", lockMapVar+".getTableMonitor("+tableId+","+sliceExpr+")");
-		return sync;
 	}
-	
 	public static ST withoutLock(String lockMapVar, Object tableId, String sliceExpr) {
 		assert tableId instanceof Integer ||tableId instanceof String;
 		STGroup group = getVisitorGroup();
@@ -402,53 +296,7 @@ public class CodeGen {
 		}
 		return klass;
 	}
-	
-	public static String tupleAlloc(Class[] types) {
-		String alloc = "new "+tupleClass(types)+"()";
-		return alloc;
-	}
-		
-	public static String fastTupleSetter(String tuple, int column, Object o) {
-		return tuple+"._"+column+"="+o;
-	}
-	public static String tupleSetter(String tuple, int column, Object o) {
-		if (o instanceof Variable) {
-			Variable v=(Variable)o;
-			if (v.type.equals(int.class)) {
-				return tuple + ".setInt("+column+","+o+")";
-			} else if (v.type.equals(long.class)) {
-				return tuple + ".setLong("+column+","+o+")";			
-			}else if (v.type.equals(float.class)) {
-				return tuple + ".setFloat("+column+","+o+")";			
-			} else if (v.type.equals(double.class)) {
-				return tuple + ".setDouble("+column+","+o+")";			
-			} else {
-				return tuple + ".setObject("+column+","+o+")";			
-			}
-		} else if (o instanceof Integer) {
-			return tuple + ".setInt("+column+","+o+")";			
-		} else if (o instanceof Long) {
-			return tuple + ".setLong("+column+","+o+")";			
-		} else if (o instanceof Float) {
-			return tuple + ".setFloat("+column+","+o+")";			
-		} else if (o instanceof Double) {
-			return tuple + ".setDouble("+column+","+o+")";
-		} else {
-			return tuple + ".setObject("+column+","+o+")";
-		}
-	}
-	
-	public static String fastTupleGetter(Variable v, String tuple, int column) {
-		if (MyType.isPrimitive(v))
-			return v+"="+tuple+"._"+column;
-		else
-			return v+"=("+MyType.javaTypeName(v)+")"+tuple+"._"+column;
-	}
-	
-	public static String tupleGetter(Variable v, String tuple, int column) {
-		return tupleGetter(v.type, tuple, column);
-	}
-	
+
 	public static String tupleGetter(Class type, String tuple, int column) {
 		if (type.equals(int.class)) {
 			return tuple + ".getInt("+column+")";
@@ -463,18 +311,6 @@ public class CodeGen {
 		}
 	}
 	
-	static boolean isPrefixConstant(Predicate p, int prefixSize) {
-		for (int i=0; i<prefixSize; i++) {
-			if (!isConstant(p.params.get(i))) return false;
-		}
-		return true;
-	}
-	static boolean isConstant(Object param) {
-		if (!(param instanceof Variable)) return true;
-		// XXX: do simple analysis to see if the variable(param) is constant in this rule
-		return false;
-	}
-
 	public static String getVisitColumns(int start, int end, int arity) {
 		if (end == arity-1) return "";
 		

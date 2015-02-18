@@ -29,6 +29,7 @@ public class TableDecl implements Serializable {
 	Map<String, IndexBy>  indexBy;	
 	TObjectIntHashMap<String> colNameToPos;
 	boolean predefined=false;
+    boolean concurrent=false;
 	boolean multiSet=false;
 	boolean approx=false;
 	int iterCol = -1;
@@ -153,47 +154,7 @@ public class TableDecl implements Serializable {
 		}
 	}
 	
-	void changeRangeToSize(ColumnDecl cd) {
-		if (cd.option() instanceof ColRange) {
-			ColRange vr=(ColRange)cd.option();
-			int size=vr.to()-vr.from()+1;
-			cd.setOption(new ColSize(size));
-		}
-	}
-
-	public TableDecl flatten(String newName, boolean keepRange) {
-		assert keepRange==true;
-		return flattenReally(newName, true);
-	}
-	public TableDecl flatten(String newName) {
-		return flattenReally(newName, false);
-	}
-	
-	TableDecl flattenReally(String newName, boolean keepRange) {
-		ColumnDecl locationColDeclClone=null;
-		if (locationColDecl!=null) {
-			locationColDeclClone=locationColDecl.clone();
-			if (!keepRange) changeRangeToSize(locationColDeclClone);
-		}
-		
-		List<ColumnDecl> colDeclsClone=new ArrayList<ColumnDecl>();
-		for (ColumnDecl cd:colDecls) {
-			ColumnDecl cdc = cd.clone();
-			if (!keepRange) changeRangeToSize(cdc);
-			colDeclsClone.add(cdc);
-		}
-		if (nestedTable!=null) {
-			for (ColumnDecl cd:nestedTable.getAllColDecls()) {
-				ColumnDecl cdc = cd.clone();
-				if (!keepRange) changeRangeToSize(cdc);
-				colDeclsClone.add(cdc);
-			}
-		}
-		// ignoring indexBy, sortBy, orderBy.
-		// Add them after flattening if necessary.
-		return new TableDecl(newName, locationColDeclClone, colDeclsClone, null);
-	}
-	
+	/*
 	public TableDecl clone(String newName) {
 		List<ColumnDecl> colDeclsClone=new ArrayList<ColumnDecl>();
 		for (ColumnDecl cd:colDecls) colDeclsClone.add(cd.clone());
@@ -210,7 +171,7 @@ public class TableDecl implements Serializable {
 		td.orderBy = orderBy;
 		td.indexBy = indexBy;
 		return td;
-	}
+	}*/
 	public int hashCode() {
 		return name.hashCode();
 	}
@@ -256,6 +217,7 @@ public class TableDecl implements Serializable {
 	public ColumnDecl locationColDecl() { return locationColDecl; }
 	public List<ColumnDecl> colDecls() {
 		List<ColumnDecl> decls = new ArrayList<ColumnDecl>();
+		if (locationColDecl!=null) decls.add(locationColDecl);
 		decls.addAll(colDecls);
 		if (nestedTable!=null) {
 			nestedTable.colDecls(decls);
@@ -381,6 +343,7 @@ public class TableDecl implements Serializable {
 	public boolean isNested() { return nestedTable!=null; }
 	public boolean isMultiSet() { return multiSet; }
 	public boolean isApproxSet() { return approx; }
+    public boolean isConcurrent() { return concurrent; }
 	public boolean isPredefined() { return predefined; }
 	public boolean hasGroupBy() { return groupby>0; }
 	public int groupby() { return groupby; }
@@ -422,7 +385,9 @@ public class TableDecl implements Serializable {
 				groupby = gb;
 			} else if (opt instanceof Predefined) { 
 				predefined = true;
-			} else if (opt instanceof MultiSet) {
+			} else if (opt instanceof Concurrent) {
+                concurrent = true;
+            } else if (opt instanceof MultiSet) {
 				multiSet = true;
 			} else if (opt instanceof Approx) {
 				approx = true;

@@ -1,10 +1,12 @@
 package socialite.parser;
 
-import java.io.Serializable;
-
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import socialite.type.Utf8;
 
-public class Const implements Serializable, Comparable<Const> {
+public class Const implements Param, Comparable<Const> {
 	private static final long serialVersionUID = 1L;
 	static int constCountInARule = 0;
 	public static void nextRule() {
@@ -13,6 +15,7 @@ public class Const implements Serializable, Comparable<Const> {
 	public Class type;
 	public Object val;
 	public int pos;
+    public Const() { }
 	public Const(Object v) {
 		assert v instanceof Integer ||
 				v instanceof Long ||
@@ -69,5 +72,24 @@ public class Const implements Serializable, Comparable<Const> {
 	@Override
 	public int compareTo(Const other) {
 		return pos - other.pos;
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		char[] typename = new char[in.readInt()];
+		for (int i=0; i<typename.length; i++)
+			typename[i] = in.readChar();
+		type = Class.forName(new String(typename));
+		val = in.readObject();
+		pos = in.readInt();
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		String typename = type.getName();
+		out.writeInt(typename.length());
+		out.writeChars(typename);
+		out.writeObject(val);
+		out.writeInt(pos);
 	}
 }

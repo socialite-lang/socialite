@@ -4,7 +4,7 @@ import java.nio.channels.SocketChannel;
 
 
 public class ChannelMux {
-	public static final int channelNum=6;
+	public static final int channelNum=8;
 	
 	int _pos;
 	SocketChannel[] channels;

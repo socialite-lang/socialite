@@ -8,6 +8,7 @@ import socialite.engine.ClientEngine;
 import socialite.engine.Config;
 import socialite.engine.DistEngine;
 import socialite.engine.LocalEngine;
+import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
 import socialite.resource.SRuntime;
 import socialite.resource.Sender;
@@ -28,7 +29,7 @@ public class DistCompileTest {
 		return map;
 	}
 	static void triangle1() {
-		SRuntime.newTestMasterRt(fakeMap());
+		SRuntimeMaster.createTest(fakeMap());
 		
 		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
 		String init="Edge[int s:0..1768197]((int t)) sortby t."+
@@ -41,7 +42,7 @@ public class DistCompileTest {
 		en.justCompile(query);
 	}
 	static void triangle2() {
-		SRuntime.newTestMasterRt(fakeMap());
+		SRuntimeMaster.createTest(fakeMap());
 		
 		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
 		String query="Edge[int s:0..9]((int t)) sortby t."+		
@@ -60,7 +61,7 @@ public class DistCompileTest {
 		en.justCompile(finalQuery);
 	}
 	static void lastfmTriangle() {
-		SRuntime.newTestMasterRt(fakeMap());
+		SRuntimeMaster.createTest(fakeMap());
 		
 		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
 		String query="Edge[int s:0..1768197]((int t)) sortby t."+
@@ -87,7 +88,7 @@ public class DistCompileTest {
 	}
 	
 	static void pagerank() {
-		SRuntime.newTestMasterRt(fakeMap());		
+		SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
 		int numVertices=/*4847571*/1768197;
 		String initQuery = String.format(
@@ -111,7 +112,7 @@ public class DistCompileTest {
 	}
 	
 	static void pagerank2() {
-		SRuntime.newTestMasterRt(fakeMap());		
+		SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
 		int numVertices=/*4847571*/1768197;
 		String initQuery = String.format(
@@ -143,13 +144,13 @@ public class DistCompileTest {
 			"Rank[_](r) :- r= 0.000000000558793544769. \n"+
 			"Rank1[_](r) :- r= 0.000000000558793544769. \n"+				
 			"Rank1[p]($Sum(r)) :- Rank[n](r1), EdgeCnt[n](cnt), r=0.85*r1/cnt, OutEdge[n](p).\n";
-		SRuntime.newTestMasterRt(fakeMap());		
+		SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(16), fakeMap(), null);
 		en.justCompile(initQuery);
 		en.justCompile(mainQuery);
 	}
 	static void sssp() {
-		SRuntime.newTestMasterRt(fakeMap());		
+		SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
 		
 		long start=System.currentTimeMillis();
@@ -176,7 +177,7 @@ public class DistCompileTest {
 	}
 
 	static void comp() {
-		SRuntime.newTestMasterRt(fakeMap());		
+		SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
 		
 		long start=System.currentTimeMillis();
@@ -193,7 +194,7 @@ public class DistCompileTest {
 	}
 	
 	static void lcc() {
-		SRuntime.newTestMasterRt(fakeMap());		
+        SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
 		
 		long start=System.currentTimeMillis();
@@ -219,7 +220,7 @@ public class DistCompileTest {
 	}
 	
 	static void mutual() {
-		SRuntime.newTestMasterRt(fakeMap());		
+		SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
 		
 		long start=System.currentTimeMillis();
@@ -234,7 +235,7 @@ public class DistCompileTest {
 	}
 	
 	static void pr() {
-		SRuntime.newTestMasterRt(fakeMap());		
+		SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
 		
 		String query = "InEdge[int s:0..100]((int t)) sortby t.\n" +
@@ -257,7 +258,7 @@ public class DistCompileTest {
 		en.shutdown();
 	}
 	static void triangle() {
-		SRuntime.newTestMasterRt(fakeMap());		
+		SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
 		
 		String query = "Edge[int s:0..100]((int t)) sortby t.\n" +
@@ -276,7 +277,7 @@ public class DistCompileTest {
 		en.shutdown();
 	}
 	static void gd() {
-		SRuntime.newTestMasterRt(fakeMap());		
+        SRuntimeMaster.createTest(fakeMap());
 		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
 		
 		final int M = 480189; // number of users

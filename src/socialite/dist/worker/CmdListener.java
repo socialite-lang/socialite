@@ -2,25 +2,9 @@ package socialite.dist.worker;
 
 import gnu.trove.map.hash.TIntFloatHashMap;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +17,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.BooleanWritable;
@@ -47,38 +30,25 @@ import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.ipc.Server;
 import org.python.core.PyFunction;
 
-import socialite.codegen.CodeGenMain;
 import socialite.codegen.Epoch;
 import socialite.codegen.EpochW;
-import socialite.dist.Host;
-import socialite.dist.PathTo;
-import socialite.dist.PortMap;
-import socialite.dist.Status;
+import socialite.dist.*;
 import socialite.dist.client.TupleSend;
 import socialite.engine.Config;
 import socialite.eval.ClassFilesBlob;
 import socialite.eval.Eval;
 import socialite.eval.EvalDist;
-import socialite.eval.EvalParallel;
-import socialite.eval.EvalProgress;
 import socialite.eval.Manager;
 import socialite.eval.Worker;
 import socialite.functions.PyInterp;
 import socialite.functions.PyInvoke;
 import socialite.parser.Table;
-import socialite.resource.WorkerAddrMap;
-import socialite.resource.WorkerAddrMapW;
-import socialite.resource.SRuntime;
-import socialite.resource.Sender;
-import socialite.resource.TableInstRegistry;
+import socialite.resource.*;
 import socialite.tables.ConstsWritable;
 import socialite.tables.QueryRunnable;
 import socialite.tables.QueryVisitor;
-import socialite.util.Assert;
-import socialite.util.Loader;
-import socialite.util.SocialiteFinishEval;
-import socialite.util.SocialiteInputStream;
-import socialite.util.SocialiteOutputStream;
+import socialite.tables.TableInst;
+import socialite.util.*;
 
 
 public class CmdListener implements WorkerCmd {
@@ -94,7 +64,7 @@ public class CmdListener implements WorkerCmd {
 		cmdListenPort=PortMap.get().workerCmdListen();
 		worker=_worker;
 	}
-	
+
 	FileSystem hdfs() {
 		if (hdfs==null) {
 			try { hdfs = FileSystem.get(new Configuration()); }
@@ -118,7 +88,7 @@ public class CmdListener implements WorkerCmd {
 	public void start() {
 		try {
 			String host=Host.get();			
-			int numHandlers = 16;
+			int numHandlers = 32;
 			Server server = RPC.getServer(this, host, cmdListenPort, numHandlers, false, new Configuration());
 			server.start();
 		} catch (IOException e) {
@@ -132,14 +102,13 @@ public class CmdListener implements WorkerCmd {
 		Worker.haltEpoch();
 	}
 	@Override
-	public IntWritable getCpuNum() {
+	public IntWritable getWorkerThreadNum() {
 		int cpuNum = Runtime.getRuntime().availableProcessors();
 		return new IntWritable(cpuNum);
 	}
 	@Override
-	public void setWorkerNum(IntWritable num) {
-		int cpuNum = num.get();
-		worker.setConf(Config.dist(cpuNum));
+	public void setWorkerThreadNum(IntWritable num) {
+        worker.initManagerAndWorkers(Config.dist(num.get()));
 	}
 	@Override
 	public BooleanWritable addToClassPath(Text _path) {
@@ -154,7 +123,7 @@ public class CmdListener implements WorkerCmd {
 	public Writable status(IntWritable verbose) {
 		Status s=new Status();		
 		s.putMemStatus(SRuntime.freeMemory());
-		SRuntime runtime = SRuntime.workerRt();
+		SRuntime runtime = SRuntimeWorker.getInst();
 		TIntFloatHashMap progressMap;
 		if (runtime==null) { progressMap = new TIntFloatHashMap(); } 
 		else { progressMap = runtime.getProgress().get(); }
@@ -248,6 +217,26 @@ public class CmdListener implements WorkerCmd {
 		}	
 	}
 
+    @Override  /* MaterNode calls CmdListener.init after all the worker nodes are registered. */
+    public synchronized void init(WorkerAddrMapW workerAddrMapW) throws RemoteException {
+        WorkerAddrMap workerMap = workerAddrMapW.get();
+        SRuntimeWorker runtime = SRuntimeWorker.create(worker.getConf(), workerMap, worker.getConnPool());
+        Manager.getInst().setRuntime(runtime);
+        if (!worker.isReady()) {
+            int tryCnt;
+            for (tryCnt=0; tryCnt<20; tryCnt++) {
+                try { Thread.sleep(10);}
+                catch (InterruptedException e) { }
+                if (worker.isReady()) break;
+            }
+            if (!worker.isReady()) {
+                L.error("tryCnt:"+tryCnt);
+                throw new RemoteException("SociaLiteException", "WorkerNode is not ready. See logs.");
+            }
+        }
+    }
+
+    /*
 	@Override
 	public BooleanWritable beginSession(Text _path, WorkerAddrMapW workerAddrMapW, boolean loadSession) {
 		String path=_path.toString();
@@ -278,7 +267,7 @@ public class CmdListener implements WorkerCmd {
 		EvalProgress.getInst().clear();
 		CodeGenMain.clearCache();		
 		return new BooleanWritable(true);
-	}
+	}*/
 	
 	void cleanupLocalWorkSpace(String path) {
 		File ws = new File(path);
@@ -287,7 +276,7 @@ public class CmdListener implements WorkerCmd {
 	}
 	
 	void loadTables() {
-		SRuntime rt=SRuntime.workerRt();		
+		SRuntime rt=SRuntimeWorker.getInst();		
 		try {
 			FileSystem fs;
 			if (PathTo.cwd().startsWith("hdfs://"))
@@ -314,7 +303,7 @@ public class CmdListener implements WorkerCmd {
 		L.info("Loading tables done");
 	}
 	void storeTables() {
-		SRuntime rc=SRuntime.workerRt();
+		SRuntime rc=SRuntimeWorker.getInst();
 		try {
 			FileSystem fs;
 			if (PathTo.cwd().startsWith("hdfs://"))
@@ -337,7 +326,6 @@ public class CmdListener implements WorkerCmd {
 	void prepare(SRuntime runtime, Epoch e) {
 		runtime.updateTableMap(e.getTableMap());
 		runtime.update(e);
-		Manager.getInst().updateRuntime(runtime);
 		Worker.setHalted(false);
 	}
 	
@@ -346,140 +334,43 @@ public class CmdListener implements WorkerCmd {
 		
 		L.info(prefix+" Used Memory:"+used/1024/1024+"M");
 	}
-	@Override
-	public BooleanWritable run(EpochW ew) {		
-		SRuntime runtime = SRuntime.workerRt();
-		if (runtime==null) return new BooleanWritable(false);
-		
-		Epoch e = ew.get();		
-		prepare(runtime, e);
-		Eval eval=runtime.getEvalInst(ew.get());
-		assert eval instanceof EvalDist;
-		if (eval!=null) { // if the epoch has only table statements, eval can be null			
-			eval.run();
-		}
-		
-		startEpochWatcher(eval);
-		return new BooleanWritable(true);
-	}
-	
-	@Override
-	public BooleanWritable isStillIdle(IntWritable idleFrom) {
-		int idleTime = idleFrom.get();
-		if (lastIdleTime == idleTime)
-			return new BooleanWritable(true);
-		return new BooleanWritable(false);
-	}
-	@Override
-	public void epochDone() {
-		epochDone=true;
-		if (watcher!=null) watcher.finish();
-	}
-	
-	public boolean isEpochBusy() {
-		return lastIdleTime==-1;
-	}	
-	public void setEpochBusy() {
-		lastIdleTime=-1;
-	}	
 
-	void startEpochWatcher(Eval eval) {
-		assert watcher==null;
-		watcher = new WatchEpoch(eval);
-		watcher.start();
+	@Override
+	public void run(EpochW ew) {
+        SRuntime runtime = SRuntimeWorker.getInst();
+        Epoch e = ew.get();
+		prepare(runtime, e);
+		Eval eval=runtime.getEvalInst(e);
+		assert eval instanceof EvalDist;
+        eval.run();
+		return;
 	}
 	
-	WatchEpoch watcher=null;
-	volatile int lastIdleTime=-1;
-	volatile boolean epochDone=false;
-	int nextIdleTime=0;
-	int nextIdleTime() { 
-		int idleTime = ++nextIdleTime;
-		if (idleTime<0) {
-			idleTime = nextIdleTime = 0;
-		}
-		return idleTime;
-	}
-	
-	class WatchEpoch extends Thread {
-		Eval eval;
-		//int gcStartTime;
-		WatchEpoch (Eval _eval) {
-			lastIdleTime=-1;
-			epochDone=false;
-			eval = _eval;
-			
-			/*List<GarbageCollectorMXBean> gcs = ManagementFactory.getGarbageCollectorMXBeans();
-			for (GarbageCollectorMXBean gc:gcs) {
-				gcStartTime+=gc.getCollectionTime();
-			}*/
-		}
-		@Override
-		public void run() {
-			try {
-				while (!epochDone) {
-					waitUntilIdle();					
-					waitUntilBusy();
-				}
-			} catch (InterruptedException e) {
-				return;
-			} catch (Exception e) {
-				L.warn("EpochWatcher, Exception:");
-				L.warn(ExceptionUtils.getStackTrace(e));
-			}
-		}
-		
-		void waitUntilIdle() throws InterruptedException {
-			while (true) {
-				if (worker.likelyIdle() && worker.idle()) {
-					sleep(8);
-					boolean stillIdle = worker.doIfIdle(new Runnable() {
-											public void run() {
-												lastIdleTime = nextIdleTime();	
-										}});
-					if (stillIdle) {
-						worker.reportIdle(lastIdleTime);					
-						return;	
-					}					
-				}
-				sleep(12);
-			}
-		}
-		
-		void waitUntilBusy() throws InterruptedException {
-			while(lastIdleTime != -1) {
-				if (epochDone) 
-					return;	
-				sleep(12);
-			}
-		}
-		
-		void finish() {
-			interrupt();
-			if (eval!=null) eval.finish();
-			lastIdleTime=-1;
-			epochDone=false;			
-			eval = null;
-			watcher=null;			
-			//printMemInfo("After epoch done");			
-		}
-	}	
-	
+	@Override
+	public BooleanWritable isStillIdle(IntWritable _epochId, IntWritable timestamp) {
+        int epochId = _epochId.get();
+		int ts = timestamp.get();
+        return new BooleanWritable(EvalRefCount.getInst().stillIdle(epochId, ts));
+    }
+    @Override
+    public void setEpochDone(IntWritable epochId) {
+    	EvalRefCount.getInst().clear(epochId.get());
+    }
+
 	public BooleanWritable runQuery(IntWritable queryTid,
 									Text queryClass,
 									LongWritable iterId, 
 									ConstsWritable args) {
-		int tid=queryTid.get();
+        int tid=queryTid.get();
 		String queryClsName = queryClass.toString();
-		
-		SRuntime runtime = SRuntime.workerRt();
+
+		SRuntime runtime = SRuntimeWorker.getInst();
 		Config conf=runtime.getConf();
 		String masterIp = conf.portMap().masterAddr();
-		int tupleReqPort=conf.portMap().tupleReqListen();
+        int tupleReqPort=conf.portMap().tupleReqListen();
 		QueryVisitor qv = new TupleSend("CmdListener", masterIp, tupleReqPort, iterId.get());
 		QueryRunnable query=runtime.getQueryInst(tid, queryClsName, qv);
 		query.setArgs(args.get());
-		
 		runningQueryMap.put(iterId.get(), query);
 		try { query.run(); }
 		catch (SocialiteFinishEval e) {
@@ -496,12 +387,11 @@ public class CmdListener implements WorkerCmd {
 	}
 	
 	@Override
-	public BooleanWritable makeConnections(ArrayWritable otherWorkers) {
+	public void makeConnections(ArrayWritable otherWorkers) {
 		String[] restWorkerAddrs=otherWorkers.toStrings();
-		boolean success=worker.connect(restWorkerAddrs);
+		worker.connect(restWorkerAddrs);
 		L.info(restWorkerAddrs.length+"'th worker registered to MasterNode");
-		return new BooleanWritable(success);
-	}		
+	}
 	
 	@Override
 	public void runGc() {
@@ -510,6 +400,11 @@ public class CmdListener implements WorkerCmd {
 		System.gc();
 		
 		printMemInfo("After System.gc():");
+	}
+	
+	@Override
+	public void info() {
+		SRuntimeWorker runtime = SRuntimeWorker.getInst();
 	}
 	
 	@Override

@@ -2,10 +2,7 @@ package socialite.tables;
 
 import socialite.parser.Table;
 
-/**
- * A SociaLite table exposed to end-users
- */
-public class TableRefLocal {
+public class TableRefLocal implements TableRef {
     Table table;
     public TableRefLocal(Table t) {
         table = t;

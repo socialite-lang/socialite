@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import socialite.parser.antlr.ColumnGroup;
 import socialite.parser.antlr.TableDecl;
 import socialite.parser.antlr.ColumnDecl;
@@ -14,10 +16,10 @@ import gnu.trove.list.array.TIntArrayList;
 
 public class Table implements Serializable {
 	static final long serialVersionUID = 1;
-	
+    static final Log L= LogFactory.getLog(Table.class);
+
 	TableDecl decl;
 	String className;
-	String deltaClassName;
 	int id;
 	
 	Column[] columns;
@@ -47,7 +49,7 @@ public class Table implements Serializable {
 	public Table(TableDecl _decl) {
 		decl = _decl;
 		id = IdFactory.nextTableId();
-		init();
+        init();
 	}
 	public void setVisitorInterface(String _visitorInterface) { visitorInterface = _visitorInterface; }
 	public String visitorInterface() { return visitorInterface; }
@@ -122,9 +124,6 @@ public class Table implements Serializable {
 
 		for (int i:nestPos()) {
 			sig += "_nest"+i;
-			if (columns[i].hasSize()) {
-				sig += "size"+columns[i].getSize();
-			}
 		}
 		for (int i:indexedCols()) {
 			sig += "_indexby"+i;
@@ -143,6 +142,7 @@ public class Table implements Serializable {
 			sig += "_orderby"+i;
 		}
 		sig += "_groupby"+groupbyColNum();
+        if (isConcurrent()) sig += "_concurrent";
 		return sig;
 	}
 	public int arrayTableSize() {
@@ -160,8 +160,8 @@ public class Table implements Serializable {
 	
 	public void setGroupByColNum(int num) throws InternalException {
 		if (compiled && groupby!=num) {
-			String msg="Cannot add group-by columns:table "+ name()+" is already compiled. "+
-					"Add groupby(number-of-columns) to the declaration of "+name()+" if necessary.";			
+			String msg="Cannot add groupby with "+num+" columns: table "+ name()+" is already compiled. "+
+					"Add groupby("+num+") to "+name()+".";			
 			throw new InternalException(msg);
 		}
 		
@@ -180,28 +180,8 @@ public class Table implements Serializable {
 	public boolean hasGroupby() { return groupby>0; }
 	public int groupbyColNum() { return groupby; }	
 	public int groupbyRestColNum() { return columns.length-groupby;}
-	
-	public int iteratePrefixNum() {
-		if (!isArrayTable) return columns[0].isIndexed()? 1:0;
-		if (nestedTableIndices.size()==0) return columns[0].isIndexed()? 1:0;
-		
-		int nestIdx1=nestedTableIndices.get(0);
-		if (columns[nestIdx1].isIndexed()) {
-			return 1+nestIdx1;
-		} else return columns[0].isIndexed()? 1:0; 
-	}
 
-	/*
-	// true if group-by operation returns a single row
-	public boolean groupbySingleRow() {
-		assert groupby > 0;		
-		for (int i=groupby; i<columns.length; i++)
-			if (nestingBegins(i)) return false;
-		return true;
-	}	
-	// true if group-by operation returns multiple rows
-	public boolean groupbyMultiRow() { return !groupbySingleRow(); }
-	*/
+    public boolean hasIndexby() { return indexedCols().length>0; }
 	
 	public List<ColumnGroup> getColumnGroups() { return columnGroupList; }
 	
@@ -230,7 +210,8 @@ public class Table implements Serializable {
 	}
 	public Class[] types() { return types; }
 	public String className() { return className; }
-	
+
+    public boolean isConcurrent() { return decl.isConcurrent(); }
 	public boolean isApprox() { return decl.isApproxSet(); }
 	public boolean isPredefined() { return decl.isPredefined(); }
 	public boolean isMultiSet() { return decl.isMultiSet(); }

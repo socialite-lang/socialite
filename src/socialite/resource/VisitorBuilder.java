@@ -10,19 +10,15 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import socialite.codegen.Analysis;
-import socialite.parser.Const;
-import socialite.parser.GeneratedT;
-import socialite.parser.Predicate;
-import socialite.parser.Rule;
-import socialite.parser.Table;
-import socialite.parser.Variable;
+import socialite.parser.*;
 import socialite.tables.TableInst;
+import socialite.tables.TmpTableInst;
 import socialite.util.SociaLiteException;
 import socialite.visitors.IVisitor;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-public class VisitorBuilder implements Serializable {
+public class VisitorBuilder {
 	public static final Log L=LogFactory.getLog(VisitorBuilder.class);
 		
 	SRuntime runtime;
@@ -34,7 +30,7 @@ public class VisitorBuilder implements Serializable {
 	TIntObjectHashMap<RuleInfo> ruleInfoMap;
 	boolean isParallel;
 
-	public VisitorBuilder() {}
+	public VisitorBuilder() {} // for Serializable
 	public VisitorBuilder(SRuntime _rt, List<Rule> rules) {
 		runtime = _rt;
 		tableMap = runtime.getTableMap();
@@ -43,23 +39,7 @@ public class VisitorBuilder implements Serializable {
 		visitorMap = new TIntObjectHashMap<Class>();
 		isParallel = runtime.getConf().isParallel();
 		
-		//ruleInfos = new RuleInfo[8];
-		ruleInfoMap = new TIntObjectHashMap<RuleInfo>(); 
-		generateRuleInfo(rules);
-	}
-	public VisitorBuilder(List<VisitorBuilder> builders, List<Rule> rules) {
-		VisitorBuilder builder = builders.get(0);
-		runtime = builder.runtime;
-		tableMap = builder.tableMap;
-		sliceMap = builder.sliceMap;
-		tableRegistry = builder.tableRegistry;
-		visitorMap = new TIntObjectHashMap<Class>(builder.visitorMap);
-		isParallel = builder.isParallel;
-		
-		ruleInfoMap = new TIntObjectHashMap<RuleInfo>(builder.ruleInfoMap);
-		for (int i=1; i<builders.size(); i++) {
-			ruleInfoMap.putAll(builders.get(i).ruleInfoMap);
-		}
+		ruleInfoMap = new TIntObjectHashMap<RuleInfo>();
 		generateRuleInfo(rules);
 	}
 	
@@ -78,34 +58,19 @@ public class VisitorBuilder implements Serializable {
 				} else {
 					bodyTableIds.add(t.id());
 				}
-			}			
-			
-			boolean startWithT=false;
+			}
+            Table firstT=null;
+			//boolean startWithT=false;
 			Object firstBody = r.getBody().get(0);
-			if (firstBody instanceof Predicate)
-				startWithT = true;
+			if (firstBody instanceof Predicate) {
+                Predicate firstP = (Predicate)firstBody;
+                firstT = tableMap.get(firstP.name());
+                //startWithT = true;
+            }
 
 			int slicingColumn=findSlicingColumn(r);			
-			RuleInfo info=new RuleInfo(r, headT, bodyTableIds, tmpTablePos, startWithT, slicingColumn, r.getConsts());
+			RuleInfo info=new RuleInfo(r, headT, bodyTableIds, tmpTablePos, firstT, slicingColumn, r.getConsts());
 			ruleInfoMap.put(r.id(), info); 
-		}
-	}
-	
-	int OLD_findSlicingColumn(Rule r) {
-		if (!isParallel) return 0;
-		
-		if (!Analysis.isParallelRule(r, tableMap)) return -1;
-		
-		Object first = r.getBody().get(0);
-		assert first instanceof Predicate;
-		Predicate firstP=(Predicate)first;
-		Table firstT=tableMap.get(firstP.name());
-		int column=Analysis.firstShardedColumnWithVar(firstP, firstT);
-		if (column >= 0) {
-			return column;
-		} else {
-			assert firstT.isModTable();
-			return 0;
 		}
 	}
 	int findSlicingColumn(Rule r) {
@@ -155,6 +120,7 @@ public class VisitorBuilder implements Serializable {
 		TIntArrayList tableIds = info.bodyTableIds;
 		assert argTypes[0].equals(int.class): "rule "+ruleId+" constructor has unexpected argument types";
 		int offset=0;
+        args[offset++] = info.getEpochId();
 		args[offset++] = ruleId;
 		for (Const c:info.consts) {
 			args[offset++] = c.val;
@@ -199,6 +165,7 @@ public class VisitorBuilder implements Serializable {
 		int tmpTablePos = info.tmpTablePos;
 		assert tmpTablePos>=0:"tmpTable:"+tmpTable;
 		int offset=0;
+        args[offset++] = info.getEpochId();
 		args[offset++] = ruleId;
 		for (Const c:info.consts) {
 			args[offset++] = c.val;
@@ -235,9 +202,9 @@ public class VisitorBuilder implements Serializable {
 		RuleInfo info = ruleInfoMap.get(ruleId);
 		int tmpTablePos = info.tmpTablePos;
 		assert tmpTablePos>=0: "rule "+info.r+ "has no tmp table slot";
-		//TIntArrayList tableIds = ruleInfos[ruleId].bodyTableIds;
 		TIntArrayList tableIds = info.bodyTableIds;
 		int offset=0;
+        args[offset++] = info.getEpochId();
 		args[offset++] = ruleId;
 		for (Const c:info.consts) {
 			args[offset++] = c.val;
@@ -272,63 +239,20 @@ public class VisitorBuilder implements Serializable {
 	public int firstTableId(int ruleId) {
 		return ruleInfoMap.get(ruleId).firstTableId();
 	}
-	boolean startWithT(int ruleId) {
-		return ruleInfoMap.get(ruleId).startWithT;
-	}	
-	
+
 	public IVisitor[] getNewVisitorInst(int ruleId) {
 		return getNewVisitorInst(ruleId, null);
 	}
-	
-	public IVisitor[] getNewVisitorInst0(int ruleId, TableInst[] localT) {
-		IVisitor[] visitors = getNewVisitorInst(ruleId, localT);
-		for (IVisitor v:visitors) 
-			if (v!=null) v.incPriority();
-		return visitors;
-	}
 
 	int getVisitorNumFromT(TableInst[] t) {		
-		// t can only be either DeltaTable or RemoteHeadTable
 		assert t.length==1;
 		assert t[0]!=null;
-		return t[0].virtualSliceNum();
+		return 1;
+		/*TmpTableInst tmp = (TmpTableInst)t[0];
+		return tmp.virtualSliceNum();*/
 	}
 	
-	public IVisitor[] getNewVisitorInst(int ruleId, TableInst localT, int sliceIdx) {
-		Class visitorClass = getVisitorClass(ruleId);
-		if (visitorClass == null) {
-			L.error("No visitor class for rule:"+ruleId);
-			throw new SociaLiteException("No visitor class for rule:"+ruleId);
-		}
-		Constructor[] constr = visitorClass.getConstructors();
-		assert(constr.length == 1);
-		
-		Object[] args;
-		if (localT==null) args = makeArgsForConstr(constr[0], ruleId);
-		else args = makeArgsForConstr(constr[0], ruleId, localT);
-		
-		IVisitor[] visitors = new IVisitor[1];
-		try {
-			args[args.length-1] = sliceIdx;
-			visitors[0] = (IVisitor)constr[0].newInstance(args);
-		} catch (Exception e) {
-			/*System.out.println("Visitor class:"+visitorClass.getSimpleName());
-			Class[] argTypes = constr[0].getParameterTypes();
-			for (int i=0; i<argTypes.length; i++) {
-				System.out.println("argTypes["+i+"]:"+argTypes[i].getSimpleName());
-			}			
-			for (int i=0; i<argTypes.length; i++) {
-				System.out.println("args["+i+"]:"+args[i].getClass().getSimpleName()+", "+args[i]);
-			}*/
-			L.error("Error while creating new visitor instance:"+e);
-			L.error(ExceptionUtils.getStackTrace(e));
-			throw new SociaLiteException("Error creating visitor(rule:"+ruleInfoMap.get(ruleId)+")");
-		}
-		return visitors;
-	}
-	
-	
-	public IVisitor[] getNewVisitorInst(int ruleId, TableInst[] localT) {
+	public IVisitor[] getNewVisitorInst(int ruleId, TableInst[] tmlTable) {
 		Class visitorClass = getVisitorClass(ruleId);
 		if (visitorClass==null) throw new SociaLiteException("No visitor class for rule:"+ruleId);
 		
@@ -336,13 +260,13 @@ public class VisitorBuilder implements Serializable {
 		assert(constr.length == 1);
 
 		Object[] args;
-		if (localT==null) args = makeArgsForConstr(constr[0], ruleId);
-		else args = makeArgsForConstr(constr[0], ruleId, localT);
+		if (tmlTable==null) args = makeArgsForConstr(constr[0], ruleId);
+		else args = makeArgsForConstr(constr[0], ruleId, tmlTable);
 		
 		int visitorNum, firstTableIdx;
 		visitorNum = ruleInfoMap.get(ruleId).getVisitorNum(sliceMap);		
 		if (visitorNum==0)
-			visitorNum = getVisitorNumFromT(localT);
+			visitorNum = getVisitorNumFromT(tmlTable);
 		assert visitorNum>0;
 		firstTableIdx = ruleInfoMap.get(ruleId).getFirstTableIdx(sliceMap);
 		
@@ -353,13 +277,8 @@ public class VisitorBuilder implements Serializable {
 				visitors[0] = (IVisitor) constr[0].newInstance(args);
 			} else {
 				for (int j = 0; j < visitors.length; j++) {
-					if (localT!=null && tableId(localT) == ruleInfoMap.get(ruleId).firstTableId() &&
-							localT.length==visitors.length && localT[j]==null) {
-						visitors[j]=null;
-					} else {
-						args[args.length - 1] = j;
-						visitors[j] = (IVisitor) constr[0].newInstance(args);
-					}
+					args[args.length - 1] = j;
+					visitors[j] = (IVisitor) constr[0].newInstance(args);
 				}
 			}
 		} catch (Exception e) {		
@@ -401,28 +320,26 @@ class RuleInfo {
 	final Rule r;
 	final Table headT;
 	final TIntArrayList bodyTableIds;
-	final boolean startWithT;
+    final Table firstT;
 	final int slicingColumn;
 	final int tmpTablePos;
 	final List<Const> consts;
 	
 	// RuleInfo(r, headT, bodyTableIds, startWithT, slicingColumn);
-	RuleInfo(Rule _r, Table _headT, TIntArrayList _bodyTableIds, int _tmpTablePos, boolean _startWithT, int _slicingColumn, List<Const> _consts) {
+	RuleInfo(Rule _r, Table _headT, TIntArrayList _bodyTableIds, int _tmpTablePos, Table _firstT, int _slicingColumn, List<Const> _consts) {
 		r = _r;
 		headT = _headT;
 		bodyTableIds = _bodyTableIds;
-		startWithT = _startWithT;
+        firstT = _firstT;
 		slicingColumn = _slicingColumn;
 		consts = _consts;
 		tmpTablePos = _tmpTablePos;		
 	}
-	
-	public int accessedTableCount() {
-		int count=bodyTableIds.size();
-		if (headTableId() >= 0)
-			count++;
-		return count;
-	}
+    boolean startWithT() { return firstT != null; }
+    public int getEpochId() {
+        return r.getEpochId();
+    }
+
 	public int headTableId() {
 		if (headT instanceof GeneratedT) return -1;
 		return headT.id();
@@ -433,7 +350,7 @@ class RuleInfo {
 	}
 		
 	public int getFirstTableIdx(TableSliceMap sliceMap) {
-		if (!startWithT) return 0;
+		if (!startWithT()) return 0;
 		assert bodyTableIds.size()>0;
 		int id = bodyTableIds.get(0);
 		
@@ -468,14 +385,16 @@ class RuleInfo {
 	}
 	
 	public int getVisitorNum(TableSliceMap sliceMap)  {
-		if (!startWithT) return 1;
-		assert bodyTableIds.size()>0;
+		if (!startWithT()) return 1;
+        if (firstT instanceof RemoteHeadTable) { return 1; }
+        if (firstT instanceof DeltaTable) { return 1; }
+
 		int id = bodyTableIds.get(0);
 
 		if (slicingColumn==-1) return 1;
 		int sliceNum = sliceMap.virtualSliceNum(id, slicingColumn);
 		if (sliceNum==1) return 1;
-		
+
 		Predicate firstP = r.firstP();
 		Object param = firstP.getAllInputParams()[slicingColumn];
 		if (param instanceof Const) {

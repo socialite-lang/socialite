@@ -1,23 +1,20 @@
 package socialite.parser;
 
-import java.io.Serializable;
+import java.io.*;
 
 import socialite.parser.antlr.ColumnDecl;
 import socialite.parser.antlr.ColIter;
 import socialite.parser.antlr.ColOpt;
 import socialite.parser.antlr.ColRange;
-import socialite.parser.antlr.ColSize;
 import socialite.util.Assert;
 import socialite.util.InternalException;
 import socialite.util.SociaLiteException;
 
 
-public class Column implements Serializable {
+public class Column implements Externalizable {
 	private static final long serialVersionUID = 1;
-	static final int DEFAULT_SIZE = 1024*4;
-	static final int DEFAULT_NESTED_SIZE = 32;
-	
-	final ColumnDecl decl;
+
+	ColumnDecl decl;
 	boolean isPrimShard;
 	boolean indexed=false;
 	boolean sorted=false;
@@ -26,8 +23,8 @@ public class Column implements Serializable {
 	boolean isConst=false;
 	Object constVal=null;	
 	int relPos=-1;
-	boolean isAtomicArray=false;
-	
+
+    public Column() { }
 	public Column(ColumnDecl _decl) { 
 		decl=_decl;
 		isPrimShard = false;
@@ -63,13 +60,13 @@ public class Column implements Serializable {
 		Assert.true_(relPos==-1);
 		relPos=idx;
 	}
-	// For StringTemplate
-	public int getRelPos() {
+	
+	public int getRelPos() { // used by StringTemplate
 		Assert.true_(relPos!=-1);
 		return relPos; 
 	}
-	// For StringTemplate
-	public int getAbsPos() { return decl.pos(); }
+	
+	public int getAbsPos() { return decl.pos(); } // used by StringTemplate
 	
 	public void setPrimaryShardIndex(boolean f) { 
 		isPrimShard = f; 
@@ -88,13 +85,7 @@ public class Column implements Serializable {
 		assert isConst;
 		return constVal;
 	}
-	public void setAtomicArray() {
-		isAtomicArray=true;
-	}
-	public boolean isAtomicArray() { 
-		return isAtomicArray;
-	}
-		
+
 	// For StringTemplate
 	public String getName() { return name(); }
 	public String getType() { return type().getSimpleName(); }
@@ -118,27 +109,9 @@ public class Column implements Serializable {
 	public boolean isArrayIndex() { return hasRange();}
 	public boolean isIndexed() { return isPrimShard || indexed || hasRange();}
 	public boolean isSorted() { return sorted; }
-	public boolean isSortedAsc() { return sorted && asc; }
-	public boolean isSortedDesc() { return sorted && !asc; }
+	public boolean isSortedAsc() { return sorted; }
+	public boolean isSortedDesc() { return false; }
 	public boolean isOrdered() { return ordered; }
-	public boolean hasSize() {
-		ColOpt opt = decl.option();
-		if (opt instanceof ColSize) return true;
-		return false;
-	}
-	public int getSize() {
-		if (hasSize()) {
-			ColSize opt = (ColSize)decl.option();
-			return opt.size();
-		} else {
-			if (getAbsPos()==0) return DEFAULT_SIZE;
-			else return DEFAULT_NESTED_SIZE;
-		}
-	}
-	public void setSize(int size) {
-		ColSize sz = new ColSize(size);
-		decl.setOption(sz);
-	}
 	
 	public boolean hasRange() {
 		ColOpt opt = decl.option();
@@ -147,14 +120,14 @@ public class Column implements Serializable {
 	}
 	
 	public void setRange(int from, int to) {
-		ColRange vrange = (ColRange)decl.option();
-		vrange.set(from, to);
+		ColRange range = (ColRange)decl.option();
+		range.set(from, to);
 	}
 	public int[] getRange() {
 		int range[] = new int[2];
-		ColRange vrange = (ColRange)decl.option();
-		range[0] = vrange.from();
-		range[1] = vrange.to();
+		ColRange _range = (ColRange)decl.option();
+		range[0] = _range.from();
+		range[1] = _range.to();
 		return range;
 	}
 	public boolean isIter() {
@@ -165,4 +138,43 @@ public class Column implements Serializable {
 	public String toString() {
 		return type().getSimpleName()+":"+name()+"@"+position();
 	}
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException,
+            ClassNotFoundException {
+        decl = new ColumnDecl();
+        decl.readExternal(in);
+        byte encoded = in.readByte();
+        if ((encoded & 0x01)>0) isPrimShard = true;
+        if ((encoded & 0x02)>0) indexed = true;
+        if ((encoded & 0x04)>0) sorted = true;
+        if ((encoded & 0x08)>0) asc = true;
+        if ((encoded & 0x10)>0) ordered = true;
+        if ((encoded & 0x20)>0) isConst = true;
+
+        if (in.readBoolean()) {
+            constVal = in.readObject();
+        }
+        relPos = in.readInt();
+    }
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        byte encoded=0;
+        decl.writeExternal(out);
+        if (isPrimShard) encoded |= 0x01;
+        if (indexed) encoded |= 0x02;
+        if (sorted) encoded |= 0x04;
+        if (asc) encoded |= 0x08;
+        if (ordered) encoded |= 0x10;
+        if (isConst) encoded |= 0x20;
+        out.writeByte(encoded);
+
+        if (constVal==null) {
+            out.writeBoolean(false);
+        } else {
+            out.writeBoolean(true);
+            out.writeObject(constVal);
+        }
+        out.writeInt(relPos);
+    }
 }

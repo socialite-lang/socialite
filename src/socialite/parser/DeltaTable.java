@@ -12,28 +12,29 @@ import socialite.parser.antlr.SortBy;
 import socialite.parser.antlr.TableDecl;
 import socialite.parser.antlr.TableOpt;
 import socialite.parser.antlr.ColumnDecl;
-import socialite.parser.antlr.ColSize;
 import socialite.resource.Sender;
 import socialite.util.AnalysisException;
 import socialite.util.Assert;
 import socialite.util.InternalException;
 
 // DeltaTable does not have nesting (so based on DynamicTable.stg)
-public class DeltaTable extends Table implements GeneratedT {
+public class DeltaTable extends Table implements GeneratedT, FixedSizeTable {
 	int origId=-1;
 	Table origT=null;	
 	DeltaRule rule=null;
+	final int size;
 	public DeltaTable(Table t, DeltaRule r) {
 		super(genDecl(t, r));
 		ConstCols.init(this, r.getTheP());
-		
+		size = determineSize(t);
 		origT=t;
 		origId=t.id();
 		rule = r;
-		assertNormalTable(t);
+		assert !(t instanceof GeneratedT);
 
 		className = signature();
 	}
+	public int size() { return size; }
 	public DeltaRule getDeltaRule() { return rule; }
 	
 	@Override public Table origT() { return origT; }
@@ -71,25 +72,19 @@ public class DeltaTable extends Table implements GeneratedT {
 			colDecls.add(new ColumnDecl(type, colname));
 		}
 		TableDecl decl=new TableDecl(newName, null, colDecls, null);		
-		setsize(decl, t, r);
 		setMultiset(decl);
 		return decl;
 	}
-	static void setsize(TableDecl decl, Table t, DeltaRule r) {
-		ColumnDecl first = decl.first();
-		first = decl.first();
+	static int determineSize(Table t) {
 		int size=-1;
 		if (t.getColumn(0).hasRange()) {
 			int[] range=t.getColumn(0).getRange();
-			size=(range[1]-range[0])/10;
-		} else if (t.getColumn(0).hasSize()) {
-			size = t.getColumn(0).getSize()/4;	
-		} else { size = 64*1024;}
-		//if (r.isDeltaStepOpt()) size/=2;
-		assert size>=0;
-		if (size<16*1024) size=16*1024;
-		ColSize optSize = new ColSize(size);
-		first.setOption(optSize);
+			size=(range[1]-range[0])/16;
+		} else { size = 128*1024;}
+		
+		if (size > 1024*1024) size = 1024*1024;
+		else if (size < 16*1024) size = 16*1024;
+		return size;
 	}
 	static void setMultiset(TableDecl decl) {
 		List<TableOpt> opts = new ArrayList<TableOpt>();
@@ -105,12 +100,8 @@ public class DeltaTable extends Table implements GeneratedT {
 	@Override
 	public boolean isSliced() { return false; }
 	
-	// 
-	static void assertNormalTable(Table t) {
-		assert !(t instanceof GeneratedT): "Table "+t.name()+" is not a normal table!";
-	}	
 	public static String name(Table origT) {
-		assertNormalTable(origT);
+		assert !(origT instanceof GeneratedT);
 		return "Delta_"+origT.name();
 		//return "Delta$"+origT.name();
 	}

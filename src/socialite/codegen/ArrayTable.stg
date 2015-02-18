@@ -3,8 +3,9 @@ group array-table;
 import "TableCommon.stg"
 
 arrayTable(tableName, name, byteArrayClass, visitorClass, columns, gbColumns, gbAggrColumn,
-		sortedCol, idxCols,
-		methods, base, size, id, 
+		base, size,
+		idxCols,
+		methods, id, 
 		concurrent=false, multiSet=false, isNested=false) ::= <<
 <if(!isNested)>
 package socialite.tables;
@@ -13,12 +14,9 @@ package socialite.tables;
 <endif>
 
 // ArrayTable
-<if(isNested)>static<else>public<endif> class <name> extends AbstractTableInst <if(concurrent)>implements ConcurrentTableInst<endif> {
+<if(!isNested)>public<endif> class <name> extends AbstractTableInst <if(concurrent)>implements ConcurrentTableInst<endif> {
 	private static final long serialVersionUID = 1;
 	
-	public static double theRowSize() {
-		return <columns:{c|<c.typeSize>};separator="+">;
-	}
 	public static int tableid() { return <id>; }
 	
 	public static <name> create() { return new <name>(<base>, <size>); }
@@ -32,7 +30,7 @@ package socialite.tables;
 	<first(columns).type> base;
 	<byteArrayClass> filled;
 	<rest(columns):{c|<c.type> col<i>[];<\n>}>
-	<idxCols:{ic|SIndex index<ic.relPos>;<\n>}>
+	<idxCols:{ic|SPosIndex index<ic.relPos>;<\n>}>
 	 
 	<if(concurrent)>volatile<endif> boolean isEmpty = true;
 	
@@ -41,11 +39,7 @@ package socialite.tables;
 		base = _base;
 		filled = new <byteArrayClass>(size);
 		<rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[size][]<else><c.type>[size]<endif>;<\n>}>;
-		<idxCols:{ic|index<ic.relPos> = new SIndex(size/8, <length(columns)>);<\n>}>
-	}
-	
-	public double rowSize() {
-		return <name>.theRowSize(); 
+		<idxCols:{ic|index<ic.relPos> = new SPosIndex();<\n>}>
 	}
 	
 <rest(columns):{c| private <c.type> col<i>(int i) { return col<i>[i]; \}<\n>}>
@@ -60,19 +54,6 @@ package socialite.tables;
 		    filled.set(i, (byte)1);
 			<rest(columns):{t| col<i>[i]=init<i>;<\n>}>;
 		}
-	}
-	
-	public TableInst copy() {
-		Assert.not_supported();
-		return null;
-	}	
-	public void addAllFast(TableInst table) {
-		Assert.not_supported();
-	}
-	
-	public boolean filledToCapacity() {
-		Assert.not_implemented();
-		return false;
 	}
 	
 	public void clearQuick() { clear(); }
@@ -153,11 +134,12 @@ package socialite.tables;
 		return true;
     }
 
+/*
     public void insertAtomic(Iterator\<Tuple> iterator) {
         Tuple<columns:{c|_<TupleMap.(c.type)>}> tuple;
         while (iterator.hasNext()) {
             tuple = (Tuple<columns:{c|_<TupleMap.(c.type)>}>)iterator.next();
-            insertAtomic(<columns:{c|tuple._<i0>};separator=",">);
+            insertAtomic(<columns:{c|(<c.type>)tuple._<i0>};separator=",">);
         }
     }
 	public boolean insertAtomic(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
@@ -178,7 +160,7 @@ package socialite.tables;
 		<idxCols:{ic|index<ic.relPos>.addAtomic(a<ic.relPos>, i);<\n>}>
 		filled.compareAndSet(i, (byte)-1, (byte)1);
 		return true;
-	}
+	}*/
 	
 	public void iterate(<visitorClass> v) {
 		if (isEmpty) return;
@@ -216,15 +198,6 @@ package socialite.tables;
 	                return v.visit(pos+_base, <rest(columns):{c2|col<i>(pos)};separator=", ">);
 	            \}\});
 	\}
-    /*
-		TIntArrayList posList=(TIntArrayList)index<c.relPos>.get(a);
-		if (posList==null) return;
-		for (int i=0; i\<posList.size(); i++) {
-			int pos=posList.getQuick(i);
-			boolean cont=v.visit(pos+base, <rest(columns):{c2|col<i>(pos)};separator=", ">);
-			if (!cont) return;
-		\}
-	\}*/
 }>
 
 <if(gbColumns)>	
@@ -264,34 +237,5 @@ package socialite.tables;
 <endif>
 
 	<methods;separator="\n">
-
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		<if(IsInt.(first(columns).type))>out.writeInt(base);
-		<else>out.writeLong(base);<endif>
-		
-		out.writeInt(filled.length());
-		for (int i=0; i\<filled.length(); i++)
-			out.writeByte(filled.get(i));
-		
-		<rest(columns):
-		{c|for (int i=0; i\<filled.length(); i++)
-			out.<WriteF.(c.type)>(col<i>[i]);
-		}>	
-	}
-	
-	@Override
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		<if(IsInt.(first(columns).type))>base=in.readInt();
-		<else>base=in.readLong();<endif>
-
-		int len=in.readInt();
-		filled = new <byteArrayClass>(len);
-		for (int i=0; i\<len; i++) 
-			filled.set(i, in.readByte());
-			
-		<rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[len][]<else><c.type>[len]<endif>;<\n>}>
-		<rest(columns):{c|for(int i=0; i\<len; i++) col<i>[i]=(<c.type>)in.<ReadF.(c.type)>();<\n>}>	
-	}
 }
 >>

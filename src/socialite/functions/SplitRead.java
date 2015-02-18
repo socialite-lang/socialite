@@ -13,7 +13,6 @@ import java.util.Arrays;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -25,9 +24,11 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.LineRecordReader;
 
+import socialite.resource.SRuntimeWorker;
 import socialite.util.SociaLiteException;
 import socialite.resource.SRuntime;
 import socialite.resource.WorkerAddrMap;
+import socialite.dist.Host;
 import socialite.eval.Worker;
 import socialite.eval.EvalProgress;
 
@@ -49,7 +50,6 @@ public class SplitRead {
 	static class LineIteratorDist implements Iterator<String> {
 		public static final Log L=LogFactory.getLog(LineIteratorDist.class);
 
-		int myid=-1;
 		List<FileSplit> mySplits;
 		int splitIdx;
 		LineRecordReader reader;
@@ -61,7 +61,6 @@ public class SplitRead {
 		LineIteratorDist(String file, String encoding) {
 			ruleid = Worker.getCurrentRuleId();
 			evalProgress = EvalProgress.getInst();
-			myid = Builtin.id();
 			try {
 				FileSystem hdfs = FileSystem.get(new Configuration());
 				Path f = new Path(file);
@@ -163,12 +162,16 @@ public class SplitRead {
 		}
 
 		int getmyid() {
-			SRuntime runtime=SRuntime.workerRt();
+			SRuntime runtime= SRuntimeWorker.getInst();
+			if (runtime == null) return 0;
 			WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
 			return addrMap.myIndex();
 		}
 		String[] getWorkers() {
-			SRuntime runtime=SRuntime.workerRt();
+			SRuntime runtime=SRuntimeWorker.getInst();
+			if (runtime == null) {
+				return new String[] {Host.get()};
+			}
 			WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
 			String[] workers = new String[addrMap.size()];
 			for (int i=0; i<addrMap.size(); i++) {

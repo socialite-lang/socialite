@@ -1,21 +1,16 @@
 package socialite.util;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import socialite.dist.EvalRefCount;
 import socialite.dist.msg.WorkerMessage;
 import socialite.eval.EvalWithTable;
-import socialite.resource.SRuntime;
-import socialite.tables.TableInst;
 
 public class SendQueue {
 	public static final Log L=LogFactory.getLog(SendQueue.class);
@@ -40,9 +35,6 @@ public class SendQueue {
 	public synchronized void empty() {
 		queue.empty();
 	}
-	public void status() {
-		System.out.println(" WARN SendQ size:"+queue.size());
-	}
 	long key(WorkerMessage msg) {
 		return ((long)msg.getSlaveId())<<32 | 
 			   ((long)msg.getTableId())<<1 | 1L;
@@ -61,8 +53,11 @@ public class SendQueue {
 		return msg;
 	}
 
-	public synchronized void pop(WorkerMessage m) {
-		reserved.remove(m);
+	public void pop(WorkerMessage m) {
+        EvalRefCount.getInst().dec(m.getEpochId());
+        synchronized (this) {
+            reserved.remove(m);
+        }
 		synchronized(condFull) {
 			condFull.notifyAll();
 		}
@@ -73,33 +68,38 @@ public class SendQueue {
 		if (!m.isSerialized()) {
 			waitIfFull();
 		}		
-		long key = key(m);		
+		long key = key(m);
+        boolean incEvalRef=false;
 		synchronized(this) {
 			WorkerMessage prevMsg = msgs.get(key);
 			if (m.isSerialized()) {
 				queue.add(m);
 				reuseTableInMsg = true;
+                incEvalRef = true;
 			} else if (prevMsg == null) {
 				queue.add(m);
 				msgs.put(key, m);
-				reuseTableInMsg = false;				
+				reuseTableInMsg = false;
+                incEvalRef = true;
 			} else {
 				boolean merged = mergeMsg(prevMsg, m);
 				if (merged) {
 					reuseTableInMsg = true;
 				} else {
 					queue.add(m);
-					msgs.put(key, m); // prevMsg is removed
+					msgs.put(key, m); // replace prevMsg with m
 					reuseTableInMsg = false;
+                    incEvalRef = true;
 				}
 			}
 			notifyAll();
 		}
+        if (incEvalRef) EvalRefCount.getInst().inc(m.getEpochId());
 		return reuseTableInMsg;
 	}
 	
 	final int queueSizeLimit=
-			(int)(ByteBufferPool.getDirectBufferAlloc()/ByteBufferPool.bufferSize()*1.5);
+			(int)(ByteBufferPool.getDirectBufferAlloc()/ByteBufferPool.bufferSize()*2);
 	Object condFull = new Object();
 	boolean isFull() {	
 		return queue.size() > queueSizeLimit;
@@ -119,12 +119,10 @@ public class SendQueue {
 		
 		EvalWithTable prevEvalT = prevMsg.evalT;
 		EvalWithTable newEvalT = newMsg.evalT;
-		assert newEvalT.getSliceIdx() == 0: "new sliceIdx:"+newEvalT.getSliceIdx();
-		assert prevEvalT.getSliceIdx() == 0: "prevEval sliceIdx:"+prevEvalT.getSliceIdx();		
 		assert prevEvalT.getTable().id() == newEvalT.getTable().id();
 		
 		if (prevEvalT.getTable().vacancy() >= newEvalT.getTable().size()) {
-			prevEvalT.getTable().addAllFast(newEvalT.getTable());			
+			prevEvalT.getTable().addAll(newEvalT.getTable());			
 			return true;
 		} else {			
 			return false;			

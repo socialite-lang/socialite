@@ -9,9 +9,7 @@ import org.apache.hadoop.ipc.VersionedProtocol;
 public interface WorkerRequest extends VersionedProtocol {
 	public static final long versionID = 1L;
 	
-	public BooleanWritable register(Text selfIp);
-	
+	public void register(Text selfIp);
 	public void handleError(IntWritable workerid, IntWritable ruleid, Text errorMsg);
-	public void haltEpoch(IntWritable workerid);
-	public void reportIdle(IntWritable workerId, IntWritable time);
+	public void reportIdle(IntWritable epochId, IntWritable workerId, IntWritable time);
 }

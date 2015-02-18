@@ -1,7 +1,10 @@
 package socialite.parser;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -10,42 +13,42 @@ import java.util.Map;
 import java.util.Set;
 
 import socialite.util.InternalException;
+import socialite.collection.SArrayList;
 
-public class Predicate implements Serializable {
+public class Predicate implements Literal {
+	private static final long serialVersionUID = 1;
+
 	public static Predicate NIL = new Predicate();
 	
-	private static final long serialVersionUID = 1;
-	
-	public Object idxParam;	
+	public Param idxParam;	
 	@SuppressWarnings("rawtypes")
-	public List params;
+	public SArrayList<Param> params;
 
-	Object[] allParams;
-	Object[] allParamsExp;
-	Object[] allOutputParams;
+	transient Param[] allParams;
+	transient Param[] allParamsExp;
+	transient Param[] allOutputParams;
 	boolean negated;
 	int posAtRuleBody;
 	String name;
 	boolean isHeadPredicate;
 	
-	
 	@SuppressWarnings("unchecked")
 	@Override
 	public Predicate clone() {
 		@SuppressWarnings("rawtypes")
-		List newParams = new ArrayList();
+		SArrayList<Param> newParams = new SArrayList<Param>();
 		newParams.addAll(params);
-		Predicate p = new Predicate(name, idxParam, new ArrayList<Object>(newParams));
+		Predicate p = new Predicate(name, idxParam, newParams);
 		p.negated = negated;
 		p.posAtRuleBody = posAtRuleBody;
 		p.isHeadPredicate = isHeadPredicate;
 		return p;
 	}
-	protected Predicate() {	}
-	public Predicate(String _name, Object _idxParam, List<?> _params) {
+	public Predicate() {	}
+	public Predicate(String _name, Param _idxParam, List<Param> _params) {
 		name = _name;
 		idxParam = _idxParam;
-		params = _params;
+		params = new SArrayList<Param>(_params);
 		negated = false;
 		posAtRuleBody = -1;
 		isHeadPredicate = false;	
@@ -108,19 +111,23 @@ public class Predicate implements Serializable {
 		if (negated) result = "!" + result;
 		
 		if (idxParam != null) {
-			if (idxParam instanceof Const) {
-				result += "[" + ((Const)idxParam).constValStr()+"]"; 
-			} else  result += "[" + idxParam + "]";
+            if (sig) {
+                result += "[" + idxParam + "]";
+            } else {
+                if (idxParam instanceof Const) {
+                    result += "[" + ((Const)idxParam).constValStr() + "]";
+                } else { result += "[" + idxParam + "]"; }
+            }
 		}
 		result += "(";
 		for (int i=0; i<params.size(); i++) {
 			Object p = params.get(i);
-			if (sig) result += p;
-			else {
+			if (sig) {
+                result += p;
+            } else {
 				if (p instanceof Const) {
-					Const c=(Const)p;
-					result += c.constValStr();
-				} else result += p;
+					result += ((Const)p).constValStr();
+				} else { result += p; }
 			}
 			if (i!= params.size()-1) result += ",";
 		}
@@ -130,7 +137,7 @@ public class Predicate implements Serializable {
 	}
 	
 	public boolean hasFunctionParam() {
-		for (Object o:params) {
+		for (Param o:params) {
 			if (o instanceof Function)
 				return true;
 		}
@@ -138,14 +145,14 @@ public class Predicate implements Serializable {
 	}
 	
 	public Function getF() {
-		for (Object o:params) {
+		for (Param o:params) {
 			if (o instanceof Function)
 				return (Function)o;
 		}
 		return null;
 	}
 	public AggrFunction getAggrF() {		
-		for (Object o:params) {
+		for (Param o:params) {
 			if (o instanceof AggrFunction)
 				return (AggrFunction)o;
 		}
@@ -155,7 +162,7 @@ public class Predicate implements Serializable {
 		int offset=0;
 		if (idxParam!=null) offset=1;
 		int i=0;
-		for (Object o:params) {
+		for (Param o:params) {
 			if (o instanceof Function)
 				return offset+i;
 			i++;
@@ -164,7 +171,7 @@ public class Predicate implements Serializable {
 		return -1;
 	}
 	@SuppressWarnings("unchecked")
-	public void replaceParamAt(int idx, Object newParam) {
+	public void replaceParamAt(int idx, Param newParam) {
 		if (idxParam!=null) {
 			if (idx==0) {
 				idxParam = newParam;
@@ -177,8 +184,8 @@ public class Predicate implements Serializable {
 		allParamsExp = null;
 		allOutputParams = null;
 	}
-	public Object removeParamAt(int i) {
-		Object ret;
+	public Param removeParamAt(int i) {
+		Param ret;
 		if (i==0 && idxParam != null) {
 			ret = idxParam;
 			idxParam = null;
@@ -198,76 +205,76 @@ public class Predicate implements Serializable {
 		
 		if (idxParam instanceof Variable) vars.add((Variable)idxParam);
 		
-		for(Object p:params) {
+		for(Param p:params) {
 			if (p instanceof Variable) vars.add((Variable)p);			
 			if (p instanceof AggrFunction) {
 				AggrFunction f = (AggrFunction)p;
-				vars.addAll(f.getInputVariables());				
+				vars.addAll(f.getInputVariables());
 			}
 		}
 		return vars;
 	}
 	
-	public Object first() { return getAllParamsExpanded()[0]; }
-	public Object last() { return getAllParamsExpanded()[getAllParamsExpanded().length-1]; }
+	public Param first() { return getAllParamsExpanded()[0]; }
+	public Param last() { return getAllParamsExpanded()[getAllParamsExpanded().length-1]; }
 	
-	public Object[] getAllInputParams() { return getAllParamsExpanded(); }	
-	public Object[] getAllOutputParams() { 
+	public Param[] getAllInputParams() { return getAllParamsExpanded(); }	
+	public Param[] getAllOutputParams() { 
 		if (allOutputParams==null) {
-			List<Object> tmp = new ArrayList<Object>();
+			List<Param> tmp = new ArrayList<Param>();
 			if (idxParam!=null) tmp.add(idxParam);
-			for (Object o:params) {
+			for (Param o:params) {
 				if (o instanceof AggrFunction) {
 					AggrFunction f=(AggrFunction)o;
-					for (Object arg:f.getReturns()) tmp.add(arg);
+					for (Param arg:f.getReturns()) tmp.add(arg);
 				} else tmp.add(o);
 			}
-			allOutputParams = tmp.toArray();			
+			allOutputParams = (Param[])tmp.toArray(new Param[0]);
 		}
 		return allOutputParams;
 	}	
 	
-	public Object[] getAllParams() {
+	public Param[] getAllParams() {
 		if (allParams==null) {
-			List<Object> tmp = new ArrayList<Object>();
+			List<Param> tmp = new ArrayList<Param>();
 			if (idxParam!=null) tmp.add(idxParam);
-			for (Object o:params) {
+			for (Param o:params) {
 				tmp.add(o);
 			}
-			allParams = tmp.toArray();			
+			allParams = (Param[])tmp.toArray(new Param[0]);
 		}
 		return allParams;
 	}
-	public Object[] getAllParamsExpanded() {
+	public Param[] getAllParamsExpanded() {
 		if (allParamsExp==null) {
-			List<Object> tmp = new ArrayList<Object>();
+			List<Param> tmp = new ArrayList<Param>();
 			if (idxParam!=null) tmp.add(idxParam);
-			for (Object o:params) {
+			for (Param o:params) {
 				if (o instanceof AggrFunction) {
 					AggrFunction f=(AggrFunction)o;
-					for (Object arg:f.getArgs()) tmp.add(arg);
+					for (Param arg:f.getArgs()) tmp.add(arg);
 				} else tmp.add(o);
 			}
-			allParamsExp = tmp.toArray();			
+			allParamsExp = (Param[])tmp.toArray(new Param[0]);
 		}
 		return allParamsExp;
 	}
-	public List<?> getRestInputParams() {
-		List<Object> tmp=new ArrayList<Object>();
-		for (Object o:params) {
+	public List<Param> getRestInputParams() {
+		List<Param> tmp=new ArrayList<Param>();
+		for (Param o:params) {
 			if (o instanceof AggrFunction) {
 				AggrFunction f=(AggrFunction)o;
-				for (Object arg:f.getArgs()) tmp.add(arg);
+				for (Param arg:f.getArgs()) tmp.add(arg);
 			} else tmp.add(o);
 		}
 		return tmp;
 	}
-	public List<?> getRestOutputParams() {
-		List<Object> tmp=new ArrayList<Object>();
-		for (Object o:params) {
+	public List<Param> getRestOutputParams() {
+		List<Param> tmp=new ArrayList<Param>();
+		for (Param o:params) {
 			if (o instanceof AggrFunction) {
 				AggrFunction f=(AggrFunction)o;
-				for (Object arg:f.getReturns()) tmp.add(arg);
+				for (Param arg:f.getReturns()) tmp.add(arg);
 			} else tmp.add(o);
 		}
 		return tmp;
@@ -295,4 +302,36 @@ public class Predicate implements Serializable {
 			}
 		}
 	}	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		if (in.readByte()==1) {
+			idxParam = (Param)in.readObject();
+		}
+		params = new SArrayList(0);
+		params.readExternal(in);
+		negated = in.readBoolean();
+		posAtRuleBody = in.readInt();
+		char[] n = new char[in.readInt()];
+		for (int i=0; i<n.length; i++) 
+			n[i] = in.readChar();	
+		name = new String(n);
+		isHeadPredicate = in.readBoolean();
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+        if (idxParam==null) {
+            out.writeByte(0);
+        } else {
+            out.writeByte(1);
+            out.writeObject(idxParam);
+        }
+		
+		params.writeExternal(out);
+		out.writeBoolean(negated);
+		out.writeInt(posAtRuleBody);
+		out.writeInt(name.length());
+		out.writeChars(name);
+		out.writeBoolean(isHeadPredicate);
+	}
 }

@@ -46,6 +46,9 @@ public class MySTGroupFile extends STGroupFile {
         }
         return st;
 	}
+
+    @Override
+    public synchronized void load() { super.load(); }
 	
 	@Override
 	public ST createStringTemplateInternally(ST proto) {

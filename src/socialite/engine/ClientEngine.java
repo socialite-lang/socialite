@@ -75,27 +75,6 @@ public class ClientEngine {
 	public Status status(int verbose) {
 		return client.status(verbose);
 	}
-	public void beginSession() {
-		beginSession("");
-	}
-	public void beginSession(String path) {
-		client.beginSession(path);
-	}
-	public void beginSession(int workerNodeNum) {
-		client.beginSession(workerNodeNum);
-	}
-	
-	public void storeSession() {
-		client.storeSession();
-	}
-	public void storeWorkspace(String workspacePath) {
-		client.storeWorkspace(workspacePath);
-		
-	}
-	public void endSession() {
-		client.endSession();
-	}
-
 	public void run(String program) {
 		try { client.run(program); }
 		catch (RemoteException e) {
@@ -117,10 +96,9 @@ public class ClientEngine {
 	public void runGc() {
 		client.runGc();
 	}	
-	
-	public void showTableMap() {
-		client.showTableMap();
-	}
+	public void info() {
+		client.info();
+	}	
 	public void shutdown() {	
 		client.shutdown();
 	}
@@ -154,7 +132,6 @@ class QueryClient {
 	QueryProtocol proto;
 	int tupleReqListenPort;
 	TupleReqListener listener;
-	volatile boolean inSession=false;
 	volatile boolean shutdown=false;
 	
 	public QueryClient(Config _conf) {
@@ -171,12 +148,22 @@ class QueryClient {
 		} catch (IOException e) {
 			L.error("Cannot connect to master:"+e);
 		}
+		boolean success=false;
 		tupleReqListenPort = conf.portMap().tupleReqClientListen();
-		listener = new TupleReqListener(conf, tupleReqListenPort);		
+		do {
+			try {
+				listener = new TupleReqListener(conf, tupleReqListenPort);
+				success = true;
+			} catch (java.net.BindException e) {
+				tupleReqListenPort++;
+			}
+		} while (!success);
 	}
 
 	Map<String, PyFunction> pyfuncMap = new HashMap<String, PyFunction>(512);
 	synchronized void maybeCopyPyFunctions() throws RemoteException {
+        if (true) return;
+
 		// XXX: this should be fixed to use BytecodeNotification in Jython when it is added.
 		
 		File pydir=new File(PathTo.pythonOutput());
@@ -231,13 +218,11 @@ class QueryClient {
 		} catch (Exception e) { throw new SociaLiteException(e); } 	
 	}
 	public void run(final String program) throws RemoteException {
-		inSession=true;
-		maybeCopyPyFunctions(); 
+		maybeCopyPyFunctions();
 		proto.run(new Text(program));
 	}
 		
 	public void run(final String program, QueryVisitor qv, int _id) throws RemoteException {
-		inSession=true;
 		maybeCopyPyFunctions();
 		long longid = machineId + _id;
 		
@@ -255,44 +240,21 @@ class QueryClient {
 		
 		return Status.fromWritable(statW);
 	}	
-	
-	public void beginSession(String path) { 
-		inSession = true;	    
-		proto.beginSession(new Text(path));		
-	}	
-	public void beginSession() { 
-		beginSession("");		
-	}
-	public void beginSession(int workerNodeNum) {
-		inSession = true;	    
-		proto.beginSession(new Text(""), new IntWritable(workerNodeNum));		
-	}
-	public void storeSession() {
-		proto.storeWorkspace();
-	}
-	public void storeWorkspace(String workspacePath) {
-		proto.storeWorkspace(new Text(workspacePath));
-	}
-	public void endSession() { 
-		if (inSession) 	proto.endSession(); 
-		inSession = false;
-	}
-	
 	public void cleanupTableIter(int _id) {
 		long longid = machineId + _id;
 		proto.cleanupTableIter(new LongWritable(longid)); 
 	}
 	
 	public void runGc() { proto.runGc(); }	
+	public void info() { proto.info(); }	
+
 	public void setVerbose() { proto.setVerbose(new BooleanWritable(true)); }
-	public void showTableMap() { proto.showTableMap(); }
 	
 	public void shutdown() {
 		if (shutdown) return;
 		
 		shutdown=true;
-		endSession();
-		
+
 		listener.shutdown();
 
 		RPC.stopProxy(proto);

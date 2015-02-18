@@ -11,7 +11,8 @@ import java.util.Arrays;
  * An immutable Utf8 string.
  */
 public class Utf8 implements Comparable<Utf8>, CharSequence, Externalizable {
-	static final Charset UTF8 = Charset.forName("UTF-8");
+    static final long serialVersionUID = 42;
+    static final Charset UTF8 = Charset.forName("UTF-8");
 	static final byte[] EMPTY_BYTES = new byte[0];
 
 	protected byte[] bytes = EMPTY_BYTES;

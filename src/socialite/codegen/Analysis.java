@@ -22,6 +22,8 @@ import socialite.functions.FunctionLoader;
 import socialite.functions.Max;
 import socialite.functions.MeetOp;
 import socialite.functions.Min;
+import socialite.parser.Param;
+import socialite.parser.Literal;
 import socialite.parser.AggrFunction;
 import socialite.parser.AssignOp;
 import socialite.parser.BinOp;
@@ -56,9 +58,11 @@ import socialite.parser.antlr.TableDecl;
 import socialite.parser.antlr.TableStmt;
 import socialite.resource.RuleMap;
 import socialite.resource.SRuntime;
+import socialite.resource.SRuntimeMaster;
 import socialite.util.AnalysisException;
 import socialite.util.Assert;
 import socialite.util.InternalException;
+import socialite.collection.SArrayList;
 
 public class Analysis {
 	public static final Log L = LogFactory.getLog(Analysis.class);
@@ -129,63 +133,29 @@ public class Analysis {
 	public Map<String, Table> getTableMap() { return new HashMap<String, Table>(tableMap); }
 	public List<TableStmt> getTableStmts() { return tableStmts; }
 	
-	void checkArrayTableOpts() {
-		if (true) return;
-		for (Table t:newTables) {
-			if (!t.isArrayTable()) continue;
-			
-			for (int i=0; i<t.numColumns(); i++) {
-				Column c=t.getColumn(i);				
-				if (c.isIndexed() && !c.hasRange()) {
-					p.removeTables(newTables);
-					String msg="array tables cannot have indexby option.";					
-					throw new AnalysisException(msg, t);
-				}				
-			}			
-			for (ColumnGroup cg:t.getColumnGroups()) {
-				int range=0;
-				if (!cg.first().hasRange()) continue;				
-				for (Column c:cg.columns()) {
-					if (c.hasRange()) range++;
-					if (c.isSorted() && !c.hasRange()) {
-						p.removeTables(newTables);
-						String msg="array tables cannot have sortby option.";
-						throw new AnalysisException(msg, t);
-					}
-					if (range > 1) {
-						p.removeTables(newTables);
-						String msg="cannot have two (or more) range operator in a single (nested) table.";
-						throw new AnalysisException(msg, t);
-					}
-				}
-			}
-		}
-	}
-	void checkMultipleIndexbyOrSortBy() {
-		for (Table t:newTables) {
-			for (ColumnGroup cg:t.getColumnGroups()) {
-				int sortby=0;
-				for (Column c:cg.columns()) {
-					if (c.hasRange()) sortby++;
-					if (c.isSorted()) sortby++;
-				}
-				if (sortby>1) {
-					String msg = "Only single sortby is allowed for each (nested) table.";
-					p.removeTableDecl(t.decl());
-					throw new AnalysisException(msg, t);
-				}
-			}
-		}
-	}
+	void checkGroupbyAndIndexBy() {
+        for (Table t:newTables) {
+            if (!t.hasGroupby()) continue;
+            if (!t.hasIndexby()) continue;
+            int groupby = t.groupbyColNum();
+            for (int col:t.indexedCols()) {
+                if (col == groupby) {
+                    Column c = t.getColumn(col);
+                    String msg = "Cannot add indexby to groupby target column (column "+c.name()+" in table "+t.name()+")";
+                    p.removeTableDecl(t.decl());
+                    throw new AnalysisException(msg, t);
+                }
+            }
+        }
+    }
 	void checkTableDecls() {
 		checkTableOpts();
 	}
 	
 	void checkTableOpts() {
-		checkArrayTableOpts();
-		checkMultipleIndexbyOrSortBy();
-	}
-		
+        checkGroupbyAndIndexBy();
+    }
+
 	void checkFreeVarsInHead() {
 		for (Rule r:rules) {
 			Set<Variable> bodyVars=r.getBodyVariables();
@@ -196,7 +166,7 @@ public class Analysis {
 					throw new AnalysisException(msg, r);
 				}
 				if (!bodyVars.contains(v)) {
-					String msg="Unbound variable("+v+") in the head";
+					String msg="Unbound variable in the head: "+v;
 					throw new AnalysisException(msg, r);	
 				}
 			}			
@@ -276,6 +246,7 @@ public class Analysis {
 		ensureSingleAssign();
 		runTypeCheck();	
 	}
+
 	public void run() {		
 		prepare();
 		
@@ -295,23 +266,10 @@ public class Analysis {
 		
 		processDropTableStmt();
 	}
-	
-	
-	void optimize() {
-		optimizeArrayTableLock();
+
+    void optimize() {
 	}
-	void optimizeArrayTableLock() {
-		for (Rule r:rules) {
-			Table headT = tableMap.get(r.getHead().name());
-			if (!headT.isArrayTable()) continue;
-			if (r.getHead().first() instanceof Const) continue;
-			
-			if (!Analysis.updateParallelShard(r, tableMap)) {				
-				r.useArrayTableLock(true);
-			}
-		}
-	}
-	
+    
 	void processDropTableStmt() {
 		for (TableStmt s:tableStmts) {
 			if (s instanceof DropTable) {
@@ -442,6 +400,19 @@ public class Analysis {
 	void setGroupby() {
 		for (Rule r : rules)
 			setGroupby(r);
+		for (Table t:newTables) {
+			if (!t.hasGroupby()) {
+				if (t.getColumn(t.numColumns()-1).isIndexed()) {
+					continue;
+				}
+				int groupby = t.getColumns().length-1;
+				if (t.nestingBegins(groupby)) continue;
+				try { t.setGroupByColNum(groupby); }
+		        catch (InternalException e) { 
+		        	Assert.impossible(); 
+		        }
+			}
+		}
 	}
 
 	void setGroupby(Rule r) {
@@ -450,12 +421,24 @@ public class Analysis {
 
 		int idx = head.functionIdx();
 		Table t = tableMap.get(head.name());
-		try {
-			t.setGroupByColNum(idx);
-		} catch (InternalException e) {
-			throw new AnalysisException(e.getMessage(), r);
-		}
+
+        if (t instanceof IterTable) {
+            TableDecl decl = t.decl();
+            for (int i=0; i<decl.maxIter(); i++) {
+                t = tableMap.get(IterTable.name(decl.name(), i));
+                setGroupby(r, t, idx);
+            }
+        } else {
+            setGroupby(r, t, idx);
+        }
 	}
+    void setGroupby(Rule r, Table t, int col) {
+        try {
+            t.setGroupByColNum(col);
+        } catch (InternalException e) {
+            throw new AnalysisException(e.getMessage(), r);
+        }
+    }
 
 	void markIfLeftRec(Rule r) {
 		if (isLeftRec(r)) {
@@ -685,128 +668,12 @@ public class Analysis {
 		
 		return false;
 	}	
-	
-	static int estimateSize(Table t) {
-		Column c=t.getColumn(0);
-		if (c.hasRange()) return c.getRange()[1]-c.getRange()[0];
-		else if (c.hasSize()) return c.getSize();		
-		else return -1;
-	}
-	static boolean isReductionRule(Rule r, Map<String, Table> tableMap) {
-		Object first = r.getBody().get(0);
-		if (!(first instanceof Predicate)) return false;
-		if (first instanceof DeltaPredicate) return false;
-				
-		Predicate firstP = (Predicate)first;
-		if (!(firstP.first() instanceof Variable)) return false;
 		
-		Predicate headP = r.getHead();
-		Table hT = tableMap.get(headP.name());
-		// For simplicity, if the head table has nesting,
-		// we do not consider it a reduction rule.
-		if (hT.hasNestedT()) return false;
-		
-		if (!(headP.first() instanceof Variable))
-			return true;
-		
-		// both firstP.first() and headP.first() variables
-		Table fT = tableMap.get(firstP.name());
-		int ftSize = estimateSize(fT);
-		if (ftSize<0) return false;
-		
-		int htSize = estimateSize(hT);
-		if (htSize<0) return false;
-		
-		if (hT.isArrayTable() && htSize <= 1024) return true;
-		if (htSize > Integer.MAX_VALUE/256) return false;
-		if (htSize < ftSize && htSize * 128 < ftSize) return true;
-		
-		return false;		
-	}
-	
-	public static boolean isPrivatizable(Rule r, Map<String, Table> tableMap) {
-		if (isSequentialRule(r, tableMap)) return false;
-
-		if (updateParallelShard(r, tableMap)) return false;
-		
-		if (r.getHead().hasFunctionParam()) {
-			if (!r.getHead().getAggrF().isSimpleAggr())
-				return false;
-		}
-		
-		if (isReductionRule(r, tableMap)) return true;
-		
-		return false;
-	}
-	PrivateTable getPrivateTable(Table t, Rule _r) {
-		Rule r = p.getCanonRule(_r);
-		PrivateTable privT;
-		if (tableMap.containsKey(PrivateTable.name(t, r))) {
-			privT = (PrivateTable)tableMap.get(PrivateTable.name(t, r));
-			privTables.add(privT);
-		} else {
-			privT = new PrivateTable(t, r);
-			privTables.add(privT);
-			tableMap.put(privT.name(), privT);
-		}
-		return privT;
-	}
+	// XXX: re-implement privatization as rule rewriting, so that VisitorCodeGen does not need to know the details.
+	// e.g.  Triangle(0, $inc(1)) :- Edge(a,b), Edge(b,c), Edge(c,a).
+	//       => _Thread_Local_Triangle(worker, $inc(1)) :- Edge(a,b), Edge(b,c), Edge(c,a), worker=$workerId().
 	void privatize() {
-		assert (epochs != null) : "privatization should be done after stratification!";
-		if (conf.isSequential()) return;
-
-		assert ruleMap != null;
-		List<Rule> toRemove = new ArrayList<Rule>();
-		List<Rule> toAdd = new ArrayList<Rule>();
-		for (RuleComp rc : ruleComps) {
-			for (Rule r : rc.getRules()) {
-				if (r.inScc()) continue;
-				if (r instanceof DeltaRule) continue;
-				if (updateParallelShard(r, tableMap)) continue;
-
-				if (isPrivatizable(r, tableMap)) {
-					Predicate h = r.getHead();
-					Table t = tableMap.get(h.name());
-					PrivateTable privT = getPrivateTable(t, r);
-
-					// add rule [PrivateTable() :- ... ]
-					Predicate newH = new PrivPredicate(privT.name(), h.idxParam, copyParams(h.params));
-					newH.setAsHeadP();
-					prepareAggrFunction(newH, privT);
-					RuleDecl rd1 = new RuleDecl(newH, new ArrayList<Object>(r.getBody()));
-					Rule add1 = new Rule(rd1);
-
-					// add rule [OrigPredicate() :- PrivateTable().]
-					Predicate newP = new PrivPredicate(privT.name(), h.idxParam, h.getRestOutputParams(), true/*rename param vars*/);
-					newP.setPos(0);
-					List<Object> body = new ArrayList<Object>();
-					body.add(newP);
-
-					// getting renamed parameters
-					Object idxParam = newP.idxParam;
-					List params = newP.params;
-					//Predicate newH2 = new Predicate(h.name(), h.idxParam, replaceAggrInputWithOutput(h.params));
-					Predicate newH2 = new Predicate(h.name(), idxParam, makeNewParams(h.params, params));
-					newH2.setAsHeadP();
-					prepareAggrFunction(newH2);
-					RuleDecl rd2 = new RuleDecl(newH2, body);
-					Rule add2 = new Rule(rd2);
-					
-					ruleMap.setPrivDep(add1.id(), add2.id());
-
-					toAdd.add(add1);
-					toAdd.add(add2);
-					toRemove.add(r);
-					
-					rc.removeAllStartingRule();
-					rc.addStartingRule(add1);
-				}
-			}
-			rc.addAll(toAdd);
-			toAdd.clear();
-			rc.removeAll(toRemove);			
-			toRemove.clear();
-		}
+		if (true) return;		
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -815,8 +682,8 @@ public class Analysis {
 		for (Object o : params) {
 			if (o instanceof AggrFunction) {
 				AggrFunction f = (AggrFunction) o;
-				List<Object> args = new ArrayList<Object>();
-				for (Object a: f.getArgs())
+				List<Param> args = new ArrayList<Param>();
+				for (Param a: f.getArgs())
 					args.add(a);
 				AggrFunction aggr = new AggrFunction(f, args);
 				tmp.add(aggr);
@@ -825,22 +692,6 @@ public class Analysis {
 		}
 		return tmp;
 	}
-
-/*List replaceAggrInputWithOutput(List params) {
-		List replaced = new ArrayList();
-		for (Object o : params) {
-			if (o instanceof AggrFunction) {
-				AggrFunction f = (AggrFunction) o;
-				List args = new ArrayList();
-				for (Object a : f.getReturns())
-					args.add(a);
-				AggrFunction aggr = new AggrFunction(f, args);
-				replaced.add(aggr);
-			} else
-				replaced.add(o);
-		}
-		return replaced;
-	} */
 
 	public static boolean hasRemoteRuleBody(Rule r) {
 		List<Predicate> bodyP = r.getBodyP();
@@ -917,11 +768,7 @@ public class Analysis {
 		return true;		
 	}
 
-	public static boolean hasPrivateHead(Rule r) {
-		Predicate h = r.getHead();
-		return h instanceof PrivPredicate;
-	}
-
+	
 	void processRemoteRules() {
 		List<Rule> toAdd = new ArrayList<Rule>();
 		for (RuleComp rc : ruleComps) {
@@ -968,7 +815,7 @@ public class Analysis {
 			}
 		}
 		usedVars.addAll(r.getHeadVariables());		
-		Iterator<Variable> i=liveVars.iterator(); 
+		Iterator<Variable> i=liveVars.iterator();
 		while (i.hasNext()) { 
 			if (!usedVars.contains(i.next())) 
 				i.remove(); 
@@ -1015,10 +862,10 @@ public class Analysis {
 	
 	@SuppressWarnings("rawtypes")
 	List<Variable> topologicalSort(List<Variable> relatedVars, Map<Object, Set> oneToMany) {
-		List<Variable> sorted = new ArrayList<Variable>();		
+		List<Variable> sorted = new ArrayList<Variable>();
 		Set<Variable> initSet = new HashSet<Variable>();
 		Set<Variable> visited = new HashSet<Variable>();
-		
+
 		initSet.addAll(relatedVars);
 		for (Variable v:relatedVars) {
 			Set deps = oneToMany.get(v);
@@ -1109,6 +956,7 @@ outer:	for (Variable v:sortedVars) {
 	RemoteBodyTable getRemoteBodyTable(Rule _r, int pos, List<Variable> vars) {
 		Rule r = p.getCanonRule(_r);
 		String name = RemoteBodyTable.name(r, pos);
+
 		if (tableMap.containsKey(name)) {
 			RemoteBodyTable rt = (RemoteBodyTable)tableMap.get(name);
 			vars.clear();
@@ -1141,7 +989,8 @@ outer:	for (Variable v:sortedVars) {
 			RemoteBodyTable rt =  getRemoteBodyTable(r, pos, vars);
 
 			// add new rule
-			Predicate newP = new PrivPredicate(rt.name(), null, vars);
+            SArrayList<Param> x = new SArrayList<Param>(); x.addAll(vars);
+			Predicate newP = new PrivPredicate(rt.name(), null, x);
 			newP.setPos(0);
 			@SuppressWarnings("rawtypes")
 			List body = new ArrayList();
@@ -1162,11 +1011,6 @@ outer:	for (Variable v:sortedVars) {
 			
 			ruleMap.setRemoteBodyDep(r.id(), pos, newR.id());
 			toAdd.add(newR);
-
-			if (hasPrivateHead(r)) {
-				int to = ruleMap.getPrivDepRule(r.id());
-				ruleMap.setPrivDep(newR.id(), to);
-			}
 		}
 	}	
 	
@@ -1217,7 +1061,7 @@ outer:	for (Variable v:sortedVars) {
 
 		// new rule (for the receiving node) [ OrigPredicate() :- RemoteTable(). ]
 		Variable idxVar = new Variable("$0", MyType.javaType(h.idxParam));
-		List<Variable> vars = new ArrayList<Variable>();
+		SArrayList<Param> vars = new SArrayList<Param>();
 		List params = h.getRestInputParams();
 		for (int i=0; i<params.size(); i++) {
 			int varIdx=1+i;
@@ -1227,7 +1071,7 @@ outer:	for (Variable v:sortedVars) {
 		Predicate bodyP = new PrivPredicate(rt.name(), idxVar, vars, true/*rename param vars*/);
 		// getting renamed vars
 		idxVar = (Variable)bodyP.idxParam; 
-		vars = (List<Variable>)bodyP.params;
+		vars = bodyP.params;
 
 		bodyP.setPos(0);
 		List body = new ArrayList();
@@ -1286,7 +1130,7 @@ outer:	for (Variable v:sortedVars) {
 			idxVar = new Variable("v0", t.types()[0]);
 			offset++;
 		}
-		List<Variable> vars = new ArrayList<Variable>();
+		SArrayList<Param> vars = new SArrayList<Param>();
 		for (int i=offset; i<t.numColumns(); i++) {
 			Variable v = new Variable("v"+i, t.types()[i]);
 			vars.add(v);
@@ -1296,7 +1140,7 @@ outer:	for (Variable v:sortedVars) {
 		DeltaPredicate deltaH = new DeltaPredicate(h);		
 		Predicate b = new Predicate(t.name(), idxVar, vars);
 		b.setPos(0);		
-		List<Object> params = new ArrayList<Object>(); params.add(b);
+		List<Literal> params = new ArrayList<Literal>(); params.add(b);
 		
 		RuleDecl decl = new RuleDecl(deltaH, params);
 		DeltaRule deltaRule = new DeltaRule(decl, deltaH);
@@ -1329,6 +1173,7 @@ outer:	for (Variable v:sortedVars) {
 		assert deltaP.name().equals(dt.name());
 		tableMap.put(deltaP.name(), dt);
 		deltaTables.add(dt);
+        newTables.add(dt);
 	}
 		
 	void addDependencyBetweenDeltaRules(List<DeltaRule> deltaRules) {
@@ -1584,11 +1429,11 @@ outer:	for (Variable v:sortedVars) {
 	void prepareNextIdReally(Predicate h) {
 		AggrFunction aggr = h.getAggrF();
 		if (aggr.getArgs().size()==0) {
-			List<Object> args=new ArrayList<Object>(1);
+			SArrayList<Param> args=new SArrayList<Param>(1);
 			if (conf.isDistributed()) {
-				 int clusterSize=SRuntime.masterRt().getWorkerAddrMap().size();
-				 args.add(clusterSize);
-			} else { args.add(1); }
+				 int clusterSize= SRuntimeMaster.getInst().getWorkerAddrMap().size();
+				 args.add(new Const(clusterSize));
+			} else { args.add(new Const(1)); }
 			aggr.setArgs(args);
 		}
 	}
@@ -1614,8 +1459,6 @@ outer:	for (Variable v:sortedVars) {
 		for (Epoch e:epochs) {
 			e.setTableMap(tableMap);
 			e.setRuleMap(ruleMap);
-			setAccessedTables(e);
-			
 			prepareNextIter(e);
 		}
 	}
@@ -1638,6 +1481,7 @@ outer:	for (Variable v:sortedVars) {
 		e.addTableStmts(clearTables);
 	}
 
+    /*
 	void setAccessedTables(Epoch e) {		
 		for (RuleComp rc : e.getRuleComps()) {
 			for (Rule r : rc.getRules()) {
@@ -1651,7 +1495,7 @@ outer:	for (Variable v:sortedVars) {
 				}
 			}
 		}
-	}
+	}*/
 
 	boolean appearsInAnyRuleBody(Table t) {
 		for (Rule rule : rules) {

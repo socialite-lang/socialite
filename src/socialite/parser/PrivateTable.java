@@ -10,7 +10,6 @@ import socialite.parser.antlr.TableOpt;
 import socialite.parser.antlr.ColumnDecl;
 import socialite.parser.antlr.ColOpt;
 import socialite.parser.antlr.ColRange;
-import socialite.parser.antlr.ColSize;
 import socialite.util.AnalysisException;
 import socialite.util.InternalException;
 import gnu.trove.list.array.TIntArrayList;
@@ -63,16 +62,13 @@ public class PrivateTable extends Table implements GeneratedT {
 		for (int i=0; i<t.numColumns(); i++) {
 			Column c=t.getColumn(i);
 			String colname = "col"+(columns++);
-			ColumnDecl decl =new ColumnDecl(c.type(), colname);
-			colDecls.add(decl);
-			if (i==0) {
-				if (c.hasRange()) {
-					int[] _r=c.getRange();
-					decl.setOption(new ColRange(_r[0], _r[1]));
-				} else if (c.hasSize()) {
-					decl.setOption(new ColSize(c.getSize()));
-				}
-			}
+			ColOpt opt=null;
+			if (i==0 && c.hasRange()) {
+				int[] _r=c.getRange();
+				opt = new ColRange(_r[0], _r[1]);
+			}		
+			ColumnDecl decl =new ColumnDecl(c.type(), colname, opt);
+			colDecls.add(decl);			
 		}
 		TableDecl decl=new TableDecl(newName, null, colDecls, null);		
 		

@@ -2,34 +2,19 @@ package socialite.codegen;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
 
 import socialite.engine.Config;
-import socialite.parser.AssignOp;
 import socialite.parser.Column;
-import socialite.parser.Const;
-import socialite.parser.DeltaTable;
-import socialite.parser.Expr;
 import socialite.parser.GeneratedT;
-import socialite.parser.MyType;
 import socialite.parser.Predicate;
-import socialite.parser.PrivateTable;
 import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.parser.Variable;
-import socialite.parser.antlr.ClearTable;
-import socialite.parser.antlr.DropTable;
-import socialite.parser.antlr.TableStmt;
-import socialite.resource.TableSliceMap;
-import socialite.util.Assert;
 
 //import org.antlr.stringtemplate.StringTemplate;
 //import org.antlr.stringtemplate.StringTemplateGroup;
@@ -114,6 +99,9 @@ public class EvalCodeGen {
 			// table registration			
 			String registr = registryVar()+".setTableInstArray("+t.id()+", "+varName(t)+")";
 			evalTmpl.add("tableRegs", registr);
+
+            String unregistr = registryVar()+".setTableInstArray("+t.id()+", null)";
+            evalTmpl.add("tableUnregs", unregistr);
 		}
 		return evalTmpl.render();
 	}
@@ -122,7 +110,7 @@ public class EvalCodeGen {
 		ST parInit=tmplGroup.getInstanceOf("parallelInit");
 		code.add("stmts", parInit);
 		parInit.add("name", "InitRule"+r.id());
-		parInit.add("numThreads", conf.getWorkerNum()-1);
+		parInit.add("numThreads", conf.getWorkerThreadNum()-1);
 		return parInit;
 	}
 	

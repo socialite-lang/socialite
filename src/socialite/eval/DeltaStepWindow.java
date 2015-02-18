@@ -16,7 +16,7 @@ public class DeltaStepWindow {
 	static AtomicLong sharedLongMin = new AtomicLong(), sharedLongMax = new AtomicLong();
 	static AtomicFloat sharedFloatMin = new AtomicFloat(), sharedFloatMax = new AtomicFloat();
 	static AtomicDouble sharedDoubleMin = new AtomicDouble(), sharedDoubleMax = new AtomicDouble();	
-	static final int maxLevel = LocalQueue.maxLevel;
+	static final int maxLevel = TaskQueue.MAX_LEVEL;
 	static ArrayList<DeltaStepWindow> allWindows = new ArrayList<DeltaStepWindow>();
 	
 	static { reset(); }

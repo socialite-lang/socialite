@@ -158,7 +158,8 @@ public class QueryCodeGen {
 		
 		/* declare methods */
 		generateConstructor();		
-		generateRunMethod();	
+		generateRunMethod();
+        generateIdGetters();
 		generateVisitMethod();
 		generateSetArgs();
 		generateTerminateMethods();
@@ -184,7 +185,17 @@ public class QueryCodeGen {
 	String argVarName(int argIdx) {
 		return "$a"+argIdx;
 	}
-	
+
+    void generateIdGetters() {
+        ST getter = getNewMethodTmpl("getRuleId", "public", "int");
+        getter.add("stmts", "return -1");
+        queryTmpl.add("methodDecls", getter);
+
+        getter = getNewMethodTmpl("getEpochId", "public", "int");
+        getter.add("stmts", "return -1");
+        queryTmpl.add("methodDecls", getter);
+    }
+
 	void generateRunMethod() {
 		ST run=getNewMethodTmpl("run", "public", "void");
 		queryTmpl.add("methodDecls", run);

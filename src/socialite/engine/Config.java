@@ -1,11 +1,12 @@
 package socialite.engine;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,7 +15,6 @@ import socialite.dist.PortMap;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 
-import gnu.trove.map.hash.TObjectByteHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
 enum EngineType {
@@ -52,28 +52,36 @@ public class Config {
 		conf.portMap=PortMap.get();
 		return conf;
 	}
-	public static int getWorkerNumFromConf() {
-		try {
-			FileInputStream fis=new FileInputStream("conf/slaves");
-			BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
-			int count=0;
-			while (true) {
-				String line=reader.readLine();
-				if (line==null) break;
-				line = line.trim();
-				if (line.length()==0) continue;
-				if (line.startsWith("#")) continue;
-				count++;
-			}
-			return count;
-		} catch (FileNotFoundException e) {
-			L.warn("Cannot find conf/slaves. Assuming 1 worker node.");
-			return 1;
-		} catch (IOException e) {
-			L.warn("Cannot parse conf/slaves file. Assuming 1 worker node.");
-			return 1;
-		}
-	}	
+    static Set<String> workerNames = new LinkedHashSet<String>();
+    static int workerNodeNum = -1;
+    public static synchronized Set<String> getWorkers() {
+        if (workerNames.size()!=0) { return workerNames; }
+
+        try {
+            FileInputStream fis=new FileInputStream("conf/slaves");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+            while (true) {
+                String line=reader.readLine();
+                if (line==null) break;
+                line = line.trim();
+                if (line.length()==0) continue;
+                if (line.startsWith("#")) continue;
+                workerNames.add(line);
+            }
+            return workerNames;
+        } catch (FileNotFoundException e) {
+            L.warn("Cannot find conf/slaves.");
+            return workerNames;
+        } catch (IOException e) {
+            L.warn("Cannot parse conf/slaves file.");
+            return workerNames;
+        }
+    }
+    public static int getWorkerNodeNum() {
+        if (workerNodeNum==-1) workerNodeNum = getWorkers().size();
+        return workerNodeNum;
+    }
+
 	public static int systemWorkerNum=-1;
 	static {
 		String p=System.getProperty("socialite.worker.num");
@@ -84,7 +92,7 @@ public class Config {
 		}
 	}
 	
-	int workerNum=1;	
+	int workerThreadNum =1;
 	boolean verbose=false;
 	boolean cleanup=false;
 	
@@ -98,7 +106,7 @@ public class Config {
 	
 	void setupDebugInfo() {
 		debugInfo = new TObjectIntHashMap<String>();
-		debugInfo.put("GenerateTable", (byte)1);		
+		debugInfo.put("GenerateTable", (byte)1);
 		debugInfo.put("GenerateVisitor", (byte)1);
 		debugInfo.put("GenerateEval", (byte)1);
 		debugInfo.put("DeltaStepOpt", (byte)1);
@@ -127,7 +135,7 @@ public class Config {
 		if (value==1) return true;
 		else return false;
 	}
-
+    public int getWorkerThreadNum() { return workerThreadNum; }
 	public void setCleanup(boolean _cleanup) { cleanup = _cleanup; }
 	public boolean cleanup() { return cleanup; }
 	public boolean errorRecovery() { return errorRecovery; }
@@ -137,44 +145,45 @@ public class Config {
 		if (_cpuNum<=0) {
 			if (type == EngineType.DIST) {
 				if (systemWorkerNum > 0) {
-					workerNum = systemWorkerNum;
+					workerThreadNum = systemWorkerNum;
 				} else {
 					Assert.impossible("systemWorkerNum<0 and cpuNum<0");
-					//System.out.println(" WARN uncomment Assert.impossible in Config::setWorkerNum");
+					//System.out.println(" WARN uncomment Assert.impossible in Config::setWorkerThreadNum");
 				}				
 			} else if (type == EngineType.PARALLEL) {
-				workerNum = Runtime.getRuntime().availableProcessors();
+				workerThreadNum = Runtime.getRuntime().availableProcessors();
 			} else {
-				workerNum = 1;
+				workerThreadNum = 1;
 			}
 		} else {
-			workerNum = _cpuNum;
+			workerThreadNum = _cpuNum;
 		}
 	}
-	public int getWorkerNum() { return workerNum;}
-	
+
 	public int sliceNum() {
-		if (workerNum==1) return 1;
+		if (workerThreadNum ==1) return 1;
 		else {
-			if (isDistributed()) return workerNum*8; 
-			else return workerNum*16;
+			/*if (isDistributed()) return workerThreadNum *8;
+			else return workerThreadNum *8;*/
+			return workerThreadNum*16;
 		}
 	}
 	
 	public int virtualSliceNum() {
-		if (workerNum==1) return 1;
+		if (workerThreadNum ==1) return 1;
 		else {
-			if (isDistributed()) return workerNum*32; 
-			else return workerNum*32;
+			/*if (isDistributed()) return workerThreadNum *8;
+			else return workerThreadNum *8;*/
+			return workerThreadNum*16;
 		}
-		//else return workerNum*2;
+		//else return workerThreadNum*2;
 	}
 	
 	public void setVerbose() { verbose=true; }
 	public boolean isVerbose() { return verbose; }
 	public boolean isClient() { return engineType == EngineType.CLIENT; }
-	public boolean isSequential() { return workerNum==1 && !isDistributed(); }
-	public boolean isParallel() { return workerNum>=2 || isDistributed(); }
+	public boolean isSequential() { return workerThreadNum ==1 && !isDistributed(); }
+	public boolean isParallel() { return workerThreadNum >=2 || isDistributed(); }
 	public boolean isDistributed() { return engineType == EngineType.DIST; }	
 	public int minSliceSize() { return 1; }	
 	

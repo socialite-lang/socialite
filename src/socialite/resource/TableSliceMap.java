@@ -1,5 +1,6 @@
 package socialite.resource;
 
+import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -22,33 +23,14 @@ import socialite.parser.Table;
 import socialite.util.Assert;
 import socialite.util.HashCode;
 
-public class TableSliceMap implements Serializable {	
+/**
+ * Table Slice(Partition) Map.
+ * This maps a value (in 1st column) to its corresponding partition.
+ *
+ */
+public class TableSliceMap implements Externalizable {	
+	private static final long serialVersionUID = 42;
 	public static final Log L=LogFactory.getLog(TableSliceMap.class);
-	
-	static class TableArray {
-		public final Table[] tables;
-		TableArray(Table[] old, int size) {
-			tables = Arrays.copyOf(old, size);
-		}
-	}
-	static class Int2dArray {
-		public final int[][] array;
-		Int2dArray(int[][] old, int size) {
-			array = Arrays.copyOf(old,  size);
-		}
-	}
-	static class IntArray {
-		public final int[] array;
-		IntArray(int[] old, int size) {
-			array = Arrays.copyOf(old,  size);
-		}
-	}
-	static class SliceInfoArray {
-		public final SliceInfo[] array;
-		SliceInfoArray(SliceInfo[] old, int size) {
-			array = Arrays.copyOf(old, size);
-		}
-	}
 
 	int sliceNum, virtualSliceNum, minSliceSize;
 	SliceInfo[] sliceInfo;
@@ -66,9 +48,7 @@ public class TableSliceMap implements Serializable {
 		int tid=t.id();
 		ensureCapacity(tid+1);
 		
-		if (sliceInfo[t.id()]!=null) {
-			return;
-		}
+		if (sliceInfo[t.id()]!=null) { return; }
 		sliceInfo[t.id()] = new SliceInfo(t);		
 	}
 	
@@ -120,6 +100,10 @@ public class TableSliceMap implements Serializable {
 			return sliceInfo[tableId].getHashIndex(rangeOrHash);
 		}
 	}
+    public int getIndex(int tableId, long rangeOrHash) { return getHashIndex(tableId, rangeOrHash); }
+    public int getIndex(int tableId, float rangeOrHash) { return getHashIndex(tableId, rangeOrHash); }
+    public int getIndex(int tableId, double rangeOrHash) { return getHashIndex(tableId, rangeOrHash); }
+
 	public int getIndex(int tableId, int column, int rangeOrHash) {
 		Table t = sliceInfo[tableId].t;
 		Column c=t.getColumn(column);
@@ -133,9 +117,7 @@ public class TableSliceMap implements Serializable {
 	public int getRangeIndex(int tableId, int column, int range) {
 		return sliceInfo[tableId].getRangeIndex(column, range);
 	}	
-	public int getHashIndex(int tableId, int val) {
-		return sliceInfo[tableId].getHashIndex(HashCode.get(val));
-	}
+	public int getHashIndex(int tableId, int val) { return sliceInfo[tableId].getHashIndex(HashCode.get(val)); }
 	public int getHashIndex(int tableId, long val) {
 		return sliceInfo[tableId].getHashIndex(HashCode.get(val));
 	}
@@ -151,7 +133,7 @@ public class TableSliceMap implements Serializable {
 		if (minCapacity > oldCapacity) {
 			int newCapacity = (oldCapacity*3)/2+1;
 			newCapacity = Math.max(minCapacity, newCapacity);			
-			sliceInfo = new SliceInfoArray(sliceInfo, newCapacity).array;
+			sliceInfo = Arrays.copyOf(sliceInfo, newCapacity);
 			return newCapacity;
 		}
 		return oldCapacity;
@@ -184,7 +166,6 @@ public class TableSliceMap implements Serializable {
 		Assert.not_supported("TableSliceMap.machineIndexFor() is only a place-holder.");
 		return -1;
 	}
-
 	public int machineIndexFor(int tableId, int i) { return -1; }
 	public int machineIndexFor(int tableId, long l) { return -1; }
 	public int machineIndexFor(int tableId, float f) { return -1; }
@@ -196,7 +177,7 @@ public class TableSliceMap implements Serializable {
 		int primaryVirtualSliceNum;
 		SliceInfo() {}
 		SliceInfo(Table _t) {
-			t = _t;		
+			t = _t;
 			init();
 		}
 		void init() {
@@ -207,10 +188,10 @@ public class TableSliceMap implements Serializable {
 				primaryVirtualSliceNum = 1;
 			} else if (t.isArrayTable()) {
 				int _virtSliceSize = arraySliceSizes[0];				
-				primaryVirtualSliceNum = (t.arrayTableSize() + _virtSliceSize-1)/_virtSliceSize; 
+				primaryVirtualSliceNum = (t.arrayTableSize() + _virtSliceSize-1)/_virtSliceSize;
 			} else if (t.isModTable()){
 				primaryVirtualSliceNum = sliceNum; 
-				if (t.hasOrderBy()) 
+				if (t.hasOrderBy())
 					primaryVirtualSliceNum=1;
 			} else { primaryVirtualSliceNum = 1; }
 		}
@@ -222,13 +203,13 @@ public class TableSliceMap implements Serializable {
 			return 1;
 		}
 		
-		int[] computeArraySliceSizes() {		
-			int[] sliceSizes=new int[t.numColumns()];			
+		int[] computeArraySliceSizes() {
+			int[] sliceSizes=new int[t.numColumns()];
 			int prevSliceSize=-1;
 			for (int i=0; i<t.numColumns(); i++) {
 				if (t.nestingBegins(i)) prevSliceSize=-1;
 				
-				Column c=t.getColumn(i);	
+				Column c=t.getColumn(i);
 				if (c.hasRange()) {
 					int[] range = c.getRange();
 					int arraySize = range[1]-range[0]+1;
@@ -245,7 +226,7 @@ public class TableSliceMap implements Serializable {
 			// returns 0 if dynamically determined. 
 			// See VisitorBuilder:getNewVisitorInst()   RuleInfo:getVisitorNum();
 			return primaryVirtualSliceNum; 
-		}	
+		}
 		public int virtualSliceNum(int columnIdx) {
 			if (columnIdx==0) return virtualSliceNum();
 			
@@ -275,7 +256,9 @@ public class TableSliceMap implements Serializable {
 			} 
 			range[0] = beginIdx+arraySliceSizes[column]*sliceIdx;
 			range[1] = beginIdx+arraySliceSizes[column]*(sliceIdx+1)-1;
-			if (range[1] > endIdx) range[1] = endIdx;
+			if (range[1] > endIdx) {
+                range[1] = endIdx;
+            }
 			return range;
 		}
 		
@@ -284,7 +267,6 @@ public class TableSliceMap implements Serializable {
 		}		
 		public int getRangeIndex(int column, int range) {
 			Column c = t.getColumn(column);
-			assert c.hasRange();
 			int beginIdx;
 			if (column==0) beginIdx = getLocalTableRange()[0]; 
 			else beginIdx = c.getRange()[0];
@@ -294,8 +276,11 @@ public class TableSliceMap implements Serializable {
 			return idx/sliceSize;
 		}
 		public int getHashIndex(int hash) {	
-	        if (hash < 0) hash = -hash;
-		
+	        if (hash < 0) {
+	        	hash = -hash;
+	        	if (hash == Integer.MIN_VALUE)
+	        		hash = 0;
+	        }
 	        assert !t.isArrayTable();
 	        int _sliceNum = sliceNum;
 	        if (t.hasOrderBy()) _sliceNum=1;
@@ -309,5 +294,17 @@ public class TableSliceMap implements Serializable {
 			range[1] = t.arrayBeginIndex()+t.arrayTableSize()-1;
 			return range;
 		}
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		// TODO Auto-generated method stub
+		
 	}
 }

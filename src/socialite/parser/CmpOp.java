@@ -10,26 +10,66 @@ import java.util.TreeSet;
 
 import org.stringtemplate.v4.ST;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
+
 import socialite.codegen.CodeGen;
 import socialite.util.Assert;
 import socialite.util.InternalException;
 
 
 public class CmpOp extends Op {
+    public static enum CmpType {
+        LT(-2), LT_EQ(-1), EQ(0), GT_EQ(1), GT(2);
+        private int value;
+        private CmpType(int val) {
+            value = val;
+        }
+        public boolean lessThan() {
+            return this == LT_EQ || this == LT;
+        }
+        public boolean greaterThan() {
+            return this == GT_EQ || this == GT;
+        }
+        public boolean inclusive() {
+            return this == LT_EQ || this == GT_EQ || this == EQ;
+        }
+        public CmpType reverse() {
+            switch(this) {
+                case LT: return GT;
+                case LT_EQ: return GT_EQ;
+                case EQ: return EQ;
+                case GT_EQ: return LT_EQ;
+                case GT: return LT;
+                default:
+                    Assert.impossible();
+                    return this;
+            }
+        }
+    }
+    public static int EQ=1, LT=1, GT=1;
+
+    private static final long serialVersionUID = 1L;
+
 	String op;
 	Object arg1, arg2;
+    public CmpOp() { }
 	public CmpOp(String _op, Object _arg1, Object _arg2) throws InternalException {
 		op = _op;
 		arg1=_arg1;
 		arg2=_arg2;
 		assert !(arg1 instanceof Function);
-		assert !(arg2 instanceof Function);		
+		assert !(arg2 instanceof Function);
+
 	}
 	
 	public ST codegen() {
 		ST expr=CodeGen.expr();	
 		
-		String cmpExpr="("+cmpExprStr()+")";;
+		String cmpExpr="("+cmpExprStr()+")";
 		expr.add("expr", cmpExpr);
 		return expr;
 	}
@@ -45,7 +85,7 @@ public class CmpOp extends Op {
 		String arg2Str=descr(sig, arg2);
 		return arg1Str + op + arg2Str;
 	}
-	
+
 	public String cmpExprStr() {
 		if (!MyType.isPrimitive(arg1)) {
 			return toStringForObjectArgs();
@@ -105,7 +145,23 @@ public class CmpOp extends Op {
 		if (arg2 instanceof Op)
 			v.visit((Op)arg2);
 	}
-	
+
+    public CmpType cmpType() {
+        if (op.equals("<")) {
+            return CmpType.LT;
+        } else if (op.equals("<=")) {
+            return CmpType.LT_EQ;
+        } else if (op.equals("==")) {
+            return CmpType.EQ;
+        } else if (op.equals(">=")) {
+            return CmpType.GT_EQ;
+        } else if (op.equals(">")) {
+            return CmpType.GT;
+        } else {
+            Assert.impossible();
+            return CmpType.EQ;
+        }
+    }
 	public int opIdReversed() {
 		return -opId();
 	}
@@ -124,6 +180,25 @@ public class CmpOp extends Op {
 			throw new RuntimeException("Unsupported cmp-op:"+op);
 		}
 	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		char[] _op = new char[in.readInt()];
+		for (int i=0; i<_op.length; i++)
+			_op[i] = in.readChar();
+		op = new String(_op);
+		arg1=in.readObject();
+		arg2=in.readObject();
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(op.length());
+		out.writeChars(op);
+		out.writeObject(arg1);
+		out.writeObject(arg2);
+	}
+
 	/*
 	public Set<Variable> getAllVariables() {
 		return getVariables(arg1, arg2);

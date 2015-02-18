@@ -39,40 +39,42 @@ class QueryVisitorInfo {
 	}
 }
 public class TupleReqListener implements TupleReq {
-	public static final Log L=LogFactory.getLog(TupleReq.class);
+	public static final Log L=LogFactory.getLog(TupleReqListener.class);
 	
 	ConcurrentHashMap<Long, QueryVisitorInfo> visitorMap = new ConcurrentHashMap<Long, QueryVisitorInfo>();
 	Config conf;
-	//QueryVisitor qv;
 	Server server;
 	int port=-1;
 	String name="unnamed";
 	
-	public TupleReqListener(Config _conf, int _port) {
+	public TupleReqListener(Config _conf, int _port) throws java.net.BindException {
 		conf=_conf;		
 		port = _port;
 		start();
 	}	
 	public TupleReqListener(Config _conf) {
 		conf=_conf;
-		start();
+		if (conf.isClient())  port = conf.portMap().tupleReqClientListen();
+		else port=conf.portMap().tupleReqListen();
+		try { start(); } 
+		catch (java.net.BindException e) {
+			L.fatal("Cannot bind to port "+port+": "+e);
+		}
 	}
 	
 	public void registerQueryVisitor(long id, QueryVisitor qv) {
 		visitorMap.put(id, new QueryVisitorInfo(qv, true));
 	}
 	
-	public void start() {
+	public void start() throws java.net.BindException {
 		try {
 			Configuration hConf = new Configuration();
-			String host=Host.get();			
-			if (port==-1) {
-				if (conf.isClient())  port = conf.portMap().tupleReqClientListen();
-				else port=conf.portMap().tupleReqListen();
-			}
+			String host=Host.get();
 			int numHandlers = 8;
 			server=RPC.getServer(this, host, port, numHandlers, false, hConf);
 			server.start();
+		} catch (java.net.BindException e) {
+			throw e;
 		} catch (IOException e) {
 			L.fatal("Cannot start TupleReq listener:"+e);
 			L.fatal(ExceptionUtils.getStackTrace(e));
@@ -105,11 +107,6 @@ public class TupleReqListener implements TupleReq {
 				}
 			}
 			return new BooleanWritable(true);
-		} catch (Exception e) {
-			L.error("Exception while receiving tuples:"+e);
-			L.error(ExceptionUtils.getStackTrace(e));
-			visitorMap.remove(id.get());
-			return new BooleanWritable(false);
 		} catch (Throwable t) {
 			L.error("Exception while receiving tuples:"+t);
 			L.error(ExceptionUtils.getStackTrace(t));

@@ -15,8 +15,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import socialite.eval.TmpTablePool;
-import socialite.resource.SRuntime;
-import socialite.tables.TableInst;
+import socialite.resource.SRuntimeWorker;
+import socialite.tables.TmpTableInst;
 import socialite.tables.TableUtil;
 
 public class FastInputStream extends ObjectInputStream {
@@ -24,17 +24,10 @@ public class FastInputStream extends ObjectInputStream {
 
 	InputStream in;
 	FastClassLookup lookup;
-	public FastInputStream(InputStream _in, FastClassLookup _lookup) throws IOException {
-		super();
-		in=_in;
-		lookup=_lookup;
-	}	
 	public FastInputStream(InputStream _in) throws IOException {
 		super();
 		in=_in;
-		SRuntime runtime=SRuntime.workerRt();
-		if (runtime==null) throw new SocialiteFinishEval();
-		lookup=runtime.getClassLookup();
+		lookup=new FastClassLookup();
 	}
 	
 	@Override
@@ -72,11 +65,11 @@ public class FastInputStream extends ObjectInputStream {
 		} 
 		Object obj=null;
 		try {
-			if (TableInst.class.isAssignableFrom(cls)) {
+			if (TmpTableInst.class.isAssignableFrom(cls)) {
 				char size = readChar();
 				if (size==2) obj = TmpTablePool._get(cls);
 				else if (size==1) obj = TmpTablePool._getSmall(cls);
-				else obj = newInstance(cls);
+				else new AssertionError("Unexpected size for "+cls.getName());
 			} else {
 				obj = cls.newInstance();
 			}
@@ -90,10 +83,10 @@ public class FastInputStream extends ObjectInputStream {
 			throw new SociaLiteException(e);
 		} 
 	}	
-	static TableInst newInstance(Class<?> tableCls) throws Exception {
+	static TmpTableInst newInstance(Class<?> tableCls) throws Exception {
 		Constructor<?> c = tableCls.getDeclaredConstructor((Class[])null);
 		c.setAccessible(true);
-		TableInst i= (TableInst)c.newInstance((Object[])null);
+		TmpTableInst i= (TmpTableInst)c.newInstance((Object[])null);
 		return i;
 	}
 	
@@ -191,11 +184,11 @@ public class FastInputStream extends ObjectInputStream {
 						continue;
 					}
 					
-					if (TableInst.class.isAssignableFrom(cls)) {
+					if (TmpTableInst.class.isAssignableFrom(cls)) {
 						char size = readChar();
 						if (size==2) array[i] = TmpTablePool._get(cls);
 						else if (size==1) array[i] = TmpTablePool._getSmall(cls);
-						else array[i] = cls.newInstance();
+						else new AssertionError("Unexpected size for "+cls.getName());
 						
 						((Externalizable)array[i]).readExternal(this);
 					} else {

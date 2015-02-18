@@ -13,7 +13,6 @@ public abstract class Eval implements Runnable {
 	public Epoch epoch;
 	public RuleMap ruleMap;
 	public TableSliceMap sliceMap;
-	public VisitorBuilder visitorBuilder;
 	public TableInstRegistry tableRegistry;
 	public Config conf;	
 	

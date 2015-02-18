@@ -2,6 +2,7 @@ package socialite.collection;
 
 import socialite.collection.ArrayList;
 
+import java.util.Collection;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -14,6 +15,7 @@ public class SArrayList<E> extends ArrayList<E> implements Externalizable {
 	
 	public SArrayList() { this(0); }
 	public SArrayList(int size) { super(size); }	
+	public SArrayList(Collection<? extends E> c) { super(c); }
 	
 	public void resetQuick() {
 		size=0;
@@ -96,21 +98,6 @@ public class SArrayList<E> extends ArrayList<E> implements Externalizable {
 	public E removeAt(int offset) {
 		return remove(offset);
 	}
-	
-	/*public void ensureCapacity(int minCapacity) {
-		int oldCapacity = elementData.length;
-		if (minCapacity > oldCapacity) {
-			Object oldData[] = elementData;
-			int newCapacity;
-			if (oldCapacity < 1024*1024)
-				newCapacity = (oldCapacity * 3)/2 + 1;
-			else newCapacity = (int)(oldCapacity*1.3f);
-			if (newCapacity < minCapacity)
-				newCapacity = minCapacity;
-			// minCapacity is usually close to size, so this is a win:
-			elementData = Arrays.copyOf(elementData, newCapacity);
-		}
-	}*/
 	
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeInt(size());

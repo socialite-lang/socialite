@@ -5,15 +5,8 @@ package socialite.dist.worker;
 //import java.nio.channels.*;
 //import java.io.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -36,18 +29,14 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import socialite.dist.EvalRefCount;
 import socialite.dist.PortMap;
 import socialite.dist.msg.*;
-import socialite.resource.SRuntime;
-import socialite.util.Assert;
 import socialite.util.ByteBufferInputStream;
-import socialite.util.ByteBufferOutputStream;
 import socialite.util.ByteBufferPool;
 import socialite.util.FastInputStream;
 import socialite.util.SociaLiteException;
 import socialite.util.SocialiteFinishEval;
-import socialite.util.SocialiteInputStream;
-import socialite.util.SocialiteOutputStream;
 
 
 class ConnDesc {
@@ -296,14 +285,18 @@ public class WorkerConnPool {
 		return connDesc.sendChannels;		
 	}
 	
-	public void send(ChannelMux sendChannelMux, ByteBuffer bb) {
+	public void send(ChannelMux sendChannelMux, int epochId, ByteBuffer bb) {
 		ByteBuffer tmp = ByteBuffer.allocate(4);
-		tmp.putInt(bb.remaining());
-		tmp.flip();
-
+		tmp.putInt(epochId);
+        tmp.flip();
 		SocketChannel sendCh = sendChannelMux.next();
 		try {
-			synchronized (sendCh) {			
+			synchronized (sendCh) {
+                while(tmp.hasRemaining())
+                    sendCh.write(tmp);
+                tmp.clear();
+                tmp.putInt(bb.remaining());
+                tmp.flip();
 				while(tmp.hasRemaining())
 					sendCh.write(tmp);
 				while(bb.hasRemaining())
@@ -321,21 +314,29 @@ public class WorkerConnPool {
 		key.cancel();
 	}
 	
-	
 	WorkerMessage recv(InetAddress nodeAddr, SocketChannel channel) {
 		WorkerMessage workerMsg=null;
 		SocketChannel recvChannel = channel;
 		ByteBuffer tmp = ByteBuffer.allocate(4);
 		ByteBuffer buffer=null;
-		
-		try {				
+
+        try {
+            do {
+                int r=recvChannel.read(tmp);
+                assert r!=-1;
+            } while (tmp.hasRemaining());
+            tmp.flip();
+            int epochId = tmp.getInt();
+            EvalRefCount.getInst().inc(epochId);
+
+            tmp.clear();
 			do {
 				int r=recvChannel.read(tmp);
 				assert r!=-1;
 			} while (tmp.hasRemaining());
-			
 			tmp.flip();
 			int size = tmp.getInt();
+
 			buffer=ByteBufferPool.get().alloc(size);
 			do { 
 				int r =recvChannel.read(buffer);

@@ -5,16 +5,10 @@ import java.io.PrintStream;
 public class SociaLiteException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	
-	public SociaLiteException(Throwable t) {
-		super(t.getMessage());		
-	}
-	public SociaLiteException(Exception e) {
-		super(e.getMessage());		
-	}
-	public SociaLiteException(String _msg) {
-		super(_msg);
-	}
-	public SociaLiteException() { }
+	public SociaLiteException(Throwable t) { super(t.getMessage());	}
+	public SociaLiteException(Exception e) { super(e.getMessage()); }
+	public SociaLiteException(String _msg) { super(_msg); }
+	public SociaLiteException() {}
 	
 	@Override
 	public void printStackTrace(PrintStream s) {

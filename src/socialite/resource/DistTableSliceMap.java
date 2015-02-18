@@ -140,7 +140,6 @@ public class DistTableSliceMap extends TableSliceMap {
 		}
 		boolean isLocalArrayT(int range) {
 			int[] localRange=getLocalTableRange();
-			
 			if (range >= localRange[0] && range <= localRange[1])
 				return true;
 			return false;
@@ -148,7 +147,7 @@ public class DistTableSliceMap extends TableSliceMap {
 		int[] computeLocalTableRange() {
 			int partitionSize=arrayPartitionSize;			
 			int selfIdx=addrMap.myIndex();
-			if (SRuntime.masterRt()!=null) { selfIdx=0; }
+			if (SRuntimeMaster.getInst()!=null) { selfIdx=0; }
 			int beginIdx=t.arrayBeginIndex()+partitionSize*selfIdx;
 			int endIdx = beginIdx + partitionSize-1;
 			if (endIdx > t.arrayBeginIndex()+t.arrayTableSize()-1)
@@ -162,7 +161,7 @@ public class DistTableSliceMap extends TableSliceMap {
 		}
 		int[] getLocalTableRange() {
 			assert t.isDistributed();
-			assert t.isArrayTable();			
+			assert t.isArrayTable();
 			return localTableRange;
 		}		
 		boolean isLocalModT(int hash) {			
@@ -238,7 +237,11 @@ public class DistTableSliceMap extends TableSliceMap {
 			}
 		}
 		int machineIndexForHash(int hash) {
-			if (hash<0) hash = -hash;
+			if (hash < 0) {
+				hash = -hash;
+				if (hash == Integer.MIN_VALUE)
+					hash = 0;
+			}
 			return hash % addrMap.size();
 		}
 	}

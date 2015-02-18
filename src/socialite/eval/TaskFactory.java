@@ -1,10 +1,20 @@
 package socialite.eval;
 
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import socialite.resource.SRuntime;
+import socialite.resource.TableInstRegistry;
+import socialite.resource.TableSliceMap;
 import socialite.resource.VisitorBuilder;
+import socialite.tables.ConcurrentTableInst;
+import socialite.tables.TmpTableInst;
 import socialite.tables.TableInst;
+import socialite.tables.Tuple;
+import socialite.util.SociaLiteException;
 import socialite.util.SocialiteFinishEval;
 import socialite.visitors.IVisitor;
 import socialite.visitors.VisitorImpl;
@@ -21,8 +31,9 @@ abstract class VisitorWrapper extends VisitorImpl {
 	}
 	public void setWorker(Worker w) { v.setWorker(w); }
 	public Worker getWorker() { return v.getWorker(); }
-	public int getWorkerId() { return v.getWorkerId(); }	
-	
+	public int getWorkerId() { return v.getWorkerId(); }
+
+    public int getEpochId() { return v.getEpochId(); }
 	public int getRuleId() { return v.getRuleId(); }
 	public TableInst[] getDeltaTables() { return v.getDeltaTables(); }
 	public TableInst[] getPrivateTable() { return v.getPrivateTable(); }
@@ -52,8 +63,8 @@ class TmpTableVisitor extends VisitorWrapper {
 	void free() {
 		for (int i=0; i<tableArray.length; i++) {
 			if (tableArray[i]!=null) {				
-				if (tableArray[i].requireFree()) {
-					TmpTablePool.free(tableArray[i]);
+				if (tableArray[i] instanceof TmpTableInst) {
+					TmpTablePool.free((TmpTableInst)tableArray[i]);
 				}
 			}
 		}
@@ -61,6 +72,8 @@ class TmpTableVisitor extends VisitorWrapper {
 }
 
 class VisitorReportingProgress extends VisitorWrapper {
+    public static final Log L = LogFactory.getLog(VisitorReportingProgress.class);
+
 	EvalProgress progress;
 	int reportFreq=1;
 	public VisitorReportingProgress(EvalProgress _progress, IVisitor _v, AtomicInteger _counter, int _limit) {
@@ -76,6 +89,7 @@ class VisitorReportingProgress extends VisitorWrapper {
 			progress.update(getRuleId(), limit, limit);
 			throw fin;
 		} catch (Error err) {
+            L.warn("VisitorReportingProgress got exception:"+err);
 			progress.halt(getRuleId());
 			throw err;
 		} catch (RuntimeException re) {
@@ -93,6 +107,8 @@ class VisitorReportingProgress extends VisitorWrapper {
 }
 
 public class TaskFactory {
+    public static final Log L = LogFactory.getLog(VisitorReportingProgress.class);
+
 	public TaskFactory() { }
 	
 	static boolean isNull(TableInst[] tableArray) {
@@ -106,10 +122,6 @@ public class TaskFactory {
 	public Task[] makeDelta(int ruleid, TableInst deltaT, VisitorBuilder builder) {
 		if (deltaT==null) return null;
 		EvalTask[] tasks = make(ruleid, new TableInst[]{deltaT}, builder);
-		if (deltaT.isAccessed()) {
-			assert tasks.length==1;			
-			tasks[0].setDeltaT(deltaT);			
-		}
 		return tasks;
 	}
 	public EvalTask[] make(int ruleid, TableInst[] tableArray, VisitorBuilder builder) {
@@ -128,8 +140,31 @@ public class TaskFactory {
 		}
 		return tasks;
 	}
-	
-	public Task[] make(EvalCommand eval, VisitorBuilder builder, SRuntime runtime) {
+
+    public Task[] make(ConcurrentLoadCommand loadCmd, SRuntime runtime) {
+        TableInstRegistry registry = runtime.getTableRegistry();
+        TableSliceMap sliceMap = runtime.getSliceMap();
+        int tableid = loadCmd.getTableId();
+        ConcurrentLoadTask[] tasks = new ConcurrentLoadTask[sliceMap.virtualSliceNum(tableid)];
+
+        TableInst[] tableArray = registry.getTableInstArray(tableid);
+        assert tableArray != null && tableArray[0] != null;
+        if (!(tableArray[0] instanceof ConcurrentTableInst)) {
+            L.error("Concurrent tuple insertion is not supported for table "+tableArray[0].name());
+            L.error("The table ("+tableArray[0].name()+") is not declared as concurrent.");
+            return null;
+        }
+        for (int i=0; i<tasks.length; i++) {
+            Iterator<Tuple> iterator = loadCmd.iterator(sliceMap, i);
+            TableInst table;
+            if (tableArray.length == 1) { table = tableArray[0]; }
+            else { table = tableArray[i]; }
+            tasks[i] = new ConcurrentLoadTask(table, iterator);
+        }
+        return tasks;
+    }
+
+    public Task[] make(EvalCommand eval, VisitorBuilder builder, SRuntime runtime) {
 		IVisitor[] visitors = eval.newInst(builder);
 		if (visitors==null) return null;
 		if (eval.isReceived()) {
@@ -150,7 +185,7 @@ public class TaskFactory {
 	boolean requireFree(TableInst[] tableArray) {
 		if (tableArray==null) return false;
 		for (int i=0; i<tableArray.length; i++) {
-			if (tableArray[i]!=null && tableArray[i].requireFree())
+			if (tableArray[i]!=null && tableArray[i] instanceof TmpTableInst)
 				return true;
 		}
 		return false;

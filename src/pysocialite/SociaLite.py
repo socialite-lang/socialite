@@ -456,7 +456,6 @@ class TableIterator(QueryVisitor):
 
     def next(self):
         n = self.__next__()
-        self.cleanupIterThread()
         return n
         
     def __iter__(self):

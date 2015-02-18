@@ -167,7 +167,6 @@ L.info(" NOTICE startListen()");
 	}
 		
 	public void reportIdle(int epochId, int ts) {
-        L.info("reportIdle(epoch-id:"+epochId+", time-stamp:"+ts+")");
         SRuntime runtime = SRuntimeWorker.getInst();
 		int id=runtime.getWorkerAddrMap().myIndex();
 		request.reportIdle(new IntWritable(epochId), new IntWritable(id), new IntWritable(ts));

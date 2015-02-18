@@ -8,12 +8,20 @@ import java.util.TreeSet;
 
 import org.stringtemplate.v4.ST;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import socialite.codegen.CodeGen;
 import socialite.util.InternalException;
 
 public class BinOp extends Op {
+    private static final long serialVersionUID = 1L;
+
 	public String op;
 	public Object arg1, arg2;
+    public BinOp()  { }
 	public BinOp(String _op, Object _arg1, Object _arg2) throws InternalException {
 		if (_op.equals("mod")) _op = "%";
 		op = _op;
@@ -78,7 +86,24 @@ public class BinOp extends Op {
 		if (arg2 instanceof Op)
 			v.visit((Op)arg2);
 	}
-	
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		char[] _op = new char[in.readInt()];
+		for (int i=0; i<_op.length; i++)
+			_op[i] = in.readChar();
+		op = new String(_op);
+		arg1=in.readObject();
+		arg2=in.readObject();
+	}
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(op.length());
+		out.writeChars(op);
+		out.writeObject(arg1);
+		out.writeObject(arg2);
+	}
 	
 	/*
 	public Set<Variable> getReadVariables() {

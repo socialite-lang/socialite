@@ -127,6 +127,28 @@ public class MyType {
 		Class type = MyType.javaType(v);
 		return javaObjectTypeName(type);
 	}
+    public static Class javaObjectType(Class type) {
+        if (type.isPrimitive()) {
+            if (type.equals(int.class))
+                return Integer.class;
+            else if (type.equals(long.class))
+                return Long.class;
+            else if (type.equals(float.class))
+                return Float.class;
+            else if (type.equals(double.class))
+                return Double.class;
+            else if (type.equals(short.class))
+                return Short.class;
+            else if (type.equals(byte.class))
+                return Byte.class;
+            else if (type.equals(boolean.class))
+                return Boolean.class;
+            else if (type.equals(char.class))
+                return Character.class;
+            throw new SociaLiteException("Unexpected primitive type:"+type.getSimpleName());
+        }
+        return type;
+    }
 	public static String javaObjectTypeName(Class type) {
 		if (type.isPrimitive()) {
 			if (type.equals(int.class))

@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 import socialite.dist.msg.WorkerMessage;
 import socialite.eval.EvalWithTable;
+import socialite.parser.*;
 import socialite.tables.TableInst;
 import socialite.type.Utf8;
 
@@ -24,7 +25,6 @@ public class FastClassLookup implements Externalizable {
 	
 	public FastClassLookup() {		
 		classLookup = new Class[32];
-	
 		init();
 	}
 	void init() {
@@ -39,18 +39,23 @@ public class FastClassLookup implements Externalizable {
 		classLookup[8] = Utf8.class;
 		pos=9;
 	}
-	void initForRuntime() {
-		classLookup[0] = WorkerMessage.class;
-		classLookup[1] = TableInst.class;
-		classLookup[2] = EvalWithTable.class;					
-		classLookup[3] = String.class;
-		classLookup[4] = Utf8.class;		
-		pos=5;
-	}
-	public FastClassLookup(boolean cacheRuntimeClasses) {		
+    void initForSysResource() {
+        classLookup[0] = Predicate.class;
+        classLookup[1] = DeltaPredicate.class;
+        classLookup[2] = PrivPredicate.class;
+        classLookup[3] = Expr.class;
+        classLookup[4] = AssignOp.class;
+        classLookup[5] = AssignDotVar.class;
+        classLookup[6] = BinOp.class;
+        classLookup[7] = CmpOp.class;
+        classLookup[8] = UnaryMinus.class;
+        classLookup[9] = TypeCast.class;
+        pos=10;
+    }
+	public FastClassLookup(boolean lookupSysRes) {
 		classLookup = new Class[32];
 		
-		if (cacheRuntimeClasses) { initForRuntime(); }
+		if (lookupSysRes) { initForSysResource(); }
 		else { init(); }
 	}
 		

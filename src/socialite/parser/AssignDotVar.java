@@ -10,7 +10,10 @@ import socialite.codegen.CodeGen;
 import socialite.util.InternalException;
 
 public class AssignDotVar extends AssignOp {
-	Variable root;
+    private static final long serialVersionUID = 1L;
+
+    Variable root;
+    public AssignDotVar() { }
 	public AssignDotVar(Variable dotVar, Variable _root) throws InternalException {	
 		super(dotVar, dotVar);
 		root = _root;

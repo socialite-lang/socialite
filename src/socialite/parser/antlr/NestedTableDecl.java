@@ -63,14 +63,6 @@ public class NestedTableDecl implements Externalizable {
 		else return true;
 	}
 	
-	public int guessRowSize() {
-		int size=ColumnDecl.guessRowSize(colDecls);
-		if (nestedTable!=null) {
-			size = size/4+nestedTable.guessRowSize();
-		}
-		return size;
-	}
-	
 	public List<ColumnDecl> getAllColDecls() {
 		List<ColumnDecl> result=new ArrayList<ColumnDecl>();
 		result.addAll(colDecls);
