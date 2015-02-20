@@ -124,7 +124,9 @@ cast:	'(' type ')' -> type ;
 varlist:	'('! e1=dotname  (','! e2=dotname)+ ')'! ;
 function:	'$' dotname '(' fparamlist? ')' -> ^(FUNC dotname fparamlist?)
 	;
-predicate	:ID ('[' param ']')? '(' paramlist? ')' -> ID ^(INDEX param?) paramlist?;
+//predicate	:ID ('[' param ']')? '(' paramlist? ')' -> ID ^(INDEX param?) paramlist?;
+predicate	:ID '(' paramlist ')' -> ID paramlist;
+
 paramlist	:param (','! param)*;
 fparamlist	:fparam (','! fparam)*;
 
@@ -137,10 +139,9 @@ term:	INT -> ^(T_INT INT )
 	|UTF8 -> ^(T_UTF8 UTF8)	
 	|dotname -> ^(T_VAR dotname)
 	;
-table_decl:    ID  ('[' col_decl ']')?  '(' decls')' table_opts? DOT_END  -> ^(DECL KIND1  ID ^(INDEX col_decl?) decls ^(OPTION table_opts?))
-	|ID ('[' col_decl ']')? '(' '(' decls')' ')' table_opts? DOT_END  -> ^(DECL KIND2  ID ^(INDEX col_decl?) decls ^(OPTION table_opts?))	
-	;
-table_opts	: t_opt (','! t_opt)*
+table_decl: ID '(' decls ')' table_opts? DOT_END  -> ^(DECL ID decls ^(OPTION table_opts?))
+        ;
+table_opts: t_opt (','! t_opt)*
 	;
 t_opt	: 'sortby' col=ID (order=SORT_ORDER)? -> ^(SORT_BY $col $order?)
 	|'orderby' ID -> ^(ORDER_BY ID)
@@ -152,11 +153,11 @@ t_opt	: 'sortby' col=ID (order=SORT_ORDER)? -> ^(SORT_BY $col $order?)
 	;
 SORT_ORDER: 'asc'|'desc'
 	;
-decls	:col_decls (',' '(' decls ')')? -> ^(COL_DECLS col_decls ^(DECL decls?))
+decls	: col_decls (',' '(' decls ')')? -> ^(COL_DECLS col_decls ^(DECL decls?))
 	;	
-col_decls	:col_decl (','! col_decl)*
+col_decls: col_decl (','! col_decl)*
 	;
-col_decl	: type ID (':' col_opt)?-> ^(COL_DECL type ID col_opt?)
+col_decl: type ID (':' col_opt)?-> ^(COL_DECL type ID col_opt?)
 	;
 col_opt	:  i1=INT '..' i2=INT -> ^(RANGE $i1 $i2)
 	| ITER_DECL -> ITER

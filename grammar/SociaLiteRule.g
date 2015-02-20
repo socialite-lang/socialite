@@ -47,10 +47,8 @@ options {
     List<AssignOp> tmpVarAssigns = new ArrayList<AssignOp>();
     int kind=0;
     public Parser getParser() { return parser; }
-    public String maybeGetDuplicateColumnName(ColumnDecl d1, List<ColumnDecl> decls) {
-        LinkedHashSet<String> names = new LinkedHashSet<String>(decls.size()+1);
-        if (d1!=null) names.add(d1.name);
-        if (decls==null) return null;
+    public String maybeGetDuplicateColumnName(List<ColumnDecl> decls) {
+        LinkedHashSet<String> names = new LinkedHashSet<String>(decls.size());
         for (ColumnDecl d:decls) {
             if (names.contains(d.name))
                 return d.name;
@@ -64,14 +62,6 @@ options {
         throw new ParseException(parser, e, msg);
     }
 
-    public void checkParamsInBodyP(Predicate bodyp, int line, int pos) {
-        for (Object p:bodyp.getAllParams()) {
-        }
-    }
-    public void checkParamsInHeadP(Predicate head, int line, int pos) {
-        for (Object p:head.getAllParams()) {
-        }
-    }
     public boolean isSimpleIntValue(Object o) {
         return getSimpleIntValue(o) != null;
     }
@@ -146,19 +136,17 @@ query returns [Query result]
 	}
 	;
 table_decl returns [TableDecl result]
-	:^(DECL (KIND1{kind=1;} | KIND2 {kind=2;})  ID ^(INDEX col_decl?) decls  ^(OPTION table_opts?) )
+    :^(DECL ID decls ^(OPTION table_opts?))
+	//:^(DECL (KIND1{kind=1;} | KIND2 {kind=2;})  ID decls ^(OPTION table_opts?) )
 	  {
-	    if (kind==2 && $col_decl.result==null) 
-	        throw new ParseException(getParser(), $ID.line-1, $ID.pos+$ID.text.length()+1, "Cannot have nested table without any other columns"); 
-	    String dupCol=maybeGetDuplicateColumnName($col_decl.result, $decls.result.getAllColDecls());
+	    String dupCol=maybeGetDuplicateColumnName($decls.result.getAllColDecls());
 	    if (dupCol!=null) 
 	        throw new ParseException(getParser(), $ID.line-1, $ID.pos,  "Duplicate column name "+dupCol+" in "+$ID);
-	    if (kind==1) $result = new TableDecl($ID.text, $col_decl.result, $decls.result.colDecls, $decls.result.nestedTable);    
-	    else $result = new TableDecl($ID.text, $col_decl.result, null, $decls.result);    
+	    $result = new TableDecl($ID.text, $decls.result.colDecls, $decls.result.nestedTable);    
 	    if ($result.nestedTable!=null) {
 	        for (ColumnDecl d:$result.nestedTable.getAllColDecls()) {
 	            if (d.option() instanceof ColIter) {
-	                throw new ParseException(getParser(), $ID.line-1, $ID.pos+$ID.text.length()+1, "Iterator column cannot be nested."); 
+	                throw new ParseException(getParser(), $ID.line-1, $ID.pos+$ID.text.length()+1, "Iteration column cannot be nested."); 
 	            }
 	        }
 	    }
@@ -323,19 +311,19 @@ literal returns [Object result]
 	}
 	;
 predicate returns [Predicate result]
-	: ID ^(INDEX param?) paramlist
-		{   TableDecl decl=tableDeclMap.get($ID.text);
+	: ID paramlist
+    {   TableDecl decl=tableDeclMap.get($ID.text);
 	    if (decl==null) {
- 	        throw new ParseException(getParser(), $ID.line-1, $ID.pos, "Table "+$ID.text+" is not declared");	 
-	    } else {
-	       try {
-	           decl.checkTypes((Param)$param.result, $paramlist.result);
-	       } catch(InternalException e) {
-	           throw new ParseException(getParser(), $ID.line-1, $ID.pos, e.getMessage());
-	       }
-	    }
-	    $result = new Predicate($ID.text, (Param)$param.result, $paramlist.result);
-	}
+            throw new ParseException(getParser(), $ID.line-1, $ID.pos, "Table "+$ID.text+" is not declared");	 
+        } else {
+           try {
+               decl.checkTypes($paramlist.result);
+           } catch(InternalException e) {
+               throw new ParseException(getParser(), $ID.line-1, $ID.pos, e.getMessage());
+           }
+        }
+        $result = new Predicate($ID.text, $paramlist.result);
+    }
 	;
 function returns [Function result]
 	: ^(FUNC dotname fparamlist?) {
