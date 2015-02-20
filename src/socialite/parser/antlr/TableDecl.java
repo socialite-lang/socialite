@@ -21,7 +21,6 @@ public class TableDecl implements Serializable {
 	private static final long serialVersionUID = 1;
 	
 	String name;
-	ColumnDecl locationColDecl;
 	List<ColumnDecl> colDecls;
 	NestedTableDecl nestedTable;
 	Map<String, SortBy> sortBy;
@@ -36,10 +35,8 @@ public class TableDecl implements Serializable {
 	int maxIter = 2;
 	int groupby = -1;
 	
-	public TableDecl(String _name, ColumnDecl _locationColDecl, List<ColumnDecl> _colDecls, 
-					 NestedTableDecl _table) {
+	public TableDecl(String _name, List<ColumnDecl> _colDecls, NestedTableDecl _table) {
 		name = _name;
-		locationColDecl = _locationColDecl;
 		colDecls = _colDecls;
 		if (colDecls==null) colDecls = new ArrayList<ColumnDecl>();
 		nestedTable = _table;
@@ -51,16 +48,7 @@ public class TableDecl implements Serializable {
 		setColumnPositions();
 	}
 		
-	public void checkTypes(Object locationParam, List<?> _params) throws InternalException {
-		if (locationColDecl==null && locationParam!=null)
-			throw new InternalException("unexpected location operator for "+name());			
-		if (locationColDecl!=null && locationParam==null)
-			throw new InternalException("location operator is required for "+name());
-		
-		List<Object> params = new ArrayList<Object>();
-		if (locationParam!=null) params.add(locationParam);
-		params.addAll(_params);
-		
+	public void checkTypes(List<?> params) throws InternalException {
 		List<ColumnDecl> allColDecls = allColDecls();
 		int colNum = allColDecls.size();
 		if (hasIterColumn()) colNum++;
@@ -88,9 +76,7 @@ public class TableDecl implements Serializable {
 	}	
 	
 	public String toString() {
-		String s=name;		
-		if (locationColDecl!=null) 
-			s += "["+locationColDecl+"]";
+		String s=name;
 		s+="(";
 		boolean first=true;
 		for (ColumnDecl cd:colDecls) {
@@ -122,78 +108,45 @@ public class TableDecl implements Serializable {
 	}	
 
 	public ColumnDecl first() {
-		if (locationColDecl !=null)
-			return locationColDecl;
-		if (colDecls.size()>0) {
-			ColumnDecl d = colDecls.get(0);
-			if (d.option() instanceof ColIter) {
-				assert colDecls.size() > 1;
-				d = colDecls.get(1);
-			}
-			return d;
+		assert colDecls.size()>0;
+		ColumnDecl d = colDecls.get(0);
+		if (d.option() instanceof ColIter) {
+			assert colDecls.size() > 1;
+			d = colDecls.get(1);
 		}
-		else return nestedTable.first();
+		return d;
 	}
 	public ColumnDecl last() {
 		if (nestedTable==null) {
 			int size = colDecls.size();
-			if (size>0) {
-				ColumnDecl d=colDecls.get(size-1);
-				if (d.option() instanceof ColIter) {
-					assert colDecls.size() > 1;
-					d = colDecls.get(size-2);
-				}
-				return d;
+			assert size>0;
+			ColumnDecl d=colDecls.get(size-1);
+			if (d.option() instanceof ColIter) {
+				assert colDecls.size() > 1;
+				d = colDecls.get(size-2);
 			}
-			else {
-				assert locationColDecl != null;
-				return locationColDecl;
-			}
+			return d;
 		} else {
 			return nestedTable.last();
 		}
 	}
 	
-	/*
-	public TableDecl clone(String newName) {
-		List<ColumnDecl> colDeclsClone=new ArrayList<ColumnDecl>();
-		for (ColumnDecl cd:colDecls) colDeclsClone.add(cd.clone());
-		
-		ColumnDecl locationColDeclClone=null;
-		if (locationColDecl!=null)
-			locationColDeclClone=locationColDecl.clone();
-		NestedTableDecl nestedTableClone=null;
-		if (nestedTable!=null)
-			nestedTableClone = nestedTable.clone();
-		TableDecl td=new TableDecl(newName, locationColDeclClone, 
-								   colDeclsClone, nestedTableClone);
-		td.sortBy = sortBy;
-		td.orderBy = orderBy;
-		td.indexBy = indexBy;
-		return td;
-	}*/
 	public int hashCode() {
 		return name.hashCode();
 	}
 	public boolean equals(Object o) {
 		if (o==this) return true;
 		if (!(o instanceof TableDecl)) return false;
+		
 		TableDecl td=(TableDecl)o;
-		
 		if (!name.equals(td.name)) return false;
-		if (locationColDecl==null) {
-			if (td.locationColDecl!=null) return false;
-		} else {
-			if (!locationColDecl.equals(td.locationColDecl)) return false;
-		}		
 		if (!colDecls.equals(td.colDecls)) return false;
-		
-		if (nestedTable!=null)
-			return nestedTable.equals(td.nestedTable);
+		if (nestedTable!=null && !nestedTable.equals(td.nestedTable))
+			return false;
 		
 		if (multiSet!=td.multiSet) return false;
 		if (predefined!=td.predefined) return false;
-
+		
 		if (sortBy==null && td.sortBy!=null) return false;
 		if (sortBy!=null && td.sortBy==null) return false;
 		if (orderBy==null && td.orderBy!=null) return false;
@@ -214,10 +167,8 @@ public class TableDecl implements Serializable {
 	public void setName(String _name) { name=_name; }
 	public String name() { return name; }
 	
-	public ColumnDecl locationColDecl() { return locationColDecl; }
 	public List<ColumnDecl> colDecls() {
 		List<ColumnDecl> decls = new ArrayList<ColumnDecl>();
-		if (locationColDecl!=null) decls.add(locationColDecl);
 		decls.addAll(colDecls);
 		if (nestedTable!=null) {
 			nestedTable.colDecls(decls);
@@ -228,15 +179,13 @@ public class TableDecl implements Serializable {
 	public TIntArrayList getNestedTableIndices() {
 		TIntArrayList nestedTableIndices = new TIntArrayList();
 		if (nestedTable!=null) {
-			int offset=0;
-			if (locationColDecl!=null) offset++;
-			int nestedIdx = offset+colDecls.size();
+			int nestedIdx = colDecls.size();
 			for (ColumnDecl decl:colDecls) {
 				if (decl.option() instanceof ColIter)
 					nestedIdx--;
 			}
 			nestedTableIndices.add(nestedIdx);
-			nestedTable.addNestedTableIndices(offset+colDecls.size(), nestedTableIndices);
+			nestedTable.addNestedTableIndices(colDecls.size(), nestedTableIndices);
 		}
 		
 		return nestedTableIndices;
@@ -244,22 +193,15 @@ public class TableDecl implements Serializable {
 	
 	public List<ColumnGroup> buildColumnGroups() {
 		List<ColumnGroup> columnGroupList = new ArrayList<ColumnGroup>();
-		
 		List<Column> cols = new ArrayList<Column>();
 		int relPos=0;
-		if (locationColDecl!=null) {
-			Column c=new Column(locationColDecl, true);
+		
+		for (int i=0; i<colDecls.size(); i++) {
+			ColumnDecl d=colDecls.get(i);
+			if (d.option() instanceof ColIter) continue;
+			Column c=new Column(d);
 			c.setRelPos(relPos++);
-			cols.add(c);			
-		}
-		if (colDecls!=null) {
-			for (int i=0; i<colDecls.size(); i++) {
-				ColumnDecl d=colDecls.get(i);
-				if (d.option() instanceof ColIter) continue;
-				Column c=new Column(d);
-				c.setRelPos(relPos++);
-				cols.add(c);
-			}
+			cols.add(c);
 		}
 		Column tmp[] = new Column[cols.size()];
 		columnGroupList.add(new ColumnGroup(cols.toArray(tmp)));
@@ -281,14 +223,6 @@ public class TableDecl implements Serializable {
 	
 	void setColumnPositions() {
 		int pos=0;
-		if (locationColDecl!=null) {
-			if (locationColDecl.option() instanceof ColIter) {
-				throw new AnalysisException("Table "+name+":location operator cannot be applied to iteration column");
-			}
-			locationColDecl.setPos(pos);
-			colNameToPos.put(locationColDecl.name, pos);
-			pos++;
-		}
 		for (ColumnDecl d:colDecls) {
 			if (d.option() instanceof ColIter) {
 				iterCol = pos;
@@ -327,13 +261,9 @@ public class TableDecl implements Serializable {
 	}
 	
 	// includes index column
-	public int numAllColumns() {		
-		if (locationColDecl == null) return numColumns();
-		else return 1+numColumns();
-	}
+	public int numAllColumns() { return numColumns(); }
 	int numColumns() {
-		int num=0;
-		num += colDecls.size();
+		int num = colDecls.size();
 		if (hasIterColumn()) num--;
 		if (nestedTable != null)
 			num += nestedTable.numColumns();
@@ -350,7 +280,6 @@ public class TableDecl implements Serializable {
 	
 	List<ColumnDecl> allColDecls() {
 		List<ColumnDecl> decls = new ArrayList<ColumnDecl>();
-		if (locationColDecl!=null) decls.add(locationColDecl);
 		for (ColumnDecl d:colDecls) {
 			if (d.option() instanceof ColIter) continue;
 			decls.add(d);
@@ -360,7 +289,6 @@ public class TableDecl implements Serializable {
 		}
 		return decls;
 	}
-	
 	public void setOptions(List<TableOpt> opts) {
 		if (opts==null) return;		
 		for (TableOpt opt:opts) {

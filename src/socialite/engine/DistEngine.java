@@ -187,35 +187,25 @@ public class DistEngine {
 		Predicate p=query.getP();
 		ConstsWritable args = new ConstsWritable(p.getConstValues());
 		boolean success;
-		if (p.idxParam==null) {
-			L.warn("Querying to worker node #0");
-			InetAddress worker0 = workerAddrMap.get(0);
-			WorkerCmd cmd=workerCmdMap.get(worker0);
-							
-			Map<String, Table> tableMap = getTableMap();
-			Table t = tableMap.get(p.name());
+		Map<String, Table> tableMap = getTableMap();
+		Table t = tableMap.get(p.name());
+		if (p.first() instanceof Const) {
+			Const c = (Const)p.first();
+			DistTableSliceMap sliceMap=(DistTableSliceMap)runtime.getSliceMap();
+			int workerId = sliceMap.machineIndexFor(t.id(), c.val);
+				
+			InetAddress workerInetAddr = workerAddrMap.get(workerId);				
+			WorkerCmd cmd = workerCmdMap.get(workerInetAddr);
 			requestRunQuery(cmd, new IntWritable(t.id()), new Text(queryClassName), iterId, args);
 		} else {
-			Map<String, Table> tableMap = getTableMap();
-			Table t = tableMap.get(p.name());
-			if (p.idxParam instanceof Const) {
-				Const c = (Const)p.idxParam;
-				DistTableSliceMap sliceMap=(DistTableSliceMap)runtime.getSliceMap();
-				int workerId = sliceMap.machineIndexFor(t.id(), c.val);
-				
-				InetAddress workerInetAddr = workerAddrMap.get(workerId);				
-				WorkerCmd cmd = workerCmdMap.get(workerInetAddr);
-				requestRunQuery(cmd, new IntWritable(t.id()), new Text(queryClassName), iterId, args);
-			} else {
-				tupleReqListener.setInvokeFinish(iterId.get(), false);
-				for (int i=0; i<workerAddrMap.size(); i++) {
-					WorkerCmd cmd = workerCmdMap.get(workerAddrMap.get(i));						
-					if (i==workerAddrMap.size()-1) 
-						tupleReqListener.setInvokeFinish(iterId.get(), true);
-					success=requestRunQuery(cmd, new IntWritable(t.id()), new Text(queryClassName), iterId, args);
-					if (!success) break;
-					if (!tupleReqListener.exists(iterId.get())) break;
-				}
+			tupleReqListener.setInvokeFinish(iterId.get(), false);
+			for (int i=0; i<workerAddrMap.size(); i++) {
+				WorkerCmd cmd = workerCmdMap.get(workerAddrMap.get(i));						
+				if (i==workerAddrMap.size()-1) 
+					tupleReqListener.setInvokeFinish(iterId.get(), true);
+				success=requestRunQuery(cmd, new IntWritable(t.id()), new Text(queryClassName), iterId, args);
+				if (!success) break;
+				if (!tupleReqListener.exists(iterId.get())) break;
 			}
 		}
 	}	

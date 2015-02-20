@@ -12,6 +12,7 @@ import socialite.parser.Column;
 import socialite.parser.Const;
 import socialite.parser.Expr;
 import socialite.parser.MyType;
+import socialite.parser.Param;
 import socialite.parser.Predicate;
 import socialite.parser.Rule;
 import socialite.parser.Table;
@@ -155,7 +156,7 @@ public class InitCodeGen {
 	
 	Column getDontCareColumn(Predicate p, Table t) {
 		int i=0;
-		for (Object o:p.getAllParamsExpanded()) {
+		for (Param o:p.inputParams()) {
 			if (o instanceof Variable) {
 				Variable v=(Variable)o;
 				if (v.dontCare) return t.getColumn(i);
@@ -182,9 +183,9 @@ public class InitCodeGen {
 	String invokeInsert(String tableVar, Predicate p, String sliceIdx) {
 		String invokeInsert = tableVar+"["+sliceIdx+"].insert(";
 		boolean first=true;
-		for (int i=0; i<p.getAllParamsExpanded().length; i++, first=false) {
+		for (int i=0; i<p.inputParams().length; i++, first=false) {
 			if (!first) invokeInsert += ", ";
-			Object o=p.getAllParamsExpanded()[i];
+			Object o=p.inputParams()[i];
 			if (isDontCare(o)) invokeInsert += "$i";
 			else invokeInsert += o;
 		}

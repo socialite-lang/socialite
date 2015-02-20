@@ -50,12 +50,12 @@ public class RemoteHeadTable extends Table implements GeneratedT, FixedSizeTable
 		String newName=name(t, r);
 		List<ColumnDecl> colDecls = new ArrayList<ColumnDecl>();
 		int columns=0;
-		for (Object o:r.getHead().getAllParamsExpanded()) {
+		for (Object o:r.getHead().inputParams()) {
 			Class type = MyType.javaType(o);
 			String colname = "col"+(columns++);
 			colDecls.add(new ColumnDecl(type, colname));
 		}
-		TableDecl decl=new TableDecl(newName, null, colDecls, null);		
+		TableDecl decl=new TableDecl(newName, colDecls, null);		
 		setMultiset(decl);
 		return decl;
 	}

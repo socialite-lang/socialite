@@ -1,4 +1,4 @@
-// $ANTLR 3.4 /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g 2015-01-27 15:18:05
+// $ANTLR 3.4 /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g 2015-02-18 14:46:31
 
     package socialite.parser.antlr;    
     import socialite.parser.Query;
@@ -302,7 +302,7 @@ public TreeAdaptor getTreeAdaptor() {
                 {
                 int LA2_1 = input.LA(2);
 
-                if ( (LA2_1==85) ) {
+                if ( (LA2_1==65) ) {
                     switch ( input.LA(3) ) {
                     case 83:
                     case 84:
@@ -316,17 +316,17 @@ public TreeAdaptor getTreeAdaptor() {
                         break;
                     case ID:
                         {
-                        int LA2_7 = input.LA(4);
+                        int LA2_6 = input.LA(4);
 
-                        if ( (LA2_7==ID||LA2_7==85) ) {
+                        if ( (LA2_6==ID||LA2_6==85) ) {
                             alt2=1;
                         }
-                        else if ( (LA2_7==DOT_ID||(LA2_7 >= 67 && LA2_7 <= 68)||LA2_7==70||LA2_7==72||LA2_7==86||LA2_7==96) ) {
+                        else if ( (LA2_6==DOT_ID||(LA2_6 >= 66 && LA2_6 <= 70)||LA2_6==72||LA2_6==96) ) {
                             alt2=2;
                         }
                         else {
                             NoViableAltException nvae =
-                                new NoViableAltException("", 2, 7, input);
+                                new NoViableAltException("", 2, 6, input);
 
                             throw nvae;
 
@@ -347,458 +347,6 @@ public TreeAdaptor getTreeAdaptor() {
                     default:
                         NoViableAltException nvae =
                             new NoViableAltException("", 2, 4, input);
-
-                        throw nvae;
-
-                    }
-
-                }
-                else if ( (LA2_1==65) ) {
-                    switch ( input.LA(3) ) {
-                    case 65:
-                        {
-                        switch ( input.LA(4) ) {
-                        case 94:
-                            {
-                            switch ( input.LA(5) ) {
-                            case 85:
-                                {
-                                int LA2_18 = input.LA(6);
-
-                                if ( (LA2_18==86) ) {
-                                    int LA2_25 = input.LA(7);
-
-                                    if ( (LA2_25==ID) ) {
-                                        alt2=1;
-                                    }
-                                    else if ( (LA2_25==66) ) {
-                                        alt2=2;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 2, 25, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 2, 18, input);
-
-                                    throw nvae;
-
-                                }
-                                }
-                                break;
-                            case ID:
-                                {
-                                alt2=1;
-                                }
-                                break;
-                            case 66:
-                                {
-                                alt2=2;
-                                }
-                                break;
-                            default:
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 2, 11, input);
-
-                                throw nvae;
-
-                            }
-
-                            }
-                            break;
-                        case 95:
-                            {
-                            switch ( input.LA(5) ) {
-                            case 85:
-                                {
-                                int LA2_19 = input.LA(6);
-
-                                if ( (LA2_19==86) ) {
-                                    int LA2_26 = input.LA(7);
-
-                                    if ( (LA2_26==ID) ) {
-                                        alt2=1;
-                                    }
-                                    else if ( (LA2_26==66) ) {
-                                        alt2=2;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 2, 26, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 2, 19, input);
-
-                                    throw nvae;
-
-                                }
-                                }
-                                break;
-                            case ID:
-                                {
-                                alt2=1;
-                                }
-                                break;
-                            case 66:
-                                {
-                                alt2=2;
-                                }
-                                break;
-                            default:
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 2, 12, input);
-
-                                throw nvae;
-
-                            }
-
-                            }
-                            break;
-                        case 91:
-                            {
-                            switch ( input.LA(5) ) {
-                            case 85:
-                                {
-                                int LA2_20 = input.LA(6);
-
-                                if ( (LA2_20==86) ) {
-                                    int LA2_27 = input.LA(7);
-
-                                    if ( (LA2_27==ID) ) {
-                                        alt2=1;
-                                    }
-                                    else if ( (LA2_27==66) ) {
-                                        alt2=2;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 2, 27, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 2, 20, input);
-
-                                    throw nvae;
-
-                                }
-                                }
-                                break;
-                            case ID:
-                                {
-                                alt2=1;
-                                }
-                                break;
-                            case 66:
-                                {
-                                alt2=2;
-                                }
-                                break;
-                            default:
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 2, 13, input);
-
-                                throw nvae;
-
-                            }
-
-                            }
-                            break;
-                        case 89:
-                            {
-                            switch ( input.LA(5) ) {
-                            case 85:
-                                {
-                                int LA2_21 = input.LA(6);
-
-                                if ( (LA2_21==86) ) {
-                                    int LA2_28 = input.LA(7);
-
-                                    if ( (LA2_28==ID) ) {
-                                        alt2=1;
-                                    }
-                                    else if ( (LA2_28==66) ) {
-                                        alt2=2;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 2, 28, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 2, 21, input);
-
-                                    throw nvae;
-
-                                }
-                                }
-                                break;
-                            case ID:
-                                {
-                                alt2=1;
-                                }
-                                break;
-                            case 66:
-                                {
-                                alt2=2;
-                                }
-                                break;
-                            default:
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 2, 14, input);
-
-                                throw nvae;
-
-                            }
-
-                            }
-                            break;
-                        case 84:
-                            {
-                            switch ( input.LA(5) ) {
-                            case 85:
-                                {
-                                int LA2_22 = input.LA(6);
-
-                                if ( (LA2_22==86) ) {
-                                    int LA2_29 = input.LA(7);
-
-                                    if ( (LA2_29==ID) ) {
-                                        alt2=1;
-                                    }
-                                    else if ( (LA2_29==66) ) {
-                                        alt2=2;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 2, 29, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 2, 22, input);
-
-                                    throw nvae;
-
-                                }
-                                }
-                                break;
-                            case ID:
-                                {
-                                alt2=1;
-                                }
-                                break;
-                            case 66:
-                                {
-                                alt2=2;
-                                }
-                                break;
-                            default:
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 2, 15, input);
-
-                                throw nvae;
-
-                            }
-
-                            }
-                            break;
-                        case 83:
-                            {
-                            switch ( input.LA(5) ) {
-                            case 85:
-                                {
-                                int LA2_23 = input.LA(6);
-
-                                if ( (LA2_23==86) ) {
-                                    int LA2_30 = input.LA(7);
-
-                                    if ( (LA2_30==ID) ) {
-                                        alt2=1;
-                                    }
-                                    else if ( (LA2_30==66) ) {
-                                        alt2=2;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 2, 30, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 2, 23, input);
-
-                                    throw nvae;
-
-                                }
-                                }
-                                break;
-                            case ID:
-                                {
-                                alt2=1;
-                                }
-                                break;
-                            case 66:
-                                {
-                                alt2=2;
-                                }
-                                break;
-                            default:
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 2, 16, input);
-
-                                throw nvae;
-
-                            }
-
-                            }
-                            break;
-                        case ID:
-                            {
-                            switch ( input.LA(5) ) {
-                            case 85:
-                                {
-                                int LA2_24 = input.LA(6);
-
-                                if ( (LA2_24==86) ) {
-                                    int LA2_31 = input.LA(7);
-
-                                    if ( (LA2_31==ID) ) {
-                                        alt2=1;
-                                    }
-                                    else if ( (LA2_31==66) ) {
-                                        alt2=2;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 2, 31, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 2, 24, input);
-
-                                    throw nvae;
-
-                                }
-                                }
-                                break;
-                            case ID:
-                                {
-                                alt2=1;
-                                }
-                                break;
-                            case DOT_ID:
-                            case 66:
-                            case 67:
-                            case 68:
-                            case 70:
-                            case 72:
-                            case 96:
-                                {
-                                alt2=2;
-                                }
-                                break;
-                            default:
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 2, 17, input);
-
-                                throw nvae;
-
-                            }
-
-                            }
-                            break;
-                        case FLOAT:
-                        case INT:
-                        case STRING:
-                        case UTF8:
-                        case 64:
-                        case 65:
-                        case 70:
-                            {
-                            alt2=2;
-                            }
-                            break;
-                        default:
-                            NoViableAltException nvae =
-                                new NoViableAltException("", 2, 9, input);
-
-                            throw nvae;
-
-                        }
-
-                        }
-                        break;
-                    case 83:
-                    case 84:
-                    case 89:
-                    case 91:
-                    case 94:
-                    case 95:
-                        {
-                        alt2=1;
-                        }
-                        break;
-                    case ID:
-                        {
-                        int LA2_10 = input.LA(4);
-
-                        if ( (LA2_10==ID||LA2_10==85) ) {
-                            alt2=1;
-                        }
-                        else if ( (LA2_10==DOT_ID||(LA2_10 >= 66 && LA2_10 <= 70)||LA2_10==72||LA2_10==96) ) {
-                            alt2=2;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("", 2, 10, input);
-
-                            throw nvae;
-
-                        }
-                        }
-                        break;
-                    case FLOAT:
-                    case INT:
-                    case STRING:
-                    case UTF8:
-                    case 64:
-                    case 66:
-                    case 70:
-                        {
-                        alt2=2;
-                        }
-                        break;
-                    default:
-                        NoViableAltException nvae =
-                            new NoViableAltException("", 2, 5, input);
 
                         throw nvae;
 
@@ -1316,7 +864,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             // AST REWRITE
-            // elements: body2, body1, head
+            // elements: body1, body2, head
             // token labels: 
             // rule labels: body2, retval, body1
             // token list labels: 
@@ -1596,7 +1144,7 @@ public TreeAdaptor getTreeAdaptor() {
                 {
                 int LA6_1 = input.LA(2);
 
-                if ( (LA6_1==65||LA6_1==85) ) {
+                if ( (LA6_1==65) ) {
                     alt6=1;
                 }
                 else if ( (LA6_1==DOT_ID||LA6_1==63||(LA6_1 >= 67 && LA6_1 <= 68)||LA6_1==70||LA6_1==72||(LA6_1 >= 76 && LA6_1 <= 81)||LA6_1==96) ) {
@@ -1693,7 +1241,7 @@ public TreeAdaptor getTreeAdaptor() {
                     stream_predicate.add(predicate28.getTree());
 
                     // AST REWRITE
-                    // elements: NOT, predicate
+                    // elements: predicate, NOT
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -2048,7 +1596,7 @@ public TreeAdaptor getTreeAdaptor() {
                     stream_function.add(function42.getTree());
 
                     // AST REWRITE
-                    // elements: varlist, function, cast
+                    // elements: cast, function, varlist
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -3127,7 +2675,6 @@ public TreeAdaptor getTreeAdaptor() {
                         case 79:
                         case 80:
                         case 81:
-                        case 86:
                         case 96:
                             {
                             alt18=3;
@@ -3254,7 +2801,7 @@ public TreeAdaptor getTreeAdaptor() {
                     stream_term.add(term53.getTree());
 
                     // AST REWRITE
-                    // elements: term, neg, cast
+                    // elements: term, cast, neg
                     // token labels: neg
                     // rule labels: retval
                     // token list labels: 
@@ -3335,7 +2882,7 @@ public TreeAdaptor getTreeAdaptor() {
                     stream_function.add(function55.getTree());
 
                     // AST REWRITE
-                    // elements: function, cast
+                    // elements: cast, function
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -3426,7 +2973,7 @@ public TreeAdaptor getTreeAdaptor() {
                     stream_compExpr.add(compExpr57.getTree());
 
                     // AST REWRITE
-                    // elements: cast, compExpr
+                    // elements: compExpr, cast
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -3894,7 +3441,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "predicate"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:1: predicate : ID ( '[' param ']' )? '(' ( paramlist )? ')' -> ID ^( INDEX ( param )? ) ( paramlist )? ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:128:1: predicate : ID '(' paramlist ')' -> ID paramlist ;
     public final SociaLiteParser.predicate_return predicate() throws RecognitionException {
         SociaLiteParser.predicate_return retval = new SociaLiteParser.predicate_return();
         retval.start = input.LT(1);
@@ -3905,99 +3452,41 @@ public TreeAdaptor getTreeAdaptor() {
         Token ID72=null;
         Token char_literal73=null;
         Token char_literal75=null;
-        Token char_literal76=null;
-        Token char_literal78=null;
-        SociaLiteParser.param_return param74 =null;
-
-        SociaLiteParser.paramlist_return paramlist77 =null;
+        SociaLiteParser.paramlist_return paramlist74 =null;
 
 
         CommonTree ID72_tree=null;
         CommonTree char_literal73_tree=null;
         CommonTree char_literal75_tree=null;
-        CommonTree char_literal76_tree=null;
-        CommonTree char_literal78_tree=null;
         RewriteRuleTokenStream stream_66=new RewriteRuleTokenStream(adaptor,"token 66");
         RewriteRuleTokenStream stream_ID=new RewriteRuleTokenStream(adaptor,"token ID");
         RewriteRuleTokenStream stream_65=new RewriteRuleTokenStream(adaptor,"token 65");
-        RewriteRuleTokenStream stream_86=new RewriteRuleTokenStream(adaptor,"token 86");
-        RewriteRuleTokenStream stream_85=new RewriteRuleTokenStream(adaptor,"token 85");
-        RewriteRuleSubtreeStream stream_param=new RewriteRuleSubtreeStream(adaptor,"rule param");
         RewriteRuleSubtreeStream stream_paramlist=new RewriteRuleSubtreeStream(adaptor,"rule paramlist");
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:11: ( ID ( '[' param ']' )? '(' ( paramlist )? ')' -> ID ^( INDEX ( param )? ) ( paramlist )? )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:12: ID ( '[' param ']' )? '(' ( paramlist )? ')'
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:128:11: ( ID '(' paramlist ')' -> ID paramlist )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:128:12: ID '(' paramlist ')'
             {
-            ID72=(Token)match(input,ID,FOLLOW_ID_in_predicate876);  
+            ID72=(Token)match(input,ID,FOLLOW_ID_in_predicate877);  
             stream_ID.add(ID72);
 
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:15: ( '[' param ']' )?
-            int alt21=2;
-            int LA21_0 = input.LA(1);
-
-            if ( (LA21_0==85) ) {
-                alt21=1;
-            }
-            switch (alt21) {
-                case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:16: '[' param ']'
-                    {
-                    char_literal73=(Token)match(input,85,FOLLOW_85_in_predicate879);  
-                    stream_85.add(char_literal73);
+            char_literal73=(Token)match(input,65,FOLLOW_65_in_predicate879);  
+            stream_65.add(char_literal73);
 
 
-                    pushFollow(FOLLOW_param_in_predicate881);
-                    param74=param();
+            pushFollow(FOLLOW_paramlist_in_predicate881);
+            paramlist74=paramlist();
 
-                    state._fsp--;
+            state._fsp--;
 
-                    stream_param.add(param74.getTree());
+            stream_paramlist.add(paramlist74.getTree());
 
-                    char_literal75=(Token)match(input,86,FOLLOW_86_in_predicate883);  
-                    stream_86.add(char_literal75);
-
-
-                    }
-                    break;
-
-            }
-
-
-            char_literal76=(Token)match(input,65,FOLLOW_65_in_predicate887);  
-            stream_65.add(char_literal76);
-
-
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:36: ( paramlist )?
-            int alt22=2;
-            int LA22_0 = input.LA(1);
-
-            if ( (LA22_0==FLOAT||LA22_0==ID||LA22_0==INT||LA22_0==STRING||LA22_0==UTF8||(LA22_0 >= 64 && LA22_0 <= 65)||LA22_0==70) ) {
-                alt22=1;
-            }
-            switch (alt22) {
-                case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:36: paramlist
-                    {
-                    pushFollow(FOLLOW_paramlist_in_predicate889);
-                    paramlist77=paramlist();
-
-                    state._fsp--;
-
-                    stream_paramlist.add(paramlist77.getTree());
-
-                    }
-                    break;
-
-            }
-
-
-            char_literal78=(Token)match(input,66,FOLLOW_66_in_predicate892);  
-            stream_66.add(char_literal78);
+            char_literal75=(Token)match(input,66,FOLLOW_66_in_predicate883);  
+            stream_66.add(char_literal75);
 
 
             // AST REWRITE
-            // elements: ID, param, paramlist
+            // elements: ID, paramlist
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -4007,35 +3496,13 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (CommonTree)adaptor.nil();
-            // 127:51: -> ID ^( INDEX ( param )? ) ( paramlist )?
+            // 128:33: -> ID paramlist
             {
                 adaptor.addChild(root_0, 
                 stream_ID.nextNode()
                 );
 
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:57: ^( INDEX ( param )? )
-                {
-                CommonTree root_1 = (CommonTree)adaptor.nil();
-                root_1 = (CommonTree)adaptor.becomeRoot(
-                (CommonTree)adaptor.create(INDEX, "INDEX")
-                , root_1);
-
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:65: ( param )?
-                if ( stream_param.hasNext() ) {
-                    adaptor.addChild(root_1, stream_param.nextTree());
-
-                }
-                stream_param.reset();
-
-                adaptor.addChild(root_0, root_1);
-                }
-
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:127:73: ( paramlist )?
-                if ( stream_paramlist.hasNext() ) {
-                    adaptor.addChild(root_0, stream_paramlist.nextTree());
-
-                }
-                stream_paramlist.reset();
+                adaptor.addChild(root_0, stream_paramlist.nextTree());
 
             }
 
@@ -4073,7 +3540,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "paramlist"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:128:1: paramlist : param ( ',' ! param )* ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:130:1: paramlist : param ( ',' ! param )* ;
     public final SociaLiteParser.paramlist_return paramlist() throws RecognitionException {
         SociaLiteParser.paramlist_return retval = new SociaLiteParser.paramlist_return();
         retval.start = input.LT(1);
@@ -4081,57 +3548,57 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal80=null;
-        SociaLiteParser.param_return param79 =null;
+        Token char_literal77=null;
+        SociaLiteParser.param_return param76 =null;
 
-        SociaLiteParser.param_return param81 =null;
+        SociaLiteParser.param_return param78 =null;
 
 
-        CommonTree char_literal80_tree=null;
+        CommonTree char_literal77_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:128:11: ( param ( ',' ! param )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:128:12: param ( ',' ! param )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:130:11: ( param ( ',' ! param )* )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:130:12: param ( ',' ! param )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_param_in_paramlist912);
-            param79=param();
+            pushFollow(FOLLOW_param_in_paramlist896);
+            param76=param();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, param79.getTree());
+            adaptor.addChild(root_0, param76.getTree());
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:128:18: ( ',' ! param )*
-            loop23:
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:130:18: ( ',' ! param )*
+            loop21:
             do {
-                int alt23=2;
-                int LA23_0 = input.LA(1);
+                int alt21=2;
+                int LA21_0 = input.LA(1);
 
-                if ( (LA23_0==69) ) {
-                    alt23=1;
+                if ( (LA21_0==69) ) {
+                    alt21=1;
                 }
 
 
-                switch (alt23) {
+                switch (alt21) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:128:19: ',' ! param
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:130:19: ',' ! param
             	    {
-            	    char_literal80=(Token)match(input,69,FOLLOW_69_in_paramlist915); 
+            	    char_literal77=(Token)match(input,69,FOLLOW_69_in_paramlist899); 
 
-            	    pushFollow(FOLLOW_param_in_paramlist918);
-            	    param81=param();
+            	    pushFollow(FOLLOW_param_in_paramlist902);
+            	    param78=param();
 
             	    state._fsp--;
 
-            	    adaptor.addChild(root_0, param81.getTree());
+            	    adaptor.addChild(root_0, param78.getTree());
 
             	    }
             	    break;
 
             	default :
-            	    break loop23;
+            	    break loop21;
                 }
             } while (true);
 
@@ -4167,7 +3634,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "fparamlist"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:129:1: fparamlist : fparam ( ',' ! fparam )* ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:131:1: fparamlist : fparam ( ',' ! fparam )* ;
     public final SociaLiteParser.fparamlist_return fparamlist() throws RecognitionException {
         SociaLiteParser.fparamlist_return retval = new SociaLiteParser.fparamlist_return();
         retval.start = input.LT(1);
@@ -4175,57 +3642,57 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal83=null;
-        SociaLiteParser.fparam_return fparam82 =null;
+        Token char_literal80=null;
+        SociaLiteParser.fparam_return fparam79 =null;
 
-        SociaLiteParser.fparam_return fparam84 =null;
+        SociaLiteParser.fparam_return fparam81 =null;
 
 
-        CommonTree char_literal83_tree=null;
+        CommonTree char_literal80_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:129:12: ( fparam ( ',' ! fparam )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:129:13: fparam ( ',' ! fparam )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:131:12: ( fparam ( ',' ! fparam )* )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:131:13: fparam ( ',' ! fparam )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_fparam_in_fparamlist926);
-            fparam82=fparam();
+            pushFollow(FOLLOW_fparam_in_fparamlist910);
+            fparam79=fparam();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, fparam82.getTree());
+            adaptor.addChild(root_0, fparam79.getTree());
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:129:20: ( ',' ! fparam )*
-            loop24:
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:131:20: ( ',' ! fparam )*
+            loop22:
             do {
-                int alt24=2;
-                int LA24_0 = input.LA(1);
+                int alt22=2;
+                int LA22_0 = input.LA(1);
 
-                if ( (LA24_0==69) ) {
-                    alt24=1;
+                if ( (LA22_0==69) ) {
+                    alt22=1;
                 }
 
 
-                switch (alt24) {
+                switch (alt22) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:129:21: ',' ! fparam
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:131:21: ',' ! fparam
             	    {
-            	    char_literal83=(Token)match(input,69,FOLLOW_69_in_fparamlist929); 
+            	    char_literal80=(Token)match(input,69,FOLLOW_69_in_fparamlist913); 
 
-            	    pushFollow(FOLLOW_fparam_in_fparamlist932);
-            	    fparam84=fparam();
+            	    pushFollow(FOLLOW_fparam_in_fparamlist916);
+            	    fparam81=fparam();
 
             	    state._fsp--;
 
-            	    adaptor.addChild(root_0, fparam84.getTree());
+            	    adaptor.addChild(root_0, fparam81.getTree());
 
             	    }
             	    break;
 
             	default :
-            	    break loop24;
+            	    break loop22;
                 }
             } while (true);
 
@@ -4261,7 +3728,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "param"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:131:1: param : simpleExpr ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:133:1: param : simpleExpr ;
     public final SociaLiteParser.param_return param() throws RecognitionException {
         SociaLiteParser.param_return retval = new SociaLiteParser.param_return();
         retval.start = input.LT(1);
@@ -4269,23 +3736,23 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        SociaLiteParser.simpleExpr_return simpleExpr85 =null;
+        SociaLiteParser.simpleExpr_return simpleExpr82 =null;
 
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:131:7: ( simpleExpr )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:131:8: simpleExpr
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:133:7: ( simpleExpr )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:133:8: simpleExpr
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_simpleExpr_in_param941);
-            simpleExpr85=simpleExpr();
+            pushFollow(FOLLOW_simpleExpr_in_param925);
+            simpleExpr82=simpleExpr();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, simpleExpr85.getTree());
+            adaptor.addChild(root_0, simpleExpr82.getTree());
 
             }
 
@@ -4318,7 +3785,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "fparam"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:132:1: fparam : simpleExpr ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:134:1: fparam : simpleExpr ;
     public final SociaLiteParser.fparam_return fparam() throws RecognitionException {
         SociaLiteParser.fparam_return retval = new SociaLiteParser.fparam_return();
         retval.start = input.LT(1);
@@ -4326,23 +3793,23 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        SociaLiteParser.simpleExpr_return simpleExpr86 =null;
+        SociaLiteParser.simpleExpr_return simpleExpr83 =null;
 
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:132:8: ( simpleExpr )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:132:9: simpleExpr
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:134:8: ( simpleExpr )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:134:9: simpleExpr
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_simpleExpr_in_fparam947);
-            simpleExpr86=simpleExpr();
+            pushFollow(FOLLOW_simpleExpr_in_fparam931);
+            simpleExpr83=simpleExpr();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, simpleExpr86.getTree());
+            adaptor.addChild(root_0, simpleExpr83.getTree());
 
             }
 
@@ -4375,7 +3842,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "term"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:134:1: term : ( INT -> ^( T_INT INT ) | FLOAT -> ^( T_FLOAT FLOAT ) | STRING -> ^( T_STR STRING ) | UTF8 -> ^( T_UTF8 UTF8 ) | dotname -> ^( T_VAR dotname ) );
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:136:1: term : ( INT -> ^( T_INT INT ) | FLOAT -> ^( T_FLOAT FLOAT ) | STRING -> ^( T_STR STRING ) | UTF8 -> ^( T_UTF8 UTF8 ) | dotname -> ^( T_VAR dotname ) );
     public final SociaLiteParser.term_return term() throws RecognitionException {
         SociaLiteParser.term_return retval = new SociaLiteParser.term_return();
         retval.start = input.LT(1);
@@ -4383,65 +3850,65 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token INT87=null;
-        Token FLOAT88=null;
-        Token STRING89=null;
-        Token UTF890=null;
-        SociaLiteParser.dotname_return dotname91 =null;
+        Token INT84=null;
+        Token FLOAT85=null;
+        Token STRING86=null;
+        Token UTF887=null;
+        SociaLiteParser.dotname_return dotname88 =null;
 
 
-        CommonTree INT87_tree=null;
-        CommonTree FLOAT88_tree=null;
-        CommonTree STRING89_tree=null;
-        CommonTree UTF890_tree=null;
+        CommonTree INT84_tree=null;
+        CommonTree FLOAT85_tree=null;
+        CommonTree STRING86_tree=null;
+        CommonTree UTF887_tree=null;
         RewriteRuleTokenStream stream_FLOAT=new RewriteRuleTokenStream(adaptor,"token FLOAT");
         RewriteRuleTokenStream stream_INT=new RewriteRuleTokenStream(adaptor,"token INT");
         RewriteRuleTokenStream stream_UTF8=new RewriteRuleTokenStream(adaptor,"token UTF8");
         RewriteRuleTokenStream stream_STRING=new RewriteRuleTokenStream(adaptor,"token STRING");
         RewriteRuleSubtreeStream stream_dotname=new RewriteRuleSubtreeStream(adaptor,"rule dotname");
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:134:5: ( INT -> ^( T_INT INT ) | FLOAT -> ^( T_FLOAT FLOAT ) | STRING -> ^( T_STR STRING ) | UTF8 -> ^( T_UTF8 UTF8 ) | dotname -> ^( T_VAR dotname ) )
-            int alt25=5;
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:136:5: ( INT -> ^( T_INT INT ) | FLOAT -> ^( T_FLOAT FLOAT ) | STRING -> ^( T_STR STRING ) | UTF8 -> ^( T_UTF8 UTF8 ) | dotname -> ^( T_VAR dotname ) )
+            int alt23=5;
             switch ( input.LA(1) ) {
             case INT:
                 {
-                alt25=1;
+                alt23=1;
                 }
                 break;
             case FLOAT:
                 {
-                alt25=2;
+                alt23=2;
                 }
                 break;
             case STRING:
                 {
-                alt25=3;
+                alt23=3;
                 }
                 break;
             case UTF8:
                 {
-                alt25=4;
+                alt23=4;
                 }
                 break;
             case ID:
                 {
-                alt25=5;
+                alt23=5;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("", 25, 0, input);
+                    new NoViableAltException("", 23, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt25) {
+            switch (alt23) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:134:7: INT
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:136:7: INT
                     {
-                    INT87=(Token)match(input,INT,FOLLOW_INT_in_term954);  
-                    stream_INT.add(INT87);
+                    INT84=(Token)match(input,INT,FOLLOW_INT_in_term938);  
+                    stream_INT.add(INT84);
 
 
                     // AST REWRITE
@@ -4455,9 +3922,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 134:11: -> ^( T_INT INT )
+                    // 136:11: -> ^( T_INT INT )
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:134:14: ^( T_INT INT )
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:136:14: ^( T_INT INT )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -4479,10 +3946,10 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:135:3: FLOAT
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:137:3: FLOAT
                     {
-                    FLOAT88=(Token)match(input,FLOAT,FOLLOW_FLOAT_in_term967);  
-                    stream_FLOAT.add(FLOAT88);
+                    FLOAT85=(Token)match(input,FLOAT,FOLLOW_FLOAT_in_term951);  
+                    stream_FLOAT.add(FLOAT85);
 
 
                     // AST REWRITE
@@ -4496,9 +3963,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 135:9: -> ^( T_FLOAT FLOAT )
+                    // 137:9: -> ^( T_FLOAT FLOAT )
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:135:12: ^( T_FLOAT FLOAT )
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:137:12: ^( T_FLOAT FLOAT )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -4520,10 +3987,10 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:136:3: STRING
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:138:3: STRING
                     {
-                    STRING89=(Token)match(input,STRING,FOLLOW_STRING_in_term979);  
-                    stream_STRING.add(STRING89);
+                    STRING86=(Token)match(input,STRING,FOLLOW_STRING_in_term963);  
+                    stream_STRING.add(STRING86);
 
 
                     // AST REWRITE
@@ -4537,9 +4004,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 136:10: -> ^( T_STR STRING )
+                    // 138:10: -> ^( T_STR STRING )
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:136:13: ^( T_STR STRING )
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:138:13: ^( T_STR STRING )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -4561,10 +4028,10 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:137:3: UTF8
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:139:3: UTF8
                     {
-                    UTF890=(Token)match(input,UTF8,FOLLOW_UTF8_in_term991);  
-                    stream_UTF8.add(UTF890);
+                    UTF887=(Token)match(input,UTF8,FOLLOW_UTF8_in_term975);  
+                    stream_UTF8.add(UTF887);
 
 
                     // AST REWRITE
@@ -4578,9 +4045,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 137:8: -> ^( T_UTF8 UTF8 )
+                    // 139:8: -> ^( T_UTF8 UTF8 )
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:137:11: ^( T_UTF8 UTF8 )
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:139:11: ^( T_UTF8 UTF8 )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -4602,14 +4069,14 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:138:3: dotname
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:3: dotname
                     {
-                    pushFollow(FOLLOW_dotname_in_term1004);
-                    dotname91=dotname();
+                    pushFollow(FOLLOW_dotname_in_term988);
+                    dotname88=dotname();
 
                     state._fsp--;
 
-                    stream_dotname.add(dotname91.getTree());
+                    stream_dotname.add(dotname88.getTree());
 
                     // AST REWRITE
                     // elements: dotname
@@ -4622,9 +4089,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 138:11: -> ^( T_VAR dotname )
+                    // 140:11: -> ^( T_VAR dotname )
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:138:14: ^( T_VAR dotname )
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:14: ^( T_VAR dotname )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -4674,7 +4141,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "table_decl"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:1: table_decl : ( ID ( '[' col_decl ']' )? '(' decls ')' ( table_opts )? DOT_END -> ^( DECL KIND1 ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) ) | ID ( '[' col_decl ']' )? '(' '(' decls ')' ')' ( table_opts )? DOT_END -> ^( DECL KIND2 ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) ) );
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:142:1: table_decl : ID '(' decls ')' ( table_opts )? DOT_END -> ^( DECL ID decls ^( OPTION ( table_opts )? ) ) ;
     public final SociaLiteParser.table_decl_return table_decl() throws RecognitionException {
         SociaLiteParser.table_decl_return retval = new SociaLiteParser.table_decl_return();
         retval.start = input.LT(1);
@@ -4682,2775 +4149,129 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token ID92=null;
-        Token char_literal93=null;
-        Token char_literal95=null;
-        Token char_literal96=null;
-        Token char_literal98=null;
-        Token DOT_END100=null;
-        Token ID101=null;
-        Token char_literal102=null;
-        Token char_literal104=null;
-        Token char_literal105=null;
-        Token char_literal106=null;
-        Token char_literal108=null;
-        Token char_literal109=null;
-        Token DOT_END111=null;
-        SociaLiteParser.col_decl_return col_decl94 =null;
+        Token ID89=null;
+        Token char_literal90=null;
+        Token char_literal92=null;
+        Token DOT_END94=null;
+        SociaLiteParser.decls_return decls91 =null;
 
-        SociaLiteParser.decls_return decls97 =null;
-
-        SociaLiteParser.table_opts_return table_opts99 =null;
-
-        SociaLiteParser.col_decl_return col_decl103 =null;
-
-        SociaLiteParser.decls_return decls107 =null;
-
-        SociaLiteParser.table_opts_return table_opts110 =null;
+        SociaLiteParser.table_opts_return table_opts93 =null;
 
 
-        CommonTree ID92_tree=null;
-        CommonTree char_literal93_tree=null;
-        CommonTree char_literal95_tree=null;
-        CommonTree char_literal96_tree=null;
-        CommonTree char_literal98_tree=null;
-        CommonTree DOT_END100_tree=null;
-        CommonTree ID101_tree=null;
-        CommonTree char_literal102_tree=null;
-        CommonTree char_literal104_tree=null;
-        CommonTree char_literal105_tree=null;
-        CommonTree char_literal106_tree=null;
-        CommonTree char_literal108_tree=null;
-        CommonTree char_literal109_tree=null;
-        CommonTree DOT_END111_tree=null;
+        CommonTree ID89_tree=null;
+        CommonTree char_literal90_tree=null;
+        CommonTree char_literal92_tree=null;
+        CommonTree DOT_END94_tree=null;
         RewriteRuleTokenStream stream_66=new RewriteRuleTokenStream(adaptor,"token 66");
         RewriteRuleTokenStream stream_ID=new RewriteRuleTokenStream(adaptor,"token ID");
         RewriteRuleTokenStream stream_65=new RewriteRuleTokenStream(adaptor,"token 65");
         RewriteRuleTokenStream stream_DOT_END=new RewriteRuleTokenStream(adaptor,"token DOT_END");
-        RewriteRuleTokenStream stream_86=new RewriteRuleTokenStream(adaptor,"token 86");
-        RewriteRuleTokenStream stream_85=new RewriteRuleTokenStream(adaptor,"token 85");
         RewriteRuleSubtreeStream stream_table_opts=new RewriteRuleSubtreeStream(adaptor,"rule table_opts");
-        RewriteRuleSubtreeStream stream_col_decl=new RewriteRuleSubtreeStream(adaptor,"rule col_decl");
         RewriteRuleSubtreeStream stream_decls=new RewriteRuleSubtreeStream(adaptor,"rule decls");
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:11: ( ID ( '[' col_decl ']' )? '(' decls ')' ( table_opts )? DOT_END -> ^( DECL KIND1 ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) ) | ID ( '[' col_decl ']' )? '(' '(' decls ')' ')' ( table_opts )? DOT_END -> ^( DECL KIND2 ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) ) )
-            int alt30=2;
-            int LA30_0 = input.LA(1);
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:142:11: ( ID '(' decls ')' ( table_opts )? DOT_END -> ^( DECL ID decls ^( OPTION ( table_opts )? ) ) )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:142:16: ID '(' decls ')' ( table_opts )? DOT_END
+            {
+            ID89=(Token)match(input,ID,FOLLOW_ID_in_table_decl1007);  
+            stream_ID.add(ID89);
 
-            if ( (LA30_0==ID) ) {
-                int LA30_1 = input.LA(2);
 
-                if ( (LA30_1==85) ) {
-                    switch ( input.LA(3) ) {
-                    case 94:
-                        {
-                        int LA30_4 = input.LA(4);
+            char_literal90=(Token)match(input,65,FOLLOW_65_in_table_decl1010);  
+            stream_65.add(char_literal90);
 
-                        if ( (LA30_4==85) ) {
-                            int LA30_13 = input.LA(5);
 
-                            if ( (LA30_13==86) ) {
-                                int LA30_21 = input.LA(6);
+            pushFollow(FOLLOW_decls_in_table_decl1012);
+            decls91=decls();
 
-                                if ( (LA30_21==ID) ) {
-                                    int LA30_14 = input.LA(7);
+            state._fsp--;
 
-                                    if ( (LA30_14==73) ) {
-                                        int LA30_22 = input.LA(8);
+            stream_decls.add(decls91.getTree());
 
-                                        if ( (LA30_22==INT) ) {
-                                            int LA30_30 = input.LA(9);
+            char_literal92=(Token)match(input,66,FOLLOW_66_in_table_decl1014);  
+            stream_66.add(char_literal92);
 
-                                            if ( (LA30_30==71) ) {
-                                                int LA30_32 = input.LA(10);
 
-                                                if ( (LA30_32==INT) ) {
-                                                    int LA30_33 = input.LA(11);
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:142:34: ( table_opts )?
+            int alt24=2;
+            int LA24_0 = input.LA(1);
 
-                                                    if ( (LA30_33==86) ) {
-                                                        int LA30_23 = input.LA(12);
-
-                                                        if ( (LA30_23==65) ) {
-                                                            int LA30_3 = input.LA(13);
-
-                                                            if ( (LA30_3==65) ) {
-                                                                alt30=2;
-                                                            }
-                                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                                alt30=1;
-                                                            }
-                                                            else {
-                                                                NoViableAltException nvae =
-                                                                    new NoViableAltException("", 30, 3, input);
-
-                                                                throw nvae;
-
-                                                            }
-                                                        }
-                                                        else {
-                                                            NoViableAltException nvae =
-                                                                new NoViableAltException("", 30, 23, input);
-
-                                                            throw nvae;
-
-                                                        }
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 33, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 32, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 30, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else if ( (LA30_22==ITER_DECL) ) {
-                                            int LA30_31 = input.LA(9);
-
-                                            if ( (LA30_31==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 31, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 22, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else if ( (LA30_14==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 14, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 21, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 13, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else if ( (LA30_4==ID) ) {
-                            int LA30_14 = input.LA(5);
-
-                            if ( (LA30_14==73) ) {
-                                int LA30_22 = input.LA(6);
-
-                                if ( (LA30_22==INT) ) {
-                                    int LA30_30 = input.LA(7);
-
-                                    if ( (LA30_30==71) ) {
-                                        int LA30_32 = input.LA(8);
-
-                                        if ( (LA30_32==INT) ) {
-                                            int LA30_33 = input.LA(9);
-
-                                            if ( (LA30_33==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 33, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 32, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 30, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else if ( (LA30_22==ITER_DECL) ) {
-                                    int LA30_31 = input.LA(7);
-
-                                    if ( (LA30_31==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 31, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 22, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else if ( (LA30_14==86) ) {
-                                int LA30_23 = input.LA(6);
-
-                                if ( (LA30_23==65) ) {
-                                    int LA30_3 = input.LA(7);
-
-                                    if ( (LA30_3==65) ) {
-                                        alt30=2;
-                                    }
-                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                        alt30=1;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 3, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 23, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 14, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("", 30, 4, input);
-
-                            throw nvae;
-
-                        }
-                        }
-                        break;
-                    case 95:
-                        {
-                        int LA30_5 = input.LA(4);
-
-                        if ( (LA30_5==85) ) {
-                            int LA30_15 = input.LA(5);
-
-                            if ( (LA30_15==86) ) {
-                                int LA30_24 = input.LA(6);
-
-                                if ( (LA30_24==ID) ) {
-                                    int LA30_14 = input.LA(7);
-
-                                    if ( (LA30_14==73) ) {
-                                        int LA30_22 = input.LA(8);
-
-                                        if ( (LA30_22==INT) ) {
-                                            int LA30_30 = input.LA(9);
-
-                                            if ( (LA30_30==71) ) {
-                                                int LA30_32 = input.LA(10);
-
-                                                if ( (LA30_32==INT) ) {
-                                                    int LA30_33 = input.LA(11);
-
-                                                    if ( (LA30_33==86) ) {
-                                                        int LA30_23 = input.LA(12);
-
-                                                        if ( (LA30_23==65) ) {
-                                                            int LA30_3 = input.LA(13);
-
-                                                            if ( (LA30_3==65) ) {
-                                                                alt30=2;
-                                                            }
-                                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                                alt30=1;
-                                                            }
-                                                            else {
-                                                                NoViableAltException nvae =
-                                                                    new NoViableAltException("", 30, 3, input);
-
-                                                                throw nvae;
-
-                                                            }
-                                                        }
-                                                        else {
-                                                            NoViableAltException nvae =
-                                                                new NoViableAltException("", 30, 23, input);
-
-                                                            throw nvae;
-
-                                                        }
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 33, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 32, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 30, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else if ( (LA30_22==ITER_DECL) ) {
-                                            int LA30_31 = input.LA(9);
-
-                                            if ( (LA30_31==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 31, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 22, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else if ( (LA30_14==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 14, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 24, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 15, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else if ( (LA30_5==ID) ) {
-                            int LA30_14 = input.LA(5);
-
-                            if ( (LA30_14==73) ) {
-                                int LA30_22 = input.LA(6);
-
-                                if ( (LA30_22==INT) ) {
-                                    int LA30_30 = input.LA(7);
-
-                                    if ( (LA30_30==71) ) {
-                                        int LA30_32 = input.LA(8);
-
-                                        if ( (LA30_32==INT) ) {
-                                            int LA30_33 = input.LA(9);
-
-                                            if ( (LA30_33==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 33, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 32, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 30, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else if ( (LA30_22==ITER_DECL) ) {
-                                    int LA30_31 = input.LA(7);
-
-                                    if ( (LA30_31==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 31, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 22, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else if ( (LA30_14==86) ) {
-                                int LA30_23 = input.LA(6);
-
-                                if ( (LA30_23==65) ) {
-                                    int LA30_3 = input.LA(7);
-
-                                    if ( (LA30_3==65) ) {
-                                        alt30=2;
-                                    }
-                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                        alt30=1;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 3, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 23, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 14, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("", 30, 5, input);
-
-                            throw nvae;
-
-                        }
-                        }
-                        break;
-                    case 91:
-                        {
-                        int LA30_6 = input.LA(4);
-
-                        if ( (LA30_6==85) ) {
-                            int LA30_16 = input.LA(5);
-
-                            if ( (LA30_16==86) ) {
-                                int LA30_25 = input.LA(6);
-
-                                if ( (LA30_25==ID) ) {
-                                    int LA30_14 = input.LA(7);
-
-                                    if ( (LA30_14==73) ) {
-                                        int LA30_22 = input.LA(8);
-
-                                        if ( (LA30_22==INT) ) {
-                                            int LA30_30 = input.LA(9);
-
-                                            if ( (LA30_30==71) ) {
-                                                int LA30_32 = input.LA(10);
-
-                                                if ( (LA30_32==INT) ) {
-                                                    int LA30_33 = input.LA(11);
-
-                                                    if ( (LA30_33==86) ) {
-                                                        int LA30_23 = input.LA(12);
-
-                                                        if ( (LA30_23==65) ) {
-                                                            int LA30_3 = input.LA(13);
-
-                                                            if ( (LA30_3==65) ) {
-                                                                alt30=2;
-                                                            }
-                                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                                alt30=1;
-                                                            }
-                                                            else {
-                                                                NoViableAltException nvae =
-                                                                    new NoViableAltException("", 30, 3, input);
-
-                                                                throw nvae;
-
-                                                            }
-                                                        }
-                                                        else {
-                                                            NoViableAltException nvae =
-                                                                new NoViableAltException("", 30, 23, input);
-
-                                                            throw nvae;
-
-                                                        }
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 33, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 32, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 30, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else if ( (LA30_22==ITER_DECL) ) {
-                                            int LA30_31 = input.LA(9);
-
-                                            if ( (LA30_31==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 31, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 22, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else if ( (LA30_14==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 14, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 25, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 16, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else if ( (LA30_6==ID) ) {
-                            int LA30_14 = input.LA(5);
-
-                            if ( (LA30_14==73) ) {
-                                int LA30_22 = input.LA(6);
-
-                                if ( (LA30_22==INT) ) {
-                                    int LA30_30 = input.LA(7);
-
-                                    if ( (LA30_30==71) ) {
-                                        int LA30_32 = input.LA(8);
-
-                                        if ( (LA30_32==INT) ) {
-                                            int LA30_33 = input.LA(9);
-
-                                            if ( (LA30_33==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 33, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 32, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 30, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else if ( (LA30_22==ITER_DECL) ) {
-                                    int LA30_31 = input.LA(7);
-
-                                    if ( (LA30_31==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 31, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 22, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else if ( (LA30_14==86) ) {
-                                int LA30_23 = input.LA(6);
-
-                                if ( (LA30_23==65) ) {
-                                    int LA30_3 = input.LA(7);
-
-                                    if ( (LA30_3==65) ) {
-                                        alt30=2;
-                                    }
-                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                        alt30=1;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 3, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 23, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 14, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("", 30, 6, input);
-
-                            throw nvae;
-
-                        }
-                        }
-                        break;
-                    case 89:
-                        {
-                        int LA30_7 = input.LA(4);
-
-                        if ( (LA30_7==85) ) {
-                            int LA30_17 = input.LA(5);
-
-                            if ( (LA30_17==86) ) {
-                                int LA30_26 = input.LA(6);
-
-                                if ( (LA30_26==ID) ) {
-                                    int LA30_14 = input.LA(7);
-
-                                    if ( (LA30_14==73) ) {
-                                        int LA30_22 = input.LA(8);
-
-                                        if ( (LA30_22==INT) ) {
-                                            int LA30_30 = input.LA(9);
-
-                                            if ( (LA30_30==71) ) {
-                                                int LA30_32 = input.LA(10);
-
-                                                if ( (LA30_32==INT) ) {
-                                                    int LA30_33 = input.LA(11);
-
-                                                    if ( (LA30_33==86) ) {
-                                                        int LA30_23 = input.LA(12);
-
-                                                        if ( (LA30_23==65) ) {
-                                                            int LA30_3 = input.LA(13);
-
-                                                            if ( (LA30_3==65) ) {
-                                                                alt30=2;
-                                                            }
-                                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                                alt30=1;
-                                                            }
-                                                            else {
-                                                                NoViableAltException nvae =
-                                                                    new NoViableAltException("", 30, 3, input);
-
-                                                                throw nvae;
-
-                                                            }
-                                                        }
-                                                        else {
-                                                            NoViableAltException nvae =
-                                                                new NoViableAltException("", 30, 23, input);
-
-                                                            throw nvae;
-
-                                                        }
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 33, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 32, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 30, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else if ( (LA30_22==ITER_DECL) ) {
-                                            int LA30_31 = input.LA(9);
-
-                                            if ( (LA30_31==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 31, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 22, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else if ( (LA30_14==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 14, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 26, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 17, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else if ( (LA30_7==ID) ) {
-                            int LA30_14 = input.LA(5);
-
-                            if ( (LA30_14==73) ) {
-                                int LA30_22 = input.LA(6);
-
-                                if ( (LA30_22==INT) ) {
-                                    int LA30_30 = input.LA(7);
-
-                                    if ( (LA30_30==71) ) {
-                                        int LA30_32 = input.LA(8);
-
-                                        if ( (LA30_32==INT) ) {
-                                            int LA30_33 = input.LA(9);
-
-                                            if ( (LA30_33==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 33, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 32, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 30, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else if ( (LA30_22==ITER_DECL) ) {
-                                    int LA30_31 = input.LA(7);
-
-                                    if ( (LA30_31==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 31, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 22, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else if ( (LA30_14==86) ) {
-                                int LA30_23 = input.LA(6);
-
-                                if ( (LA30_23==65) ) {
-                                    int LA30_3 = input.LA(7);
-
-                                    if ( (LA30_3==65) ) {
-                                        alt30=2;
-                                    }
-                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                        alt30=1;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 3, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 23, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 14, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("", 30, 7, input);
-
-                            throw nvae;
-
-                        }
-                        }
-                        break;
-                    case 84:
-                        {
-                        int LA30_8 = input.LA(4);
-
-                        if ( (LA30_8==85) ) {
-                            int LA30_18 = input.LA(5);
-
-                            if ( (LA30_18==86) ) {
-                                int LA30_27 = input.LA(6);
-
-                                if ( (LA30_27==ID) ) {
-                                    int LA30_14 = input.LA(7);
-
-                                    if ( (LA30_14==73) ) {
-                                        int LA30_22 = input.LA(8);
-
-                                        if ( (LA30_22==INT) ) {
-                                            int LA30_30 = input.LA(9);
-
-                                            if ( (LA30_30==71) ) {
-                                                int LA30_32 = input.LA(10);
-
-                                                if ( (LA30_32==INT) ) {
-                                                    int LA30_33 = input.LA(11);
-
-                                                    if ( (LA30_33==86) ) {
-                                                        int LA30_23 = input.LA(12);
-
-                                                        if ( (LA30_23==65) ) {
-                                                            int LA30_3 = input.LA(13);
-
-                                                            if ( (LA30_3==65) ) {
-                                                                alt30=2;
-                                                            }
-                                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                                alt30=1;
-                                                            }
-                                                            else {
-                                                                NoViableAltException nvae =
-                                                                    new NoViableAltException("", 30, 3, input);
-
-                                                                throw nvae;
-
-                                                            }
-                                                        }
-                                                        else {
-                                                            NoViableAltException nvae =
-                                                                new NoViableAltException("", 30, 23, input);
-
-                                                            throw nvae;
-
-                                                        }
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 33, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 32, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 30, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else if ( (LA30_22==ITER_DECL) ) {
-                                            int LA30_31 = input.LA(9);
-
-                                            if ( (LA30_31==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 31, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 22, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else if ( (LA30_14==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 14, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 27, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 18, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else if ( (LA30_8==ID) ) {
-                            int LA30_14 = input.LA(5);
-
-                            if ( (LA30_14==73) ) {
-                                int LA30_22 = input.LA(6);
-
-                                if ( (LA30_22==INT) ) {
-                                    int LA30_30 = input.LA(7);
-
-                                    if ( (LA30_30==71) ) {
-                                        int LA30_32 = input.LA(8);
-
-                                        if ( (LA30_32==INT) ) {
-                                            int LA30_33 = input.LA(9);
-
-                                            if ( (LA30_33==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 33, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 32, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 30, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else if ( (LA30_22==ITER_DECL) ) {
-                                    int LA30_31 = input.LA(7);
-
-                                    if ( (LA30_31==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 31, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 22, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else if ( (LA30_14==86) ) {
-                                int LA30_23 = input.LA(6);
-
-                                if ( (LA30_23==65) ) {
-                                    int LA30_3 = input.LA(7);
-
-                                    if ( (LA30_3==65) ) {
-                                        alt30=2;
-                                    }
-                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                        alt30=1;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 3, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 23, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 14, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("", 30, 8, input);
-
-                            throw nvae;
-
-                        }
-                        }
-                        break;
-                    case 83:
-                        {
-                        int LA30_9 = input.LA(4);
-
-                        if ( (LA30_9==85) ) {
-                            int LA30_19 = input.LA(5);
-
-                            if ( (LA30_19==86) ) {
-                                int LA30_28 = input.LA(6);
-
-                                if ( (LA30_28==ID) ) {
-                                    int LA30_14 = input.LA(7);
-
-                                    if ( (LA30_14==73) ) {
-                                        int LA30_22 = input.LA(8);
-
-                                        if ( (LA30_22==INT) ) {
-                                            int LA30_30 = input.LA(9);
-
-                                            if ( (LA30_30==71) ) {
-                                                int LA30_32 = input.LA(10);
-
-                                                if ( (LA30_32==INT) ) {
-                                                    int LA30_33 = input.LA(11);
-
-                                                    if ( (LA30_33==86) ) {
-                                                        int LA30_23 = input.LA(12);
-
-                                                        if ( (LA30_23==65) ) {
-                                                            int LA30_3 = input.LA(13);
-
-                                                            if ( (LA30_3==65) ) {
-                                                                alt30=2;
-                                                            }
-                                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                                alt30=1;
-                                                            }
-                                                            else {
-                                                                NoViableAltException nvae =
-                                                                    new NoViableAltException("", 30, 3, input);
-
-                                                                throw nvae;
-
-                                                            }
-                                                        }
-                                                        else {
-                                                            NoViableAltException nvae =
-                                                                new NoViableAltException("", 30, 23, input);
-
-                                                            throw nvae;
-
-                                                        }
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 33, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 32, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 30, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else if ( (LA30_22==ITER_DECL) ) {
-                                            int LA30_31 = input.LA(9);
-
-                                            if ( (LA30_31==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 31, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 22, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else if ( (LA30_14==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 14, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 28, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 19, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else if ( (LA30_9==ID) ) {
-                            int LA30_14 = input.LA(5);
-
-                            if ( (LA30_14==73) ) {
-                                int LA30_22 = input.LA(6);
-
-                                if ( (LA30_22==INT) ) {
-                                    int LA30_30 = input.LA(7);
-
-                                    if ( (LA30_30==71) ) {
-                                        int LA30_32 = input.LA(8);
-
-                                        if ( (LA30_32==INT) ) {
-                                            int LA30_33 = input.LA(9);
-
-                                            if ( (LA30_33==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 33, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 32, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 30, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else if ( (LA30_22==ITER_DECL) ) {
-                                    int LA30_31 = input.LA(7);
-
-                                    if ( (LA30_31==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 31, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 22, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else if ( (LA30_14==86) ) {
-                                int LA30_23 = input.LA(6);
-
-                                if ( (LA30_23==65) ) {
-                                    int LA30_3 = input.LA(7);
-
-                                    if ( (LA30_3==65) ) {
-                                        alt30=2;
-                                    }
-                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                        alt30=1;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 3, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 23, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 14, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("", 30, 9, input);
-
-                            throw nvae;
-
-                        }
-                        }
-                        break;
-                    case ID:
-                        {
-                        int LA30_10 = input.LA(4);
-
-                        if ( (LA30_10==85) ) {
-                            int LA30_20 = input.LA(5);
-
-                            if ( (LA30_20==86) ) {
-                                int LA30_29 = input.LA(6);
-
-                                if ( (LA30_29==ID) ) {
-                                    int LA30_14 = input.LA(7);
-
-                                    if ( (LA30_14==73) ) {
-                                        int LA30_22 = input.LA(8);
-
-                                        if ( (LA30_22==INT) ) {
-                                            int LA30_30 = input.LA(9);
-
-                                            if ( (LA30_30==71) ) {
-                                                int LA30_32 = input.LA(10);
-
-                                                if ( (LA30_32==INT) ) {
-                                                    int LA30_33 = input.LA(11);
-
-                                                    if ( (LA30_33==86) ) {
-                                                        int LA30_23 = input.LA(12);
-
-                                                        if ( (LA30_23==65) ) {
-                                                            int LA30_3 = input.LA(13);
-
-                                                            if ( (LA30_3==65) ) {
-                                                                alt30=2;
-                                                            }
-                                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                                alt30=1;
-                                                            }
-                                                            else {
-                                                                NoViableAltException nvae =
-                                                                    new NoViableAltException("", 30, 3, input);
-
-                                                                throw nvae;
-
-                                                            }
-                                                        }
-                                                        else {
-                                                            NoViableAltException nvae =
-                                                                new NoViableAltException("", 30, 23, input);
-
-                                                            throw nvae;
-
-                                                        }
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 33, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 32, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 30, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else if ( (LA30_22==ITER_DECL) ) {
-                                            int LA30_31 = input.LA(9);
-
-                                            if ( (LA30_31==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 31, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 22, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else if ( (LA30_14==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 14, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 29, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 20, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else if ( (LA30_10==ID) ) {
-                            int LA30_14 = input.LA(5);
-
-                            if ( (LA30_14==73) ) {
-                                int LA30_22 = input.LA(6);
-
-                                if ( (LA30_22==INT) ) {
-                                    int LA30_30 = input.LA(7);
-
-                                    if ( (LA30_30==71) ) {
-                                        int LA30_32 = input.LA(8);
-
-                                        if ( (LA30_32==INT) ) {
-                                            int LA30_33 = input.LA(9);
-
-                                            if ( (LA30_33==86) ) {
-                                                int LA30_23 = input.LA(10);
-
-                                                if ( (LA30_23==65) ) {
-                                                    int LA30_3 = input.LA(11);
-
-                                                    if ( (LA30_3==65) ) {
-                                                        alt30=2;
-                                                    }
-                                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                        alt30=1;
-                                                    }
-                                                    else {
-                                                        NoViableAltException nvae =
-                                                            new NoViableAltException("", 30, 3, input);
-
-                                                        throw nvae;
-
-                                                    }
-                                                }
-                                                else {
-                                                    NoViableAltException nvae =
-                                                        new NoViableAltException("", 30, 23, input);
-
-                                                    throw nvae;
-
-                                                }
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 33, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 32, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 30, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else if ( (LA30_22==ITER_DECL) ) {
-                                    int LA30_31 = input.LA(7);
-
-                                    if ( (LA30_31==86) ) {
-                                        int LA30_23 = input.LA(8);
-
-                                        if ( (LA30_23==65) ) {
-                                            int LA30_3 = input.LA(9);
-
-                                            if ( (LA30_3==65) ) {
-                                                alt30=2;
-                                            }
-                                            else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                                alt30=1;
-                                            }
-                                            else {
-                                                NoViableAltException nvae =
-                                                    new NoViableAltException("", 30, 3, input);
-
-                                                throw nvae;
-
-                                            }
-                                        }
-                                        else {
-                                            NoViableAltException nvae =
-                                                new NoViableAltException("", 30, 23, input);
-
-                                            throw nvae;
-
-                                        }
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 31, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 22, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else if ( (LA30_14==86) ) {
-                                int LA30_23 = input.LA(6);
-
-                                if ( (LA30_23==65) ) {
-                                    int LA30_3 = input.LA(7);
-
-                                    if ( (LA30_3==65) ) {
-                                        alt30=2;
-                                    }
-                                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                                        alt30=1;
-                                    }
-                                    else {
-                                        NoViableAltException nvae =
-                                            new NoViableAltException("", 30, 3, input);
-
-                                        throw nvae;
-
-                                    }
-                                }
-                                else {
-                                    NoViableAltException nvae =
-                                        new NoViableAltException("", 30, 23, input);
-
-                                    throw nvae;
-
-                                }
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("", 30, 14, input);
-
-                                throw nvae;
-
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("", 30, 10, input);
-
-                            throw nvae;
-
-                        }
-                        }
-                        break;
-                    default:
-                        NoViableAltException nvae =
-                            new NoViableAltException("", 30, 2, input);
-
-                        throw nvae;
-
-                    }
-
-                }
-                else if ( (LA30_1==65) ) {
-                    int LA30_3 = input.LA(3);
-
-                    if ( (LA30_3==65) ) {
-                        alt30=2;
-                    }
-                    else if ( (LA30_3==ID||(LA30_3 >= 83 && LA30_3 <= 84)||LA30_3==89||LA30_3==91||(LA30_3 >= 94 && LA30_3 <= 95)) ) {
-                        alt30=1;
-                    }
-                    else {
-                        NoViableAltException nvae =
-                            new NoViableAltException("", 30, 3, input);
-
-                        throw nvae;
-
-                    }
-                }
-                else {
-                    NoViableAltException nvae =
-                        new NoViableAltException("", 30, 1, input);
-
-                    throw nvae;
-
-                }
+            if ( (LA24_0==88||(LA24_0 >= 92 && LA24_0 <= 93)||(LA24_0 >= 97 && LA24_0 <= 100)) ) {
+                alt24=1;
             }
-            else {
-                NoViableAltException nvae =
-                    new NoViableAltException("", 30, 0, input);
-
-                throw nvae;
-
-            }
-            switch (alt30) {
+            switch (alt24) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:16: ID ( '[' col_decl ']' )? '(' decls ')' ( table_opts )? DOT_END
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:142:34: table_opts
                     {
-                    ID92=(Token)match(input,ID,FOLLOW_ID_in_table_decl1023);  
-                    stream_ID.add(ID92);
-
-
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:20: ( '[' col_decl ']' )?
-                    int alt26=2;
-                    int LA26_0 = input.LA(1);
-
-                    if ( (LA26_0==85) ) {
-                        alt26=1;
-                    }
-                    switch (alt26) {
-                        case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:21: '[' col_decl ']'
-                            {
-                            char_literal93=(Token)match(input,85,FOLLOW_85_in_table_decl1027);  
-                            stream_85.add(char_literal93);
-
-
-                            pushFollow(FOLLOW_col_decl_in_table_decl1029);
-                            col_decl94=col_decl();
-
-                            state._fsp--;
-
-                            stream_col_decl.add(col_decl94.getTree());
-
-                            char_literal95=(Token)match(input,86,FOLLOW_86_in_table_decl1031);  
-                            stream_86.add(char_literal95);
-
-
-                            }
-                            break;
-
-                    }
-
-
-                    char_literal96=(Token)match(input,65,FOLLOW_65_in_table_decl1036);  
-                    stream_65.add(char_literal96);
-
-
-                    pushFollow(FOLLOW_decls_in_table_decl1038);
-                    decls97=decls();
+                    pushFollow(FOLLOW_table_opts_in_table_decl1016);
+                    table_opts93=table_opts();
 
                     state._fsp--;
 
-                    stream_decls.add(decls97.getTree());
-
-                    char_literal98=(Token)match(input,66,FOLLOW_66_in_table_decl1039);  
-                    stream_66.add(char_literal98);
-
-
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:54: ( table_opts )?
-                    int alt27=2;
-                    int LA27_0 = input.LA(1);
-
-                    if ( (LA27_0==88||(LA27_0 >= 92 && LA27_0 <= 93)||(LA27_0 >= 97 && LA27_0 <= 100)) ) {
-                        alt27=1;
-                    }
-                    switch (alt27) {
-                        case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:54: table_opts
-                            {
-                            pushFollow(FOLLOW_table_opts_in_table_decl1041);
-                            table_opts99=table_opts();
-
-                            state._fsp--;
-
-                            stream_table_opts.add(table_opts99.getTree());
-
-                            }
-                            break;
-
-                    }
-
-
-                    DOT_END100=(Token)match(input,DOT_END,FOLLOW_DOT_END_in_table_decl1044);  
-                    stream_DOT_END.add(DOT_END100);
-
-
-                    // AST REWRITE
-                    // elements: table_opts, decls, ID, col_decl
-                    // token labels: 
-                    // rule labels: retval
-                    // token list labels: 
-                    // rule list labels: 
-                    // wildcard labels: 
-                    retval.tree = root_0;
-                    RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
-
-                    root_0 = (CommonTree)adaptor.nil();
-                    // 140:75: -> ^( DECL KIND1 ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) )
-                    {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:78: ^( DECL KIND1 ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) )
-                        {
-                        CommonTree root_1 = (CommonTree)adaptor.nil();
-                        root_1 = (CommonTree)adaptor.becomeRoot(
-                        (CommonTree)adaptor.create(DECL, "DECL")
-                        , root_1);
-
-                        adaptor.addChild(root_1, 
-                        (CommonTree)adaptor.create(KIND1, "KIND1")
-                        );
-
-                        adaptor.addChild(root_1, 
-                        stream_ID.nextNode()
-                        );
-
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:95: ^( INDEX ( col_decl )? )
-                        {
-                        CommonTree root_2 = (CommonTree)adaptor.nil();
-                        root_2 = (CommonTree)adaptor.becomeRoot(
-                        (CommonTree)adaptor.create(INDEX, "INDEX")
-                        , root_2);
-
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:103: ( col_decl )?
-                        if ( stream_col_decl.hasNext() ) {
-                            adaptor.addChild(root_2, stream_col_decl.nextTree());
-
-                        }
-                        stream_col_decl.reset();
-
-                        adaptor.addChild(root_1, root_2);
-                        }
-
-                        adaptor.addChild(root_1, stream_decls.nextTree());
-
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:120: ^( OPTION ( table_opts )? )
-                        {
-                        CommonTree root_2 = (CommonTree)adaptor.nil();
-                        root_2 = (CommonTree)adaptor.becomeRoot(
-                        (CommonTree)adaptor.create(OPTION, "OPTION")
-                        , root_2);
-
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:140:129: ( table_opts )?
-                        if ( stream_table_opts.hasNext() ) {
-                            adaptor.addChild(root_2, stream_table_opts.nextTree());
-
-                        }
-                        stream_table_opts.reset();
-
-                        adaptor.addChild(root_1, root_2);
-                        }
-
-                        adaptor.addChild(root_0, root_1);
-                        }
-
-                    }
-
-
-                    retval.tree = root_0;
-
-                    }
-                    break;
-                case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:3: ID ( '[' col_decl ']' )? '(' '(' decls ')' ')' ( table_opts )? DOT_END
-                    {
-                    ID101=(Token)match(input,ID,FOLLOW_ID_in_table_decl1076);  
-                    stream_ID.add(ID101);
-
-
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:6: ( '[' col_decl ']' )?
-                    int alt28=2;
-                    int LA28_0 = input.LA(1);
-
-                    if ( (LA28_0==85) ) {
-                        alt28=1;
-                    }
-                    switch (alt28) {
-                        case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:7: '[' col_decl ']'
-                            {
-                            char_literal102=(Token)match(input,85,FOLLOW_85_in_table_decl1079);  
-                            stream_85.add(char_literal102);
-
-
-                            pushFollow(FOLLOW_col_decl_in_table_decl1081);
-                            col_decl103=col_decl();
-
-                            state._fsp--;
-
-                            stream_col_decl.add(col_decl103.getTree());
-
-                            char_literal104=(Token)match(input,86,FOLLOW_86_in_table_decl1083);  
-                            stream_86.add(char_literal104);
-
-
-                            }
-                            break;
-
-                    }
-
-
-                    char_literal105=(Token)match(input,65,FOLLOW_65_in_table_decl1087);  
-                    stream_65.add(char_literal105);
-
-
-                    char_literal106=(Token)match(input,65,FOLLOW_65_in_table_decl1089);  
-                    stream_65.add(char_literal106);
-
-
-                    pushFollow(FOLLOW_decls_in_table_decl1091);
-                    decls107=decls();
-
-                    state._fsp--;
-
-                    stream_decls.add(decls107.getTree());
-
-                    char_literal108=(Token)match(input,66,FOLLOW_66_in_table_decl1092);  
-                    stream_66.add(char_literal108);
-
-
-                    char_literal109=(Token)match(input,66,FOLLOW_66_in_table_decl1094);  
-                    stream_66.add(char_literal109);
-
-
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:47: ( table_opts )?
-                    int alt29=2;
-                    int LA29_0 = input.LA(1);
-
-                    if ( (LA29_0==88||(LA29_0 >= 92 && LA29_0 <= 93)||(LA29_0 >= 97 && LA29_0 <= 100)) ) {
-                        alt29=1;
-                    }
-                    switch (alt29) {
-                        case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:47: table_opts
-                            {
-                            pushFollow(FOLLOW_table_opts_in_table_decl1096);
-                            table_opts110=table_opts();
-
-                            state._fsp--;
-
-                            stream_table_opts.add(table_opts110.getTree());
-
-                            }
-                            break;
-
-                    }
-
-
-                    DOT_END111=(Token)match(input,DOT_END,FOLLOW_DOT_END_in_table_decl1099);  
-                    stream_DOT_END.add(DOT_END111);
-
-
-                    // AST REWRITE
-                    // elements: table_opts, decls, ID, col_decl
-                    // token labels: 
-                    // rule labels: retval
-                    // token list labels: 
-                    // rule list labels: 
-                    // wildcard labels: 
-                    retval.tree = root_0;
-                    RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
-
-                    root_0 = (CommonTree)adaptor.nil();
-                    // 141:68: -> ^( DECL KIND2 ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) )
-                    {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:71: ^( DECL KIND2 ID ^( INDEX ( col_decl )? ) decls ^( OPTION ( table_opts )? ) )
-                        {
-                        CommonTree root_1 = (CommonTree)adaptor.nil();
-                        root_1 = (CommonTree)adaptor.becomeRoot(
-                        (CommonTree)adaptor.create(DECL, "DECL")
-                        , root_1);
-
-                        adaptor.addChild(root_1, 
-                        (CommonTree)adaptor.create(KIND2, "KIND2")
-                        );
-
-                        adaptor.addChild(root_1, 
-                        stream_ID.nextNode()
-                        );
-
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:88: ^( INDEX ( col_decl )? )
-                        {
-                        CommonTree root_2 = (CommonTree)adaptor.nil();
-                        root_2 = (CommonTree)adaptor.becomeRoot(
-                        (CommonTree)adaptor.create(INDEX, "INDEX")
-                        , root_2);
-
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:96: ( col_decl )?
-                        if ( stream_col_decl.hasNext() ) {
-                            adaptor.addChild(root_2, stream_col_decl.nextTree());
-
-                        }
-                        stream_col_decl.reset();
-
-                        adaptor.addChild(root_1, root_2);
-                        }
-
-                        adaptor.addChild(root_1, stream_decls.nextTree());
-
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:113: ^( OPTION ( table_opts )? )
-                        {
-                        CommonTree root_2 = (CommonTree)adaptor.nil();
-                        root_2 = (CommonTree)adaptor.becomeRoot(
-                        (CommonTree)adaptor.create(OPTION, "OPTION")
-                        , root_2);
-
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:141:122: ( table_opts )?
-                        if ( stream_table_opts.hasNext() ) {
-                            adaptor.addChild(root_2, stream_table_opts.nextTree());
-
-                        }
-                        stream_table_opts.reset();
-
-                        adaptor.addChild(root_1, root_2);
-                        }
-
-                        adaptor.addChild(root_0, root_1);
-                        }
-
-                    }
-
-
-                    retval.tree = root_0;
+                    stream_table_opts.add(table_opts93.getTree());
 
                     }
                     break;
 
             }
+
+
+            DOT_END94=(Token)match(input,DOT_END,FOLLOW_DOT_END_in_table_decl1019);  
+            stream_DOT_END.add(DOT_END94);
+
+
+            // AST REWRITE
+            // elements: ID, table_opts, decls
+            // token labels: 
+            // rule labels: retval
+            // token list labels: 
+            // rule list labels: 
+            // wildcard labels: 
+            retval.tree = root_0;
+            RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
+
+            root_0 = (CommonTree)adaptor.nil();
+            // 142:55: -> ^( DECL ID decls ^( OPTION ( table_opts )? ) )
+            {
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:142:58: ^( DECL ID decls ^( OPTION ( table_opts )? ) )
+                {
+                CommonTree root_1 = (CommonTree)adaptor.nil();
+                root_1 = (CommonTree)adaptor.becomeRoot(
+                (CommonTree)adaptor.create(DECL, "DECL")
+                , root_1);
+
+                adaptor.addChild(root_1, 
+                stream_ID.nextNode()
+                );
+
+                adaptor.addChild(root_1, stream_decls.nextTree());
+
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:142:75: ^( OPTION ( table_opts )? )
+                {
+                CommonTree root_2 = (CommonTree)adaptor.nil();
+                root_2 = (CommonTree)adaptor.becomeRoot(
+                (CommonTree)adaptor.create(OPTION, "OPTION")
+                , root_2);
+
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:142:84: ( table_opts )?
+                if ( stream_table_opts.hasNext() ) {
+                    adaptor.addChild(root_2, stream_table_opts.nextTree());
+
+                }
+                stream_table_opts.reset();
+
+                adaptor.addChild(root_1, root_2);
+                }
+
+                adaptor.addChild(root_0, root_1);
+                }
+
+            }
+
+
+            retval.tree = root_0;
+
+            }
+
             retval.stop = input.LT(-1);
 
 
@@ -7480,7 +4301,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "table_opts"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:143:1: table_opts : t_opt ( ',' ! t_opt )* ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:144:1: table_opts : t_opt ( ',' ! t_opt )* ;
     public final SociaLiteParser.table_opts_return table_opts() throws RecognitionException {
         SociaLiteParser.table_opts_return retval = new SociaLiteParser.table_opts_return();
         retval.start = input.LT(1);
@@ -7488,57 +4309,57 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal113=null;
-        SociaLiteParser.t_opt_return t_opt112 =null;
+        Token char_literal96=null;
+        SociaLiteParser.t_opt_return t_opt95 =null;
 
-        SociaLiteParser.t_opt_return t_opt114 =null;
+        SociaLiteParser.t_opt_return t_opt97 =null;
 
 
-        CommonTree char_literal113_tree=null;
+        CommonTree char_literal96_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:143:12: ( t_opt ( ',' ! t_opt )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:143:14: t_opt ( ',' ! t_opt )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:144:11: ( t_opt ( ',' ! t_opt )* )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:144:13: t_opt ( ',' ! t_opt )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_t_opt_in_table_opts1137);
-            t_opt112=t_opt();
+            pushFollow(FOLLOW_t_opt_in_table_opts1053);
+            t_opt95=t_opt();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, t_opt112.getTree());
+            adaptor.addChild(root_0, t_opt95.getTree());
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:143:20: ( ',' ! t_opt )*
-            loop31:
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:144:19: ( ',' ! t_opt )*
+            loop25:
             do {
-                int alt31=2;
-                int LA31_0 = input.LA(1);
+                int alt25=2;
+                int LA25_0 = input.LA(1);
 
-                if ( (LA31_0==69) ) {
-                    alt31=1;
+                if ( (LA25_0==69) ) {
+                    alt25=1;
                 }
 
 
-                switch (alt31) {
+                switch (alt25) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:143:21: ',' ! t_opt
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:144:20: ',' ! t_opt
             	    {
-            	    char_literal113=(Token)match(input,69,FOLLOW_69_in_table_opts1140); 
+            	    char_literal96=(Token)match(input,69,FOLLOW_69_in_table_opts1056); 
 
-            	    pushFollow(FOLLOW_t_opt_in_table_opts1143);
-            	    t_opt114=t_opt();
+            	    pushFollow(FOLLOW_t_opt_in_table_opts1059);
+            	    t_opt97=t_opt();
 
             	    state._fsp--;
 
-            	    adaptor.addChild(root_0, t_opt114.getTree());
+            	    adaptor.addChild(root_0, t_opt97.getTree());
 
             	    }
             	    break;
 
             	default :
-            	    break loop31;
+            	    break loop25;
                 }
             } while (true);
 
@@ -7574,7 +4395,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "t_opt"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:145:1: t_opt : ( 'sortby' col= ID (order= SORT_ORDER )? -> ^( SORT_BY $col ( $order)? ) | 'orderby' ID -> ^( ORDER_BY ID ) | 'indexby' ID -> ^( INDEX_BY ID ) | 'groupby' '(' INT ')' -> ^( GROUP_BY INT ) | 'predefined' -> PREDEFINED | 'concurrent' -> CONCURRENT | 'multiset' -> MULTISET );
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:146:1: t_opt : ( 'sortby' col= ID (order= SORT_ORDER )? -> ^( SORT_BY $col ( $order)? ) | 'orderby' ID -> ^( ORDER_BY ID ) | 'indexby' ID -> ^( INDEX_BY ID ) | 'groupby' '(' INT ')' -> ^( GROUP_BY INT ) | 'predefined' -> PREDEFINED | 'concurrent' -> CONCURRENT | 'multiset' -> MULTISET );
     public final SociaLiteParser.t_opt_return t_opt() throws RecognitionException {
         SociaLiteParser.t_opt_return retval = new SociaLiteParser.t_opt_return();
         retval.start = input.LT(1);
@@ -7584,33 +4405,33 @@ public TreeAdaptor getTreeAdaptor() {
 
         Token col=null;
         Token order=null;
-        Token string_literal115=null;
-        Token string_literal116=null;
-        Token ID117=null;
-        Token string_literal118=null;
-        Token ID119=null;
-        Token string_literal120=null;
-        Token char_literal121=null;
-        Token INT122=null;
-        Token char_literal123=null;
-        Token string_literal124=null;
-        Token string_literal125=null;
-        Token string_literal126=null;
+        Token string_literal98=null;
+        Token string_literal99=null;
+        Token ID100=null;
+        Token string_literal101=null;
+        Token ID102=null;
+        Token string_literal103=null;
+        Token char_literal104=null;
+        Token INT105=null;
+        Token char_literal106=null;
+        Token string_literal107=null;
+        Token string_literal108=null;
+        Token string_literal109=null;
 
         CommonTree col_tree=null;
         CommonTree order_tree=null;
-        CommonTree string_literal115_tree=null;
-        CommonTree string_literal116_tree=null;
-        CommonTree ID117_tree=null;
-        CommonTree string_literal118_tree=null;
-        CommonTree ID119_tree=null;
-        CommonTree string_literal120_tree=null;
-        CommonTree char_literal121_tree=null;
-        CommonTree INT122_tree=null;
-        CommonTree char_literal123_tree=null;
-        CommonTree string_literal124_tree=null;
-        CommonTree string_literal125_tree=null;
-        CommonTree string_literal126_tree=null;
+        CommonTree string_literal98_tree=null;
+        CommonTree string_literal99_tree=null;
+        CommonTree ID100_tree=null;
+        CommonTree string_literal101_tree=null;
+        CommonTree ID102_tree=null;
+        CommonTree string_literal103_tree=null;
+        CommonTree char_literal104_tree=null;
+        CommonTree INT105_tree=null;
+        CommonTree char_literal106_tree=null;
+        CommonTree string_literal107_tree=null;
+        CommonTree string_literal108_tree=null;
+        CommonTree string_literal109_tree=null;
         RewriteRuleTokenStream stream_98=new RewriteRuleTokenStream(adaptor,"token 98");
         RewriteRuleTokenStream stream_97=new RewriteRuleTokenStream(adaptor,"token 97");
         RewriteRuleTokenStream stream_66=new RewriteRuleTokenStream(adaptor,"token 66");
@@ -7625,76 +4446,76 @@ public TreeAdaptor getTreeAdaptor() {
         RewriteRuleTokenStream stream_100=new RewriteRuleTokenStream(adaptor,"token 100");
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:145:7: ( 'sortby' col= ID (order= SORT_ORDER )? -> ^( SORT_BY $col ( $order)? ) | 'orderby' ID -> ^( ORDER_BY ID ) | 'indexby' ID -> ^( INDEX_BY ID ) | 'groupby' '(' INT ')' -> ^( GROUP_BY INT ) | 'predefined' -> PREDEFINED | 'concurrent' -> CONCURRENT | 'multiset' -> MULTISET )
-            int alt33=7;
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:146:7: ( 'sortby' col= ID (order= SORT_ORDER )? -> ^( SORT_BY $col ( $order)? ) | 'orderby' ID -> ^( ORDER_BY ID ) | 'indexby' ID -> ^( INDEX_BY ID ) | 'groupby' '(' INT ')' -> ^( GROUP_BY INT ) | 'predefined' -> PREDEFINED | 'concurrent' -> CONCURRENT | 'multiset' -> MULTISET )
+            int alt27=7;
             switch ( input.LA(1) ) {
             case 100:
                 {
-                alt33=1;
+                alt27=1;
                 }
                 break;
             case 98:
                 {
-                alt33=2;
+                alt27=2;
                 }
                 break;
             case 93:
                 {
-                alt33=3;
+                alt27=3;
                 }
                 break;
             case 92:
                 {
-                alt33=4;
+                alt27=4;
                 }
                 break;
             case 99:
                 {
-                alt33=5;
+                alt27=5;
                 }
                 break;
             case 88:
                 {
-                alt33=6;
+                alt27=6;
                 }
                 break;
             case 97:
                 {
-                alt33=7;
+                alt27=7;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("", 33, 0, input);
+                    new NoViableAltException("", 27, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt33) {
+            switch (alt27) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:145:9: 'sortby' col= ID (order= SORT_ORDER )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:146:9: 'sortby' col= ID (order= SORT_ORDER )?
                     {
-                    string_literal115=(Token)match(input,100,FOLLOW_100_in_t_opt1154);  
-                    stream_100.add(string_literal115);
+                    string_literal98=(Token)match(input,100,FOLLOW_100_in_t_opt1070);  
+                    stream_100.add(string_literal98);
 
 
-                    col=(Token)match(input,ID,FOLLOW_ID_in_t_opt1158);  
+                    col=(Token)match(input,ID,FOLLOW_ID_in_t_opt1074);  
                     stream_ID.add(col);
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:145:25: (order= SORT_ORDER )?
-                    int alt32=2;
-                    int LA32_0 = input.LA(1);
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:146:25: (order= SORT_ORDER )?
+                    int alt26=2;
+                    int LA26_0 = input.LA(1);
 
-                    if ( (LA32_0==SORT_ORDER) ) {
-                        alt32=1;
+                    if ( (LA26_0==SORT_ORDER) ) {
+                        alt26=1;
                     }
-                    switch (alt32) {
+                    switch (alt26) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:145:26: order= SORT_ORDER
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:146:26: order= SORT_ORDER
                             {
-                            order=(Token)match(input,SORT_ORDER,FOLLOW_SORT_ORDER_in_t_opt1163);  
+                            order=(Token)match(input,SORT_ORDER,FOLLOW_SORT_ORDER_in_t_opt1079);  
                             stream_SORT_ORDER.add(order);
 
 
@@ -7717,9 +4538,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 145:45: -> ^( SORT_BY $col ( $order)? )
+                    // 146:45: -> ^( SORT_BY $col ( $order)? )
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:145:48: ^( SORT_BY $col ( $order)? )
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:146:48: ^( SORT_BY $col ( $order)? )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -7728,7 +4549,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                         adaptor.addChild(root_1, stream_col.nextNode());
 
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:145:64: ( $order)?
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:146:64: ( $order)?
                         if ( stream_order.hasNext() ) {
                             adaptor.addChild(root_1, stream_order.nextNode());
 
@@ -7746,14 +4567,14 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:146:3: 'orderby' ID
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:147:3: 'orderby' ID
                     {
-                    string_literal116=(Token)match(input,98,FOLLOW_98_in_t_opt1182);  
-                    stream_98.add(string_literal116);
+                    string_literal99=(Token)match(input,98,FOLLOW_98_in_t_opt1098);  
+                    stream_98.add(string_literal99);
 
 
-                    ID117=(Token)match(input,ID,FOLLOW_ID_in_t_opt1184);  
-                    stream_ID.add(ID117);
+                    ID100=(Token)match(input,ID,FOLLOW_ID_in_t_opt1100);  
+                    stream_ID.add(ID100);
 
 
                     // AST REWRITE
@@ -7767,9 +4588,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 146:16: -> ^( ORDER_BY ID )
+                    // 147:16: -> ^( ORDER_BY ID )
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:146:19: ^( ORDER_BY ID )
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:147:19: ^( ORDER_BY ID )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -7791,14 +4612,14 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:147:3: 'indexby' ID
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:148:3: 'indexby' ID
                     {
-                    string_literal118=(Token)match(input,93,FOLLOW_93_in_t_opt1196);  
-                    stream_93.add(string_literal118);
+                    string_literal101=(Token)match(input,93,FOLLOW_93_in_t_opt1112);  
+                    stream_93.add(string_literal101);
 
 
-                    ID119=(Token)match(input,ID,FOLLOW_ID_in_t_opt1198);  
-                    stream_ID.add(ID119);
+                    ID102=(Token)match(input,ID,FOLLOW_ID_in_t_opt1114);  
+                    stream_ID.add(ID102);
 
 
                     // AST REWRITE
@@ -7812,9 +4633,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 147:16: -> ^( INDEX_BY ID )
+                    // 148:16: -> ^( INDEX_BY ID )
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:147:19: ^( INDEX_BY ID )
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:148:19: ^( INDEX_BY ID )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -7836,22 +4657,22 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:148:3: 'groupby' '(' INT ')'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:149:3: 'groupby' '(' INT ')'
                     {
-                    string_literal120=(Token)match(input,92,FOLLOW_92_in_t_opt1210);  
-                    stream_92.add(string_literal120);
+                    string_literal103=(Token)match(input,92,FOLLOW_92_in_t_opt1126);  
+                    stream_92.add(string_literal103);
 
 
-                    char_literal121=(Token)match(input,65,FOLLOW_65_in_t_opt1212);  
-                    stream_65.add(char_literal121);
+                    char_literal104=(Token)match(input,65,FOLLOW_65_in_t_opt1128);  
+                    stream_65.add(char_literal104);
 
 
-                    INT122=(Token)match(input,INT,FOLLOW_INT_in_t_opt1214);  
-                    stream_INT.add(INT122);
+                    INT105=(Token)match(input,INT,FOLLOW_INT_in_t_opt1130);  
+                    stream_INT.add(INT105);
 
 
-                    char_literal123=(Token)match(input,66,FOLLOW_66_in_t_opt1216);  
-                    stream_66.add(char_literal123);
+                    char_literal106=(Token)match(input,66,FOLLOW_66_in_t_opt1132);  
+                    stream_66.add(char_literal106);
 
 
                     // AST REWRITE
@@ -7865,9 +4686,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 148:25: -> ^( GROUP_BY INT )
+                    // 149:25: -> ^( GROUP_BY INT )
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:148:28: ^( GROUP_BY INT )
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:149:28: ^( GROUP_BY INT )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -7889,10 +4710,10 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:149:3: 'predefined'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:150:3: 'predefined'
                     {
-                    string_literal124=(Token)match(input,99,FOLLOW_99_in_t_opt1228);  
-                    stream_99.add(string_literal124);
+                    string_literal107=(Token)match(input,99,FOLLOW_99_in_t_opt1144);  
+                    stream_99.add(string_literal107);
 
 
                     // AST REWRITE
@@ -7906,7 +4727,7 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 149:16: -> PREDEFINED
+                    // 150:16: -> PREDEFINED
                     {
                         adaptor.addChild(root_0, 
                         (CommonTree)adaptor.create(PREDEFINED, "PREDEFINED")
@@ -7920,10 +4741,10 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 6 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:150:3: 'concurrent'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:151:3: 'concurrent'
                     {
-                    string_literal125=(Token)match(input,88,FOLLOW_88_in_t_opt1236);  
-                    stream_88.add(string_literal125);
+                    string_literal108=(Token)match(input,88,FOLLOW_88_in_t_opt1152);  
+                    stream_88.add(string_literal108);
 
 
                     // AST REWRITE
@@ -7937,7 +4758,7 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 150:16: -> CONCURRENT
+                    // 151:16: -> CONCURRENT
                     {
                         adaptor.addChild(root_0, 
                         (CommonTree)adaptor.create(CONCURRENT, "CONCURRENT")
@@ -7951,10 +4772,10 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 7 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:151:3: 'multiset'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:152:3: 'multiset'
                     {
-                    string_literal126=(Token)match(input,97,FOLLOW_97_in_t_opt1244);  
-                    stream_97.add(string_literal126);
+                    string_literal109=(Token)match(input,97,FOLLOW_97_in_t_opt1160);  
+                    stream_97.add(string_literal109);
 
 
                     // AST REWRITE
@@ -7968,7 +4789,7 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 151:14: -> MULTISET
+                    // 152:14: -> MULTISET
                     {
                         adaptor.addChild(root_0, 
                         (CommonTree)adaptor.create(MULTISET, "MULTISET")
@@ -8012,7 +4833,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "decls"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:155:1: decls : col_decls ( ',' '(' decls ')' )? -> ^( COL_DECLS col_decls ^( DECL ( decls )? ) ) ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:156:1: decls : col_decls ( ',' '(' decls ')' )? -> ^( COL_DECLS col_decls ^( DECL ( decls )? ) ) ;
     public final SociaLiteParser.decls_return decls() throws RecognitionException {
         SociaLiteParser.decls_return retval = new SociaLiteParser.decls_return();
         retval.start = input.LT(1);
@@ -8020,61 +4841,61 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal128=null;
-        Token char_literal129=null;
-        Token char_literal131=null;
-        SociaLiteParser.col_decls_return col_decls127 =null;
+        Token char_literal111=null;
+        Token char_literal112=null;
+        Token char_literal114=null;
+        SociaLiteParser.col_decls_return col_decls110 =null;
 
-        SociaLiteParser.decls_return decls130 =null;
+        SociaLiteParser.decls_return decls113 =null;
 
 
-        CommonTree char_literal128_tree=null;
-        CommonTree char_literal129_tree=null;
-        CommonTree char_literal131_tree=null;
+        CommonTree char_literal111_tree=null;
+        CommonTree char_literal112_tree=null;
+        CommonTree char_literal114_tree=null;
         RewriteRuleTokenStream stream_66=new RewriteRuleTokenStream(adaptor,"token 66");
         RewriteRuleTokenStream stream_69=new RewriteRuleTokenStream(adaptor,"token 69");
         RewriteRuleTokenStream stream_65=new RewriteRuleTokenStream(adaptor,"token 65");
         RewriteRuleSubtreeStream stream_col_decls=new RewriteRuleSubtreeStream(adaptor,"rule col_decls");
         RewriteRuleSubtreeStream stream_decls=new RewriteRuleSubtreeStream(adaptor,"rule decls");
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:155:7: ( col_decls ( ',' '(' decls ')' )? -> ^( COL_DECLS col_decls ^( DECL ( decls )? ) ) )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:155:8: col_decls ( ',' '(' decls ')' )?
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:156:7: ( col_decls ( ',' '(' decls ')' )? -> ^( COL_DECLS col_decls ^( DECL ( decls )? ) ) )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:156:9: col_decls ( ',' '(' decls ')' )?
             {
-            pushFollow(FOLLOW_col_decls_in_decls1266);
-            col_decls127=col_decls();
+            pushFollow(FOLLOW_col_decls_in_decls1183);
+            col_decls110=col_decls();
 
             state._fsp--;
 
-            stream_col_decls.add(col_decls127.getTree());
+            stream_col_decls.add(col_decls110.getTree());
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:155:18: ( ',' '(' decls ')' )?
-            int alt34=2;
-            int LA34_0 = input.LA(1);
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:156:19: ( ',' '(' decls ')' )?
+            int alt28=2;
+            int LA28_0 = input.LA(1);
 
-            if ( (LA34_0==69) ) {
-                alt34=1;
+            if ( (LA28_0==69) ) {
+                alt28=1;
             }
-            switch (alt34) {
+            switch (alt28) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:155:19: ',' '(' decls ')'
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:156:20: ',' '(' decls ')'
                     {
-                    char_literal128=(Token)match(input,69,FOLLOW_69_in_decls1269);  
-                    stream_69.add(char_literal128);
+                    char_literal111=(Token)match(input,69,FOLLOW_69_in_decls1186);  
+                    stream_69.add(char_literal111);
 
 
-                    char_literal129=(Token)match(input,65,FOLLOW_65_in_decls1271);  
-                    stream_65.add(char_literal129);
+                    char_literal112=(Token)match(input,65,FOLLOW_65_in_decls1188);  
+                    stream_65.add(char_literal112);
 
 
-                    pushFollow(FOLLOW_decls_in_decls1273);
-                    decls130=decls();
+                    pushFollow(FOLLOW_decls_in_decls1190);
+                    decls113=decls();
 
                     state._fsp--;
 
-                    stream_decls.add(decls130.getTree());
+                    stream_decls.add(decls113.getTree());
 
-                    char_literal131=(Token)match(input,66,FOLLOW_66_in_decls1275);  
-                    stream_66.add(char_literal131);
+                    char_literal114=(Token)match(input,66,FOLLOW_66_in_decls1192);  
+                    stream_66.add(char_literal114);
 
 
                     }
@@ -8094,9 +4915,9 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (CommonTree)adaptor.nil();
-            // 155:39: -> ^( COL_DECLS col_decls ^( DECL ( decls )? ) )
+            // 156:40: -> ^( COL_DECLS col_decls ^( DECL ( decls )? ) )
             {
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:155:42: ^( COL_DECLS col_decls ^( DECL ( decls )? ) )
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:156:43: ^( COL_DECLS col_decls ^( DECL ( decls )? ) )
                 {
                 CommonTree root_1 = (CommonTree)adaptor.nil();
                 root_1 = (CommonTree)adaptor.becomeRoot(
@@ -8105,14 +4926,14 @@ public TreeAdaptor getTreeAdaptor() {
 
                 adaptor.addChild(root_1, stream_col_decls.nextTree());
 
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:155:64: ^( DECL ( decls )? )
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:156:65: ^( DECL ( decls )? )
                 {
                 CommonTree root_2 = (CommonTree)adaptor.nil();
                 root_2 = (CommonTree)adaptor.becomeRoot(
                 (CommonTree)adaptor.create(DECL, "DECL")
                 , root_2);
 
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:155:71: ( decls )?
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:156:72: ( decls )?
                 if ( stream_decls.hasNext() ) {
                     adaptor.addChild(root_2, stream_decls.nextTree());
 
@@ -8161,7 +4982,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "col_decls"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:157:1: col_decls : col_decl ( ',' ! col_decl )* ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:158:1: col_decls : col_decl ( ',' ! col_decl )* ;
     public final SociaLiteParser.col_decls_return col_decls() throws RecognitionException {
         SociaLiteParser.col_decls_return retval = new SociaLiteParser.col_decls_return();
         retval.start = input.LT(1);
@@ -8169,63 +4990,63 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal133=null;
-        SociaLiteParser.col_decl_return col_decl132 =null;
+        Token char_literal116=null;
+        SociaLiteParser.col_decl_return col_decl115 =null;
 
-        SociaLiteParser.col_decl_return col_decl134 =null;
+        SociaLiteParser.col_decl_return col_decl117 =null;
 
 
-        CommonTree char_literal133_tree=null;
+        CommonTree char_literal116_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:157:11: ( col_decl ( ',' ! col_decl )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:157:12: col_decl ( ',' ! col_decl )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:158:10: ( col_decl ( ',' ! col_decl )* )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:158:12: col_decl ( ',' ! col_decl )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_col_decl_in_col_decls1301);
-            col_decl132=col_decl();
+            pushFollow(FOLLOW_col_decl_in_col_decls1218);
+            col_decl115=col_decl();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, col_decl132.getTree());
+            adaptor.addChild(root_0, col_decl115.getTree());
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:157:21: ( ',' ! col_decl )*
-            loop35:
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:158:21: ( ',' ! col_decl )*
+            loop29:
             do {
-                int alt35=2;
-                int LA35_0 = input.LA(1);
+                int alt29=2;
+                int LA29_0 = input.LA(1);
 
-                if ( (LA35_0==69) ) {
-                    int LA35_1 = input.LA(2);
+                if ( (LA29_0==69) ) {
+                    int LA29_1 = input.LA(2);
 
-                    if ( (LA35_1==ID||(LA35_1 >= 83 && LA35_1 <= 84)||LA35_1==89||LA35_1==91||(LA35_1 >= 94 && LA35_1 <= 95)) ) {
-                        alt35=1;
+                    if ( (LA29_1==ID||(LA29_1 >= 83 && LA29_1 <= 84)||LA29_1==89||LA29_1==91||(LA29_1 >= 94 && LA29_1 <= 95)) ) {
+                        alt29=1;
                     }
 
 
                 }
 
 
-                switch (alt35) {
+                switch (alt29) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:157:22: ',' ! col_decl
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:158:22: ',' ! col_decl
             	    {
-            	    char_literal133=(Token)match(input,69,FOLLOW_69_in_col_decls1304); 
+            	    char_literal116=(Token)match(input,69,FOLLOW_69_in_col_decls1221); 
 
-            	    pushFollow(FOLLOW_col_decl_in_col_decls1307);
-            	    col_decl134=col_decl();
+            	    pushFollow(FOLLOW_col_decl_in_col_decls1224);
+            	    col_decl117=col_decl();
 
             	    state._fsp--;
 
-            	    adaptor.addChild(root_0, col_decl134.getTree());
+            	    adaptor.addChild(root_0, col_decl117.getTree());
 
             	    }
             	    break;
 
             	default :
-            	    break loop35;
+            	    break loop29;
                 }
             } while (true);
 
@@ -8261,7 +5082,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "col_decl"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:159:1: col_decl : type ID ( ':' col_opt )? -> ^( COL_DECL type ID ( col_opt )? ) ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:160:1: col_decl : type ID ( ':' col_opt )? -> ^( COL_DECL type ID ( col_opt )? ) ;
     public final SociaLiteParser.col_decl_return col_decl() throws RecognitionException {
         SociaLiteParser.col_decl_return retval = new SociaLiteParser.col_decl_return();
         retval.start = input.LT(1);
@@ -8269,55 +5090,55 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token ID136=null;
-        Token char_literal137=null;
-        SociaLiteParser.type_return type135 =null;
+        Token ID119=null;
+        Token char_literal120=null;
+        SociaLiteParser.type_return type118 =null;
 
-        SociaLiteParser.col_opt_return col_opt138 =null;
+        SociaLiteParser.col_opt_return col_opt121 =null;
 
 
-        CommonTree ID136_tree=null;
-        CommonTree char_literal137_tree=null;
+        CommonTree ID119_tree=null;
+        CommonTree char_literal120_tree=null;
         RewriteRuleTokenStream stream_ID=new RewriteRuleTokenStream(adaptor,"token ID");
         RewriteRuleTokenStream stream_73=new RewriteRuleTokenStream(adaptor,"token 73");
         RewriteRuleSubtreeStream stream_col_opt=new RewriteRuleSubtreeStream(adaptor,"rule col_opt");
         RewriteRuleSubtreeStream stream_type=new RewriteRuleSubtreeStream(adaptor,"rule type");
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:159:10: ( type ID ( ':' col_opt )? -> ^( COL_DECL type ID ( col_opt )? ) )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:159:12: type ID ( ':' col_opt )?
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:160:9: ( type ID ( ':' col_opt )? -> ^( COL_DECL type ID ( col_opt )? ) )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:160:11: type ID ( ':' col_opt )?
             {
-            pushFollow(FOLLOW_type_in_col_decl1318);
-            type135=type();
+            pushFollow(FOLLOW_type_in_col_decl1234);
+            type118=type();
 
             state._fsp--;
 
-            stream_type.add(type135.getTree());
+            stream_type.add(type118.getTree());
 
-            ID136=(Token)match(input,ID,FOLLOW_ID_in_col_decl1320);  
-            stream_ID.add(ID136);
+            ID119=(Token)match(input,ID,FOLLOW_ID_in_col_decl1236);  
+            stream_ID.add(ID119);
 
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:159:20: ( ':' col_opt )?
-            int alt36=2;
-            int LA36_0 = input.LA(1);
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:160:19: ( ':' col_opt )?
+            int alt30=2;
+            int LA30_0 = input.LA(1);
 
-            if ( (LA36_0==73) ) {
-                alt36=1;
+            if ( (LA30_0==73) ) {
+                alt30=1;
             }
-            switch (alt36) {
+            switch (alt30) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:159:21: ':' col_opt
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:160:20: ':' col_opt
                     {
-                    char_literal137=(Token)match(input,73,FOLLOW_73_in_col_decl1323);  
-                    stream_73.add(char_literal137);
+                    char_literal120=(Token)match(input,73,FOLLOW_73_in_col_decl1239);  
+                    stream_73.add(char_literal120);
 
 
-                    pushFollow(FOLLOW_col_opt_in_col_decl1325);
-                    col_opt138=col_opt();
+                    pushFollow(FOLLOW_col_opt_in_col_decl1241);
+                    col_opt121=col_opt();
 
                     state._fsp--;
 
-                    stream_col_opt.add(col_opt138.getTree());
+                    stream_col_opt.add(col_opt121.getTree());
 
                     }
                     break;
@@ -8326,7 +5147,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             // AST REWRITE
-            // elements: col_opt, ID, type
+            // elements: ID, col_opt, type
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -8336,9 +5157,9 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (CommonTree)adaptor.nil();
-            // 159:34: -> ^( COL_DECL type ID ( col_opt )? )
+            // 160:33: -> ^( COL_DECL type ID ( col_opt )? )
             {
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:159:37: ^( COL_DECL type ID ( col_opt )? )
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:160:36: ^( COL_DECL type ID ( col_opt )? )
                 {
                 CommonTree root_1 = (CommonTree)adaptor.nil();
                 root_1 = (CommonTree)adaptor.becomeRoot(
@@ -8351,7 +5172,7 @@ public TreeAdaptor getTreeAdaptor() {
                 stream_ID.nextNode()
                 );
 
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:159:56: ( col_opt )?
+                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:160:55: ( col_opt )?
                 if ( stream_col_opt.hasNext() ) {
                     adaptor.addChild(root_1, stream_col_opt.nextTree());
 
@@ -8397,7 +5218,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "col_opt"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:161:1: col_opt : (i1= INT '..' i2= INT -> ^( RANGE $i1 $i2) | ITER_DECL -> ITER );
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:162:1: col_opt : (i1= INT '..' i2= INT -> ^( RANGE $i1 $i2) | ITER_DECL -> ITER );
     public final SociaLiteParser.col_opt_return col_opt() throws RecognitionException {
         SociaLiteParser.col_opt_return retval = new SociaLiteParser.col_opt_return();
         retval.start = input.LT(1);
@@ -8407,53 +5228,53 @@ public TreeAdaptor getTreeAdaptor() {
 
         Token i1=null;
         Token i2=null;
-        Token string_literal139=null;
-        Token ITER_DECL140=null;
+        Token string_literal122=null;
+        Token ITER_DECL123=null;
 
         CommonTree i1_tree=null;
         CommonTree i2_tree=null;
-        CommonTree string_literal139_tree=null;
-        CommonTree ITER_DECL140_tree=null;
+        CommonTree string_literal122_tree=null;
+        CommonTree ITER_DECL123_tree=null;
         RewriteRuleTokenStream stream_ITER_DECL=new RewriteRuleTokenStream(adaptor,"token ITER_DECL");
         RewriteRuleTokenStream stream_INT=new RewriteRuleTokenStream(adaptor,"token INT");
         RewriteRuleTokenStream stream_71=new RewriteRuleTokenStream(adaptor,"token 71");
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:161:9: (i1= INT '..' i2= INT -> ^( RANGE $i1 $i2) | ITER_DECL -> ITER )
-            int alt37=2;
-            int LA37_0 = input.LA(1);
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:162:9: (i1= INT '..' i2= INT -> ^( RANGE $i1 $i2) | ITER_DECL -> ITER )
+            int alt31=2;
+            int LA31_0 = input.LA(1);
 
-            if ( (LA37_0==INT) ) {
-                alt37=1;
+            if ( (LA31_0==INT) ) {
+                alt31=1;
             }
-            else if ( (LA37_0==ITER_DECL) ) {
-                alt37=2;
+            else if ( (LA31_0==ITER_DECL) ) {
+                alt31=2;
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("", 37, 0, input);
+                    new NoViableAltException("", 31, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt37) {
+            switch (alt31) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:161:12: i1= INT '..' i2= INT
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:162:12: i1= INT '..' i2= INT
                     {
-                    i1=(Token)match(input,INT,FOLLOW_INT_in_col_opt1351);  
+                    i1=(Token)match(input,INT,FOLLOW_INT_in_col_opt1267);  
                     stream_INT.add(i1);
 
 
-                    string_literal139=(Token)match(input,71,FOLLOW_71_in_col_opt1353);  
-                    stream_71.add(string_literal139);
+                    string_literal122=(Token)match(input,71,FOLLOW_71_in_col_opt1269);  
+                    stream_71.add(string_literal122);
 
 
-                    i2=(Token)match(input,INT,FOLLOW_INT_in_col_opt1357);  
+                    i2=(Token)match(input,INT,FOLLOW_INT_in_col_opt1273);  
                     stream_INT.add(i2);
 
 
                     // AST REWRITE
-                    // elements: i2, i1
+                    // elements: i1, i2
                     // token labels: i2, i1
                     // rule labels: retval
                     // token list labels: 
@@ -8465,9 +5286,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 161:31: -> ^( RANGE $i1 $i2)
+                    // 162:31: -> ^( RANGE $i1 $i2)
                     {
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:161:34: ^( RANGE $i1 $i2)
+                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:162:34: ^( RANGE $i1 $i2)
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(
@@ -8489,10 +5310,10 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:162:4: ITER_DECL
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:163:4: ITER_DECL
                     {
-                    ITER_DECL140=(Token)match(input,ITER_DECL,FOLLOW_ITER_DECL_in_col_opt1374);  
-                    stream_ITER_DECL.add(ITER_DECL140);
+                    ITER_DECL123=(Token)match(input,ITER_DECL,FOLLOW_ITER_DECL_in_col_opt1290);  
+                    stream_ITER_DECL.add(ITER_DECL123);
 
 
                     // AST REWRITE
@@ -8506,7 +5327,7 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 162:14: -> ITER
+                    // 163:14: -> ITER
                     {
                         adaptor.addChild(root_0, 
                         (CommonTree)adaptor.create(ITER, "ITER")
@@ -8550,7 +5371,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "type"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:165:1: type : ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? );
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:166:1: type : ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? );
     public final SociaLiteParser.type_return type() throws RecognitionException {
         SociaLiteParser.type_return retval = new SociaLiteParser.type_return();
         retval.start = input.LT(1);
@@ -8558,134 +5379,134 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token string_literal141=null;
-        Token char_literal142=null;
+        Token string_literal124=null;
+        Token char_literal125=null;
+        Token char_literal126=null;
+        Token string_literal127=null;
+        Token char_literal128=null;
+        Token char_literal129=null;
+        Token string_literal130=null;
+        Token char_literal131=null;
+        Token char_literal132=null;
+        Token string_literal133=null;
+        Token char_literal134=null;
+        Token char_literal135=null;
+        Token string_literal136=null;
+        Token char_literal137=null;
+        Token char_literal138=null;
+        Token string_literal139=null;
+        Token char_literal140=null;
+        Token char_literal141=null;
+        Token ID142=null;
         Token char_literal143=null;
-        Token string_literal144=null;
-        Token char_literal145=null;
-        Token char_literal146=null;
-        Token string_literal147=null;
-        Token char_literal148=null;
-        Token char_literal149=null;
-        Token string_literal150=null;
-        Token char_literal151=null;
-        Token char_literal152=null;
-        Token string_literal153=null;
-        Token char_literal154=null;
-        Token char_literal155=null;
-        Token string_literal156=null;
-        Token char_literal157=null;
-        Token char_literal158=null;
-        Token ID159=null;
-        Token char_literal160=null;
-        Token char_literal161=null;
+        Token char_literal144=null;
 
-        CommonTree string_literal141_tree=null;
-        CommonTree char_literal142_tree=null;
+        CommonTree string_literal124_tree=null;
+        CommonTree char_literal125_tree=null;
+        CommonTree char_literal126_tree=null;
+        CommonTree string_literal127_tree=null;
+        CommonTree char_literal128_tree=null;
+        CommonTree char_literal129_tree=null;
+        CommonTree string_literal130_tree=null;
+        CommonTree char_literal131_tree=null;
+        CommonTree char_literal132_tree=null;
+        CommonTree string_literal133_tree=null;
+        CommonTree char_literal134_tree=null;
+        CommonTree char_literal135_tree=null;
+        CommonTree string_literal136_tree=null;
+        CommonTree char_literal137_tree=null;
+        CommonTree char_literal138_tree=null;
+        CommonTree string_literal139_tree=null;
+        CommonTree char_literal140_tree=null;
+        CommonTree char_literal141_tree=null;
+        CommonTree ID142_tree=null;
         CommonTree char_literal143_tree=null;
-        CommonTree string_literal144_tree=null;
-        CommonTree char_literal145_tree=null;
-        CommonTree char_literal146_tree=null;
-        CommonTree string_literal147_tree=null;
-        CommonTree char_literal148_tree=null;
-        CommonTree char_literal149_tree=null;
-        CommonTree string_literal150_tree=null;
-        CommonTree char_literal151_tree=null;
-        CommonTree char_literal152_tree=null;
-        CommonTree string_literal153_tree=null;
-        CommonTree char_literal154_tree=null;
-        CommonTree char_literal155_tree=null;
-        CommonTree string_literal156_tree=null;
-        CommonTree char_literal157_tree=null;
-        CommonTree char_literal158_tree=null;
-        CommonTree ID159_tree=null;
-        CommonTree char_literal160_tree=null;
-        CommonTree char_literal161_tree=null;
+        CommonTree char_literal144_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:165:5: ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? )
-            int alt45=7;
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:166:5: ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? )
+            int alt39=7;
             switch ( input.LA(1) ) {
             case 94:
                 {
-                alt45=1;
+                alt39=1;
                 }
                 break;
             case 95:
                 {
-                alt45=2;
+                alt39=2;
                 }
                 break;
             case 91:
                 {
-                alt45=3;
+                alt39=3;
                 }
                 break;
             case 89:
                 {
-                alt45=4;
+                alt39=4;
                 }
                 break;
             case 84:
                 {
-                alt45=5;
+                alt39=5;
                 }
                 break;
             case 83:
                 {
-                alt45=6;
+                alt39=6;
                 }
                 break;
             case ID:
                 {
-                alt45=7;
+                alt39=7;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("", 45, 0, input);
+                    new NoViableAltException("", 39, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt45) {
+            switch (alt39) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:165:7: 'int' ( '[' ']' )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:166:7: 'int' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    string_literal141=(Token)match(input,94,FOLLOW_94_in_type1387); 
-                    string_literal141_tree = 
-                    (CommonTree)adaptor.create(string_literal141)
+                    string_literal124=(Token)match(input,94,FOLLOW_94_in_type1303); 
+                    string_literal124_tree = 
+                    (CommonTree)adaptor.create(string_literal124)
                     ;
-                    adaptor.addChild(root_0, string_literal141_tree);
+                    adaptor.addChild(root_0, string_literal124_tree);
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:165:13: ( '[' ']' )?
-                    int alt38=2;
-                    int LA38_0 = input.LA(1);
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:166:13: ( '[' ']' )?
+                    int alt32=2;
+                    int LA32_0 = input.LA(1);
 
-                    if ( (LA38_0==85) ) {
-                        alt38=1;
+                    if ( (LA32_0==85) ) {
+                        alt32=1;
                     }
-                    switch (alt38) {
+                    switch (alt32) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:165:14: '[' ']'
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:166:14: '[' ']'
                             {
-                            char_literal142=(Token)match(input,85,FOLLOW_85_in_type1390); 
-                            char_literal142_tree = 
-                            (CommonTree)adaptor.create(char_literal142)
+                            char_literal125=(Token)match(input,85,FOLLOW_85_in_type1306); 
+                            char_literal125_tree = 
+                            (CommonTree)adaptor.create(char_literal125)
                             ;
-                            adaptor.addChild(root_0, char_literal142_tree);
+                            adaptor.addChild(root_0, char_literal125_tree);
 
 
-                            char_literal143=(Token)match(input,86,FOLLOW_86_in_type1392); 
-                            char_literal143_tree = 
-                            (CommonTree)adaptor.create(char_literal143)
+                            char_literal126=(Token)match(input,86,FOLLOW_86_in_type1308); 
+                            char_literal126_tree = 
+                            (CommonTree)adaptor.create(char_literal126)
                             ;
-                            adaptor.addChild(root_0, char_literal143_tree);
+                            adaptor.addChild(root_0, char_literal126_tree);
 
 
                             }
@@ -8697,41 +5518,41 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:166:3: 'long' ( '[' ']' )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:167:3: 'long' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    string_literal144=(Token)match(input,95,FOLLOW_95_in_type1398); 
-                    string_literal144_tree = 
-                    (CommonTree)adaptor.create(string_literal144)
+                    string_literal127=(Token)match(input,95,FOLLOW_95_in_type1314); 
+                    string_literal127_tree = 
+                    (CommonTree)adaptor.create(string_literal127)
                     ;
-                    adaptor.addChild(root_0, string_literal144_tree);
+                    adaptor.addChild(root_0, string_literal127_tree);
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:166:10: ( '[' ']' )?
-                    int alt39=2;
-                    int LA39_0 = input.LA(1);
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:167:10: ( '[' ']' )?
+                    int alt33=2;
+                    int LA33_0 = input.LA(1);
 
-                    if ( (LA39_0==85) ) {
-                        alt39=1;
+                    if ( (LA33_0==85) ) {
+                        alt33=1;
                     }
-                    switch (alt39) {
+                    switch (alt33) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:166:11: '[' ']'
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:167:11: '[' ']'
                             {
-                            char_literal145=(Token)match(input,85,FOLLOW_85_in_type1401); 
-                            char_literal145_tree = 
-                            (CommonTree)adaptor.create(char_literal145)
+                            char_literal128=(Token)match(input,85,FOLLOW_85_in_type1317); 
+                            char_literal128_tree = 
+                            (CommonTree)adaptor.create(char_literal128)
                             ;
-                            adaptor.addChild(root_0, char_literal145_tree);
+                            adaptor.addChild(root_0, char_literal128_tree);
 
 
-                            char_literal146=(Token)match(input,86,FOLLOW_86_in_type1403); 
-                            char_literal146_tree = 
-                            (CommonTree)adaptor.create(char_literal146)
+                            char_literal129=(Token)match(input,86,FOLLOW_86_in_type1319); 
+                            char_literal129_tree = 
+                            (CommonTree)adaptor.create(char_literal129)
                             ;
-                            adaptor.addChild(root_0, char_literal146_tree);
+                            adaptor.addChild(root_0, char_literal129_tree);
 
 
                             }
@@ -8743,41 +5564,41 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:167:3: 'float' ( '[' ']' )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:168:3: 'float' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    string_literal147=(Token)match(input,91,FOLLOW_91_in_type1411); 
-                    string_literal147_tree = 
-                    (CommonTree)adaptor.create(string_literal147)
+                    string_literal130=(Token)match(input,91,FOLLOW_91_in_type1327); 
+                    string_literal130_tree = 
+                    (CommonTree)adaptor.create(string_literal130)
                     ;
-                    adaptor.addChild(root_0, string_literal147_tree);
+                    adaptor.addChild(root_0, string_literal130_tree);
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:167:11: ( '[' ']' )?
-                    int alt40=2;
-                    int LA40_0 = input.LA(1);
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:168:11: ( '[' ']' )?
+                    int alt34=2;
+                    int LA34_0 = input.LA(1);
 
-                    if ( (LA40_0==85) ) {
-                        alt40=1;
+                    if ( (LA34_0==85) ) {
+                        alt34=1;
                     }
-                    switch (alt40) {
+                    switch (alt34) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:167:12: '[' ']'
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:168:12: '[' ']'
                             {
-                            char_literal148=(Token)match(input,85,FOLLOW_85_in_type1414); 
-                            char_literal148_tree = 
-                            (CommonTree)adaptor.create(char_literal148)
+                            char_literal131=(Token)match(input,85,FOLLOW_85_in_type1330); 
+                            char_literal131_tree = 
+                            (CommonTree)adaptor.create(char_literal131)
                             ;
-                            adaptor.addChild(root_0, char_literal148_tree);
+                            adaptor.addChild(root_0, char_literal131_tree);
 
 
-                            char_literal149=(Token)match(input,86,FOLLOW_86_in_type1416); 
-                            char_literal149_tree = 
-                            (CommonTree)adaptor.create(char_literal149)
+                            char_literal132=(Token)match(input,86,FOLLOW_86_in_type1332); 
+                            char_literal132_tree = 
+                            (CommonTree)adaptor.create(char_literal132)
                             ;
-                            adaptor.addChild(root_0, char_literal149_tree);
+                            adaptor.addChild(root_0, char_literal132_tree);
 
 
                             }
@@ -8789,41 +5610,41 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:168:3: 'double' ( '[' ']' )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:169:3: 'double' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    string_literal150=(Token)match(input,89,FOLLOW_89_in_type1424); 
-                    string_literal150_tree = 
-                    (CommonTree)adaptor.create(string_literal150)
+                    string_literal133=(Token)match(input,89,FOLLOW_89_in_type1340); 
+                    string_literal133_tree = 
+                    (CommonTree)adaptor.create(string_literal133)
                     ;
-                    adaptor.addChild(root_0, string_literal150_tree);
+                    adaptor.addChild(root_0, string_literal133_tree);
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:168:12: ( '[' ']' )?
-                    int alt41=2;
-                    int LA41_0 = input.LA(1);
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:169:12: ( '[' ']' )?
+                    int alt35=2;
+                    int LA35_0 = input.LA(1);
 
-                    if ( (LA41_0==85) ) {
-                        alt41=1;
+                    if ( (LA35_0==85) ) {
+                        alt35=1;
                     }
-                    switch (alt41) {
+                    switch (alt35) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:168:13: '[' ']'
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:169:13: '[' ']'
                             {
-                            char_literal151=(Token)match(input,85,FOLLOW_85_in_type1427); 
-                            char_literal151_tree = 
-                            (CommonTree)adaptor.create(char_literal151)
+                            char_literal134=(Token)match(input,85,FOLLOW_85_in_type1343); 
+                            char_literal134_tree = 
+                            (CommonTree)adaptor.create(char_literal134)
                             ;
-                            adaptor.addChild(root_0, char_literal151_tree);
+                            adaptor.addChild(root_0, char_literal134_tree);
 
 
-                            char_literal152=(Token)match(input,86,FOLLOW_86_in_type1429); 
-                            char_literal152_tree = 
-                            (CommonTree)adaptor.create(char_literal152)
+                            char_literal135=(Token)match(input,86,FOLLOW_86_in_type1345); 
+                            char_literal135_tree = 
+                            (CommonTree)adaptor.create(char_literal135)
                             ;
-                            adaptor.addChild(root_0, char_literal152_tree);
+                            adaptor.addChild(root_0, char_literal135_tree);
 
 
                             }
@@ -8835,41 +5656,41 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:169:3: 'String' ( '[' ']' )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:170:3: 'String' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    string_literal153=(Token)match(input,84,FOLLOW_84_in_type1437); 
-                    string_literal153_tree = 
-                    (CommonTree)adaptor.create(string_literal153)
+                    string_literal136=(Token)match(input,84,FOLLOW_84_in_type1353); 
+                    string_literal136_tree = 
+                    (CommonTree)adaptor.create(string_literal136)
                     ;
-                    adaptor.addChild(root_0, string_literal153_tree);
+                    adaptor.addChild(root_0, string_literal136_tree);
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:169:12: ( '[' ']' )?
-                    int alt42=2;
-                    int LA42_0 = input.LA(1);
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:170:12: ( '[' ']' )?
+                    int alt36=2;
+                    int LA36_0 = input.LA(1);
 
-                    if ( (LA42_0==85) ) {
-                        alt42=1;
+                    if ( (LA36_0==85) ) {
+                        alt36=1;
                     }
-                    switch (alt42) {
+                    switch (alt36) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:169:13: '[' ']'
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:170:13: '[' ']'
                             {
-                            char_literal154=(Token)match(input,85,FOLLOW_85_in_type1440); 
-                            char_literal154_tree = 
-                            (CommonTree)adaptor.create(char_literal154)
+                            char_literal137=(Token)match(input,85,FOLLOW_85_in_type1356); 
+                            char_literal137_tree = 
+                            (CommonTree)adaptor.create(char_literal137)
                             ;
-                            adaptor.addChild(root_0, char_literal154_tree);
+                            adaptor.addChild(root_0, char_literal137_tree);
 
 
-                            char_literal155=(Token)match(input,86,FOLLOW_86_in_type1442); 
-                            char_literal155_tree = 
-                            (CommonTree)adaptor.create(char_literal155)
+                            char_literal138=(Token)match(input,86,FOLLOW_86_in_type1358); 
+                            char_literal138_tree = 
+                            (CommonTree)adaptor.create(char_literal138)
                             ;
-                            adaptor.addChild(root_0, char_literal155_tree);
+                            adaptor.addChild(root_0, char_literal138_tree);
 
 
                             }
@@ -8881,41 +5702,41 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 6 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:170:3: 'Object' ( '[' ']' )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:171:3: 'Object' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    string_literal156=(Token)match(input,83,FOLLOW_83_in_type1450); 
-                    string_literal156_tree = 
-                    (CommonTree)adaptor.create(string_literal156)
+                    string_literal139=(Token)match(input,83,FOLLOW_83_in_type1366); 
+                    string_literal139_tree = 
+                    (CommonTree)adaptor.create(string_literal139)
                     ;
-                    adaptor.addChild(root_0, string_literal156_tree);
+                    adaptor.addChild(root_0, string_literal139_tree);
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:170:12: ( '[' ']' )?
-                    int alt43=2;
-                    int LA43_0 = input.LA(1);
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:171:12: ( '[' ']' )?
+                    int alt37=2;
+                    int LA37_0 = input.LA(1);
 
-                    if ( (LA43_0==85) ) {
-                        alt43=1;
+                    if ( (LA37_0==85) ) {
+                        alt37=1;
                     }
-                    switch (alt43) {
+                    switch (alt37) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:170:13: '[' ']'
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:171:13: '[' ']'
                             {
-                            char_literal157=(Token)match(input,85,FOLLOW_85_in_type1453); 
-                            char_literal157_tree = 
-                            (CommonTree)adaptor.create(char_literal157)
+                            char_literal140=(Token)match(input,85,FOLLOW_85_in_type1369); 
+                            char_literal140_tree = 
+                            (CommonTree)adaptor.create(char_literal140)
                             ;
-                            adaptor.addChild(root_0, char_literal157_tree);
+                            adaptor.addChild(root_0, char_literal140_tree);
 
 
-                            char_literal158=(Token)match(input,86,FOLLOW_86_in_type1455); 
-                            char_literal158_tree = 
-                            (CommonTree)adaptor.create(char_literal158)
+                            char_literal141=(Token)match(input,86,FOLLOW_86_in_type1371); 
+                            char_literal141_tree = 
+                            (CommonTree)adaptor.create(char_literal141)
                             ;
-                            adaptor.addChild(root_0, char_literal158_tree);
+                            adaptor.addChild(root_0, char_literal141_tree);
 
 
                             }
@@ -8927,41 +5748,41 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 7 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:171:4: ID ( '[' ']' )?
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:172:4: ID ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    ID159=(Token)match(input,ID,FOLLOW_ID_in_type1462); 
-                    ID159_tree = 
-                    (CommonTree)adaptor.create(ID159)
+                    ID142=(Token)match(input,ID,FOLLOW_ID_in_type1378); 
+                    ID142_tree = 
+                    (CommonTree)adaptor.create(ID142)
                     ;
-                    adaptor.addChild(root_0, ID159_tree);
+                    adaptor.addChild(root_0, ID142_tree);
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:171:7: ( '[' ']' )?
-                    int alt44=2;
-                    int LA44_0 = input.LA(1);
+                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:172:7: ( '[' ']' )?
+                    int alt38=2;
+                    int LA38_0 = input.LA(1);
 
-                    if ( (LA44_0==85) ) {
-                        alt44=1;
+                    if ( (LA38_0==85) ) {
+                        alt38=1;
                     }
-                    switch (alt44) {
+                    switch (alt38) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:171:8: '[' ']'
+                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:172:8: '[' ']'
                             {
-                            char_literal160=(Token)match(input,85,FOLLOW_85_in_type1465); 
-                            char_literal160_tree = 
-                            (CommonTree)adaptor.create(char_literal160)
+                            char_literal143=(Token)match(input,85,FOLLOW_85_in_type1381); 
+                            char_literal143_tree = 
+                            (CommonTree)adaptor.create(char_literal143)
                             ;
-                            adaptor.addChild(root_0, char_literal160_tree);
+                            adaptor.addChild(root_0, char_literal143_tree);
 
 
-                            char_literal161=(Token)match(input,86,FOLLOW_86_in_type1467); 
-                            char_literal161_tree = 
-                            (CommonTree)adaptor.create(char_literal161)
+                            char_literal144=(Token)match(input,86,FOLLOW_86_in_type1383); 
+                            char_literal144_tree = 
+                            (CommonTree)adaptor.create(char_literal144)
                             ;
-                            adaptor.addChild(root_0, char_literal161_tree);
+                            adaptor.addChild(root_0, char_literal144_tree);
 
 
                             }
@@ -9003,7 +5824,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "dotname"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:173:1: dotname : ID ( DOT_ID )* ;
+    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:174:1: dotname : ID ( DOT_ID )* ;
     public final SociaLiteParser.dotname_return dotname() throws RecognitionException {
         SociaLiteParser.dotname_return retval = new SociaLiteParser.dotname_return();
         retval.start = input.LT(1);
@@ -9011,53 +5832,53 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token ID162=null;
-        Token DOT_ID163=null;
+        Token ID145=null;
+        Token DOT_ID146=null;
 
-        CommonTree ID162_tree=null;
-        CommonTree DOT_ID163_tree=null;
+        CommonTree ID145_tree=null;
+        CommonTree DOT_ID146_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:173:9: ( ID ( DOT_ID )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:173:10: ID ( DOT_ID )*
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:174:9: ( ID ( DOT_ID )* )
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:174:10: ID ( DOT_ID )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            ID162=(Token)match(input,ID,FOLLOW_ID_in_dotname1479); 
-            ID162_tree = 
-            (CommonTree)adaptor.create(ID162)
+            ID145=(Token)match(input,ID,FOLLOW_ID_in_dotname1395); 
+            ID145_tree = 
+            (CommonTree)adaptor.create(ID145)
             ;
-            adaptor.addChild(root_0, ID162_tree);
+            adaptor.addChild(root_0, ID145_tree);
 
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:173:13: ( DOT_ID )*
-            loop46:
+            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:174:13: ( DOT_ID )*
+            loop40:
             do {
-                int alt46=2;
-                int LA46_0 = input.LA(1);
+                int alt40=2;
+                int LA40_0 = input.LA(1);
 
-                if ( (LA46_0==DOT_ID) ) {
-                    alt46=1;
+                if ( (LA40_0==DOT_ID) ) {
+                    alt40=1;
                 }
 
 
-                switch (alt46) {
+                switch (alt40) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:173:14: DOT_ID
+            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLite.g:174:14: DOT_ID
             	    {
-            	    DOT_ID163=(Token)match(input,DOT_ID,FOLLOW_DOT_ID_in_dotname1482); 
-            	    DOT_ID163_tree = 
-            	    (CommonTree)adaptor.create(DOT_ID163)
+            	    DOT_ID146=(Token)match(input,DOT_ID,FOLLOW_DOT_ID_in_dotname1398); 
+            	    DOT_ID146_tree = 
+            	    (CommonTree)adaptor.create(DOT_ID146)
             	    ;
-            	    adaptor.addChild(root_0, DOT_ID163_tree);
+            	    adaptor.addChild(root_0, DOT_ID146_tree);
 
 
             	    }
             	    break;
 
             	default :
-            	    break loop46;
+            	    break loop40;
                 }
             } while (true);
 
@@ -9225,101 +6046,84 @@ public TreeAdaptor getTreeAdaptor() {
     public static final BitSet FOLLOW_65_in_function852 = new BitSet(new long[]{0x2008000090200000L,0x0000000000000047L});
     public static final BitSet FOLLOW_fparamlist_in_function854 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
     public static final BitSet FOLLOW_66_in_function857 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_predicate876 = new BitSet(new long[]{0x0000000000000000L,0x0000000000200002L});
-    public static final BitSet FOLLOW_85_in_predicate879 = new BitSet(new long[]{0x2008000090200000L,0x0000000000000043L});
-    public static final BitSet FOLLOW_param_in_predicate881 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_predicate883 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
-    public static final BitSet FOLLOW_65_in_predicate887 = new BitSet(new long[]{0x2008000090200000L,0x0000000000000047L});
-    public static final BitSet FOLLOW_paramlist_in_predicate889 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_66_in_predicate892 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_param_in_paramlist912 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
-    public static final BitSet FOLLOW_69_in_paramlist915 = new BitSet(new long[]{0x2008000090200000L,0x0000000000000043L});
-    public static final BitSet FOLLOW_param_in_paramlist918 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
-    public static final BitSet FOLLOW_fparam_in_fparamlist926 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
-    public static final BitSet FOLLOW_69_in_fparamlist929 = new BitSet(new long[]{0x2008000090200000L,0x0000000000000043L});
-    public static final BitSet FOLLOW_fparam_in_fparamlist932 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
-    public static final BitSet FOLLOW_simpleExpr_in_param941 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleExpr_in_fparam947 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_INT_in_term954 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_FLOAT_in_term967 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_STRING_in_term979 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_UTF8_in_term991 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_dotname_in_term1004 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_table_decl1023 = new BitSet(new long[]{0x0000000000000000L,0x0000000000200002L});
-    public static final BitSet FOLLOW_85_in_table_decl1027 = new BitSet(new long[]{0x0000000010000000L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_col_decl_in_table_decl1029 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_table_decl1031 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
-    public static final BitSet FOLLOW_65_in_table_decl1036 = new BitSet(new long[]{0x0000000010000000L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_decls_in_table_decl1038 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_66_in_table_decl1039 = new BitSet(new long[]{0x0000000000004000L,0x0000001E31000000L});
-    public static final BitSet FOLLOW_table_opts_in_table_decl1041 = new BitSet(new long[]{0x0000000000004000L});
-    public static final BitSet FOLLOW_DOT_END_in_table_decl1044 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_table_decl1076 = new BitSet(new long[]{0x0000000000000000L,0x0000000000200002L});
-    public static final BitSet FOLLOW_85_in_table_decl1079 = new BitSet(new long[]{0x0000000010000000L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_col_decl_in_table_decl1081 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_table_decl1083 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
-    public static final BitSet FOLLOW_65_in_table_decl1087 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
-    public static final BitSet FOLLOW_65_in_table_decl1089 = new BitSet(new long[]{0x0000000010000000L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_decls_in_table_decl1091 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_66_in_table_decl1092 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_66_in_table_decl1094 = new BitSet(new long[]{0x0000000000004000L,0x0000001E31000000L});
-    public static final BitSet FOLLOW_table_opts_in_table_decl1096 = new BitSet(new long[]{0x0000000000004000L});
-    public static final BitSet FOLLOW_DOT_END_in_table_decl1099 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_t_opt_in_table_opts1137 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
-    public static final BitSet FOLLOW_69_in_table_opts1140 = new BitSet(new long[]{0x0000000000000000L,0x0000001E31000000L});
-    public static final BitSet FOLLOW_t_opt_in_table_opts1143 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
-    public static final BitSet FOLLOW_100_in_t_opt1154 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_ID_in_t_opt1158 = new BitSet(new long[]{0x0004000000000002L});
-    public static final BitSet FOLLOW_SORT_ORDER_in_t_opt1163 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_98_in_t_opt1182 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_ID_in_t_opt1184 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_93_in_t_opt1196 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_ID_in_t_opt1198 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_92_in_t_opt1210 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
-    public static final BitSet FOLLOW_65_in_t_opt1212 = new BitSet(new long[]{0x0000000080000000L});
-    public static final BitSet FOLLOW_INT_in_t_opt1214 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_66_in_t_opt1216 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_99_in_t_opt1228 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_88_in_t_opt1236 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_97_in_t_opt1244 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_col_decls_in_decls1266 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
-    public static final BitSet FOLLOW_69_in_decls1269 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
-    public static final BitSet FOLLOW_65_in_decls1271 = new BitSet(new long[]{0x0000000010000000L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_decls_in_decls1273 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_66_in_decls1275 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_col_decl_in_col_decls1301 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
-    public static final BitSet FOLLOW_69_in_col_decls1304 = new BitSet(new long[]{0x0000000010000000L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_col_decl_in_col_decls1307 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
-    public static final BitSet FOLLOW_type_in_col_decl1318 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_ID_in_col_decl1320 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000200L});
-    public static final BitSet FOLLOW_73_in_col_decl1323 = new BitSet(new long[]{0x0000000280000000L});
-    public static final BitSet FOLLOW_col_opt_in_col_decl1325 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_INT_in_col_opt1351 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000080L});
-    public static final BitSet FOLLOW_71_in_col_opt1353 = new BitSet(new long[]{0x0000000080000000L});
-    public static final BitSet FOLLOW_INT_in_col_opt1357 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ITER_DECL_in_col_opt1374 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_94_in_type1387 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type1390 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type1392 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_95_in_type1398 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type1401 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type1403 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_91_in_type1411 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type1414 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type1416 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_89_in_type1424 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type1427 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type1429 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_84_in_type1437 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type1440 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type1442 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_83_in_type1450 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type1453 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type1455 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_type1462 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type1465 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type1467 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_dotname1479 = new BitSet(new long[]{0x0000000000008002L});
-    public static final BitSet FOLLOW_DOT_ID_in_dotname1482 = new BitSet(new long[]{0x0000000000008002L});
+    public static final BitSet FOLLOW_ID_in_predicate877 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
+    public static final BitSet FOLLOW_65_in_predicate879 = new BitSet(new long[]{0x2008000090200000L,0x0000000000000043L});
+    public static final BitSet FOLLOW_paramlist_in_predicate881 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_66_in_predicate883 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_param_in_paramlist896 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
+    public static final BitSet FOLLOW_69_in_paramlist899 = new BitSet(new long[]{0x2008000090200000L,0x0000000000000043L});
+    public static final BitSet FOLLOW_param_in_paramlist902 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
+    public static final BitSet FOLLOW_fparam_in_fparamlist910 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
+    public static final BitSet FOLLOW_69_in_fparamlist913 = new BitSet(new long[]{0x2008000090200000L,0x0000000000000043L});
+    public static final BitSet FOLLOW_fparam_in_fparamlist916 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
+    public static final BitSet FOLLOW_simpleExpr_in_param925 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleExpr_in_fparam931 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_INT_in_term938 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_FLOAT_in_term951 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_STRING_in_term963 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_UTF8_in_term975 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_dotname_in_term988 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_table_decl1007 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
+    public static final BitSet FOLLOW_65_in_table_decl1010 = new BitSet(new long[]{0x0000000010000000L,0x00000000CA180000L});
+    public static final BitSet FOLLOW_decls_in_table_decl1012 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_66_in_table_decl1014 = new BitSet(new long[]{0x0000000000004000L,0x0000001E31000000L});
+    public static final BitSet FOLLOW_table_opts_in_table_decl1016 = new BitSet(new long[]{0x0000000000004000L});
+    public static final BitSet FOLLOW_DOT_END_in_table_decl1019 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_t_opt_in_table_opts1053 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
+    public static final BitSet FOLLOW_69_in_table_opts1056 = new BitSet(new long[]{0x0000000000000000L,0x0000001E31000000L});
+    public static final BitSet FOLLOW_t_opt_in_table_opts1059 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
+    public static final BitSet FOLLOW_100_in_t_opt1070 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_ID_in_t_opt1074 = new BitSet(new long[]{0x0004000000000002L});
+    public static final BitSet FOLLOW_SORT_ORDER_in_t_opt1079 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_98_in_t_opt1098 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_ID_in_t_opt1100 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_93_in_t_opt1112 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_ID_in_t_opt1114 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_92_in_t_opt1126 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
+    public static final BitSet FOLLOW_65_in_t_opt1128 = new BitSet(new long[]{0x0000000080000000L});
+    public static final BitSet FOLLOW_INT_in_t_opt1130 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_66_in_t_opt1132 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_99_in_t_opt1144 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_88_in_t_opt1152 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_97_in_t_opt1160 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_col_decls_in_decls1183 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
+    public static final BitSet FOLLOW_69_in_decls1186 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000002L});
+    public static final BitSet FOLLOW_65_in_decls1188 = new BitSet(new long[]{0x0000000010000000L,0x00000000CA180000L});
+    public static final BitSet FOLLOW_decls_in_decls1190 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_66_in_decls1192 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_col_decl_in_col_decls1218 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
+    public static final BitSet FOLLOW_69_in_col_decls1221 = new BitSet(new long[]{0x0000000010000000L,0x00000000CA180000L});
+    public static final BitSet FOLLOW_col_decl_in_col_decls1224 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000020L});
+    public static final BitSet FOLLOW_type_in_col_decl1234 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_ID_in_col_decl1236 = new BitSet(new long[]{0x0000000000000002L,0x0000000000000200L});
+    public static final BitSet FOLLOW_73_in_col_decl1239 = new BitSet(new long[]{0x0000000280000000L});
+    public static final BitSet FOLLOW_col_opt_in_col_decl1241 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_INT_in_col_opt1267 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000080L});
+    public static final BitSet FOLLOW_71_in_col_opt1269 = new BitSet(new long[]{0x0000000080000000L});
+    public static final BitSet FOLLOW_INT_in_col_opt1273 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ITER_DECL_in_col_opt1290 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_94_in_type1303 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
+    public static final BitSet FOLLOW_85_in_type1306 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type1308 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_95_in_type1314 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
+    public static final BitSet FOLLOW_85_in_type1317 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type1319 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_91_in_type1327 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
+    public static final BitSet FOLLOW_85_in_type1330 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type1332 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_89_in_type1340 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
+    public static final BitSet FOLLOW_85_in_type1343 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type1345 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_84_in_type1353 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
+    public static final BitSet FOLLOW_85_in_type1356 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type1358 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_83_in_type1366 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
+    public static final BitSet FOLLOW_85_in_type1369 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type1371 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_type1378 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
+    public static final BitSet FOLLOW_85_in_type1381 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type1383 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_dotname1395 = new BitSet(new long[]{0x0000000000008002L});
+    public static final BitSet FOLLOW_DOT_ID_in_dotname1398 = new BitSet(new long[]{0x0000000000008002L});
 
 }

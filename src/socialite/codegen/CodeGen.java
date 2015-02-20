@@ -112,7 +112,7 @@ public class CodeGen {
 		return result;
 	}
 	public static void fillArgTypes(ST method, Predicate p, int startCol, int endCol) {
-		Object[] params = p.getAllInputParams();		
+		Object[] params = p.inputParams();		
 		for (int i=startCol; i<=endCol; i++) {
 			String arg="_"+(i-startCol); // fillVisitMethodBody
 			method.add("args", MyType.visitTypeName(params[i])+" "+arg);
@@ -217,7 +217,7 @@ public class CodeGen {
 									Collection<Variable> resolved, TIntCollection idxbyCols) {
 		ST body=findCodeBlockFor(method, p);
 
-		Object[] params = p.getAllParamsExpanded();
+		Object[] params = p.inputParams();
 		for (int i=startCol; i<=endCol; ) {
 			String arg="_"+(i-startCol); // same as fillArgTypes
 			if (params[i] instanceof Variable &&

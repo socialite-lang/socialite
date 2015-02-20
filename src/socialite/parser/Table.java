@@ -99,8 +99,7 @@ public class Table implements Serializable {
 	public int id() { return id; }	
 	public String name() { return decl.name(); }
 	
-	public boolean isDistributed() { return hasPrimaryShardColumn(); }
-	boolean hasPrimaryShardColumn() { return columns[0].isPrimaryShard(); }	
+	public boolean isDistributed() { return true; }
 
 	public boolean isSliced() { return isModTable(); }
 	public boolean isArrayTable() { return isArrayTable; }
@@ -203,11 +202,6 @@ public class Table implements Serializable {
 	public Column getColumn(int idx) { return columns[idx]; }
 	public int numColumns() { return columns.length; }
 	
-	public Class idxType() {
-		ColumnDecl d = decl.locationColDecl();
-		if (d==null) return null;
-		return d.type();
-	}
 	public Class[] types() { return types; }
 	public String className() { return className; }
 

@@ -21,10 +21,10 @@ public class ParserTest {
 
 	static void test1() {
 		// not really a PageRank algorithm
-		String prQuery2 = "Edge[int s](int t).\n"
+		String prQuery2 = "Edge(int s,int t).\n"
 				+ "PageRank(int i:0..10,(int n:0..100, double d)).\n"
 				+ "PageRank(1, n, $sum(r)) :- PageRank(0, p, r1),"
-				+ 	"  Edge[p](n), r = r1/100.\n"; 
+				+ 	"  Edge(p,n), r = r1/100.\n"; 
 		Parser p = new Parser(prQuery2);
 		try { p.parse();
 		} catch (ParseException pe) {
@@ -50,9 +50,9 @@ public class ParserTest {
 	}
 
 	static void testVariables() {
-		String query = "Edge[int s](int t).\n"
-				+ "Foo[int f](int a, int b).\n"
-				+ "Foo[a](b,d) :- Foo[a](b,c), Edge[b](d).\n";
+		String query = "Edge(int s,int t).\n"
+				+ "Foo(int f,int a, int b).\n"
+				+ "Foo(a, b,d) :- Foo(a,b,c), Edge(b,d).\n";
 		Parser p = new Parser(query);
 		p.parse();
 
@@ -66,17 +66,17 @@ public class ParserTest {
 		Predicate p0=r.getBodyP().get(0);
 		Predicate p1=r.getBodyP().get(1);
 		Variable b1=(Variable)p0.params.get(0);
-		Variable b2=(Variable)p1.idxParam;
+		Variable b2=(Variable)p1.first();
 		Assert.true_(b1==b2, "expecting the same instance");		
 		Variable b3=(Variable)r.getHead().params.get(0);
 		Assert.true_(b1==b3, "expecting the same instance");
 	}
 	
 	static void testVarResolution() {
-		String simpleQuery = "Edge[int s]((int t)).\n"
-				+ "Foaf[int a](int b).\n"
-				+ "Foo[int a](int b).\n"
-				+ "Foaf[n1](n3) :- Foo[n1](n2), Edge[n2](n3), n4=n1*(n2+1).\n";
+		String simpleQuery = "Edge(int s,(int t)).\n"
+				+ "Foaf(int a,int b).\n"
+				+ "Foo(int a,int b).\n"
+				+ "Foaf(n1,n3) :- Foo(n1,n2), Edge(n2,n3), n4=n1*(n2+1).\n";
 		Parser p = new Parser(simpleQuery);
 		p.parse();
 		Analysis an = new Analysis(p);
@@ -100,10 +100,10 @@ public class ParserTest {
 	}
 
 	static void testVarResolution2() {
-		String simpleQuery = "Edge[int s]((int t)).\n"
-				+ "Foaf[int a](int b).\n"
-				+ "Foo[int a](int b).\n"
-				+ "Foaf[n1](n3) :- Foo[n1](n2), Edge[n2](n3), n4=	n5*(n2+1).\n";
+		String simpleQuery = "Edge(int s,(int t)).\n"
+				+ "Foaf(int a,int b).\n"
+				+ "Foo(int a,int b).\n"
+				+ "Foaf(n1,n3) :- Foo(n1,n2), Edge(n2,n3), n4=	n5*(n2+1).\n";
 		Parser p = new Parser(simpleQuery);
 		p.parse();
 		Analysis an = new Analysis(p);
@@ -114,10 +114,10 @@ public class ParserTest {
 	}
 
 	static void testQuery() {
-		String prQuery = "PageRank[int n](int i, double r).\n"
-				+ "Edge[int s](int t).\n"
-				+ "PageRank[t](0, r) :- Edge[p](t), r = 1.0/100.\n"
-				+ "?-PageRank[1](0, r).\n";
+		String prQuery = "PageRank(int n,int i, double r).\n"
+				+ "Edge(int s,int t).\n"
+				+ "PageRank(t, 0, r) :- Edge(p,t), r = 1.0/100.\n"
+				+ "?-PageRank(1,0, r).\n";
 		Parser p = new Parser(prQuery);
 		p.parse();
 		Analysis an = new Analysis(p);
@@ -129,10 +129,10 @@ public class ParserTest {
 	}
 
 	static void testFunction() {
-		String prQuery = "Edge[int s](int t).\n" +
+		String prQuery = "Edge(int s,int t).\n" +
 				"Foo(int a, String b, int c).\n" +
 				"Bar(int a, String b).\n" +
-				"Edge[s](t) :- s=1, t=2.\n" +
+				"Edge(s,t) :- s=1, t=2.\n" +
 				"Foo(a, b, d) :- Bar(a, b), c=$toInt(\"11\"), d=$toInt(\"12\")+3*$toInt(\"12\").\n";
 				
 		Parser p = new Parser(prQuery);
@@ -151,13 +151,13 @@ public class ParserTest {
 	}
 
 	static void testReadWrite() {
-		String prQuery = "Edge[int s](int t).\n"
-				+ "Foo[int a](int b).\n"
-				+ "Bar[int a](int b).\n"
-				+ "Zoo[int a](int b).\n"
-				+ "Foo[a](b) :- Bar[a](c), Zoo[b](c).\n"
-				+ "Bar[a](b) :- Bar[a](c), Zoo[b](c).\n"
-				+ "Edge[s](t) :- s=1, t=2.\n";
+		String prQuery = "Edge(int s,int t).\n"
+				+ "Foo(int a,int b).\n"
+				+ "Bar(int a,int b).\n"
+				+ "Zoo(int a,int b).\n"
+				+ "Foo(a,b) :- Bar(a,c), Zoo(b,c).\n"
+				+ "Bar(a,b) :- Bar(a,c), Zoo(b,c).\n"
+				+ "Edge(s,t) :- s=1, t=2.\n";
 
 		Parser p = new Parser(prQuery);
 		p.parse();
@@ -175,13 +175,13 @@ public class ParserTest {
 	}
 	
 	static void testRuleDependency() {
-		String prQuery = "Edge[int s](int t).\n"
-				+ "Foo[int a](int b).\n"
-				+ "Bar[int a](int b).\n"
-				+ "Zoo[int a](int b).\n"
-				+ "Foo[a](b) :- Bar[a](c), Zoo[b](c).\n"
-				+ "Bar[a](b) :- Bar[a](c), Zoo[b](c).\n"
-				+ "Edge[s](t) :- s=1, t=2 .\n";
+		String prQuery = "Edge(int s,int t).\n"
+				+ "Foo(int a,int b).\n"
+				+ "Bar(int a,int b).\n"
+				+ "Zoo(int a,int b).\n"
+				+ "Foo(a,b) :- Bar(a,c), Zoo(b,c).\n"
+				+ "Bar(a,b) :- Bar(a,c), Zoo(b,c).\n"
+				+ "Edge(s,t) :- s=1, t=2 .\n";
 
 		Parser p = new Parser(prQuery);
 		p.parse();
@@ -208,28 +208,28 @@ public class ParserTest {
 	}	
 	
 	static void testParseMultipleProg() {
-		String query = "Foo[int f](int b).\n"
-			+ "Bar[int b](int c).\n"
-			+ "Zoo[int z](int a).\n"
-			+ "Foo[a](b) :- Bar[a](c), Zoo[b](c).\n"
-			+ "Bar[a](b) :- Bar[a](c), Zoo[b](c).\n";
+		String query = "Foo(int f,int b).\n"
+			+ "Bar(int b,int c).\n"
+			+ "Zoo(int z,int a).\n"
+			+ "Foo(a,b) :- Bar(a,c), Zoo(b,c).\n"
+			+ "Bar(a,b) :- Bar(a,c), Zoo(b,c).\n";
 	
 		Parser p = new Parser(query);
 		p.parse();
 		
-		String query2 ="Foo[a](b) :- Foo[a](c), Zoo[b](c).\n";
+		String query2 ="Foo(a,b) :- Foo(a,c), Zoo(b,c).\n";
 		p.parse(query2);
 		Assert.true_(p.getRules().get(0).name().startsWith("Foo"));
 		
-		String query3="Zoo[a](b) :- Foo[a](b).\n";
+		String query3="Zoo(a,b) :- Foo(a,b).\n";
 		p.parse(query3);
 		Assert.true_(p.getRules().get(0).name().startsWith("Zoo"));		
 	}
 	
 	static void testTableReadWrite() {
-		String query="PageRank[int n](int _iter, double r).\n" +
-					 "Edge[int s](int t).\n" +
-					 "PageRank[t](0, r) :- Edge[p](t), r = 1.0/100.\n";
+		String query="PageRank(int n,int _iter, double r).\n" +
+					 "Edge(int s,int t).\n" +
+					 "PageRank(t,0, r) :- Edge(p,t), r = 1.0/100.\n";
 
 		Parser p = new Parser();
 		p.parse(query);
@@ -245,8 +245,8 @@ public class ParserTest {
 	}
 	
 	static void testTableColumns() {
-		String query = "PageRank[int n]((int _iter, double r)) sortby _iter desc.\n"
-				+ "Edge[int s:0..10](int t).\n"
+		String query = "PageRank(int n,(int _iter, double r)) sortby _iter desc.\n"
+				+ "Edge(int s:0..10,int t).\n"
 				+ "Foo(int a:0..10, double d).\n";
 
 		Parser p = new Parser();
@@ -266,8 +266,8 @@ public class ParserTest {
 	}
 	
 	static void testNestedTable() {
-		String query="Triangle[int h]((int x, int y, int z)).\n" +
-				"Edge[int s](int t).\n";
+		String query="Triangle(int h,(int x, int y, int z)).\n" +
+				"Edge(int s,int t).\n";
 		
 		Parser p = new Parser();
 		p.parse(query);
@@ -290,8 +290,8 @@ public class ParserTest {
 	}
 	
 	static void testTableOptions() {
-		String query="Edge[int s](int t) predefined.\n" +
-					"B[int a](int b, (int i, double c)) sortby i.\n";
+		String query="Edge(int s,int t) predefined.\n" +
+					"B(int a,int b, (int i, double c)) sortby i.\n";
 		Parser p = new Parser();
 		p.parse(query);
 		
@@ -313,10 +313,10 @@ public class ParserTest {
 	}
 	
 	static void testUserClass() {
-		String query="Edge[int s](int t) predefined.\n" +
-					"Conn[int n]((int n1, int n2, int s)).\n"+
-					"Edge[n1](n2) :- n1=10, n2=20.\n"+
-					"Conn[h](n1, n2, $inc(1)) :- Edge[n1](c1), Edge[n2](c1).\n";
+		String query="Edge(int s,int t) predefined.\n" +
+					"Conn(int n,(int n1, int n2, int s)).\n"+
+					"Edge(n1,n2) :- n1=10, n2=20.\n"+
+					"Conn(h,n1, n2, $inc(1)) :- Edge(n1,c1), Edge(n2,c1).\n";
 		Parser p = new Parser();
 		p.parse(query);
 	}
@@ -385,11 +385,11 @@ public class ParserTest {
 		List<Rule> startRules = comps.get(0).getStartingRules();
 		assert startRules.size()==3;		
 		
-		query = "Node[int n:0..100](int i).\n" +
-				"Edge[int n:0..100](int i).\n" +
-				"Comp[int n:0..100](int i).\n" +
-				"Comp[n](n) :- Node[n](_). \n" + 
-				"Comp[m]($min(i)) :- Comp[n](i), Edge[n](m).\n";
+		query = "Node(int n:0..100,int i).\n" +
+				"Edge(int n:0..100,int i).\n" +
+				"Comp(int n:0..100,int i).\n" +
+				"Comp(n,n) :- Node(n,_). \n" + 
+				"Comp(m,$min(i)) :- Comp(n,i), Edge(n,m).\n";
 		p = new Parser();
 		p.parse(query);
 		an  = new Analysis(p);
@@ -402,13 +402,13 @@ public class ParserTest {
 		assert startRules.size()==1;
 	}
 	static void testEpochs() {
-		String query="SP[int n:0..2000000](int d).\n"+
-				"Edge[int s](int t).\n" +
+		String query="SP(int n:0..2000000,int d).\n"+
+				"Edge(int s,int t).\n" +
 				"Foo(int n, int a).\n" +
-			"SP[t](d) :- Edge[1](t), d=1 .\n" +
-			"SP[t]($min(d)) :- SP[p](d1), Edge[p](t), d=d1+1 .\n" +
-			"Foo(a, b) :- SP[a](b).\n" +
-			"Edge[n1](n2) :- n1=2, n2=20.\n";
+			"SP(t,d) :- Edge(1,t), d=1 .\n" +
+			"SP(t,$min(d)) :- SP(p,d1), Edge(p,t), d=d1+1 .\n" +
+			"Foo(a, b) :- SP(a,b).\n" +
+			"Edge(n1,n2) :- n1=2, n2=20.\n";
 		Parser p = new Parser();
 		p.parse(query);
 		Analysis an  = new Analysis(p);
@@ -432,18 +432,18 @@ public class ParserTest {
 	}
 	static void testEpochs2() {
 		String query ="Edge(int s:0..410235, (int t)).\n"
-				+ "InEdge[int s:0..410235]((int t)).\n"
+				+ "InEdge(int s:0..410235,(int t)).\n"
 				+ "EdgeCnt(int s:0..410235, int cnt).\n" 
-			    + "PR0[int p:0..410235](double r).\n" 
-				+"PR1[int p:0..410235](double r).\n"
-				+"PR2[int p:0..410235](double r).\n"
-				+"PR3[int p:0..410235](double r).\n"
-				+"PR4[int p:0..410235](double r).\n"
-				+"PR0[_](r) :- r= 1/410236.0.\n"
-				+"PR1[p]($sum(r)) :- InEdge[p](n), PR0[n](r1), EdgeCnt(n, cnt), r=0.85*r1/cnt.\n"
-				+"PR2[p]($sum(r)) :- InEdge[p](n), PR1[n](r1), EdgeCnt(n, cnt), r=0.85*r1/cnt.\n"
-				+"PR3[p]($sum(r)) :- InEdge[p](n), PR2[n](r1), EdgeCnt(n, cnt), r=0.85*r1/cnt.\n"
-				+"PR4[p]($sum(r)) :- InEdge[p](n), PR3[n](r1), EdgeCnt(n, cnt), r=0.85*r1/cnt.\n";
+			    + "PR0(int p:0..410235,double r).\n" 
+				+"PR1(int p:0..410235,double r).\n"
+				+"PR2(int p:0..410235,double r).\n"
+				+"PR3(int p:0..410235,double r).\n"
+				+"PR4(int p:0..410235,double r).\n"
+				+"PR0(_,r) :- r= 1/410236.0.\n"
+				+"PR1(p,$sum(r)) :- InEdge(p,n), PR0(n,r1), EdgeCnt(n, cnt), r=0.85*r1/cnt.\n"
+				+"PR2(p,$sum(r)) :- InEdge(p,n), PR1(n,r1), EdgeCnt(n, cnt), r=0.85*r1/cnt.\n"
+				+"PR3(p,$sum(r)) :- InEdge(p,n), PR2(n,r1), EdgeCnt(n, cnt), r=0.85*r1/cnt.\n"
+				+"PR4(p,$sum(r)) :- InEdge(p,n), PR3(n,r1), EdgeCnt(n, cnt), r=0.85*r1/cnt.\n";
 		Parser p = new Parser();
 		p.parse(query);
 		Analysis an  = new Analysis(p);
@@ -476,11 +476,11 @@ public class ParserTest {
 	}
 	
 	static void testDistRule() {
-		String query ="Edge[int a:0..100]((int b)).\n" +
-		"InEdge[int a:0..100]((int b)).\n" +
-		"Edge[s](t) :- s=1, t=99.\n" +
-		"InEdge[t](s) :- Edge[s](t).\n" +
-		"?-InEdge[s](t).\n";
+		String query ="Edge(int a:0..100,(int b)).\n" +
+		"InEdge(int a:0..100,(int b)).\n" +
+		"Edge(s,t) :- s=1, t=99.\n" +
+		"InEdge(t,s) :- Edge(s,t).\n" +
+		"?-InEdge(s,t).\n";
 		Parser p=new Parser();
 		p.parse(query);
 		Analysis an=new Analysis(p, Config.dist(4));
@@ -495,8 +495,8 @@ public class ParserTest {
 	
 	static void testLocationOpInPredicate() {
 		String query ="Edge(int a:0..100, (int b)). \n" +
-		"Attr[int a](int b).\n" +
-		"Attr[a](b) :- Edge[a](b).\n";
+		"Attr(int a,int b).\n" +
+		"Attr(a,b) :- Edge(a,b).\n";
 		Parser p=new Parser();		
 		Analysis an;
 		try {
@@ -507,7 +507,7 @@ public class ParserTest {
 		} catch (ParseException e) {/* expected */}
 		
 		query ="Edge(int a:0..100, (int b)). \n" +
-		"Attr[int a](int b).\n" +
+		"Attr(int a,int b).\n" +
 		"Attr(a, b) :- Edge(a, b).\n";
 		p=new Parser();		
 		try {

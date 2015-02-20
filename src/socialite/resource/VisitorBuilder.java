@@ -79,7 +79,7 @@ public class VisitorBuilder {
 		if (!Analysis.isParallelRule(r, tableMap)) return -1;
 		
 		Predicate firstP=(Predicate)r.getBody().get(0);
-		Object f = firstP.getAllInputParams()[0]; 
+		Object f = firstP.inputParams()[0]; 
 		Table firstT=tableMap.get(firstP.name());
 		if (firstT.getColumn(0).isIndexed() && f instanceof Const) return -1;
 		
@@ -357,7 +357,7 @@ class RuleInfo {
 		Predicate firstP = r.firstP();
 				
 		if (slicingColumn==-1) {
-			Object param = firstP.getAllInputParams()[0];
+			Object param = firstP.inputParams()[0];
 			if (param instanceof Variable) 
 				return 0; // this table has an order-by option
 			
@@ -370,7 +370,7 @@ class RuleInfo {
 		if (sliceMap.virtualSliceNum(id, slicingColumn)==1) 
 			return 0;		
 		
-		Object param = firstP.getAllInputParams()[slicingColumn];
+		Object param = firstP.inputParams()[slicingColumn];
 		if (param instanceof Variable) {
 			return -1;
 		} else if (param instanceof Const) {

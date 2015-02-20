@@ -66,12 +66,12 @@ public class DeltaTable extends Table implements GeneratedT, FixedSizeTable {
 		String newName=name(t);
 		List<ColumnDecl> colDecls = new ArrayList<ColumnDecl>();
 		int columns=0;
-		for (Object o:r.getTheP().getAllParamsExpanded()) {				
-			Class type = MyType.javaType(o);
+		for (Param o:r.getTheP().inputParams()) {				
+			Class<?> type = MyType.javaType(o);
 			String colname = "col"+(columns++);
 			colDecls.add(new ColumnDecl(type, colname));
 		}
-		TableDecl decl=new TableDecl(newName, null, colDecls, null);		
+		TableDecl decl=new TableDecl(newName, colDecls, null);		
 		setMultiset(decl);
 		return decl;
 	}

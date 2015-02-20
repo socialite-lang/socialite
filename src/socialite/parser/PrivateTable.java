@@ -70,7 +70,7 @@ public class PrivateTable extends Table implements GeneratedT {
 			ColumnDecl decl =new ColumnDecl(c.type(), colname, opt);
 			colDecls.add(decl);			
 		}
-		TableDecl decl=new TableDecl(newName, null, colDecls, null);		
+		TableDecl decl=new TableDecl(newName, colDecls, null);		
 		
 		if (t.indexedCols().length>0) {
 			int col=t.indexedCols()[0];
@@ -86,21 +86,6 @@ public class PrivateTable extends Table implements GeneratedT {
 		return decl;
 	}
 	
-	static String constColumns(Predicate head) {
-		String s="";
-		int idx=0;
-		if (head.idxParam!=null) {
-			if (head.idxParam instanceof Const)
-				s+="_"+idx;
-			idx++;
-		}
-		for (Object o:head.params) {
-			if (o instanceof Const)
-				s+="_"+idx;
-			idx++;
-		}
-		return s;
-	}
 	public static String name(Table origT, Rule rule) {
 		String name = "Private_"+origT.name();
 		int[] constIdx = ConstCols.get(rule.getHead());

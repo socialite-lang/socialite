@@ -383,7 +383,7 @@ class QueryCache<T> {
 		sig$.constIdx.resetQuick();
 		sig$.dontcareIdx.resetQuick();
 		int i=0;
-		for (Object o:p.getAllParamsExpanded()) {
+		for (Object o:p.inputParams()) {
 			if (o instanceof Const)
 				sig$.constIdx.add(i);
 			if (isDontCare(o)) 

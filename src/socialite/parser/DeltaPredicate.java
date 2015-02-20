@@ -21,7 +21,6 @@ public class DeltaPredicate extends Predicate {
 
     public DeltaPredicate() {}
 	public DeltaPredicate(Predicate p) {
-		idxParam = p.idxParam;
 		params = p.params;
 		negated = p.negated;
 		posAtRuleBody = p.posAtRuleBody;

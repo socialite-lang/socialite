@@ -147,14 +147,14 @@ public class Rule implements Externalizable {
 	
 	public List<Const> getConsts() {
 		SortedSet<Const> _consts = new TreeSet<Const>();		
-		for (Object o:getHead().getAllParamsExpanded()) {
+		for (Object o:getHead().inputParams()) {
 			if (o instanceof Const) 
 				_consts.add((Const)o);
 		}
 		for (Object o:getBody()) {
 			if (o instanceof Predicate) {
 				Predicate p=(Predicate)o;
-				for (Object x:p.getAllParamsExpanded()) {
+				for (Object x:p.inputParams()) {
 					if (x instanceof Const)
 						_consts.add((Const)x);
 				}
@@ -188,9 +188,6 @@ public class Rule implements Externalizable {
 	}
 	
 	void addVariablesForPredicate(Predicate p, Set<Variable> vars) {		
-		if (p.idxParam instanceof Variable) {
-			vars.add((Variable)p.idxParam);
-		}
 		for(int i=0; i<p.params.size(); i++) {
 			if (p.params.get(i) instanceof Variable) {
 				vars.add((Variable)p.params.get(i));

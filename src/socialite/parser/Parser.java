@@ -249,7 +249,7 @@ public class Parser {
 		if (!tdecl.hasIterColumn()) return;
 		
 		int iterCol = tdecl.iterColumn();
-		Object iterParam = q.getP().getAllInputParams()[iterCol];
+		Object iterParam = q.getP().inputParams()[iterCol];
 		if (!isIntConst(iterParam)) {
 			String msg="Integer constant is required for the iterator column ("+iterCol+"'th column) of "+q.getP().name();
 			throw new AnalysisException(msg, q);
@@ -293,10 +293,7 @@ public class Parser {
 			if (tdecl==null) {throw new AnalysisException("Table "+p.name()+" not declared");}
 			if (!tdecl.hasIterColumn()) continue;
 			int iterCol = tdecl.iterColumn();
-			if (iterCol==0 && tdecl.locationColDecl()!=null) {
-				throw new AnalysisException("Location operator cannot be applied to iteration column", r);
-			}
-			Object iterParam = p.getAllInputParams()[iterCol];
+			Object iterParam = p.inputParams()[iterCol];
 			if (!isIntConst(iterParam)) {
 				String msg="Integer constant is required for the iterator column ("+iterCol+"'th column) of "+p.name();
 				throw new AnalysisException(msg, r);

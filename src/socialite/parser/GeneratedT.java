@@ -9,8 +9,8 @@ public interface GeneratedT {
 	public static class ConstCols {
 		public static int[] get(Predicate p) {
 			TIntArrayList constCols = new TIntArrayList();			
-			for (int i=0; i<p.getAllParamsExpanded().length; i++) {			
-				Object o=p.getAllParamsExpanded()[i];
+			for (int i=0; i<p.inputParams().length; i++) {			
+				Object o=p.inputParams()[i];
 				if (o instanceof Const) 
 					constCols.add(i);
 			}
@@ -18,9 +18,9 @@ public interface GeneratedT {
 		}
 		public static void init(Table t, Predicate p) {			
 			TIntArrayList constCols = new TIntArrayList();			
-			assert t.numColumns()==p.getAllParamsExpanded().length;
-			for (int i=0; i<p.getAllParamsExpanded().length; i++) {			
-				Object o=p.getAllParamsExpanded()[i];
+			assert t.numColumns()==p.inputParams().length;
+			for (int i=0; i<p.inputParams().length; i++) {			
+				Object o=p.inputParams()[i];
 				if (o instanceof Const) {
 					Const c=(Const)o;
 					Column col=t.getColumn(i);

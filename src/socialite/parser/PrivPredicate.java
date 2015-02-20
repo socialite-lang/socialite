@@ -12,16 +12,16 @@ public class PrivPredicate extends Predicate {
 
     @Override
 	public PrivPredicate clone() {
-		return new PrivPredicate(name, idxParam, params);
+		return new PrivPredicate(name, params);
 	}
 
     public PrivPredicate() {};
-    public PrivPredicate(String _name, Param _idxParam, List<Param> _params, boolean rename) {
-		super(_name, renameVar(_idxParam), renameVariables(_params));
+    public PrivPredicate(String _name, List<Param> _params, boolean rename) {
+		super(_name, renameVariables(_params));
 		assert rename;
 	}	
-	public PrivPredicate(String _name, Param _idxParam, List<Param> _params) {
-		super(_name, _idxParam, _params);
+	public PrivPredicate(String _name, List<Param> _params) {
+		super(_name, _params);
 	}	
 	
 	static Param renameVar(Param param) {

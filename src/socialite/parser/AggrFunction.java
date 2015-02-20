@@ -139,7 +139,7 @@ public class AggrFunction extends Function implements Externalizable {
 	
 	public boolean hasRemainingParam() {
 		int fidx=idxInParamList;		
-		if (predicate.getAllInputParams().length==fidx+getReturns().size()) 
+		if (predicate.inputParams().length==fidx+getReturns().size()) 
 			return false;
 		return true;
 	}

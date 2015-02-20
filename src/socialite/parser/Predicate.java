@@ -20,13 +20,15 @@ public class Predicate implements Literal {
 
 	public static Predicate NIL = new Predicate();
 	
-	public Param idxParam;	
+	//public Param idxParam;	
 	@SuppressWarnings("rawtypes")
 	public SArrayList<Param> params;
 
-	transient Param[] allParams;
-	transient Param[] allParamsExp;
-	transient Param[] allOutputParams;
+	transient Param[] inputParams;
+	transient Param[] outputParams;
+	//transient Param[] allParams;
+	//transient Param[] allParamsExp;
+	//transient Param[] allOutputParams;
 	boolean negated;
 	int posAtRuleBody;
 	String name;
@@ -38,16 +40,15 @@ public class Predicate implements Literal {
 		@SuppressWarnings("rawtypes")
 		SArrayList<Param> newParams = new SArrayList<Param>();
 		newParams.addAll(params);
-		Predicate p = new Predicate(name, idxParam, newParams);
+		Predicate p = new Predicate(name, newParams);
 		p.negated = negated;
 		p.posAtRuleBody = posAtRuleBody;
 		p.isHeadPredicate = isHeadPredicate;
 		return p;
 	}
 	public Predicate() {	}
-	public Predicate(String _name, Param _idxParam, List<Param> _params) {
+	public Predicate(String _name, List<Param> _params) {
 		name = _name;
-		idxParam = _idxParam;
 		params = new SArrayList<Param>(_params);
 		negated = false;
 		posAtRuleBody = -1;
@@ -56,12 +57,10 @@ public class Predicate implements Literal {
 	}
 	
 	void setAggrFuncIdx() {
-		int offset=0;
-		if (idxParam!=null) offset=1;
 		for (int i=0; i<params.size(); i++) {
 			Object p=params.get(i);
 			if (p instanceof AggrFunction) 
-				((AggrFunction)p).setIdx(offset+i);
+				((AggrFunction)p).setIdx(i);
 		}
 	}
 	
@@ -78,21 +77,14 @@ public class Predicate implements Literal {
 	public boolean isHeadP() { return isHeadPredicate; }
 	public void setAsHeadP() { isHeadPredicate=true; }
 	
-	public void setNegated() {
-		/*Assert.die("need to handle negation!");*/
-		negated = true;
-	}
-	
-	public boolean isNegated() {
-		return negated;
-	}
+	public void setNegated() { negated = true; }
+	public boolean isNegated() { return negated; }
 	
 	public List<Object> getConstValues() {
 		List<Object> consts = new ArrayList<Object>();
-		Object[] params = getAllParamsExpanded();
-		for (int i=0; i<params.length; i++) {
-			if (params[i] instanceof Const) {
-				Const c = (Const)params[i];
+		for (int i=0; i<params.size(); i++) {
+			if (params.get(i) instanceof Const) {
+				Const c = (Const)params.get(i);
 				consts.add(c.val);
 			}			
 		}
@@ -110,15 +102,6 @@ public class Predicate implements Literal {
 		String result = _name;
 		if (negated) result = "!" + result;
 		
-		if (idxParam != null) {
-            if (sig) {
-                result += "[" + idxParam + "]";
-            } else {
-                if (idxParam instanceof Const) {
-                    result += "[" + ((Const)idxParam).constValStr() + "]";
-                } else { result += "[" + idxParam + "]"; }
-            }
-		}
 		result += "(";
 		for (int i=0; i<params.size(); i++) {
 			Object p = params.get(i);
@@ -159,12 +142,10 @@ public class Predicate implements Literal {
 		return null;
 	}		
 	public int functionIdx() {
-		int offset=0;
-		if (idxParam!=null) offset=1;
 		int i=0;
 		for (Param o:params) {
 			if (o instanceof Function)
-				return offset+i;
+				return i;
 			i++;
 		}
 		assert false:"should not reach here";
@@ -172,39 +153,17 @@ public class Predicate implements Literal {
 	}
 	@SuppressWarnings("unchecked")
 	public void replaceParamAt(int idx, Param newParam) {
-		if (idxParam!=null) {
-			if (idx==0) {
-				idxParam = newParam;
-				return;
-			}
-			idx--;
-		}
 		params.set(idx, newParam);
-		allParams = null;
-		allParamsExp = null;
-		allOutputParams = null;
+		inputParams = null;
+		outputParams = null;
 	}
 	public Param removeParamAt(int i) {
-		Param ret;
-		if (i==0 && idxParam != null) {
-			ret = idxParam;
-			idxParam = null;
-			return ret;
-		}		
-		
-		if (idxParam!=null) i--;
-		
-		ret = params.remove(i);
-		allParams = null;
-		allParamsExp = null;
-		allOutputParams = null;
-		return ret;
+		inputParams = null;
+		outputParams = null;
+		return params.remove(i);
 	}	
 	public Set<Variable> getVariables() {
-		Set<Variable> vars = new LinkedHashSet<Variable>();
-		
-		if (idxParam instanceof Variable) vars.add((Variable)idxParam);
-		
+		Set<Variable> vars = new LinkedHashSet<Variable>();		
 		for(Param p:params) {
 			if (p instanceof Variable) vars.add((Variable)p);			
 			if (p instanceof AggrFunction) {
@@ -215,40 +174,57 @@ public class Predicate implements Literal {
 		return vars;
 	}
 	
-	public Param first() { return getAllParamsExpanded()[0]; }
-	public Param last() { return getAllParamsExpanded()[getAllParamsExpanded().length-1]; }
+	public Param first() { return params.get(0); }
+	public Param last() { return params.get(params.size()-1); }
 	
-	public Param[] getAllInputParams() { return getAllParamsExpanded(); }	
+	@Deprecated
+	public Param[] getAllInputParams() { return params.toArray(new Param[0]); }
+	@Deprecated
 	public Param[] getAllOutputParams() { 
-		if (allOutputParams==null) {
+		List<Param> tmp = new ArrayList<Param>();
+		for (Param o:params) {
+			if (o instanceof AggrFunction) {
+				AggrFunction f=(AggrFunction)o;
+				for (Param arg:f.getReturns()) tmp.add(arg);
+			} else tmp.add(o);
+		}
+		return tmp.toArray(new Param[0]);
+	}	
+	
+	public Param[] outputParams() {
+		if (outputParams==null) {
 			List<Param> tmp = new ArrayList<Param>();
-			if (idxParam!=null) tmp.add(idxParam);
 			for (Param o:params) {
 				if (o instanceof AggrFunction) {
 					AggrFunction f=(AggrFunction)o;
 					for (Param arg:f.getReturns()) tmp.add(arg);
 				} else tmp.add(o);
 			}
-			allOutputParams = (Param[])tmp.toArray(new Param[0]);
+			outputParams = tmp.toArray(new Param[0]);
 		}
-		return allOutputParams;
-	}	
-	
-	public Param[] getAllParams() {
-		if (allParams==null) {
-			List<Param> tmp = new ArrayList<Param>();
-			if (idxParam!=null) tmp.add(idxParam);
-			for (Param o:params) {
-				tmp.add(o);
-			}
-			allParams = (Param[])tmp.toArray(new Param[0]);
-		}
-		return allParams;
+		return outputParams;
 	}
+	public Param[] inputParams() {
+		if (inputParams==null) {
+			List<Param> tmp = new ArrayList<Param>();
+			for (Param o:params) {
+				if (o instanceof AggrFunction) {
+					AggrFunction f=(AggrFunction)o;
+					for (Param arg:f.getArgs()) tmp.add(arg);
+				} else tmp.add(o);
+			}
+			inputParams = (Param[])tmp.toArray(new Param[0]);
+		}
+		return inputParams;
+	}
+	/*
+	public Param[] getAllParams() {
+		return getAllInputParams();
+	}*/
+	/*
 	public Param[] getAllParamsExpanded() {
 		if (allParamsExp==null) {
 			List<Param> tmp = new ArrayList<Param>();
-			if (idxParam!=null) tmp.add(idxParam);
 			for (Param o:params) {
 				if (o instanceof AggrFunction) {
 					AggrFunction f=(AggrFunction)o;
@@ -258,7 +234,7 @@ public class Predicate implements Literal {
 			allParamsExp = (Param[])tmp.toArray(new Param[0]);
 		}
 		return allParamsExp;
-	}
+	}*/
 	public List<Param> getRestInputParams() {
 		List<Param> tmp=new ArrayList<Param>();
 		for (Param o:params) {
@@ -281,18 +257,11 @@ public class Predicate implements Literal {
 	}
 	
 	public void computeVarTypes(Table t) throws InternalException {
-		Variable v;
-		int offset= (idxParam==null)?0:1;
-		if (idxParam instanceof Variable) {
-			v = (Variable)idxParam;
-			v.setType(t.idxType());			
-		}
-		@SuppressWarnings("rawtypes")
-		Class[] types = t.types();		
+		Class<?>[] types = t.types();		
 		for(int i=0; i<params.size(); ) {
 			if (params.get(i) instanceof Variable) {
-				v = (Variable)params.get(i);				
-				v.setType(types[offset+i]);
+				Variable v = (Variable)params.get(i);				
+				v.setType(types[i]);
 				i++;
 			} else if (params.get(i) instanceof AggrFunction) {
 				AggrFunction f=(AggrFunction)params.get(i);								
@@ -305,9 +274,6 @@ public class Predicate implements Literal {
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
-		if (in.readByte()==1) {
-			idxParam = (Param)in.readObject();
-		}
 		params = new SArrayList(0);
 		params.readExternal(in);
 		negated = in.readBoolean();
@@ -320,13 +286,6 @@ public class Predicate implements Literal {
 	}
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-        if (idxParam==null) {
-            out.writeByte(0);
-        } else {
-            out.writeByte(1);
-            out.writeObject(idxParam);
-        }
-		
 		params.writeExternal(out);
 		out.writeBoolean(negated);
 		out.writeInt(posAtRuleBody);

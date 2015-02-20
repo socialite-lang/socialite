@@ -59,7 +59,7 @@ public class RemoteBodyTable extends Table implements GeneratedT {
 			
 			colDecls = createColDecls(nestedTypes.get(i), "nest"+i+"_");			
 			if (i==0) {
-				return new TableDecl(name, null, colDecls, nestedTableDecl);
+				return new TableDecl(name, colDecls, nestedTableDecl);
 			}
 		}
 		assert false:"should not reach here";

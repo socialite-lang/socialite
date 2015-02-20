@@ -64,7 +64,6 @@ import socialite.visitors.ObjectVisitor;
 import socialite.visitors.VisitorImpl;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
-import socialite.collection.SIndex;
 import socialite.collection.SIntArrayList;
 import socialite.collection.SLongArrayList;
 import socialite.collection.SFloatArrayList;

@@ -11,7 +11,6 @@ public abstract class TmpTableInst extends AbstractTableInst implements External
 	abstract public int vacancy(); // capacity - current size
 	abstract public boolean isSmall(); // has small # of elems compared to ordinaryCapacity()
 		
-	abstract public TmpTableInst copy();	
 	abstract public void addAll(TmpTableInst table);
 	
 	boolean _reuse=true;

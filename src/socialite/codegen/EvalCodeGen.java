@@ -11,6 +11,7 @@ import org.stringtemplate.v4.STGroup;
 import socialite.engine.Config;
 import socialite.parser.Column;
 import socialite.parser.GeneratedT;
+import socialite.parser.Param;
 import socialite.parser.Predicate;
 import socialite.parser.Rule;
 import socialite.parser.Table;
@@ -116,7 +117,7 @@ public class EvalCodeGen {
 	
 	Column getDontCareColumn(Predicate p, Table t) {
 		int i=0;
-		for (Object o:p.getAllParamsExpanded()) {
+		for (Param o:p.inputParams()) {
 			if (o instanceof Variable) {
 				Variable v=(Variable)o;
 				if (v.dontCare) return t.getColumn(i);

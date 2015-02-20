@@ -16,8 +16,9 @@ import socialite.parser.antlr.SociaLiteParser.prog_return;
 import socialite.util.Assert;
 
 
-
+@Deprecated
 public class AntlrParserTest {
+	/**
 	static SociaLiteParser getParser(String query) {
 		SociaLiteLexer lexer = new SociaLiteLexer(new ANTLRStringStream(query));
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -82,9 +83,9 @@ public class AntlrParserTest {
 		Assert.true_(rule.head.name().equals("Foo"));		
 		
 		Predicate bar = (Predicate)rule.body.get(0);
-		Variable c = (Variable)bar.getAllParamsExpanded()[1];
+		Variable c = (Variable)bar.inputParams()[1];
 		Assert.true_(c.name.equals("c"));		
-		Variable b = (Variable)bar.getAllParamsExpanded()[2];
+		Variable b = (Variable)bar.inputParams()[2];
 		Assert.true_(b.name.equals("b"));
 	}
 	
@@ -282,5 +283,5 @@ public class AntlrParserTest {
     	testParsingMultipleString(); dot();    	
     	
     	System.out.println("AntlrParserTest done");
-    }
+    }*/
 }

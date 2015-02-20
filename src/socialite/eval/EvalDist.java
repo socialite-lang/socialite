@@ -42,10 +42,9 @@ public class EvalDist extends EvalParallel {
 	boolean needsLocalEval(Rule r) {
 		Predicate firstP=r.firstP();
 		if (firstP==null) return true;
-		if (firstP.idxParam==null) return true;
-
-		if (firstP.idxParam instanceof Const) {
-			Const c = (Const)firstP.idxParam;
+		
+		if (firstP.first() instanceof Const) {
+			Const c = (Const)firstP.first();
             int tid = runtime.getVisitorBuilder(r.id()).firstTableId(r.id());
             return sliceMap.isLocal(tid, c.val);
 		}

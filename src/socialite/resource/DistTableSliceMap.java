@@ -30,11 +30,9 @@ public class DistTableSliceMap extends TableSliceMap {
 	}
 	@Override
 	public void addTable(Table t) {
-		if (t.isDistributed()) {
-			assert !(t instanceof GeneratedT);
-			ensureCapacity(t.id()+1);
-			sliceInfo[t.id()] = new DistSliceInfo(t); 
-		} else super.addTable(t);
+		assert !(t instanceof GeneratedT);
+		ensureCapacity(t.id()+1);
+		sliceInfo[t.id()] = new DistSliceInfo(t);
 	}
 	@Override
 	public int machineIndexFor(int tableId, Object o) {
@@ -100,15 +98,13 @@ public class DistTableSliceMap extends TableSliceMap {
 		@Override
 		int[] computeArraySliceSizes() {
 			int[] sliceSizes=super.computeArraySliceSizes();
-			if (t.isDistributed()) {
-				if (t.isArrayTable()) {
-					int arraySize = arrayPartitionSize;
-					int _sliceSize=(arraySize+virtualSliceNum-1)/virtualSliceNum;
-					_sliceSize = _sliceSize > minSliceSize? _sliceSize:minSliceSize;
-					if (_sliceSize > arraySize) _sliceSize=arraySize;
-					sliceSizes[0] = _sliceSize;	
-				}			
-			} 
+			if (t.isArrayTable()) {
+				int arraySize = arrayPartitionSize;
+				int _sliceSize=(arraySize+virtualSliceNum-1)/virtualSliceNum;
+				_sliceSize = _sliceSize > minSliceSize? _sliceSize:minSliceSize;
+				if (_sliceSize > arraySize) _sliceSize=arraySize;
+				sliceSizes[0] = _sliceSize;	
+			}
 			return sliceSizes;
 		}		
 		@Override
@@ -128,7 +124,6 @@ public class DistTableSliceMap extends TableSliceMap {
 		}
 		
 		public boolean isLocal(int rangeOrHash) {
-			assert t.isDistributed();
 			if (t.isArrayTable()) {
 				return isLocalArrayT(rangeOrHash);
 			} else if (t.isModTable()) {
@@ -160,7 +155,6 @@ public class DistTableSliceMap extends TableSliceMap {
 			return tmp;
 		}
 		int[] getLocalTableRange() {
-			assert t.isDistributed();
 			assert t.isArrayTable();
 			return localTableRange;
 		}		

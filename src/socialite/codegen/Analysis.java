@@ -487,8 +487,8 @@ public class Analysis {
 		if (!p1.name().equals(p2.name())) return false;
 
 		Table t = map.get(p1.name());	
-		Object[] params1 = p1.getAllOutputParams();
-		Object[] params2 = p2.getAllOutputParams();
+		Param[] params1 = p1.outputParams();
+		Param[] params2 = p2.outputParams();
 		int compareUpto=t.numColumns();
 		if (p1.hasFunctionParam())
 			compareUpto = p1.functionIdx();		
@@ -539,23 +539,6 @@ public class Analysis {
 		return maxSubDepth + 1;
 	}
 
-	
-	boolean isLocalRule(Rule r) {
-		List body = r.getBody();
-		if (body.size() == 1 && body.get(0) instanceof PrivPredicate) {
-			Set<Variable> appearedVars = new LinkedHashSet<Variable>();
-			Object params[] = r.getHead().getAllInputParams();
-			for (int i = 0; i < params.length; i++) {
-				if (params[i] instanceof Variable) {
-					if (appearedVars.contains(params[i]))
-						return false;
-				}
-			}
-			return true;
-		}
-		return false;
-	}
-
 	/**
 	 * returns true if the updating shard at the head table is same as the block
 	 * at the first table.
@@ -570,8 +553,8 @@ public class Analysis {
 		Table hT = tableMap.get(h.name());
 		Table fT = tableMap.get(f.name());
 
-		Object hParams[] = h.getAllInputParams();
-		Object fParams[] = f.getAllInputParams();
+		Object hParams[] = h.inputParams();
+		Object fParams[] = f.inputParams();
 
 		int hidx = firstShardedColumnWithVar(h, hT);
 		if (hidx == -1) return false;
@@ -612,15 +595,10 @@ public class Analysis {
 	}
 
 	static int firstColumnWithVar(Predicate p, Table t) {
-		int offset=0;
-		if (p.idxParam!=null) {
-			if (p.idxParam instanceof Variable) return 0;
-			offset++;			
-		}
 		for (ColumnGroup group:t.getColumnGroups()) {
 			Column c=group.first();
 			if (c.isPrimaryShard()) continue;
-			int paramIdx=c.getAbsPos()-offset;
+			int paramIdx=c.getAbsPos();
 			if (p.params.get(paramIdx) instanceof Variable)
 				return c.getAbsPos();				
 		}
@@ -710,22 +688,18 @@ public class Analysis {
 		List<Integer> sendPos = new ArrayList<Integer>();
 		Predicate prevp = null;
 		for (Predicate p : bodyP) {
-			if (p.idxParam == null) continue;
-			else {
-				if (prevp != null) {
-					Object prevpIdx = prevp.idxParam;
-					Object idxParam = p.idxParam;
-					assert (prevpIdx != null && idxParam != null);
-					if (!prevpIdx.equals(idxParam)) {
-						if (collectLiveVarsAt(r, p.getPos()).isEmpty()) {
-							Assert.die("This probably should not happen.");
-							continue;			
-						}
-						sendPos.add(p.getPos());
-					}
-				}
+			if (prevp == null || prevp instanceof PrivPredicate) {
 				prevp = p;
+				continue;
 			}
+			if (!prevp.first().equals(p.first())) {
+				if (collectLiveVarsAt(r, p.getPos()).isEmpty()) {
+					Assert.impossible();
+					continue;			
+				}
+				sendPos.add(p.getPos());
+			}
+			prevp = p;
 		}
 		return sendPos;	
 	}
@@ -734,42 +708,31 @@ public class Analysis {
 		List<Integer> sendPos = new ArrayList<Integer>();
 		Predicate prevp = null;
 		for (Predicate p : bodyP) {
-			if (p.idxParam == null)
-				continue;
-			else {
-				if (prevp != null) {
-					Object prevpIdx = prevp.idxParam;
-					Object idxParam = p.idxParam;
-					assert (prevpIdx != null && idxParam != null);
-					if (!prevpIdx.equals(idxParam)) {			
-						sendPos.add(p.getPos());
-					}
+			if (prevp != null) {
+				if (!prevp.first().equals(p.first())) {			
+					sendPos.add(p.getPos());
 				}
-				prevp = p;
 			}
+			prevp = p;
 		}
 		return sendPos;
 	}
 
 	public static boolean hasRemoteRuleHead(Rule r) {
 		Predicate h = r.getHead();
-		if (h.idxParam == null) return false;
 		if (r.isSimpleArrayInit()) return false;
 		if (r.getBodyP().size()==0) return true;
 		
 		List<Predicate> body = r.getBodyP();
-		for (int i=body.size()-1; i>=0; i--) {
-			Predicate p=body.get(i);
-			if (p.idxParam==null) continue;			
-			if (p.idxParam.equals(h.idxParam))
-				return false;
-			else return true;
-		}
-		return true;		
+		Predicate p=body.get(body.size()-1);
+		if (p.first().equals(h.first()))
+			return false;
+		else return true;		
 	}
 
-	
 	void processRemoteRules() {
+		if (!conf.isDistributed()) return;
+		
 		List<Rule> toAdd = new ArrayList<Rule>();
 		for (RuleComp rc : ruleComps) {
 			for (Rule r : rc.getRules()) {
@@ -826,7 +789,7 @@ public class Analysis {
 	boolean beginNestingAfter(Variable v, Rule r) {
 		for (Predicate p:r.getBodyP()) {
 			int i=0;				
-			for (Object o:p.getAllInputParams()) {
+			for (Object o:p.inputParams()) {
 				if (!v.equals(o)) continue;
 				
 				Table t=tableMap.get(p.name());
@@ -906,20 +869,19 @@ public class Analysis {
 		for (Predicate p:r.getBodyP()) {
 			if (p.getPos() >= transferPos) break;
 			Table t = tableMap.get(p.name());
-			Object[] params = p.getAllParamsExpanded();
 			
 			int prevPos=0;
 			for (int pos:t.nestPos()) {
 				for (int i=prevPos; i<pos; i++) {
-					if (!(params[i] instanceof Variable))
+					if (!(p.params.get(i) instanceof Variable))
 						continue;
-					for (int j=pos;j<params.length; j++) {
-						Set s = oneToMany.get(params[i]);
+					for (int j=pos;j<p.params.size(); j++) {
+						Set s = oneToMany.get(p.params.get(i));
 						if (s==null) {
 							s = new HashSet<Object>();
-							oneToMany.put(params[i], s);
+							oneToMany.put(p.params.get(i), s);
 						}						
-						s.add(params[j]);
+						s.add(p.params.get(j));
 					}
 				}
 				prevPos = pos;
@@ -990,7 +952,7 @@ outer:	for (Variable v:sortedVars) {
 
 			// add new rule
             SArrayList<Param> x = new SArrayList<Param>(); x.addAll(vars);
-			Predicate newP = new PrivPredicate(rt.name(), null, x);
+			Predicate newP = new PrivPredicate(rt.name(), x);
 			newP.setPos(0);
 			@SuppressWarnings("rawtypes")
 			List body = new ArrayList();
@@ -999,7 +961,7 @@ outer:	for (Variable v:sortedVars) {
 				Object o = r.getBody().get(i);
 				if (o instanceof Predicate) {
 					Predicate p = (Predicate) o;
-					Predicate clonedP = new Predicate(p.name(), p.idxParam, p.params);
+					Predicate clonedP = new Predicate(p.name(), p.params);
 					clonedP.setPos(i - pos + 1);
 					body.add(clonedP);
 				} else body.add(o);
@@ -1051,7 +1013,6 @@ outer:	for (Variable v:sortedVars) {
 	@SuppressWarnings("unchecked")
 	void processRemoteRuleHead(Rule r, List<Rule> toAdd) {
 		Predicate h = r.getHead();
-		assert h.idxParam != null;
 		Table ht = tableMap.get(h.name());
 		if (ht instanceof PrivateTable) {
 			ht = ((PrivateTable) ht).origT();
@@ -1060,23 +1021,19 @@ outer:	for (Variable v:sortedVars) {
 		RemoteHeadTable rt = getRemoteHeadTable(ht, r);
 
 		// new rule (for the receiving node) [ OrigPredicate() :- RemoteTable(). ]
-		Variable idxVar = new Variable("$0", MyType.javaType(h.idxParam));
 		SArrayList<Param> vars = new SArrayList<Param>();
-		List params = h.getRestInputParams();
-		for (int i=0; i<params.size(); i++) {
-			int varIdx=1+i;
-			vars.add(new Variable("$"+varIdx, MyType.javaType(params.get(i))));
+		Param[] params = h.inputParams();
+		for (int i=0; i<params.length; i++) {
+			int varIdx=i;
+			vars.add(new Variable("$"+varIdx, MyType.javaType(params[i])));
 		}
-		
-		Predicate bodyP = new PrivPredicate(rt.name(), idxVar, vars, true/*rename param vars*/);
+		Predicate bodyP = new PrivPredicate(rt.name(), vars, true/*rename param vars*/);
 		// getting renamed vars
-		idxVar = (Variable)bodyP.idxParam; 
 		vars = bodyP.params;
-
 		bodyP.setPos(0);
 		List body = new ArrayList();
 		body.add(bodyP);
-		Predicate newH = new Predicate(ht.name(), idxVar, makeNewParams(h.params, vars));
+		Predicate newH = new Predicate(ht.name(), makeNewParams(h.params, vars));
 		newH.setAsHeadP();
 		prepareAggrFunction(newH);
 		Rule newR = new Rule(new RuleDecl(newH, body));
@@ -1088,10 +1045,10 @@ outer:	for (Variable v:sortedVars) {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	List makeNewParams(List oldParams, List input) {
-		List newParam = new ArrayList();
+	List makeNewParams(List<Param> oldParams, List<Param> input) {
+		List<Param> newParam = new ArrayList<Param>();
 		int i=0;
-		for (Object o:oldParams) {
+		for (Param o:oldParams) {
 			if (o instanceof AggrFunction) {
 				AggrFunction f = (AggrFunction) o;
 				List args = new ArrayList();
@@ -1099,8 +1056,9 @@ outer:	for (Variable v:sortedVars) {
 					args.add(input.get(i++));
 				AggrFunction aggr = new AggrFunction(f, args);
 				newParam.add(aggr);
-			} else
+			} else {
 				newParam.add(input.get(i++));
+			}
 		}
 		return newParam;	
   }
@@ -1124,21 +1082,15 @@ outer:	for (Variable v:sortedVars) {
 	}
 
 	DeltaRule createStartingDeltaRule(Table t, DeltaRule dependingRule) {
-		Variable idxVar=null;
-		int offset=0;
-		if (t.isDistributed()) {
-			idxVar = new Variable("v0", t.types()[0]);
-			offset++;
-		}
 		SArrayList<Param> vars = new SArrayList<Param>();
-		for (int i=offset; i<t.numColumns(); i++) {
+		for (int i=0; i<t.numColumns(); i++) {
 			Variable v = new Variable("v"+i, t.types()[i]);
 			vars.add(v);
 		}
-		Predicate h = new Predicate(t.name(), idxVar, vars);
+		Predicate h = new Predicate(t.name(), vars);
 		h.setAsHeadP();
 		DeltaPredicate deltaH = new DeltaPredicate(h);		
-		Predicate b = new Predicate(t.name(), idxVar, vars);
+		Predicate b = new Predicate(t.name(), vars);
 		b.setPos(0);		
 		List<Literal> params = new ArrayList<Literal>(); params.add(b);
 		
@@ -1817,10 +1769,10 @@ outer:	for (Variable v:sortedVars) {
 			Table headT = tableMap.get(headP.name());
 			if (!headT.isArrayTable()) continue;
 
-			Object[] params = headP.getAllParamsExpanded();
+			Param[] params = headP.inputParams();
 			int dontCare = 0;
 			for (int i = 0; i < params.length; i++) {
-				Object p = params[i];
+				Param p = params[i];
 				if (p instanceof Variable) {
 					Variable v = (Variable) p;
 					Column c = headT.getColumn(i);
@@ -1843,20 +1795,15 @@ outer:	for (Variable v:sortedVars) {
 			Predicate h=r.getHead();
 			Table ht=tableMap.get(h.name());
 			
-			int offset=0;
-			if (h.idxParam!=null) {
-				typeCheckInHead(h.idxParam, ht.types()[0], r);
-				offset++;
-			}
 			for (int i=0; i<h.params.size(); i++) {
-				Object p=h.params.get(i);
+				Param p=h.params.get(i);
 				if (p instanceof Function) break;
-				typeCheckInHead(p, ht.types()[offset+i], r);
+				typeCheckInHead(p, ht.types()[i], r);
 			}
 		}
 	}	
 	@SuppressWarnings("unchecked")
-	void typeCheckInHead(Object p, @SuppressWarnings("rawtypes") Class type, Rule r) {
+	void typeCheckInHead(Param p, @SuppressWarnings("rawtypes") Class type, Rule r) {
 		if (p instanceof Variable && ((Variable)p).dontCare) return;
 		
 		if (!type.isAssignableFrom(MyType.javaType(p))) {

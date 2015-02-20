@@ -20,6 +20,7 @@ import socialite.parser.Column;
 import socialite.parser.Const;
 import socialite.parser.IterTable;
 import socialite.parser.MyType;
+import socialite.parser.Param;
 import socialite.parser.Predicate;
 import socialite.parser.Query;
 import socialite.parser.Table;
@@ -69,24 +70,18 @@ public class QueryCodeGen {
 	@SuppressWarnings("unchecked")
 	Predicate makeNewPredicate(Predicate oldP, TIntObjectHashMap<Variable> constVars) {
 		Predicate p = oldP.clone();
-		int offset = 0;
-		if (p.idxParam!=null) {
-			if (p.idxParam instanceof Const)
-				p.idxParam = constVars.get(0);				
-			offset = 1;
-		}		
 		for (int i=0; i<oldP.params.size(); i++) {
 			Object o = oldP.params.get(i);
 			if (o instanceof Const)
-				p.params.set(i, constVars.get(offset+i));
+				p.params.set(i, constVars.get(i));
 		}
 		return p;
 	}
 	TIntObjectHashMap<Variable> makeConstVars(Predicate p) {
 		TIntObjectHashMap<Variable> vars = new TIntObjectHashMap<Variable>();		
 		Column cols[] = table.getColumns();
-		for (int i=0; i<p.getAllParamsExpanded().length; i++) {
-			Object o = p.getAllParamsExpanded()[i];
+		for (int i=0; i<p.inputParams().length; i++) {
+			Param o = p.inputParams()[i];
 			if (o instanceof Const) {
 				Const cons = (Const)o;
 				Column c = cols[i];			
@@ -270,7 +265,7 @@ public class QueryCodeGen {
 	
 	String getIteratebySuffix() {
 		TIntArrayList idxbyCols = getIndexByCols();
-		Object[] params = queryP.getAllParamsExpanded();
+		Param[] params = queryP.inputParams();
 		String iteratebySuffix = "_by";
 		for (int i=0; i<idxbyCols.size(); i++) {
 			int idxPos = idxbyCols.get(i);
@@ -301,7 +296,7 @@ public class QueryCodeGen {
 		setargs.add("stmts", "assert $params.size()=="+constVars.size());
 		
 		int paramIdx=0;
-		Object[] params = queryP.getAllParamsExpanded();
+		Object[] params = queryP.inputParams();
 		for (int i=0; i<params.length; i++) {
 			if (constVars.containsKey(i)) {					
 				Variable v = constVars.get(i);
@@ -336,7 +331,7 @@ public class QueryCodeGen {
 	
 	boolean allDontCares(int from) {
 		Predicate p = queryP;
-		Object[] params=p.getAllParams();
+		Object[] params=p.inputParams();
 		for (int i=from; i<params.length; i++) {
 			if (!(params[i] instanceof Const)) {
 				return false;
@@ -368,19 +363,19 @@ public class QueryCodeGen {
 	}
 		
 	int paramNum() {
-		int num = queryP.getAllParamsExpanded().length;
+		int num = queryP.inputParams().length;
 		if (table instanceof IterTable)	num++;
 		return num;
 	}
 	
 	void invokeQueryVisitor(ST method) {
 		if (paramNum()==1) {
-			Object param = queryP.getAllParamsExpanded()[0];
+			Object param = queryP.inputParams()[0];
 			String invoke=queryVisitorVar()+".visit("+param+")";
 			method.add("stmts", invoke);
 		} else {
 			int i=0;
-			for (Object param:queryP.getAllParamsExpanded()) {
+			for (Object param:queryP.inputParams()) {
 				if (i==iterColumn()) {
 					method.add("stmts", tupleVar()+"._"+i+"="+query.getIterVal());
 					i++;
