@@ -181,6 +181,7 @@ public class Table implements Serializable {
 	public int groupbyRestColNum() { return columns.length-groupby;}
 
     public boolean hasIndexby() { return indexedCols().length>0; }
+    public boolean hasSortby() { return sortbyCols().length>0; }
 	
 	public List<ColumnGroup> getColumnGroups() { return columnGroupList; }
 	

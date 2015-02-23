@@ -43,7 +43,7 @@ public class MyIndexPosList {
             int l = len();
             boolean cont = false;
             for (int i = 0; i < l; i++) {
-                int e = elems[i];
+                int e = elems[i];                
                 cont = cont | v.visit(e);
                 if (!cont) break;
             }

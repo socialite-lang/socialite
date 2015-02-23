@@ -76,6 +76,7 @@ public class Column implements Externalizable {
 	public String name() { return decl.name(); }
 	public Class type() { return decl.type(); }
 	
+	public boolean isPrimitive() { return type().isPrimitive(); }
 	public boolean isConst() { return isConst; }
 	public void setConst(Object _constVal) {
 		isConst = true;

@@ -4,7 +4,7 @@ import "TableCommon.stg"
 dynamicNestedTable(tableName, name, visitorClass, nestedTable, classes, methods, 
 		size, id, 
 		columns, nestedColumns, nestedNestedColumns, gbColumns, gbNestedColumns, gbAggrColumn,
-		idxCols,
+		sortedCol, idxCols,
 		concurrent=false, multiSet=false, isNested=false) ::= <<
 <if(!isNested)>
 package socialite.tables;
@@ -21,10 +21,15 @@ package socialite.tables;
 	
 	static boolean groupby = false;
 	static void setGroupby() {
+		<if(sortedCol)>
+		throw new SociaLiteException("Table <tableName>: cannot use both groupby and sortby. "+
+									 "Remove sortby in the declaration.");
+		<else>
 		if (groupby == false) {
 			groupby = true;
 			<nestedTable>.setGroupby();
 		}
+		<endif>
 	}
 	static int makePos(int nodePos, int offset) { return (nodePos \<\< 8) | offset; }
 	static int getPos(int val) { return (val >\> 8); }
@@ -87,7 +92,37 @@ package socialite.tables;
 
         <columns:{c|<c.type>[] col<i0>() { return (<c.type>[])col<i0>; \}<\n>}>
 
+		void spill(int num, Node to) {
+			assert num > 0 && num \< len;
+			<columns:{c|System.arraycopy(to.col<i0>(), 0, to.col<i0>(), num, to.len);<\n>}>
+			System.arraycopy(to.nested, 0, to.nested, num, to.len);
+			<columns:{c|System.arraycopy(col<i0>(), len-num, to.col<i0>(), 0, num);<\n>}>
+			System.arraycopy(nested, len-num, to.nested, 0, num);
+			len -= num;
+			to.len += num;
+		}
+		<if(sortedCol)>
+		boolean contains_sorted(<columns:{c|<c.type> a<i0>}; separator=", "><nestedColumns:{c|, <c.type> b<i0>}>, boolean[] dontcare) {
+			int pos = Arrays.binarySearch(col<sortedCol.relPos>(), 0, len, a<sortedCol.relPos>);
+			if (pos \< 0) return false;
+			if (dontcare==null) {
+				if (true<columns:{c|&& (col<i0>()[pos]<EqOpMap.(c.type)>(a<i0>))}>) {
+					return nested[i].contains(<nestedColumns:{c|b<i0>};separator=",">);
+				}
+			}
+			if (true<columns:{c|&& (dontcare[<i0>]||col<i0>()[pos]<EqOpMap.(c.type)>(a<i0>))}>) {
+				return nested[i].contains(<nestedColumns:{c|b<i0>};separator=",">,
+									Arrays.copyOfRange(dontcare, <length(columns)>, dontcare.length));
+			}
+			return false;
+		}
+		<endif>
         boolean contains(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>, boolean[] dontcare) {
+        <if(sortedCol)>
+        	if (!dontcare[<sortedCol.relPos>]) {
+        		return contains_sorted(<columns:{c|a<i0>}; separator=", "><nestedColumns:{c|,b<i0>}>,dontcare);
+        	}
+        <endif>
             for (int i=0; i\<len(); i++) {
                 if (true<columns:{c|&& (dontcare[<i0>]||col<i0>()[i]<EqOpMap.(c.type)>(a<i0>))}>) {
                     return nested[i].contains(<nestedColumns:{c|b<i0>};separator=",">,
@@ -119,6 +154,22 @@ package socialite.tables;
             return true<columns:{c|&& a<i0><EqOpMap.(c.type)>(col<i0>()[i])}> &&
                         nested[i].contains(<nestedColumns:{c|b<i0>};separator=",">);
         }
+    <if(sortedCol)>
+    	int insert_sorted(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
+			int pos = Arrays.binarySearch(col<sortedCol.relPos>(), 0, len, a<sortedCol.relPos>);
+			if (pos >= 0) {
+				
+			} else {
+			}
+        	
+        	<columns:{c|System.arraycopy(col<i0>(), pos, col<i0>(), pos+1, len-pos);<\n>}>
+        	System.arraycopy(nested, pos, nested, pos+1, len-pos);
+        		
+        	
+        	<columns:{c|col<i0>()[pos] = a<i0>;<\n>}>
+        	return len++;
+    	}
+    <endif>
         int insert(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
             int l = len();
             assert l \< nested.length;

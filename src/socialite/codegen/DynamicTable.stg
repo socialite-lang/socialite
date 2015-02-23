@@ -22,7 +22,12 @@ package socialite.tables;
 	
 	static boolean groupby = false;
 	static void setGroupby() {
-		if (groupby == false) { groupby = true; }
+		<if(sortedCol)>
+		throw new SociaLiteException("Table <tableName>: cannot use both groupby and sortby. "+
+									 "Remove sortby in the declaration.");
+		<else>
+		if (groupby == false) {groupby = true;}
+		<endif>
 	}
 	static int makePos(int nodePos, int offset) { return (nodePos \<\< 8) | offset; }
 	static int getPos(int val) { return (val >\> 8); }
@@ -75,12 +80,61 @@ package socialite.tables;
         }
         public void free() { Node.free(this); }
 
+		boolean isEmpty() { return len() == 0; }
         boolean isFull() { return len() >= col0().length; }
         int len() { return len; }
 
         <columns:{c|<c.type>[] col<i0>() { return (<c.type>[])col<i0>; \}<\n>}>
 
+		public String toString() {
+			String s="{";
+			for (int i=0; i\<len; i++) {
+				s+="(";
+				<columns:{c|s+= col<i0>()[i]+" ";<\n>}>
+				s+="),";
+			}
+			s+="}";
+			return s;
+		}
+		void spill(int num, Node to) {
+			assert num > 0 && num \< len;
+			<columns:{c|System.arraycopy(to.col<i0>(), 0, to.col<i0>(), num, to.len);<\n>}>
+			<columns:{c|System.arraycopy(col<i0>(), len-num, to.col<i0>(), 0, num);<\n>}>
+			len -= num;
+			to.len += num;
+		}
+		<if(sortedCol)>
+		int binarySearch1(<sortedCol.type> val) {
+			int pos = Arrays.binarySearch(col<sortedCol.relPos>(), 0, len, val);
+			if (pos \< 0) return pos;
+			while (pos > 0) {
+				pos--;
+				if (col<sortedCol.relPos>()[pos]!=val) {
+					return pos+1;
+				}
+			}
+			return pos;
+		}
+		boolean contains_sorted(<columns:{c|<c.type> a<i0>}; separator=", ">, boolean[] dontcare) {
+			int pos = binarySearch1(a<sortedCol.relPos>);
+			if (pos \< 0) return false;
+			for (int i=pos; i\<len; i++) {
+				if (col<sortedCol.relPos>()[i]!=a<sortedCol.relPos>) {return false;}
+				if (dontcare==null) {
+					if (contains_at(<columns:{c|a<i0>}; separator=", ">,i)) {return true;}
+				} else {
+					if (contains_at(<columns:{c|a<i0>}; separator=", ">,i,dontcare)) {return true;}
+				}
+			}
+			return false;
+		}
+		<endif>
         boolean contains(<columns:{c|<c.type> a<i0>}; separator=", ">, boolean[] dontcare) {
+        <if(sortedCol)>
+        	if (!dontcare[<sortedCol.relPos>]) {
+        		return contains_sorted(<columns:{c|a<i0>}; separator=", ">,dontcare);
+        	}
+        <endif>
             for (int i=0; i\<len(); i++) {
                 if (true<columns:{c|&& (dontcare[<i0>]||col<i0>()[i]<EqOpMap.(c.type)>(a<i0>))}>) {
                     return true;
@@ -89,6 +143,9 @@ package socialite.tables;
             return false;
         }
         boolean contains(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+        <if(sortedCol)>
+        	if (true) { return contains_sorted(<columns:{c|a<i0>}; separator=", ">,null); }
+        <endif>
             for (int i=0; i\<len(); i++) {
                 if (true<columns:{c|&& col<i0>()[i]<EqOpMap.(c.type)>(a<i0>)}>) {
                     return true;
@@ -104,7 +161,18 @@ package socialite.tables;
             int i = at;
             return true<columns:{c|&& a<i0><EqOpMap.(c.type)>(col<i0>()[i])}>;
         }
+    <if(sortedCol)>
+        int insert_sorted(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+        	int pos = Arrays.binarySearch(col<sortedCol.relPos>(), 0, len, a<sortedCol.relPos>);
+        	if (pos \< 0) { pos = -pos-1; }
+        	<columns:{c|System.arraycopy(col<i0>(), pos, col<i0>(), pos+1, len-pos);<\n>}>	
+        	
+        	<columns:{c|col<i0>()[pos] = a<i0>;<\n>}>
+        	return len++;
+        }
+    <endif>
         int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+        	<if(sortedCol)>if (true) {return insert_sorted(<columns:{c|a<i0>}; separator=", ">);}<endif>
             int l = len();
             assert l \< col0().length;
             <columns:{c|col<i0>()[l] = a<i0>;<\n>}>
@@ -161,8 +229,10 @@ package socialite.tables;
 		<idxCols:{ic|index<ic.relPos>.clear();<\n>}>
 		<if(gbColumns)>if(groupbyMap!=null) groupbyMap.clear();<endif>
 	}
-
 	public boolean contains(<columns:{c|final <c.type> a<i0>};separator=", ">) {
+		<if(sortedCol)>
+			if (true) {return contains_sorted(<columns:{c|a<i0>};separator=",">,null);}
+		<endif>
 		<if(idxCols)>
 			<if(rest(columns))>
 			final boolean[] contains = new boolean[] {false};
@@ -192,6 +262,9 @@ package socialite.tables;
 		<endif>
 	}
 	public boolean contains(<columns:{c|final <c.type> a<i0>};separator=", ">, final boolean[] dontcare) {
+		<if(sortedCol)>
+			if (!dontcare[<sortedCol.relPos>]) {return contains_sorted(<columns:{c|a<i0>};separator=",">,dontcare);}
+		<endif>
 		<if(idxCols)>
 		if (!dontcare[<first(idxCols).relPos>]) {
             <if(rest(columns))>
@@ -240,10 +313,114 @@ package socialite.tables;
      	<endif>
      	<endif>
 	}
-
+	<if(sortedCol)>
+	int binarySearch(<sortedCol.type> v) {
+		if (nodeList.size()==1 && nodeList.getQuick(0).isEmpty()) {return -1;}
+		int lo=0, hi=nodeList.size()-1;
+		<sortedCol.type> midVal1, midVal2;
+		while (lo \<= hi) {
+			int mid = (lo+hi)/2;
+			Node n = nodeList.getQuick(mid);
+			midVal1 = n.col<sortedCol.relPos>()[0];
+			midVal2 = n.col<sortedCol.relPos>()[n.len-1];			
+		<if(sortedCol.primitive)>
+			if (midVal2 \< v) {
+				lo = mid+1;
+			} else if (midVal1 > v) {
+				hi = mid-1;
+			} else {return mid;}
+		<else>
+			if (midVal2.compareTo(v) \< 0) {
+				lo = mid+1;
+			} else if (midVal1.compareTo(v) > 0) {
+				hi = mid-1;
+			} else {return mid;}
+		<endif> 
+		}
+		if (lo == nodeList.size()) {
+			if (!nodeList.get(lo-1).isFull()) { lo--; }
+		}
+		return -(lo+1);
+	}
+	int binarySearch1(<sortedCol.type> v) {
+		int pos = binarySearch(v);
+		if (pos \< 0) return pos;
+		while (pos > 0) {
+			pos--;
+			Node n = nodeList.getQuick(pos);
+			if (n.col<sortedCol.relPos>()[n.len-1]!=v) {
+				return pos+1;
+			}
+		}
+		return pos;
+	}
+	int binarySearch2(<sortedCol.type> v) {
+		int pos = binarySearch(v);
+		if (pos \< 0) return pos;
+		while (pos \< nodeList.size()-1) {
+			pos++;
+			Node n = nodeList.getQuick(pos);
+			if (n.col<sortedCol.relPos>()[0]!=v) {
+				return pos-1;
+			}
+		}
+		return pos;
+	}
+	boolean contains_sorted(<columns:{c|final <c.type> a<i0>};separator=", ">,boolean[] dontcare) {
+		int pos = binarySearch1(a<sortedCol.relPos>);
+		if (pos \< 0) {return false;}
+		for (int i=pos; i\<nodeList.size(); i++) {
+			if (nodeList.getQuick(i).col<sortedCol.relPos>()[0] > a<sortedCol.relPos>) {
+				return false;
+			}
+			if (dontcare == null) {
+				if (nodeList.getQuick(i).contains(<columns:{c|a<i0>};separator=", ">)) {
+					return true;
+				}
+			} else {
+				if (nodeList.getQuick(i).contains(<columns:{c|a<i0>};separator=", ">,dontcare)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	public boolean insert_sorted(<columns:{c|<c.type> a<i0>};separator=", ">) {
+		int pos = binarySearch(a<sortedCol.relPos>);
+		if (pos \< 0) { pos = -pos-1; }
+		Node n;
+		if (pos \< nodeList.size()) {
+			n = nodeList.getQuick(pos);
+			if (n.isFull()) {
+				Node next;
+				if (pos == nodeList.size()-1) {
+					next = Node.alloc();
+					nodeList.add(next);
+				} else {
+					next = nodeList.getQuick(pos+1);
+				}
+				if (next.isFull()) {
+					Node x = Node.alloc();
+					n.spill(n.len/2, x);
+					nodeList.insert(pos+1, x);
+				} else {
+					n.spill(1, next);
+				}
+			}
+		} else {
+			n = Node.alloc();
+			nodeList.add(n);
+		}
+		n.insert(<columns:{c|a<i0>};separator=", ">);
+		return true;
+	}
+	<endif>
 	public boolean insert(<columns:{c|<c.type> a<i0>};separator=", ">) {
 	<if(!isNested && !multiSet)>
 		if (contains(<columns:{c|a<i0>};separator=",">)) return false;
+	<endif>
+	<if(sortedCol)>
+		if (true) { return insert_sorted(<columns:{c|a<i0>};separator=", ">); }
 	<endif>
 		Node last = nodeList.getQuick(nodeList.size()-1);
 		int nodePos = nodeList.size()-1;
@@ -287,43 +464,26 @@ package socialite.tables;
 		\});
 	\}
 }>
-/**
-<idxCols:{c|
-	public void iterate_part_from_<c.absPos>(<c.type> from, boolean inclusive, final <visitorClass> v) {
-        index<c.relPos>.iterateFrom(from, inclusive,
-            new IntVisitor() {
-                public boolean visit(int val) {
-                    int pos = getPos(val);
-	            	int offset = getOffset(val);
-	            	Node n = nodeList.getQuick(pos);
-		        	return n.iterate_at(v, offset);
-                \}
-            \});
-	\}
-	public void iterate_part_to_<c.absPos>(<c.type> to, boolean inclusive, final <visitorClass> v) {
-        index<c.relPos>.iterateTo(to, inclusive,
-            new IntVisitor() {
-                public boolean visit(int val) {
-                	int pos = getPos(val);
-	            	int offset = getOffset(val);
-	            	Node n = nodeList.getQuick(pos);
-		        	return n.iterate_at(v, offset);
-                \}
-            \});
-    \}
-    public void iterate_part_from_to_<c.absPos>(<c.type> from, boolean fromInclusive, <c.type> to, boolean toInclusive, final <visitorClass> v) {
-        index<c.relPos>.iterateFromTo(from, fromInclusive, to, toInclusive,
-            new IntVisitor() {
-                public boolean visit(int val) {
-                	int pos = getPos(val);
-	            	int offset = getOffset(val);
-	            	Node n = nodeList.getQuick(pos);
-		        	return n.iterate_at(v, offset);
-                \}
-            \});
-    \}
-}>
-*/
+<if(sortedCol)>
+public void iterate_part_from_<sortedCol.absPos>(<sortedCol.type> from, boolean inclusive, final <visitorClass> v) {
+	int nodePos = binarySearch1(from);
+	if (nodePos \< 0) { nodePos = -nodePos-1; }
+	for (int i=nodePos; i\<nodeList.size(); i++) {
+		Node n = nodeList.getQuick(i);
+		n.iterate(v);
+	}
+}
+public void iterate_part_to_<sortedCol.absPos>(<sortedCol.type> to, boolean inclusive, final <visitorClass> v) {
+	int nodePos = binarySearch2(to);
+	if (nodePos \< 0) { nodePos = -nodePos-1; }
+	for (int i=0; i\<=nodePos; i++) {
+		Node n = nodeList.getQuick(i);
+		n.iterate(v);
+	}
+}
+
+<endif>
+
 	<methods;separator="\n">
 }
 >>

@@ -1379,9 +1379,7 @@ public class VisitorCodeGen {
 		int pos = getPosInParams(p, v);
 		if (pos >= 0) {
 			Column c = t.getColumn(pos);
-			//if (c.isSorted())
-            if (c.isIndexed())
-				return c;
+			if (c.isSorted()) { return c; }
 		}
 		return null;
 	}
@@ -1475,7 +1473,7 @@ public class VisitorCodeGen {
     }
 	boolean iteratePart(Predicate p, Set<Variable> resolved) {
 		if (!hasCmpNext(p)) return false;
-
+		
 		CmpOp cmpOp = getNextCmpOp(p);
 		if (cmpOp.getOp().equals("!="))
 			return false; // not worth extra effort, so don't optimize for this.
@@ -1495,8 +1493,7 @@ public class VisitorCodeGen {
 		return false;
 	}
     boolean canBinarySearch(Predicate p, Variable v, Object cmp, Set<Variable> resolved) {
-        if (!isSortedColumn(p, v))
-            return false;
+        if (!isSortedColumn(p, v)) { return false; }
         Column sortedCol = getSortedColumn(p, v);
         if (getNestingLevel(p, sortedCol) >= 2) {
             // nesting level too deep, see table code templates (e.g. DynamicNestedTable.stg).
@@ -2102,7 +2099,7 @@ public class VisitorCodeGen {
 	boolean headTableLockAtStart() {
 		if (!headTableLockNeeded())	{ return false; }
 		if (!conf.isDistributed() && Analysis.updateParallelShard(rule, tableMap)) { return true; }
-		// !rule.inScc(): HACK! 
+		// !rule.inScc(): HACK! 	
 		if (!conf.isDistributed() && Analysis.isSequentialRule(rule, tableMap) &&
         		!rule.inScc()) { return true; }
 		return false;

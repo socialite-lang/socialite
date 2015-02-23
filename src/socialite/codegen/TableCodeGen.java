@@ -254,8 +254,8 @@ public class TableCodeGen {
 			for (Column c:group.columns()) {
 				if (c.isIter()) continue;
 				tmpl.add("columns", c);
-                if (c.isIndexed() && !c.isArrayIndex())
-                    tmpl.add("idxCols", c);
+                if (c.isIndexed() && !c.isArrayIndex()) { tmpl.add("idxCols", c); }
+                if (c.isSorted()) { tmpl.add("sortedCol", c); }
 			}
 			if (tableType.isArrayTable()) {
 				Column first = group.first();
@@ -337,11 +337,9 @@ public class TableCodeGen {
 		for (Column c:group.columns()) {
 			if (c.isIter()) continue;
 			tableTmpl.add("columns", c);			
-			if (c.position() < table.groupbyColNum())
-				tableTmpl.add("gbColumns", c);
-			
-			if (c.isIndexed() && !c.isArrayIndex()) 
-                tableTmpl.add("idxCols", c);
+			if (c.position() < table.groupbyColNum()) { tableTmpl.add("gbColumns", c); }
+			if (c.isIndexed() && !c.isArrayIndex()) { tableTmpl.add("idxCols", c); }
+			if (c.isSorted()) { tableTmpl.add("sortedCol", c); }
 		}
 
 		tableTmpl.add("visitorClass", visitorClass());

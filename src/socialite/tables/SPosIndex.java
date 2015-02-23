@@ -78,7 +78,7 @@ public final class SPosIndex {
 			v.visit(val);
 		} else {
 			int offset = -val - 1;
-			MyIndexPosList list = getPosLists().getQuick(offset);
+			MyIndexPosList list = getPosLists().getQuick(offset);			
 			list.iterate(v);
 		}
 	}
@@ -102,7 +102,10 @@ public final class SPosIndex {
 				getPosLists().getQuick(offset).add(pos);
 			} else {
 				int offset = getPosLists().size();
-				getPosLists().add(new MyIndexPosList());
+				MyIndexPosList list = new MyIndexPosList();
+				list.add(val);
+				list.add(pos);
+				getPosLists().add(list);
 				iIndex().put(key, -(offset + 1));
 			}
 		}
@@ -117,8 +120,9 @@ public final class SPosIndex {
 	}
 
 	public void iterateBy(int key, IntVisitor v) {
-		if (!iIndex().containsKey(key))
+		if (!iIndex().containsKey(key)) {
 			return;
+		}
 		int val = iIndex().get(key);
 		visitPos(val, v);
 	}
@@ -186,7 +190,10 @@ public final class SPosIndex {
 				getPosLists().getQuick(offset).add(pos);
 			} else {
 				int offset = getPosLists().size();
-				getPosLists().add(new MyIndexPosList());
+				MyIndexPosList list = new MyIndexPosList();
+				list.add(val);
+				list.add(pos);
+				getPosLists().add(list);
 				lIndex().put(key, -(offset + 1));
 			}
 		}
@@ -270,7 +277,10 @@ public final class SPosIndex {
 				getPosLists().getQuick(offset).add(pos);
 			} else {
 				int offset = getPosLists().size();
-				getPosLists().add(new MyIndexPosList());
+				MyIndexPosList list = new MyIndexPosList();
+				list.add(val);
+				list.add(pos);
+				getPosLists().add(list);
 				fIndex().put(key, -(offset + 1));
 			}
 		}
@@ -354,7 +364,10 @@ public final class SPosIndex {
 				getPosLists().getQuick(offset).add(pos);
 			} else {
 				int offset = getPosLists().size();
-				getPosLists().add(new MyIndexPosList());
+				MyIndexPosList list = new MyIndexPosList();
+				list.add(val);
+				list.add(pos);
+				getPosLists().add(list);
 				dIndex().put(key, -(offset + 1));
 			}
 		}
@@ -438,7 +451,10 @@ public final class SPosIndex {
 				getPosLists().getQuick(offset).add(pos);
 			} else {
 				int offset = getPosLists().size();
-				getPosLists().add(new MyIndexPosList());
+				MyIndexPosList list = new MyIndexPosList();
+				list.add(val);
+				list.add(pos);
+				getPosLists().add(list);
 				oIndex().put(key, -(offset + 1));
 			}
 		}

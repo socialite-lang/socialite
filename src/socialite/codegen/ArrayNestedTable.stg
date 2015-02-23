@@ -91,41 +91,55 @@ package socialite.tables;
 			}
 		}
 	}	
-<if(first(nestedColumns).arrayIndex)>	
-	public void iterate_range_<first(nestedColumns).absPos>(
-					<first(nestedColumns).type> _from, <first(nestedColumns).type> _to, <visitorClass> v) {
+<nestedColumns:{c|
+	<if(c.arrayIndex)>
+	public void iterate_range_<c.absPos>(<c.type> _from, <c.type> _to, <visitorClass> v) {
 		if (isEmpty) return;
 		for (int i=0; i\<nestedTables.length(); i++) {
 			if (nestedTables.get(i)!=null && !nestedTables.get(i).isEmpty()) {
-				boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-				if (cont) nestedTables.get(i).iterate_range_<first(nestedColumns).absPos>(_from, _to, v);
-			}
-		}
-	}
-	public void iterate_range_<first(nestedColumns).absPos>_by_<first(columns).absPos>(<first(columns).type> a0, 
-								   <first(nestedColumns).type> _from, <first(nestedColumns).type> _to, <visitorClass> v) {
+				boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(i+base<rest(columns):{c2|, col<i>(i)}>);
+				if (cont) nestedTables.get(i).iterate_range_<c.absPos>(_from, _to, v);
+			\}
+		\}
+	\}
+	public void iterate_range_<c.absPos>_by_<first(columns).absPos>(<first(columns).type> a0, <c.type> _from, <c.type> _to, <visitorClass> v) {
 		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables.get(i)==null) return;
 		if (nestedTables.get(i).isEmpty()) return;
 		
 		boolean cont=v.visit<columns:{c|_<c.absPos>}>(a0<rest(columns):{c|, col<i>(i)}>);
 		if (cont) nestedTables.get(i).iterate_range_<first(nestedColumns).absPos>(_from, _to, v);
-	}		
-<endif>
-<if(first(nestedColumns).indexed)>
-	public void iterate_range_<first(columns).absPos>_by_<first(nestedColumns).absPos>(<first(nestedColumns).type> n,
-																					int _from, int _to, <visitorClass> v) {
+	\}
+	<endif>
+	<if(c.indexed)>
+	public void iterate_range_<first(columns).absPos>_by_<c.absPos>(<c.type> n, int _from, int _to, <visitorClass> v) {
 		int from=(int)(_from-base); rangeCheck(from);
 		int to=(int)(_to-base); rangeCheck(to);
 		for (int i=from; i\<=to; i++) {
 			if (nestedTables.get(i)!=null && !nestedTables.get(i).isEmpty()) {
-				boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-				if (cont) nestedTables.get(i).iterate_by_<first(nestedColumns).absPos>(n, v);
-			}
-		}
-	}
-<endif>
-
+				boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(i+base<rest(columns):{c2|, col<i>(i)}>);
+				if (cont) nestedTables.get(i).iterate_by_<c.absPos>(n, v);
+			\}
+		\}
+	\}
+	public void iterate_by_<c.absPos>(<c.type> n, <visitorClass> v) {
+		for (int i=0; i\<nestedTables.length(); i++) {
+			if (nestedTables.get(i)!=null && !nestedTables.get(i).isEmpty()) {
+				boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(i+base<rest(columns):{c2|, col<i>(i)}>);
+				if (cont) nestedTables.get(i).iterate_by_<c.absPos>(n, v);
+			\}
+		\}
+	\}
+	public void iterate_by_<first(columns).absPos>_<c.absPos>(<first(columns).type> a0, <c.type> b0, <visitorClass> v) {
+		int i=(int)(a0-base); rangeCheck(i);
+		if (nestedTables.get(i)==null) return;
+		if (nestedTables.get(i).isEmpty()) return;
+		
+		boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(i+base<rest(columns):{c2|, col<i>(i)}>);
+		if (cont) nestedTables.get(i).iterate_by_<c.absPos>(b0, v);
+	\}
+	<endif>		
+}>
 	public void iterate(<visitorClass> v) {
 		if (isEmpty) return;
 		for (int i=0; i\<nestedTables.length(); i++) {
@@ -147,89 +161,103 @@ package socialite.tables;
 		index<c.relPos>.iterateBy(a,
 			new IntVisitor() {
 				public boolean visit(int pos) {
-					boolean cont=v.visit<columns:{c|_<c.absPos>}>(n<rest(columns):{c|, col<i>(pos)}>);
+					boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(n<rest(columns):{c2|, col<i>(pos)}>);
 					if (cont) nestedTables.get(pos).iterate(v);
 				\}\});
-	\}
+	<nestedColumns:{nc|<if(nc.indexed)>
+		public void iterate_by_<c.absPos>_<nc.absPos>(<c.type> a, <nc.type> b, final <visitorClass> v) {
+			index<c.relPos>.iterateBy(a,
+				new IntVisitor() {
+					public boolean visit(int pos) {
+						boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(n<rest(columns):{c2|, col<i>(pos)}>);
+						if (cont) nestedTables.get(pos).iterate_by_<nc.absPos>(b, v);
+					\}\});
+		\}
+		<endif>
+		<if(nc.arrayIndex)>
+		public void iterate_range_<nc.absPos>_by_<c.absPos>(<c.type> a, <nc.type> _from, <nc.type> _to, <visitorClass> v) {
+			int i=(int)(a-base); rangeCheck(i);
+			if (nestedTables.get(i)==null) return;
+			if (nestedTables.get(i).isEmpty()) return;
+		
+			boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(a<rest(columns):{c2|, col<i>(i)}>);
+			if (cont) nestedTables.get(i).iterate_range_<nc.absPos>(_from, _to, v);
+		\}
+		<endif>
+		<if(nc.sorted)>
+		public void iterate_part_from_<nc.absPos>_by<c.absPos>(<c.type> a, final <nc.type> from, final boolean inclusive, <visitorClass> v) {
+			index<c.relPos>.iterateBy(a,
+				new IntVisitor() {
+					public boolean visit(int pos) {
+						boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(n<rest(columns):{c2|, col<i>(pos)}>);
+						if (cont) nestedTables.get(pos).iterate_part_from_<nc.absPos>(from, inclusive, v);
+					\}\});
+		\}
+		public void iterate_part_to_<nc.absPos>_by<c.absPos>(<c.type> a, final <nc.type> to, final boolean inclusive, <visitorClass> v) {
+			index<c.relPos>.iterateBy(a,
+				new IntVisitor() {
+					public boolean visit(int pos) {
+						boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(n<rest(columns):{c2|, col<i>(pos)}>);
+						if (cont) nestedTables.get(pos).iterate_part_to_<nc.absPos>(to, inclusive, v);
+					\}\});
+		\}
+		<endif>
+	}>
 }>
-
-<if(first(nestedColumns).indexed)>
-	public void iterate_by_<first(columns).absPos>_<first(nestedColumns).absPos>(<first(columns).type> a0,<first(nestedColumns).type> b0, <visitorClass> v) {
-		int i=(int)(a0-base); rangeCheck(i);
-		if (nestedTables.get(i)==null) return;
-		if (nestedTables.get(i).isEmpty()) return;
-		
-		boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-		if (cont) nestedTables.get(i).iterate_by_<first(nestedColumns).absPos>(b0, v);
-	}
-	
-	<if(first(nestedNestedColumns).indexed)>
-	public void iterate_by_<first(columns).absPos>_<first(nestedColumns).absPos>_<first(nestedNestedColumns).absPos>
-						(<first(columns).type> a0,<first(nestedColumns).type> b0, <first(nestedNestedColumns).type> c0, <visitorClass> v) {
-		int i=(int)(a0-base); rangeCheck(i);
-		if (nestedTables.get(i)==null) return;
-		if (nestedTables.get(i).isEmpty()) return;
-		
-		boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-		if (cont) nestedTables.get(i).iterate_by_<first(nestedColumns).absPos>_<first(nestedNestedColumns).absPos>(b0, c0, v);
-	}
-	<endif>
-<endif>
-
-<if(first(nestedColumns).indexed)>
-	public void iterate_by_<first(nestedColumns).absPos>(<first(nestedColumns).type> n, <visitorClass> v) {
-		for (int i=0; i\<nestedTables.length(); i++) {
+	public void iterate_part_from_<first(columns).absPos>(<first(columns).type> from, boolean inclusive, <visitorClass> v) {
+		int start =(int)(from-base); rangeCheck(start);
+		for (int i=start; i\<nestedTables.length(); i++) {
 			if (nestedTables.get(i)!=null && !nestedTables.get(i).isEmpty()) {
 				boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-				if (cont) nestedTables.get(i).iterate_by_<first(nestedColumns).absPos>(n, v);
+				if (cont) nestedTables.get(i).iterate(v);
 			}
 		}
 	}
-	<if(first(nestedNestedColumns).indexed)>
-	public void iterate_by_<first(nestedColumns).absPos>_<first(nestedNestedColumns).absPos>
-						(<first(nestedColumns).type> a0, <first(nestedNestedColumns).type> b0, <visitorClass> v) {
-		for (int i=0; i\<nestedTables.length(); i++) {
+	public void iterate_part_to_<first(columns).absPos>(<first(columns).type> to, boolean inclusive, <visitorClass> v) {
+		int end =(int)(to-base); rangeCheck(end);
+		if (end > nestedTables.length()-1) end = nestedTables.length()-1;
+		for (int i=0; i\<=end; i++) {
 			if (nestedTables.get(i)!=null && !nestedTables.get(i).isEmpty()) {
 				boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-				if (cont) nestedTables.get(i).iterate_by_<first(nestedColumns).absPos>_<first(nestedNestedColumns).absPos>(a0, b0, v);
+				if (cont) nestedTables.get(i).iterate(v);
 			}
 		}
 	}
-	<endif>
-<endif>	
-
-<if(first(nestedNestedColumns).indexed)>
-	public void iterate_by_<first(nestedNestedColumns).absPos>(<first(nestedNestedColumns).type> a0, <visitorClass> v) {
-		for (int i=0; i\<nestedTables.length(); i++) {
-			if (nestedTables.get(i)!=null && !nestedTables.get(i).isEmpty()) {
-				boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-				if (cont) nestedTables.get(i).iterate_by_<first(nestedNestedColumns).absPos>(a0, v);
-			}
-		}
-	}
-<endif>
-	
 <nestedColumns:{c|<if(c.sorted)>
-	public void iterate_part_<c.absPos>(<visitorClass> v, <c.type> val, int cmpOp) {
+	public void iterate_part_from_<c.absPos>(<c.type> from, boolean inclusive, <visitorClass> v) {
 		for (int i=0; i\<nestedTables.length(); i++) {
 			if (nestedTables.get(i)!=null && !nestedTables.get(i).isEmpty()) {
 				boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(i+base<rest(columns):{c2|, col<i>(i)}>);
-				if (cont) nestedTables.get(i).iterate_part_<c.absPos>(v, val, cmpOp);
+				if (cont) nestedTables.get(i).iterate_part_from_<c.absPos>(from, inclusive, v);
 			\}
 		\}
 	\}
-<endif>}>
-
-<nestedColumns:{c|<if(c.sorted)>
-	public void iterate_part_<c.absPos>_by_<first(columns).absPos>(<first(columns).type> a0, <visitorClass> v, <c.type> val, int cmpOp) {
+	public void iterate_part_to_<c.absPos>(<c.type> to, boolean inclusive, <visitorClass> v) {
+		for (int i=0; i\<nestedTables.length(); i++) {
+			if (nestedTables.get(i)!=null && !nestedTables.get(i).isEmpty()) {
+				boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(i+base<rest(columns):{c2|, col<i>(i)}>);
+				if (cont) nestedTables.get(i).iterate_part_to_<c.absPos>(to, inclusive, v);
+			\}
+		\}
+	\}
+	public void iterate_part_from_<c.absPos>_by_<first(columns).absPos>(<first(columns).type> a0, <c.type> from, boolean inclusive, <visitorClass> v) {
 		int i=(int)(a0-base); rangeCheck(i);
 		if (nestedTables.get(i)==null) return;
 		if (nestedTables.get(i).isEmpty()) return;
 		
 		boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(a0<rest(columns):{c2|, col<i>(i)}>);
-		if (cont) nestedTables.get(i).iterate_part_<c.absPos>(v, val, cmpOp);
+		if (cont) nestedTables.get(i).iterate_part_from_<c.absPos>(from, inclusive, v);
+	\}
+	public void iterate_part_to_<c.absPos>_by_<first(columns).absPos>(<first(columns).type> a0, <c.type> to, boolean inclusive, <visitorClass> v) {
+		int i=(int)(a0-base); rangeCheck(i);
+		if (nestedTables.get(i)==null) return;
+		if (nestedTables.get(i).isEmpty()) return;
+		
+		boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(a0<rest(columns):{c2|, col<i>(i)}>);
+		if (cont) nestedTables.get(i).iterate_part_to_<c.absPos>(to, inclusive, v);
 	\}
 <endif>}>
+
 	public boolean contains_prefix(int n<rest(columns):{c|, <c.type> a<i>}>) {
 		int i=(int)(n-base); rangeCheck(i);
 		if (nestedTables.get(i)==null) return false;

@@ -199,7 +199,26 @@ package socialite.tables;
 	            \}\});
 	\}
 }>
-
+	public void iterate_part_from_<first(columns).absPos>(<first(columns).type> from, boolean inclusive, <visitorClass> v) {
+		int start =(int)(from-base); rangeCheck(start);
+		for (int i=start; i\<=filled.length(); i++) {
+			if (filled.get(i)==1) {
+				boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
+				if (!$cont) return;
+			}
+		}	
+	}
+	public void iterate_part_to_<first(columns).absPos>(<first(columns).type> to, boolean inclusive, <visitorClass> v) {
+		int end =(int)(to-base); rangeCheck(end);
+		if (end > filled.length()-1) end = filled.length()-1;
+		for (int i=0; i\<=end; i++) {
+			if (filled.get(i)==1) {
+				boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
+				if (!$cont) return;
+			}
+		}	
+	}
+	
 <if(gbColumns)>	
 	public <gbAggrColumn.type> groupby(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
 		int i=(int)(a0-base); rangeCheck(i);

@@ -204,14 +204,7 @@ public class Worker implements Runnable {
 				if (isHalted()) continue;
                 if (task instanceof EvalTask) {
                     EvalTask t = (EvalTask) task;
-                    TableInst[] deltaT = t.getResultDeltaTable();
-                    
-                if (deltaT!=null && deltaT[0] != null) {
-                	L.info("DeltaT:"+deltaT+", delta[0]:"+deltaT[0]);
-                } else {
-                	L.info("deltaT null");
-                }
-                    
+                    TableInst[] deltaT = t.getResultDeltaTable();   
                     addTasksForDelta(t.getRuleId(), deltaT);
                 }
 			} catch (InterruptedException e) {

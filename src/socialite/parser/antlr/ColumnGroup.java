@@ -51,6 +51,12 @@ public class ColumnGroup implements Externalizable {
 	public int startIdx() { return columns[0].position(); }
 	public int endIdx() { return startIdx()+columns.length-1; }
 	
+	public boolean isSorted() {
+		for (Column c:columns) {
+			if (c.isSorted()) return true;
+		}
+		return false;
+	}
 	public boolean hasIndex() {
 		for (Column c:columns) {
 			if (c.isIndexed()) return true;
