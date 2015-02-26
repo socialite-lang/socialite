@@ -160,6 +160,16 @@ public class Analysis {
             	}
             }
         }
+        for (Rule r:rules) {
+        	if (!r.getHead().hasFunctionParam()) continue;
+        	
+        	Predicate h = r.getHead();
+        	Table t = tableMap.get(r.getHead().name());
+        	if (t.hasSortby()) {
+        		String msg = "Cannot apply an aggregate function to a table with sorted column";
+        		throw new AnalysisException(msg, r);
+        	}
+        }
     }
 	void checkTableDecls() {
 		checkTableOpts();

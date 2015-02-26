@@ -185,7 +185,7 @@ package socialite.tables;
 		\}
 		<endif>
 		<if(nc.sorted)>
-		public void iterate_part_from_<nc.absPos>_by<c.absPos>(<c.type> a, final <nc.type> from, final boolean inclusive, <visitorClass> v) {
+		public void iterate_part_from_<nc.absPos>_by_<c.absPos>(<c.type> a, final <nc.type> from, final boolean inclusive, <visitorClass> v) {
 			index<c.relPos>.iterateBy(a,
 				new IntVisitor() {
 					public boolean visit(int pos) {
@@ -193,7 +193,7 @@ package socialite.tables;
 						if (cont) nestedTables.get(pos).iterate_part_from_<nc.absPos>(from, inclusive, v);
 					\}\});
 		\}
-		public void iterate_part_to_<nc.absPos>_by<c.absPos>(<c.type> a, final <nc.type> to, final boolean inclusive, <visitorClass> v) {
+		public void iterate_part_to_<nc.absPos>_by_<c.absPos>(<c.type> a, final <nc.type> to, final boolean inclusive, <visitorClass> v) {
 			index<c.relPos>.iterateBy(a,
 				new IntVisitor() {
 					public boolean visit(int pos) {
@@ -275,7 +275,7 @@ package socialite.tables;
 		return nestedTables.get(i).contains(<nestedColumns:{c|b<i>}; separator=", ">);
 	}
 	public boolean contains(int n<rest(columns):{c|, <c.type> a<i>}><nestedColumns:{c|, <c.type> b<i>}>, boolean[] dontcare) {
-		if (dontcare[0]) {
+		if (dontcare==null || dontcare[0]) {
 			boolean contains=false;
 			for (int i=0; i\<nestedTables.length(); i++) {
 				if (nestedTables.get(i)==null) continue;

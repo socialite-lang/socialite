@@ -21,13 +21,8 @@ package socialite.tables;
 	public static <name> create() { return new <name>(); }	
 	
 	static boolean groupby = false;
-	static void setGroupby() {
-		<if(sortedCol)>
-		throw new SociaLiteException("Table <tableName>: cannot use both groupby and sortby. "+
-									 "Remove sortby in the declaration.");
-		<else>
-		if (groupby == false) {groupby = true;}
-		<endif>
+	static void setGroupby() { 
+		if (groupby == false) {groupby = true;} 
 	}
 	static int makePos(int nodePos, int offset) { return (nodePos \<\< 8) | offset; }
 	static int getPos(int val) { return (val >\> 8); }
@@ -75,9 +70,7 @@ package socialite.tables;
         Node(int capacity) {
             <columns:{c|col<i0> = new <c.type>[capacity];<\n>}>
         }
-        void init() {
-            len = 0;
-        }
+        void init() {len = 0;}
         public void free() { Node.free(this); }
 
 		boolean isEmpty() { return len() == 0; }
@@ -120,21 +113,18 @@ package socialite.tables;
 			if (pos \< 0) return false;
 			for (int i=pos; i\<len; i++) {
 				if (col<sortedCol.relPos>()[i]!=a<sortedCol.relPos>) {return false;}
-				if (dontcare==null) {
-					if (contains_at(<columns:{c|a<i0>}; separator=", ">,i)) {return true;}
-				} else {
-					if (contains_at(<columns:{c|a<i0>}; separator=", ">,i,dontcare)) {return true;}
-				}
+				if (contains_at(<columns:{c|a<i0>}; separator=", ">,i,dontcare)) {return true;}
 			}
 			return false;
 		}
 		<endif>
         boolean contains(<columns:{c|<c.type> a<i0>}; separator=", ">, boolean[] dontcare) {
         <if(sortedCol)>
-        	if (!dontcare[<sortedCol.relPos>]) {
+        	if (dontcare==null || !dontcare[<sortedCol.relPos>]) {
         		return contains_sorted(<columns:{c|a<i0>}; separator=", ">,dontcare);
         	}
         <endif>
+        	if (dontcare==null) {return contains(<columns:{c|a<i0>}; separator=", ">);}
             for (int i=0; i\<len(); i++) {
                 if (true<columns:{c|&& (dontcare[<i0>]||col<i0>()[i]<EqOpMap.(c.type)>(a<i0>))}>) {
                     return true;
@@ -154,6 +144,7 @@ package socialite.tables;
             return false;
         }
         boolean contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at, boolean[] dontcare) {
+        	if (dontcare==null) {return contains_at(<columns:{c|a<i0>}; separator=", ">,at);}
             int i = at;
             return true<columns:{c|&& (dontcare[<i0>]||a<i0><EqOpMap.(c.type)>(col<i0>()[i]))}>;
         }
@@ -173,23 +164,17 @@ package socialite.tables;
     <endif>
         int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
         	<if(sortedCol)>if (true) {return insert_sorted(<columns:{c|a<i0>}; separator=", ">);}<endif>
-            int l = len();
-            assert l \< col0().length;
-            <columns:{c|col<i0>()[l] = a<i0>;<\n>}>
-            len = l+1;
-            return l;
+            <columns:{c|col<i0>()[len] = a<i0>;<\n>}>
+            return len++;
         }
         boolean iterate(<visitorClass> v) {
-            int l = len();
-            for (int i=0; i\<l; i++) {
+            for (int i=0; i\<len; i++) {
                 boolean cont = v.visit(<columns:{c|col<i0>()[i]}; separator=", ">);
                 if (!cont) return false;
             }
             return true;
         }
         boolean iterate_at(<visitorClass> v, int pos) {
-            int l = len();
-            assert pos \< l;
             return v.visit(<columns:{c|col<i0>()[pos]}; separator=", ">);
         }
 	}
@@ -230,9 +215,7 @@ package socialite.tables;
 		<if(gbColumns)>if(groupbyMap!=null) groupbyMap.clear();<endif>
 	}
 	public boolean contains(<columns:{c|final <c.type> a<i0>};separator=", ">) {
-		<if(sortedCol)>
-			if (true) {return contains_sorted(<columns:{c|a<i0>};separator=",">,null);}
-		<endif>
+		<if(sortedCol)>if (true) {return contains_sorted(<columns:{c|a<i0>};separator=",">,null);}<endif>
 		<if(idxCols)>
 			<if(rest(columns))>
 			final boolean[] contains = new boolean[] {false};
@@ -263,8 +246,9 @@ package socialite.tables;
 	}
 	public boolean contains(<columns:{c|final <c.type> a<i0>};separator=", ">, final boolean[] dontcare) {
 		<if(sortedCol)>
-			if (!dontcare[<sortedCol.relPos>]) {return contains_sorted(<columns:{c|a<i0>};separator=",">,dontcare);}
+			if (dontcare==null || !dontcare[<sortedCol.relPos>]) {return contains_sorted(<columns:{c|a<i0>};separator=",">,dontcare);}
 		<endif>
+		if (dontcare==null) {return contains(<columns:{c|a<i0>};separator=", ">);} 
 		<if(idxCols)>
 		if (!dontcare[<first(idxCols).relPos>]) {
             <if(rest(columns))>
@@ -324,17 +308,13 @@ package socialite.tables;
 			midVal1 = n.col<sortedCol.relPos>()[0];
 			midVal2 = n.col<sortedCol.relPos>()[n.len-1];			
 		<if(sortedCol.primitive)>
-			if (midVal2 \< v) {
-				lo = mid+1;
-			} else if (midVal1 > v) {
-				hi = mid-1;
-			} else {return mid;}
+			if (midVal2 \< v) {lo = mid+1;} 
+			else if (midVal1 > v) {hi = mid-1;}
+			else {return mid;}
 		<else>
-			if (midVal2.compareTo(v) \< 0) {
-				lo = mid+1;
-			} else if (midVal1.compareTo(v) > 0) {
-				hi = mid-1;
-			} else {return mid;}
+			if (midVal2.compareTo(v) \< 0) {lo = mid+1;}
+			else if (midVal1.compareTo(v) > 0) {hi = mid-1;} 
+			else {return mid;}
 		<endif> 
 		}
 		if (lo == nodeList.size()) {
@@ -348,9 +328,7 @@ package socialite.tables;
 		while (pos > 0) {
 			pos--;
 			Node n = nodeList.getQuick(pos);
-			if (n.col<sortedCol.relPos>()[n.len-1]!=v) {
-				return pos+1;
-			}
+			if (n.col<sortedCol.relPos>()[n.len-1]!=v) {return pos+1;}
 		}
 		return pos;
 	}
@@ -360,9 +338,7 @@ package socialite.tables;
 		while (pos \< nodeList.size()-1) {
 			pos++;
 			Node n = nodeList.getQuick(pos);
-			if (n.col<sortedCol.relPos>()[0]!=v) {
-				return pos-1;
-			}
+			if (n.col<sortedCol.relPos>()[0]!=v) {return pos-1;}
 		}
 		return pos;
 	}
@@ -373,19 +349,13 @@ package socialite.tables;
 			if (nodeList.getQuick(i).col<sortedCol.relPos>()[0] > a<sortedCol.relPos>) {
 				return false;
 			}
-			if (dontcare == null) {
-				if (nodeList.getQuick(i).contains(<columns:{c|a<i0>};separator=", ">)) {
-					return true;
-				}
-			} else {
-				if (nodeList.getQuick(i).contains(<columns:{c|a<i0>};separator=", ">,dontcare)) {
-					return true;
-				}
+			if (nodeList.getQuick(i).contains(<columns:{c|a<i0>};separator=", ">,dontcare)) {
+				return true;
 			}
 		}
 		return false;
 	}
-	public boolean insert_sorted(<columns:{c|<c.type> a<i0>};separator=", ">) {
+	boolean insert_sorted(<columns:{c|<c.type> a<i0>};separator=", ">) {
 		int pos = binarySearch(a<sortedCol.relPos>);
 		if (pos \< 0) { pos = -pos-1; }
 		Node n;
