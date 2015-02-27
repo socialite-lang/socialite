@@ -179,9 +179,10 @@ simpleStmts(stmts) ::= <<
 expr(expr) ::= <<
 <expr> >>
 
-doWhile0(stmts) ::= <<
+doWhile0(stmts, lastStmts) ::= <<
 do {
   <stmts; separator=";\n">;
+  <lastStmts; separator=";\n">
 } while (false);
 >>
 

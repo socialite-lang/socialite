@@ -40,5 +40,10 @@ echo
 for testSrc in $(find src/ -name "*Test.java"); do
    testit $testSrc
 done
+
+#testit src/socialite/codegen/TableCodeGenTest
+#testit src/socialite/codegen/VisitorCodeGenTest
+#testit src/socialite/codegen/CodeGenMainTest
+#testit src/socialite/parser/ParserTest
     
    # -exec bash -c 'testit "$0"' {} \;

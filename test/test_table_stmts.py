@@ -39,6 +39,17 @@ class TestTableStmts(unittest.TestCase):
         self.assertEqual(a, 12)
         self.assertEqual(b, 22)
 
+    def test_clear_table(self):
+        `TestC1(int a, int b).`
+        `clear TestC1.`
+
+        `TestC1(a,b) :- a=1, b=42.`
+        `clear TestC1.`
+        try:
+            `TestC1(a,b)`.next()
+            self.fail("Expected exception(StopIteration) not raised")
+        except StopIteration:
+            pass
 
 if __name__ == '__main__':
     unittest.main()

@@ -216,7 +216,9 @@ public class CodeGen {
 									int startCol, int endCol, 
 									Collection<Variable> resolved, TIntCollection idxbyCols) {
 		ST body=findCodeBlockFor(method, p);
-
+		
+		boolean innerMost=false;
+		if (endCol == p.params.size()-1) { innerMost = true; }
 		Object[] params = p.inputParams();
 		for (int i=startCol; i<=endCol; ) {
 			String arg="_"+(i-startCol); // same as fillArgTypes
@@ -225,12 +227,12 @@ public class CodeGen {
 				i++; continue;
 			}
 			if (idxbyCols.contains(i)) {
-                ST if_=generateFilter(params[i], arg);
+                ST if_=generateFilter(params[i], arg, innerMost);
                 body.add("stmts", if_);
 				i++;
 			} else if (resolved.contains(params[i])) {	
 				assert !p.isNegated();
-				ST if_=generateFilter(params[i], arg);
+				ST if_=generateFilter(params[i], arg, innerMost);
 				body.add("stmts", if_);
 				i++;
 			} else if (params[i] instanceof Variable) {
@@ -239,17 +241,18 @@ public class CodeGen {
 				i++;
 			} else { // Constants
 				assert params[i] instanceof Const;
-				ST if_=generateFilter(params[i], arg);
+				ST if_=generateFilter(params[i], arg, innerMost);
 				body.add("stmts", if_);
 				i++;
 			}
 		}
 	}
-	static ST generateFilter(Object param, Object arg) {
+	static ST generateFilter(Object param, Object arg, boolean innerMost) {
 		ST if_=getVisitorGroup().getInstanceOf("if");
 		if (MyType.isPrimitive(param)) if_.add("cond", param+"!="+arg);	
 		else if_.add("cond", "!"+param+".equals("+arg+")");
-		if_.add("stmts", "break");
+		if (innerMost) { if_.add("stmts", "break"); }
+		else { if_.add("stmts", "return false"); }
 		return if_;
 	}
 

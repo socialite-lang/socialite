@@ -14,7 +14,8 @@ List of libraries and their licenses:
  * commons-lang3 3.1: Apache License v2
  * commons-configuration 1.6: Apache License v2
  * log4j 1.2.16: Apache License v2
- * trove 3.0.3 LGPL v2.1
+ * trove 3.0.3: LGPL v2.1
+ * ConcurrentPrimitiveMap 1.0.0: GPL v2 with classpath exception
 
 -----------------------------------------------------------------------------
 

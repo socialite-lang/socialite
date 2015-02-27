@@ -166,7 +166,7 @@ package socialite.tables;
         	return true<columns:{c|&& a<i0><EqOpMap.(c.type)>(col<i0>()[at])}>;
         }
         boolean contains_at(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>, int at, boolean[] dontcare) {
-        	if (dontcare==null) {return contains_at(<columns:{c|a<i0>}; separator=", "><nestedColumns:{c|,b<i0>}>);}
+        	if (dontcare==null) {return contains_at(<columns:{c|a<i0>}; separator=", "><nestedColumns:{c|,b<i0>}>,at);}
             return true<columns:{c|&& (dontcare[<i0>]||a<i0><EqOpMap.(c.type)>(col<i0>()[at]))}> &&
                         nested[at].contains(<nestedColumns:{c|b<i0>};separator=",">,
                                     Arrays.copyOfRange(dontcare, <length(columns)>, dontcare.length));
@@ -607,6 +607,20 @@ package socialite.tables;
 		}
 	}
 <endif>
+<nestedColumns:{c|<if(c.sorted)>
+	public void iterate_part_from_<c.absPos>(<c.type> from, boolean inclusive, <visitorClass> v) {
+		for (int i=0; i\<nodeList.size(); i++) {
+			Node n = nodeList.getQuick(i);
+			n.iterate_part_from_<c.absPos>(from, inclusive, v);
+		\}
+	\}
+	public void iterate_part_to_<c.absPos>(<c.type> to, boolean inclusive, <visitorClass> v) {
+		for (int i=0; i\<nodeList.size(); i++) {
+			Node n = nodeList.getQuick(i);
+			n.iterate_part_to_<c.absPos>(to, inclusive, v);
+		\}
+	\}
+<endif>}>
 
 	<methods;separator="\n">
 }
