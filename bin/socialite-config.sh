@@ -12,6 +12,7 @@ fi
 
 SOCIALITE_MASTER=`cat "${SOCIALITE_CONF_DIR}/master"|sed "s/#.*$//;/^$/d"|head -1`
 HADOOP_CONF_DIR="${HADOOP_HOME}/conf"
+HADOOP2_CONF_DIR="${HADOOP_HOME}/etc/hadoop"
 export HADOOP_PREFIX="${HADOOP_HOME}"
 
 if [ "x$SOCIALITE_OUTPUT_DIR" = "x" ]; then
@@ -21,12 +22,12 @@ fi
 EXT="${SOCIALITE_PREFIX}/ext"
 #PREV_CP="${CLASSPATH}"
 CLASSPATH="${SOCIALITE_CONF_DIR}"
-CLASSPATH=${CLASSPATH}:${HADOOP_CONF_DIR}
-CLASSPATH=${CLASSPATH}:${EXT}/hadoop-core-1.2.1.jar 
-#CLASSPATH=${CLASSPATH}:${EXT}/hadoop-common-2.2.0.jar
-#CLASSPATH=${CLASSPATH}:${EXT}/hadoop-hdfs-2.2.0.jar
-#CLASSPATH=${CLASSPATH}:${EXT}/hadoop-hdfs-nfs-2.2.0.jar
-#CLASSPATH=${CLASSPATH}:${EXT}/hadoop-nfs-2.2.0.jar
+if [ -f "${HADOOP_HOME}/bin/yarn" ]; then
+    HADOOP2_CLASSPATH=`${HADOOP_HOME}/bin/yarn classpath`
+    CLASSPATH=${CLASSPATH}:${HADOOP2_CONF_DIR}:${HADOOP2_CLASSPATH}
+else
+    CLASSPATH=${CLASSPATH}:${HADOOP_CONF_DIR}:${EXT}/hadoop-core-1.2.1.jar
+fi
 
 CLASSPATH=${CLASSPATH}:${EXT}/commons-lang3-3.1.jar
 CLASSPATH=${CLASSPATH}:${EXT}/commons-lang-2.6.jar
