@@ -11,8 +11,9 @@ class TestTableStmts(unittest.TestCase):
     def test_drop_non_exit_table(self):
         try:
             `drop NonExistingTable42.`
+            self.fail("")
         except:
-            self.fail("Error while dropping non-existing table. It should only warn, not raise error.")
+            pass
 
     def test_drop_table(self):
         `TestX(int a, int b).

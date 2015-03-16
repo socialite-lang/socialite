@@ -4,6 +4,37 @@
 
 import unittest
 
+class TestIterTable(unittest.TestCase):
+    def __init__(self, methodName='runTest'):
+        unittest.TestCase.__init__(self, methodName)
+        `Rank(int a, int i:iter, float f) indexby a.` 
+        #`Rank(a, 0, f) :- a=$range(0, 10), f=1.0f.`
+        `Rank(a, 0, f) :- a=10, f=1.0f.`
+
+    def test_iter_table_in_multiple_body(self):
+        for i in range(1):
+            #`Rank(a, $i+1, $sum(f)) :- a=$range(0,10), f=1.0f;
+            #                        :- a=$range(0,10), f=1.1f;
+            #                        :- Rank(a, $i, f).`
+            `Rank(a, $i+1, $sum(f)) :- a=0, f=1.0f;
+                                    :- a=0, f=1.0f;
+                                    :- a=0, f=1.0f.`
+
+        for a,_,r in `Rank(a,$i,r)`:
+            print a,r
+
+        for a,_,r in `Rank(a,$i,r)`:
+            print a,r
+
+        for a,_,r in `Rank(a,$i,r)`:
+            print a,r
+
+        #a, _, r = `Rank(0, $i, r)`.next()
+        #print a, r
+
+        #self.assertEqual(r, 1.0+1.0+1.1, "Unexpected value r:%f, expecting %f"%(r,1.0+1.0+1.1))
+
+"""
 class TestJoin(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         unittest.TestCase.__init__(self, methodName)
@@ -175,6 +206,7 @@ class TestJoin(unittest.TestCase):
         exp=set([(20, 20), (20, 21)])
         self.assertEqual(l, exp, "Unexpected tuples in Bar(a,b). Expecting "+str(exp)+", but "+str(l))
 
- 
+"""
+
 if __name__ == '__main__':
     unittest.main()
