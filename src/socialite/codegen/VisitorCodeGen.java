@@ -179,11 +179,14 @@ public class VisitorCodeGen {
 
 		visitorTmpl.add("extends", "extends VisitorImpl");
 		visitorTmpl.add("interfaces", "Runnable");
-		
+
+    HashSet<String> addedInterfaces = new HashSet<String>();
 		for (Predicate p:rule.getBodyP()) {			
 			Table t = getTable(p);
 			if (t.visitorInterface()==null) continue;
+      if (addedInterfaces.contains(t.visitorInterface())) continue;
 			visitorTmpl.add("interfaces", t.visitorInterface());
+      addedInterfaces.add(t.visitorInterface());
 		}
 
 		importTablesDeclareFields();

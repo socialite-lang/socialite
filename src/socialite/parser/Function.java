@@ -357,7 +357,11 @@ public class Function implements Param {
 		}
 	}
 
-	Class<?>[] typesFromPyTuple(PyTuple pytypes) {		
+	Class<?>[] typesFromPyTuple(PyTuple pytypes) throws InternalException {
+    if (pytypes==null) {
+      String msg = "Missing @returns in "+pyname+" for return type annotation";
+      throw new InternalException(msg);
+    }
 		List<Class<?>> types = new ArrayList<Class<?>>();
 		for (int i=0; i<pytypes.size(); i++) {
 			assert pytypes.__finditem__(i) instanceof PyType;
@@ -365,8 +369,8 @@ public class Function implements Param {
 			types.add(type);
 		}
 		return types.toArray(new Class[0]);
-	}	
-	void computePyReturnVarTypes(TypeCast cast) throws InternalException {		
+	}
+	void computePyReturnVarTypes(TypeCast cast) throws InternalException {
 		PyStringMap fmap = (PyStringMap)((PyFunction)pyfunc).getDict();
 		PyObject pytypes = fmap.__finditem__("returns");
 		String msg="Unexpected return type from $"+name();
@@ -388,9 +392,9 @@ public class Function implements Param {
 		}
 	}
 	
-	public void load() throws InternalException {		
+	public void load() throws InternalException {
 		if (!allArgsTyped()) return;
-		
+
 		loadReally();	
 		//computeReturnVarTypes();
 	}

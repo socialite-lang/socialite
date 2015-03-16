@@ -186,8 +186,8 @@ public class Worker implements Runnable {
 				long start=0, end=0;
 				if (verbose) start=System.currentTimeMillis();
 				currentRuleId.set(task.getRuleId());
-				try { 
-					task.run(this); 
+				try {
+					task.run(this);
 				} catch (SocialiteFinishEval e) {
 					//haltEpoch();					
 					//WorkerNode.haltOthers();

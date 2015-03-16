@@ -1,4 +1,4 @@
-// $ANTLR 3.4 /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g 2015-02-18 15:24:12
+// $ANTLR 3.4 /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g 2015-03-14 03:39:43
 
     package socialite.parser.antlr;    
     import socialite.parser.Query;
@@ -43,11 +43,10 @@ import java.util.ArrayList;
 @SuppressWarnings({"all", "warnings", "unchecked"})
 public class SociaLiteRule extends TreeParser {
     public static final String[] tokenNames = new String[] {
-        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "APPROX", "BODY", "CHAR", "CLEAR", "COL_DECL", "COL_DECLS", "COMMENT", "COMPOUND_EXPR", "CONCURRENT", "DECL", "DOT_END", "DOT_ID", "DROP", "ESC_SEQ", "EXPONENT", "EXPR", "FALSE", "FLOAT", "FUNC", "FUNCTION", "FUNC_ARG", "GROUP_BY", "HEAD", "HEX_DIGIT", "ID", "INDEX", "INDEX_BY", "INT", "ITER", "ITER_DECL", "KIND1", "KIND2", "MULTISET", "MULTI_ASSIGN", "NOT", "OCTAL_ESC", "OPT", "OPTION", "ORDER_BY", "PREDEFINED", "PREDICATE", "PROG", "QUERY", "RANGE", "RULE", "SORT_BY", "SORT_ORDER", "STRING", "TABLE_OPT", "TERM", "TRUE", "T_FLOAT", "T_INT", "T_STR", "T_UTF8", "T_VAR", "UNICODE_ESC", "UTF8", "WS", "'!='", "'$'", "'('", "')'", "'*'", "'+'", "','", "'-'", "'..'", "'/'", "':'", "':-'", "';'", "'<'", "'<='", "'='", "'=='", "'>'", "'>='", "'?-'", "'Object'", "'String'", "'['", "']'", "'clear'", "'concurrent'", "'double'", "'drop'", "'float'", "'groupby'", "'indexby'", "'int'", "'long'", "'mod'", "'multiset'", "'orderby'", "'predefined'", "'sortby'"
+        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "APPROX", "BODY", "CHAR", "CLEAR", "COL_DECL", "COL_DECLS", "COMMENT", "COMPOUND_EXPR", "CONCURRENT", "DECL", "DOT_END", "DOT_ID", "DROP", "ESC_SEQ", "EXPONENT", "EXPR", "FALSE", "FLOAT", "FUNC", "FUNCTION", "FUNC_ARG", "GROUP_BY", "HEAD", "HEX_DIGIT", "ID", "INDEX", "INDEX_BY", "INT", "ITER", "ITER_DECL", "KIND1", "KIND2", "MULTISET", "MULTI_ASSIGN", "NOT", "OCTAL_ESC", "OPT", "OPTION", "ORDER_BY", "PREDEFINED", "PREDICATE", "PROG", "QUERY", "RANGE", "RULE", "RULES", "SORT_BY", "SORT_ORDER", "STRING", "TABLE_OPT", "TERM", "TRUE", "T_FLOAT", "T_INT", "T_STR", "T_UTF8", "T_VAR", "UNICODE_ESC", "UTF8", "WS", "'!='", "'$'", "'('", "')'", "'*'", "'+'", "','", "'-'", "'..'", "'/'", "':'", "':-'", "';'", "'<'", "'<='", "'='", "'=='", "'>'", "'>='", "'?-'", "'Object'", "'String'", "'['", "']'", "'clear'", "'concurrent'", "'double'", "'drop'", "'float'", "'groupby'", "'indexby'", "'int'", "'long'", "'mod'", "'multiset'", "'orderby'", "'predefined'", "'sortby'"
     };
 
     public static final int EOF=-1;
-    public static final int T__63=63;
     public static final int T__64=64;
     public static final int T__65=65;
     public static final int T__66=66;
@@ -85,6 +84,7 @@ public class SociaLiteRule extends TreeParser {
     public static final int T__98=98;
     public static final int T__99=99;
     public static final int T__100=100;
+    public static final int T__101=101;
     public static final int APPROX=4;
     public static final int BODY=5;
     public static final int CHAR=6;
@@ -130,20 +130,21 @@ public class SociaLiteRule extends TreeParser {
     public static final int QUERY=46;
     public static final int RANGE=47;
     public static final int RULE=48;
-    public static final int SORT_BY=49;
-    public static final int SORT_ORDER=50;
-    public static final int STRING=51;
-    public static final int TABLE_OPT=52;
-    public static final int TERM=53;
-    public static final int TRUE=54;
-    public static final int T_FLOAT=55;
-    public static final int T_INT=56;
-    public static final int T_STR=57;
-    public static final int T_UTF8=58;
-    public static final int T_VAR=59;
-    public static final int UNICODE_ESC=60;
-    public static final int UTF8=61;
-    public static final int WS=62;
+    public static final int RULES=49;
+    public static final int SORT_BY=50;
+    public static final int SORT_ORDER=51;
+    public static final int STRING=52;
+    public static final int TABLE_OPT=53;
+    public static final int TERM=54;
+    public static final int TRUE=55;
+    public static final int T_FLOAT=56;
+    public static final int T_INT=57;
+    public static final int T_STR=58;
+    public static final int T_UTF8=59;
+    public static final int T_VAR=60;
+    public static final int UNICODE_ESC=61;
+    public static final int UTF8=62;
+    public static final int WS=63;
 
     // delegates
     public TreeParser[] getDelegates() {
@@ -169,7 +170,7 @@ public TreeAdaptor getTreeAdaptor() {
     return adaptor;
 }
     public String[] getTokenNames() { return SociaLiteRule.tokenNames; }
-    public String getGrammarFileName() { return "/Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g"; }
+    public String getGrammarFileName() { return "/Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g"; }
 
 
         public Parser parser;
@@ -177,7 +178,11 @@ public TreeAdaptor getTreeAdaptor() {
         Set<Variable> dotVars = new LinkedHashSet<Variable>();
         List<AssignOp> headTmpVarAssigns = new ArrayList<AssignOp>();
         List<AssignOp> tmpVarAssigns = new ArrayList<AssignOp>();
-        int kind=0;
+
+        HashMap<String, Variable> varMapInRule = new HashMap<String, Variable>();
+        int tmpVarCount=0;
+        int constCount=0;
+
         public Parser getParser() { return parser; }
         public String maybeGetDuplicateColumnName(List<ColumnDecl> decls) {
             LinkedHashSet<String> names = new LinkedHashSet<String>(decls.size());
@@ -192,6 +197,26 @@ public TreeAdaptor getTreeAdaptor() {
     //        String hdr = getErrorHeader(e);
             String msg = getErrorMessage(e, tokenNames);
             throw new ParseException(parser, e, msg);
+        }
+
+        Variable getVariable(String name) {
+            if (name.equals("_")) {
+                tmpVarCount++;
+                return new Variable(name+"$"+tmpVarCount, true);
+            }
+            if (varMapInRule.containsKey(name)) {return varMapInRule.get(name);}
+            Variable v = new Variable(name);
+            varMapInRule.put(name, v);
+            return v;
+        }
+        Variable getNextTmpVar() {
+            tmpVarCount++;
+            return new Variable("_tmp$"+tmpVarCount);
+        }
+        int getNextConstId() { return constCount++; }
+        void nextRule() {
+            varMapInRule.clear();
+            constCount = 0;
         }
 
         public boolean isSimpleIntValue(Object o) {
@@ -226,7 +251,7 @@ public TreeAdaptor getTreeAdaptor() {
         }
 
         public Variable addTmpVarAssign(Object rhs) {
-            Variable tmpVar = Variable.getTmpVar();
+            Variable tmpVar = getNextTmpVar();
             try { tmpVarAssigns.add(new AssignOp(tmpVar, rhs));}
             catch (InternalException e) {}
             return tmpVar;
@@ -249,7 +274,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "prog"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:111:1: prog returns [List result] : ( stat )+ EOF ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:135:1: prog returns [List result] : ( stat )+ EOF ;
     public final SociaLiteRule.prog_return prog() throws RecognitionException {
         SociaLiteRule.prog_return retval = new SociaLiteRule.prog_return();
         retval.start = input.LT(1);
@@ -267,15 +292,15 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree EOF2_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:112:2: ( ( stat )+ EOF )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:112:4: ( stat )+ EOF
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:136:5: ( ( stat )+ EOF )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:136:7: ( stat )+ EOF
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             retval.result = new ArrayList();
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:113:2: ( stat )+
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:137:8: ( stat )+
             int cnt1=0;
             loop1:
             do {
@@ -289,10 +314,10 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt1) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:113:3: stat
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:137:9: stat
             	    {
             	    _last = (CommonTree)input.LT(1);
-            	    pushFollow(FOLLOW_stat_in_prog65);
+            	    pushFollow(FOLLOW_stat_in_prog74);
             	    stat1=stat();
 
             	    state._fsp--;
@@ -301,10 +326,11 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-            	    	    if ((stat1!=null?stat1.result:null) instanceof List)
-            	    	        retval.result.addAll((List)((stat1!=null?stat1.result:null)));
-            	    	    else
-            	        	        retval.result.add((stat1!=null?stat1.result:null));
+            	            if ((stat1!=null?stat1.result:null) instanceof List)
+            	                retval.result.addAll((List)((stat1!=null?stat1.result:null)));
+            	            else
+            	                retval.result.add((stat1!=null?stat1.result:null));
+            	            
 
             	    }
             	    break;
@@ -320,7 +346,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             _last = (CommonTree)input.LT(1);
-            EOF2=(CommonTree)match(input,EOF,FOLLOW_EOF_in_prog77); 
+            EOF2=(CommonTree)match(input,EOF,FOLLOW_EOF_in_prog80); 
             EOF2_tree = (CommonTree)adaptor.dupNode(EOF2);
 
 
@@ -353,7 +379,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "stat"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:120:1: stat returns [Object result] : ( table_decl | rule | query | table_stmt );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:144:1: stat returns [Object result] : ( table_decl | rule | query | table_stmt );
     public final SociaLiteRule.stat_return stat() throws RecognitionException {
         SociaLiteRule.stat_return retval = new SociaLiteRule.stat_return();
         retval.start = input.LT(1);
@@ -375,7 +401,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:121:2: ( table_decl | rule | query | table_stmt )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:145:2: ( table_decl | rule | query | table_stmt )
             int alt2=4;
             switch ( input.LA(1) ) {
             case DECL:
@@ -409,13 +435,13 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt2) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:121:3: table_decl
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:145:3: table_decl
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_table_decl_in_stat90);
+                    pushFollow(FOLLOW_table_decl_in_stat93);
                     table_decl3=table_decl();
 
                     state._fsp--;
@@ -428,13 +454,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:122:3: rule
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:146:3: rule
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_rule_in_stat96);
+                    pushFollow(FOLLOW_rule_in_stat99);
                     rule4=rule();
 
                     state._fsp--;
@@ -447,13 +473,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:123:3: query
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:147:3: query
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_query_in_stat102);
+                    pushFollow(FOLLOW_query_in_stat105);
                     query5=query();
 
                     state._fsp--;
@@ -466,13 +492,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:124:3: table_stmt
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:148:3: table_stmt
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_table_stmt_in_stat107);
+                    pushFollow(FOLLOW_table_stmt_in_stat110);
                     table_stmt6=table_stmt();
 
                     state._fsp--;
@@ -510,7 +536,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "table_stmt"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:126:1: table_stmt returns [TableStmt result] : ( ^( CLEAR ID ) | ^( DROP ( ID )? ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:150:1: table_stmt returns [TableStmt result] : ( ^( CLEAR ID ) | ^( DROP ( ID )? ) );
     public final SociaLiteRule.table_stmt_return table_stmt() throws RecognitionException {
         SociaLiteRule.table_stmt_return retval = new SociaLiteRule.table_stmt_return();
         retval.start = input.LT(1);
@@ -532,7 +558,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree ID10_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:127:2: ( ^( CLEAR ID ) | ^( DROP ( ID )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:151:2: ( ^( CLEAR ID ) | ^( DROP ( ID )? ) )
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -551,7 +577,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt4) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:127:4: ^( CLEAR ID )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:151:4: ^( CLEAR ID )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -562,7 +588,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    CLEAR7=(CommonTree)match(input,CLEAR,FOLLOW_CLEAR_in_table_stmt124); 
+                    CLEAR7=(CommonTree)match(input,CLEAR,FOLLOW_CLEAR_in_table_stmt127); 
                     CLEAR7_tree = (CommonTree)adaptor.dupNode(CLEAR7);
 
 
@@ -571,7 +597,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    ID8=(CommonTree)match(input,ID,FOLLOW_ID_in_table_stmt126); 
+                    ID8=(CommonTree)match(input,ID,FOLLOW_ID_in_table_stmt129); 
                     ID8_tree = (CommonTree)adaptor.dupNode(ID8);
 
 
@@ -589,7 +615,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:128:3: ^( DROP ( ID )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:152:3: ^( DROP ( ID )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -600,7 +626,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    DROP9=(CommonTree)match(input,DROP,FOLLOW_DROP_in_table_stmt135); 
+                    DROP9=(CommonTree)match(input,DROP,FOLLOW_DROP_in_table_stmt138); 
                     DROP9_tree = (CommonTree)adaptor.dupNode(DROP9);
 
 
@@ -609,7 +635,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     if ( input.LA(1)==Token.DOWN ) {
                         match(input, Token.DOWN, null); 
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:128:10: ( ID )?
+                        // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:152:10: ( ID )?
                         int alt3=2;
                         int LA3_0 = input.LA(1);
 
@@ -618,10 +644,10 @@ public TreeAdaptor getTreeAdaptor() {
                         }
                         switch (alt3) {
                             case 1 :
-                                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:128:10: ID
+                                // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:152:10: ID
                                 {
                                 _last = (CommonTree)input.LT(1);
-                                ID10=(CommonTree)match(input,ID,FOLLOW_ID_in_table_stmt137); 
+                                ID10=(CommonTree)match(input,ID,FOLLOW_ID_in_table_stmt140); 
                                 ID10_tree = (CommonTree)adaptor.dupNode(ID10);
 
 
@@ -671,7 +697,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "query"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:130:1: query returns [Query result] : ^( QUERY predicate ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:154:1: query returns [Query result] : ^( QUERY predicate ) ;
     public final SociaLiteRule.query_return query() throws RecognitionException {
         SociaLiteRule.query_return retval = new SociaLiteRule.query_return();
         retval.start = input.LT(1);
@@ -689,8 +715,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree QUERY11_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:131:2: ( ^( QUERY predicate ) )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:131:3: ^( QUERY predicate )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:155:2: ( ^( QUERY predicate ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:155:3: ^( QUERY predicate )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -701,7 +727,7 @@ public TreeAdaptor getTreeAdaptor() {
             CommonTree _first_1 = null;
             CommonTree root_1 = (CommonTree)adaptor.nil();
             _last = (CommonTree)input.LT(1);
-            QUERY11=(CommonTree)match(input,QUERY,FOLLOW_QUERY_in_query155); 
+            QUERY11=(CommonTree)match(input,QUERY,FOLLOW_QUERY_in_query158); 
             QUERY11_tree = (CommonTree)adaptor.dupNode(QUERY11);
 
 
@@ -710,7 +736,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             match(input, Token.DOWN, null); 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_predicate_in_query157);
+            pushFollow(FOLLOW_predicate_in_query160);
             predicate12=predicate();
 
             state._fsp--;
@@ -726,8 +752,7 @@ public TreeAdaptor getTreeAdaptor() {
 
              
             	retval.result = new Query((predicate12!=null?predicate12.result:null));
-            	Variable.nextRule();
-            	Const.nextRule();
+            	nextRule();
             	tmpVarAssigns.clear();
             	
 
@@ -757,7 +782,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "table_decl"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:138:1: table_decl returns [TableDecl result] : ^( DECL ID decls ^( OPTION ( table_opts )? ) ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:161:1: table_decl returns [TableDecl result] : ^( DECL ID decls ^( OPTION ( table_opts )? ) ) ;
     public final SociaLiteRule.table_decl_return table_decl() throws RecognitionException {
         SociaLiteRule.table_decl_return retval = new SociaLiteRule.table_decl_return();
         retval.start = input.LT(1);
@@ -781,8 +806,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree OPTION16_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:139:5: ( ^( DECL ID decls ^( OPTION ( table_opts )? ) ) )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:139:6: ^( DECL ID decls ^( OPTION ( table_opts )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:162:5: ( ^( DECL ID decls ^( OPTION ( table_opts )? ) ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:162:6: ^( DECL ID decls ^( OPTION ( table_opts )? ) )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -793,7 +818,7 @@ public TreeAdaptor getTreeAdaptor() {
             CommonTree _first_1 = null;
             CommonTree root_1 = (CommonTree)adaptor.nil();
             _last = (CommonTree)input.LT(1);
-            DECL13=(CommonTree)match(input,DECL,FOLLOW_DECL_in_table_decl177); 
+            DECL13=(CommonTree)match(input,DECL,FOLLOW_DECL_in_table_decl180); 
             DECL13_tree = (CommonTree)adaptor.dupNode(DECL13);
 
 
@@ -802,7 +827,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             match(input, Token.DOWN, null); 
             _last = (CommonTree)input.LT(1);
-            ID14=(CommonTree)match(input,ID,FOLLOW_ID_in_table_decl179); 
+            ID14=(CommonTree)match(input,ID,FOLLOW_ID_in_table_decl182); 
             ID14_tree = (CommonTree)adaptor.dupNode(ID14);
 
 
@@ -810,7 +835,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_decls_in_table_decl181);
+            pushFollow(FOLLOW_decls_in_table_decl184);
             decls15=decls();
 
             state._fsp--;
@@ -824,7 +849,7 @@ public TreeAdaptor getTreeAdaptor() {
             CommonTree _first_2 = null;
             CommonTree root_2 = (CommonTree)adaptor.nil();
             _last = (CommonTree)input.LT(1);
-            OPTION16=(CommonTree)match(input,OPTION,FOLLOW_OPTION_in_table_decl184); 
+            OPTION16=(CommonTree)match(input,OPTION,FOLLOW_OPTION_in_table_decl187); 
             OPTION16_tree = (CommonTree)adaptor.dupNode(OPTION16);
 
 
@@ -833,7 +858,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             if ( input.LA(1)==Token.DOWN ) {
                 match(input, Token.DOWN, null); 
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:139:31: ( table_opts )?
+                // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:162:31: ( table_opts )?
                 int alt5=2;
                 int LA5_0 = input.LA(1);
 
@@ -842,10 +867,10 @@ public TreeAdaptor getTreeAdaptor() {
                 }
                 switch (alt5) {
                     case 1 :
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:139:31: table_opts
+                        // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:162:31: table_opts
                         {
                         _last = (CommonTree)input.LT(1);
-                        pushFollow(FOLLOW_table_opts_in_table_decl186);
+                        pushFollow(FOLLOW_table_opts_in_table_decl189);
                         table_opts17=table_opts();
 
                         state._fsp--;
@@ -873,30 +898,30 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-            	    String dupCol=maybeGetDuplicateColumnName((decls15!=null?decls15.result:null).getAllColDecls());
-            	    if (dupCol!=null) 
-            	        throw new ParseException(getParser(), (ID14!=null?ID14.getLine():0)-1, (ID14!=null?ID14.getCharPositionInLine():0),  "Duplicate column name "+dupCol+" in "+ID14);
-            	    retval.result = new TableDecl((ID14!=null?ID14.getText():null), (decls15!=null?decls15.result:null).colDecls, (decls15!=null?decls15.result:null).nestedTable);    
-            	    if (retval.result.nestedTable!=null) {
-            	        for (ColumnDecl d:retval.result.nestedTable.getAllColDecls()) {
-            	            if (d.option() instanceof ColIter) {
-            	                throw new ParseException(getParser(), (ID14!=null?ID14.getLine():0)-1, (ID14!=null?ID14.getCharPositionInLine():0)+(ID14!=null?ID14.getText():null).length()+1, "Iteration column cannot be nested."); 
-            	            }
-            	        }
-            	    }
-            	    try { retval.result.setOptions((table_opts17!=null?table_opts17.result:null)); }
-            	    catch (ParseException e) {
-            	        e.setLine((ID14!=null?ID14.getLine():0)-1); e.setPos(0);e.setParser(getParser());
-            	        throw e;
-            	    }
-            	    if (tableDeclMap.containsKey((ID14!=null?ID14.getText():null))) {
-            	        if (!retval.result.equals(tableDeclMap.get((ID14!=null?ID14.getText():null)))) {
-            	            throw new ParseException(getParser(), (ID14!=null?ID14.getLine():0)-1, (ID14!=null?ID14.getCharPositionInLine():0), 
-            	                        (ID14!=null?ID14.getText():null)+" was previously declared with different signature.");	 
-            	        }
-            	        retval.result =null;
-            	    } else { tableDeclMap.put((ID14!=null?ID14.getText():null), retval.result); }
-            	
+                    String dupCol=maybeGetDuplicateColumnName((decls15!=null?decls15.result:null).getAllColDecls());
+                    if (dupCol!=null) 
+                        throw new ParseException(getParser(), (ID14!=null?ID14.getLine():0)-1, (ID14!=null?ID14.getCharPositionInLine():0),  "Duplicate column name "+dupCol+" in "+ID14);
+                    retval.result = new TableDecl((ID14!=null?ID14.getText():null), (decls15!=null?decls15.result:null).colDecls, (decls15!=null?decls15.result:null).nestedTable);    
+                    if (retval.result.nestedTable!=null) {
+                        for (ColumnDecl d:retval.result.nestedTable.getAllColDecls()) {
+                            if (d.option() instanceof ColIter) {
+                                throw new ParseException(getParser(), (ID14!=null?ID14.getLine():0)-1, (ID14!=null?ID14.getCharPositionInLine():0)+(ID14!=null?ID14.getText():null).length()+1, "Iteration column cannot be nested."); 
+                            }
+                        }
+                    }
+                    try { retval.result.setOptions((table_opts17!=null?table_opts17.result:null)); }
+                    catch (ParseException e) {
+                        e.setLine((ID14!=null?ID14.getLine():0)-1); e.setPos(0);e.setParser(getParser());
+                        throw e;
+                    }
+                    if (tableDeclMap.containsKey((ID14!=null?ID14.getText():null))) {
+                        if (!retval.result.equals(tableDeclMap.get((ID14!=null?ID14.getText():null)))) {
+                            throw new ParseException(getParser(), (ID14!=null?ID14.getLine():0)-1, (ID14!=null?ID14.getCharPositionInLine():0), 
+                                        (ID14!=null?ID14.getText():null)+" was previously declared with different signature.");     
+                        }
+                        retval.result =null;
+                    } else { tableDeclMap.put((ID14!=null?ID14.getText():null), retval.result); }
+                
 
             }
 
@@ -924,7 +949,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "table_opts"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:168:1: table_opts returns [List<TableOpt> result] : opt1= t_opt (opt2= t_opt )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:190:1: table_opts returns [List<TableOpt> result] : opt1= t_opt (opt2= t_opt )* ;
     public final SociaLiteRule.table_opts_return table_opts() throws RecognitionException {
         SociaLiteRule.table_opts_return retval = new SociaLiteRule.table_opts_return();
         retval.start = input.LT(1);
@@ -942,14 +967,14 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:169:2: (opt1= t_opt (opt2= t_opt )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:169:3: opt1= t_opt (opt2= t_opt )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:191:2: (opt1= t_opt (opt2= t_opt )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:191:3: opt1= t_opt (opt2= t_opt )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_t_opt_in_table_opts213);
+            pushFollow(FOLLOW_t_opt_in_table_opts223);
             opt1=t_opt();
 
             state._fsp--;
@@ -959,7 +984,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             retval.result = new ArrayList<TableOpt>(); retval.result.add((opt1!=null?opt1.result:null));
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:170:2: (opt2= t_opt )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:192:2: (opt2= t_opt )*
             loop6:
             do {
                 int alt6=2;
@@ -972,10 +997,10 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt6) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:170:3: opt2= t_opt
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:192:3: opt2= t_opt
             	    {
             	    _last = (CommonTree)input.LT(1);
-            	    pushFollow(FOLLOW_t_opt_in_table_opts221);
+            	    pushFollow(FOLLOW_t_opt_in_table_opts231);
             	    opt2=t_opt();
 
             	    state._fsp--;
@@ -1020,7 +1045,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "t_opt"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:172:1: t_opt returns [TableOpt result] : ( ^( SORT_BY col= ID (order= SORT_ORDER )? ) | ^( ORDER_BY ID ) | ^( INDEX_BY ID ) | ^( GROUP_BY INT ) | PREDEFINED | CONCURRENT | MULTISET );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:194:1: t_opt returns [TableOpt result] : ( ^( SORT_BY col= ID (order= SORT_ORDER )? ) | ^( ORDER_BY ID ) | ^( INDEX_BY ID ) | ^( GROUP_BY INT ) | PREDEFINED | CONCURRENT | MULTISET );
     public final SociaLiteRule.t_opt_return t_opt() throws RecognitionException {
         SociaLiteRule.t_opt_return retval = new SociaLiteRule.t_opt_return();
         retval.start = input.LT(1);
@@ -1058,7 +1083,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree MULTISET27_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:173:2: ( ^( SORT_BY col= ID (order= SORT_ORDER )? ) | ^( ORDER_BY ID ) | ^( INDEX_BY ID ) | ^( GROUP_BY INT ) | PREDEFINED | CONCURRENT | MULTISET )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:195:2: ( ^( SORT_BY col= ID (order= SORT_ORDER )? ) | ^( ORDER_BY ID ) | ^( INDEX_BY ID ) | ^( GROUP_BY INT ) | PREDEFINED | CONCURRENT | MULTISET )
             int alt8=7;
             switch ( input.LA(1) ) {
             case SORT_BY:
@@ -1106,7 +1131,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt8) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:173:3: ^( SORT_BY col= ID (order= SORT_ORDER )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:195:3: ^( SORT_BY col= ID (order= SORT_ORDER )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1117,7 +1142,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    SORT_BY18=(CommonTree)match(input,SORT_BY,FOLLOW_SORT_BY_in_t_opt240); 
+                    SORT_BY18=(CommonTree)match(input,SORT_BY,FOLLOW_SORT_BY_in_t_opt250); 
                     SORT_BY18_tree = (CommonTree)adaptor.dupNode(SORT_BY18);
 
 
@@ -1126,14 +1151,14 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    col=(CommonTree)match(input,ID,FOLLOW_ID_in_t_opt244); 
+                    col=(CommonTree)match(input,ID,FOLLOW_ID_in_t_opt254); 
                     col_tree = (CommonTree)adaptor.dupNode(col);
 
 
                     adaptor.addChild(root_1, col_tree);
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:173:20: (order= SORT_ORDER )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:195:20: (order= SORT_ORDER )?
                     int alt7=2;
                     int LA7_0 = input.LA(1);
 
@@ -1142,10 +1167,10 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt7) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:173:21: order= SORT_ORDER
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:195:21: order= SORT_ORDER
                             {
                             _last = (CommonTree)input.LT(1);
-                            order=(CommonTree)match(input,SORT_ORDER,FOLLOW_SORT_ORDER_in_t_opt249); 
+                            order=(CommonTree)match(input,SORT_ORDER,FOLLOW_SORT_ORDER_in_t_opt259); 
                             order_tree = (CommonTree)adaptor.dupNode(order);
 
 
@@ -1173,7 +1198,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:178:3: ^( ORDER_BY ID )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:200:3: ^( ORDER_BY ID )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1184,7 +1209,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    ORDER_BY19=(CommonTree)match(input,ORDER_BY,FOLLOW_ORDER_BY_in_t_opt259); 
+                    ORDER_BY19=(CommonTree)match(input,ORDER_BY,FOLLOW_ORDER_BY_in_t_opt269); 
                     ORDER_BY19_tree = (CommonTree)adaptor.dupNode(ORDER_BY19);
 
 
@@ -1193,7 +1218,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    ID20=(CommonTree)match(input,ID,FOLLOW_ID_in_t_opt261); 
+                    ID20=(CommonTree)match(input,ID,FOLLOW_ID_in_t_opt271); 
                     ID20_tree = (CommonTree)adaptor.dupNode(ID20);
 
 
@@ -1211,7 +1236,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:179:3: ^( INDEX_BY ID )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:201:3: ^( INDEX_BY ID )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1222,7 +1247,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    INDEX_BY21=(CommonTree)match(input,INDEX_BY,FOLLOW_INDEX_BY_in_t_opt269); 
+                    INDEX_BY21=(CommonTree)match(input,INDEX_BY,FOLLOW_INDEX_BY_in_t_opt279); 
                     INDEX_BY21_tree = (CommonTree)adaptor.dupNode(INDEX_BY21);
 
 
@@ -1231,7 +1256,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    ID22=(CommonTree)match(input,ID,FOLLOW_ID_in_t_opt271); 
+                    ID22=(CommonTree)match(input,ID,FOLLOW_ID_in_t_opt281); 
                     ID22_tree = (CommonTree)adaptor.dupNode(ID22);
 
 
@@ -1249,7 +1274,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:180:3: ^( GROUP_BY INT )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:202:3: ^( GROUP_BY INT )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1260,7 +1285,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    GROUP_BY23=(CommonTree)match(input,GROUP_BY,FOLLOW_GROUP_BY_in_t_opt279); 
+                    GROUP_BY23=(CommonTree)match(input,GROUP_BY,FOLLOW_GROUP_BY_in_t_opt289); 
                     GROUP_BY23_tree = (CommonTree)adaptor.dupNode(GROUP_BY23);
 
 
@@ -1269,7 +1294,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    INT24=(CommonTree)match(input,INT,FOLLOW_INT_in_t_opt281); 
+                    INT24=(CommonTree)match(input,INT,FOLLOW_INT_in_t_opt291); 
                     INT24_tree = (CommonTree)adaptor.dupNode(INT24);
 
 
@@ -1287,13 +1312,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:181:4: PREDEFINED
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:203:4: PREDEFINED
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    PREDEFINED25=(CommonTree)match(input,PREDEFINED,FOLLOW_PREDEFINED_in_t_opt289); 
+                    PREDEFINED25=(CommonTree)match(input,PREDEFINED,FOLLOW_PREDEFINED_in_t_opt299); 
                     PREDEFINED25_tree = (CommonTree)adaptor.dupNode(PREDEFINED25);
 
 
@@ -1305,13 +1330,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 6 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:182:4: CONCURRENT
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:204:4: CONCURRENT
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    CONCURRENT26=(CommonTree)match(input,CONCURRENT,FOLLOW_CONCURRENT_in_t_opt296); 
+                    CONCURRENT26=(CommonTree)match(input,CONCURRENT,FOLLOW_CONCURRENT_in_t_opt306); 
                     CONCURRENT26_tree = (CommonTree)adaptor.dupNode(CONCURRENT26);
 
 
@@ -1323,13 +1348,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 7 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:183:4: MULTISET
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:205:4: MULTISET
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    MULTISET27=(CommonTree)match(input,MULTISET,FOLLOW_MULTISET_in_t_opt303); 
+                    MULTISET27=(CommonTree)match(input,MULTISET,FOLLOW_MULTISET_in_t_opt313); 
                     MULTISET27_tree = (CommonTree)adaptor.dupNode(MULTISET27);
 
 
@@ -1366,7 +1391,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "decls"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:185:1: decls returns [NestedTableDecl result] : ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:207:1: decls returns [NestedTableDecl result] : ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) ) ;
     public final SociaLiteRule.decls_return decls() throws RecognitionException {
         SociaLiteRule.decls_return retval = new SociaLiteRule.decls_return();
         retval.start = input.LT(1);
@@ -1388,8 +1413,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree DECL30_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:186:2: ( ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) ) )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:186:3: ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:208:2: ( ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:208:3: ^( COL_DECLS col_decls ^( DECL (nested= decls )? ) )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -1400,7 +1425,7 @@ public TreeAdaptor getTreeAdaptor() {
             CommonTree _first_1 = null;
             CommonTree root_1 = (CommonTree)adaptor.nil();
             _last = (CommonTree)input.LT(1);
-            COL_DECLS28=(CommonTree)match(input,COL_DECLS,FOLLOW_COL_DECLS_in_decls320); 
+            COL_DECLS28=(CommonTree)match(input,COL_DECLS,FOLLOW_COL_DECLS_in_decls330); 
             COL_DECLS28_tree = (CommonTree)adaptor.dupNode(COL_DECLS28);
 
 
@@ -1409,7 +1434,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             match(input, Token.DOWN, null); 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_col_decls_in_decls322);
+            pushFollow(FOLLOW_col_decls_in_decls332);
             col_decls29=col_decls();
 
             state._fsp--;
@@ -1423,7 +1448,7 @@ public TreeAdaptor getTreeAdaptor() {
             CommonTree _first_2 = null;
             CommonTree root_2 = (CommonTree)adaptor.nil();
             _last = (CommonTree)input.LT(1);
-            DECL30=(CommonTree)match(input,DECL,FOLLOW_DECL_in_decls325); 
+            DECL30=(CommonTree)match(input,DECL,FOLLOW_DECL_in_decls335); 
             DECL30_tree = (CommonTree)adaptor.dupNode(DECL30);
 
 
@@ -1432,7 +1457,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             if ( input.LA(1)==Token.DOWN ) {
                 match(input, Token.DOWN, null); 
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:186:38: (nested= decls )?
+                // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:208:38: (nested= decls )?
                 int alt9=2;
                 int LA9_0 = input.LA(1);
 
@@ -1441,10 +1466,10 @@ public TreeAdaptor getTreeAdaptor() {
                 }
                 switch (alt9) {
                     case 1 :
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:186:38: nested= decls
+                        // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:208:38: nested= decls
                         {
                         _last = (CommonTree)input.LT(1);
-                        pushFollow(FOLLOW_decls_in_decls329);
+                        pushFollow(FOLLOW_decls_in_decls339);
                         nested=decls();
 
                         state._fsp--;
@@ -1500,7 +1525,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "col_decls"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:189:1: col_decls returns [List<ColumnDecl> result] : d1= col_decl (d2= col_decl )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:211:1: col_decls returns [List<ColumnDecl> result] : d1= col_decl (d2= col_decl )* ;
     public final SociaLiteRule.col_decls_return col_decls() throws RecognitionException {
         SociaLiteRule.col_decls_return retval = new SociaLiteRule.col_decls_return();
         retval.start = input.LT(1);
@@ -1518,14 +1543,14 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:190:2: (d1= col_decl (d2= col_decl )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:190:3: d1= col_decl (d2= col_decl )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:212:2: (d1= col_decl (d2= col_decl )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:212:3: d1= col_decl (d2= col_decl )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_col_decl_in_col_decls349);
+            pushFollow(FOLLOW_col_decl_in_col_decls359);
             d1=col_decl();
 
             state._fsp--;
@@ -1535,7 +1560,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             retval.result = new ArrayList<ColumnDecl>(); retval.result.add((d1!=null?d1.result:null));
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:191:3: (d2= col_decl )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:213:3: (d2= col_decl )*
             loop10:
             do {
                 int alt10=2;
@@ -1548,10 +1573,10 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt10) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:191:4: d2= col_decl
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:213:4: d2= col_decl
             	    {
             	    _last = (CommonTree)input.LT(1);
-            	    pushFollow(FOLLOW_col_decl_in_col_decls358);
+            	    pushFollow(FOLLOW_col_decl_in_col_decls368);
             	    d2=col_decl();
 
             	    state._fsp--;
@@ -1596,7 +1621,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "col_decl"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:193:1: col_decl returns [ColumnDecl result] : ^( COL_DECL type ID ( col_opt )? ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:215:1: col_decl returns [ColumnDecl result] : ^( COL_DECL type ID ( col_opt )? ) ;
     public final SociaLiteRule.col_decl_return col_decl() throws RecognitionException {
         SociaLiteRule.col_decl_return retval = new SociaLiteRule.col_decl_return();
         retval.start = input.LT(1);
@@ -1618,8 +1643,8 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree ID33_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:194:2: ( ^( COL_DECL type ID ( col_opt )? ) )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:194:4: ^( COL_DECL type ID ( col_opt )? )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:216:2: ( ^( COL_DECL type ID ( col_opt )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:216:4: ^( COL_DECL type ID ( col_opt )? )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -1630,7 +1655,7 @@ public TreeAdaptor getTreeAdaptor() {
             CommonTree _first_1 = null;
             CommonTree root_1 = (CommonTree)adaptor.nil();
             _last = (CommonTree)input.LT(1);
-            COL_DECL31=(CommonTree)match(input,COL_DECL,FOLLOW_COL_DECL_in_col_decl379); 
+            COL_DECL31=(CommonTree)match(input,COL_DECL,FOLLOW_COL_DECL_in_col_decl389); 
             COL_DECL31_tree = (CommonTree)adaptor.dupNode(COL_DECL31);
 
 
@@ -1639,7 +1664,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             match(input, Token.DOWN, null); 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_type_in_col_decl381);
+            pushFollow(FOLLOW_type_in_col_decl391);
             type32=type();
 
             state._fsp--;
@@ -1648,14 +1673,14 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             _last = (CommonTree)input.LT(1);
-            ID33=(CommonTree)match(input,ID,FOLLOW_ID_in_col_decl383); 
+            ID33=(CommonTree)match(input,ID,FOLLOW_ID_in_col_decl393); 
             ID33_tree = (CommonTree)adaptor.dupNode(ID33);
 
 
             adaptor.addChild(root_1, ID33_tree);
 
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:194:23: ( col_opt )?
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:216:23: ( col_opt )?
             int alt11=2;
             int LA11_0 = input.LA(1);
 
@@ -1664,10 +1689,10 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt11) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:194:23: col_opt
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:216:23: col_opt
                     {
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_col_opt_in_col_decl385);
+                    pushFollow(FOLLOW_col_opt_in_col_decl395);
                     col_opt34=col_opt();
 
                     state._fsp--;
@@ -1717,7 +1742,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "col_opt"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:198:1: col_opt returns [ColOpt result] : ( ^( RANGE i1= INT i2= INT ) | ITER );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:220:1: col_opt returns [ColOpt result] : ( ^( RANGE i1= INT i2= INT ) | ITER );
     public final SociaLiteRule.col_opt_return col_opt() throws RecognitionException {
         SociaLiteRule.col_opt_return retval = new SociaLiteRule.col_opt_return();
         retval.start = input.LT(1);
@@ -1739,7 +1764,7 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree ITER36_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:199:2: ( ^( RANGE i1= INT i2= INT ) | ITER )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:221:2: ( ^( RANGE i1= INT i2= INT ) | ITER )
             int alt12=2;
             int LA12_0 = input.LA(1);
 
@@ -1758,7 +1783,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt12) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:199:3: ^( RANGE i1= INT i2= INT )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:221:3: ^( RANGE i1= INT i2= INT )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -1769,7 +1794,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    RANGE35=(CommonTree)match(input,RANGE,FOLLOW_RANGE_in_col_opt403); 
+                    RANGE35=(CommonTree)match(input,RANGE,FOLLOW_RANGE_in_col_opt413); 
                     RANGE35_tree = (CommonTree)adaptor.dupNode(RANGE35);
 
 
@@ -1778,7 +1803,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    i1=(CommonTree)match(input,INT,FOLLOW_INT_in_col_opt407); 
+                    i1=(CommonTree)match(input,INT,FOLLOW_INT_in_col_opt417); 
                     i1_tree = (CommonTree)adaptor.dupNode(i1);
 
 
@@ -1786,7 +1811,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     _last = (CommonTree)input.LT(1);
-                    i2=(CommonTree)match(input,INT,FOLLOW_INT_in_col_opt411); 
+                    i2=(CommonTree)match(input,INT,FOLLOW_INT_in_col_opt421); 
                     i2_tree = (CommonTree)adaptor.dupNode(i2);
 
 
@@ -1806,13 +1831,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:202:4: ITER
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:224:4: ITER
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    ITER36=(CommonTree)match(input,ITER,FOLLOW_ITER_in_col_opt419); 
+                    ITER36=(CommonTree)match(input,ITER,FOLLOW_ITER_in_col_opt429); 
                     ITER36_tree = (CommonTree)adaptor.dupNode(ITER36);
 
 
@@ -1851,7 +1876,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "type"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:206:1: type returns [Class result] : ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:228:1: type returns [Class result] : ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? );
     public final SociaLiteRule.type_return type() throws RecognitionException {
         SociaLiteRule.type_return retval = new SociaLiteRule.type_return();
         retval.start = input.LT(1);
@@ -1907,35 +1932,35 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree char_literal57_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:207:2: ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:229:2: ( 'int' ( '[' ']' )? | 'long' ( '[' ']' )? | 'float' ( '[' ']' )? | 'double' ( '[' ']' )? | 'String' ( '[' ']' )? | 'Object' ( '[' ']' )? | ID ( '[' ']' )? )
             int alt20=7;
             switch ( input.LA(1) ) {
-            case 94:
+            case 95:
                 {
                 alt20=1;
                 }
                 break;
-            case 95:
+            case 96:
                 {
                 alt20=2;
                 }
                 break;
-            case 91:
+            case 92:
                 {
                 alt20=3;
                 }
                 break;
-            case 89:
+            case 90:
                 {
                 alt20=4;
                 }
                 break;
-            case 84:
+            case 85:
                 {
                 alt20=5;
                 }
                 break;
-            case 83:
+            case 84:
                 {
                 alt20=6;
                 }
@@ -1955,13 +1980,13 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt20) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:207:3: 'int' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:229:3: 'int' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    string_literal37=(CommonTree)match(input,94,FOLLOW_94_in_type434); 
+                    string_literal37=(CommonTree)match(input,95,FOLLOW_95_in_type444); 
                     string_literal37_tree = (CommonTree)adaptor.dupNode(string_literal37);
 
 
@@ -1970,19 +1995,19 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = int.class;
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:207:32: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:229:32: ( '[' ']' )?
                     int alt13=2;
                     int LA13_0 = input.LA(1);
 
-                    if ( (LA13_0==85) ) {
+                    if ( (LA13_0==86) ) {
                         alt13=1;
                     }
                     switch (alt13) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:207:33: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:229:33: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
-                            char_literal38=(CommonTree)match(input,85,FOLLOW_85_in_type439); 
+                            char_literal38=(CommonTree)match(input,86,FOLLOW_86_in_type449); 
                             char_literal38_tree = (CommonTree)adaptor.dupNode(char_literal38);
 
 
@@ -1990,7 +2015,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                             _last = (CommonTree)input.LT(1);
-                            char_literal39=(CommonTree)match(input,86,FOLLOW_86_in_type441); 
+                            char_literal39=(CommonTree)match(input,87,FOLLOW_87_in_type451); 
                             char_literal39_tree = (CommonTree)adaptor.dupNode(char_literal39);
 
 
@@ -2008,13 +2033,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:208:3: 'long' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:230:3: 'long' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    string_literal40=(CommonTree)match(input,95,FOLLOW_95_in_type452); 
+                    string_literal40=(CommonTree)match(input,96,FOLLOW_96_in_type462); 
                     string_literal40_tree = (CommonTree)adaptor.dupNode(string_literal40);
 
 
@@ -2023,19 +2048,19 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result =long.class;
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:208:31: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:230:31: ( '[' ']' )?
                     int alt14=2;
                     int LA14_0 = input.LA(1);
 
-                    if ( (LA14_0==85) ) {
+                    if ( (LA14_0==86) ) {
                         alt14=1;
                     }
                     switch (alt14) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:208:32: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:230:32: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
-                            char_literal41=(CommonTree)match(input,85,FOLLOW_85_in_type456); 
+                            char_literal41=(CommonTree)match(input,86,FOLLOW_86_in_type466); 
                             char_literal41_tree = (CommonTree)adaptor.dupNode(char_literal41);
 
 
@@ -2043,7 +2068,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                             _last = (CommonTree)input.LT(1);
-                            char_literal42=(CommonTree)match(input,86,FOLLOW_86_in_type458); 
+                            char_literal42=(CommonTree)match(input,87,FOLLOW_87_in_type468); 
                             char_literal42_tree = (CommonTree)adaptor.dupNode(char_literal42);
 
 
@@ -2061,13 +2086,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:209:3: 'float' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:231:3: 'float' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    string_literal43=(CommonTree)match(input,91,FOLLOW_91_in_type467); 
+                    string_literal43=(CommonTree)match(input,92,FOLLOW_92_in_type477); 
                     string_literal43_tree = (CommonTree)adaptor.dupNode(string_literal43);
 
 
@@ -2076,19 +2101,19 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = float.class;
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:209:36: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:231:36: ( '[' ']' )?
                     int alt15=2;
                     int LA15_0 = input.LA(1);
 
-                    if ( (LA15_0==85) ) {
+                    if ( (LA15_0==86) ) {
                         alt15=1;
                     }
                     switch (alt15) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:209:37: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:231:37: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
-                            char_literal44=(CommonTree)match(input,85,FOLLOW_85_in_type472); 
+                            char_literal44=(CommonTree)match(input,86,FOLLOW_86_in_type482); 
                             char_literal44_tree = (CommonTree)adaptor.dupNode(char_literal44);
 
 
@@ -2096,7 +2121,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                             _last = (CommonTree)input.LT(1);
-                            char_literal45=(CommonTree)match(input,86,FOLLOW_86_in_type474); 
+                            char_literal45=(CommonTree)match(input,87,FOLLOW_87_in_type484); 
                             char_literal45_tree = (CommonTree)adaptor.dupNode(char_literal45);
 
 
@@ -2114,13 +2139,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:210:3: 'double' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:232:3: 'double' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    string_literal46=(CommonTree)match(input,89,FOLLOW_89_in_type484); 
+                    string_literal46=(CommonTree)match(input,90,FOLLOW_90_in_type494); 
                     string_literal46_tree = (CommonTree)adaptor.dupNode(string_literal46);
 
 
@@ -2129,19 +2154,19 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = double.class;
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:210:38: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:232:38: ( '[' ']' )?
                     int alt16=2;
                     int LA16_0 = input.LA(1);
 
-                    if ( (LA16_0==85) ) {
+                    if ( (LA16_0==86) ) {
                         alt16=1;
                     }
                     switch (alt16) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:210:39: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:232:39: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
-                            char_literal47=(CommonTree)match(input,85,FOLLOW_85_in_type489); 
+                            char_literal47=(CommonTree)match(input,86,FOLLOW_86_in_type499); 
                             char_literal47_tree = (CommonTree)adaptor.dupNode(char_literal47);
 
 
@@ -2149,7 +2174,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                             _last = (CommonTree)input.LT(1);
-                            char_literal48=(CommonTree)match(input,86,FOLLOW_86_in_type491); 
+                            char_literal48=(CommonTree)match(input,87,FOLLOW_87_in_type501); 
                             char_literal48_tree = (CommonTree)adaptor.dupNode(char_literal48);
 
 
@@ -2167,13 +2192,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 5 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:211:3: 'String' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:3: 'String' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    string_literal49=(CommonTree)match(input,84,FOLLOW_84_in_type501); 
+                    string_literal49=(CommonTree)match(input,85,FOLLOW_85_in_type511); 
                     string_literal49_tree = (CommonTree)adaptor.dupNode(string_literal49);
 
 
@@ -2182,19 +2207,19 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = String.class;
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:211:38: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:38: ( '[' ']' )?
                     int alt17=2;
                     int LA17_0 = input.LA(1);
 
-                    if ( (LA17_0==85) ) {
+                    if ( (LA17_0==86) ) {
                         alt17=1;
                     }
                     switch (alt17) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:211:39: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:233:39: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
-                            char_literal50=(CommonTree)match(input,85,FOLLOW_85_in_type506); 
+                            char_literal50=(CommonTree)match(input,86,FOLLOW_86_in_type516); 
                             char_literal50_tree = (CommonTree)adaptor.dupNode(char_literal50);
 
 
@@ -2202,7 +2227,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                             _last = (CommonTree)input.LT(1);
-                            char_literal51=(CommonTree)match(input,86,FOLLOW_86_in_type508); 
+                            char_literal51=(CommonTree)match(input,87,FOLLOW_87_in_type518); 
                             char_literal51_tree = (CommonTree)adaptor.dupNode(char_literal51);
 
 
@@ -2220,13 +2245,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 6 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:212:3: 'Object' ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:234:3: 'Object' ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    string_literal52=(CommonTree)match(input,83,FOLLOW_83_in_type518); 
+                    string_literal52=(CommonTree)match(input,84,FOLLOW_84_in_type528); 
                     string_literal52_tree = (CommonTree)adaptor.dupNode(string_literal52);
 
 
@@ -2235,19 +2260,19 @@ public TreeAdaptor getTreeAdaptor() {
 
                     retval.result = Object.class;
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:212:37: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:234:37: ( '[' ']' )?
                     int alt18=2;
                     int LA18_0 = input.LA(1);
 
-                    if ( (LA18_0==85) ) {
+                    if ( (LA18_0==86) ) {
                         alt18=1;
                     }
                     switch (alt18) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:212:38: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:234:38: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
-                            char_literal53=(CommonTree)match(input,85,FOLLOW_85_in_type522); 
+                            char_literal53=(CommonTree)match(input,86,FOLLOW_86_in_type532); 
                             char_literal53_tree = (CommonTree)adaptor.dupNode(char_literal53);
 
 
@@ -2255,7 +2280,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                             _last = (CommonTree)input.LT(1);
-                            char_literal54=(CommonTree)match(input,86,FOLLOW_86_in_type524); 
+                            char_literal54=(CommonTree)match(input,87,FOLLOW_87_in_type534); 
                             char_literal54_tree = (CommonTree)adaptor.dupNode(char_literal54);
 
 
@@ -2273,13 +2298,13 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 7 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:213:4: ID ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:235:4: ID ( '[' ']' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    ID55=(CommonTree)match(input,ID,FOLLOW_ID_in_type535); 
+                    ID55=(CommonTree)match(input,ID,FOLLOW_ID_in_type545); 
                     ID55_tree = (CommonTree)adaptor.dupNode(ID55);
 
 
@@ -2294,19 +2319,19 @@ public TreeAdaptor getTreeAdaptor() {
                     	    }
                     	
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:219:4: ( '[' ']' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:241:4: ( '[' ']' )?
                     int alt19=2;
                     int LA19_0 = input.LA(1);
 
-                    if ( (LA19_0==85) ) {
+                    if ( (LA19_0==86) ) {
                         alt19=1;
                     }
                     switch (alt19) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:219:5: '[' ']'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:241:5: '[' ']'
                             {
                             _last = (CommonTree)input.LT(1);
-                            char_literal56=(CommonTree)match(input,85,FOLLOW_85_in_type540); 
+                            char_literal56=(CommonTree)match(input,86,FOLLOW_86_in_type550); 
                             char_literal56_tree = (CommonTree)adaptor.dupNode(char_literal56);
 
 
@@ -2314,7 +2339,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                             _last = (CommonTree)input.LT(1);
-                            char_literal57=(CommonTree)match(input,86,FOLLOW_86_in_type542); 
+                            char_literal57=(CommonTree)match(input,87,FOLLOW_87_in_type552); 
                             char_literal57_tree = (CommonTree)adaptor.dupNode(char_literal57);
 
 
@@ -2357,7 +2382,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "rule"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:221:1: rule returns [Object result] : ^( RULE ^( HEAD head ) ^( BODY body1= litlist ) ^( BODY (body2= litlist )? ) ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:244:1: rule returns [Object result] : ( ^( RULE head litlist ) )+ DOT_END ;
     public final SociaLiteRule.rule_return rule() throws RecognitionException {
         SociaLiteRule.rule_return retval = new SociaLiteRule.rule_return();
         retval.start = input.LT(1);
@@ -2369,174 +2394,121 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _last = null;
 
         CommonTree RULE58=null;
-        CommonTree HEAD59=null;
-        CommonTree BODY61=null;
-        CommonTree BODY62=null;
-        SociaLiteRule.litlist_return body1 =null;
+        CommonTree DOT_END61=null;
+        SociaLiteRule.head_return head59 =null;
 
-        SociaLiteRule.litlist_return body2 =null;
-
-        SociaLiteRule.head_return head60 =null;
+        SociaLiteRule.litlist_return litlist60 =null;
 
 
         CommonTree RULE58_tree=null;
-        CommonTree HEAD59_tree=null;
-        CommonTree BODY61_tree=null;
-        CommonTree BODY62_tree=null;
+        CommonTree DOT_END61_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:222:2: ( ^( RULE ^( HEAD head ) ^( BODY body1= litlist ) ^( BODY (body2= litlist )? ) ) )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:222:3: ^( RULE ^( HEAD head ) ^( BODY body1= litlist ) ^( BODY (body2= litlist )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:245:9: ( ( ^( RULE head litlist ) )+ DOT_END )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:245:10: ( ^( RULE head litlist ) )+ DOT_END
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            _last = (CommonTree)input.LT(1);
-            {
-            CommonTree _save_last_1 = _last;
-            CommonTree _first_1 = null;
-            CommonTree root_1 = (CommonTree)adaptor.nil();
-            _last = (CommonTree)input.LT(1);
-            RULE58=(CommonTree)match(input,RULE,FOLLOW_RULE_in_rule561); 
-            RULE58_tree = (CommonTree)adaptor.dupNode(RULE58);
+             retval.result = new ArrayList<RuleDecl>(); 
+                        List<Literal> first = null;
+                     
 
-
-            root_1 = (CommonTree)adaptor.becomeRoot(RULE58_tree, root_1);
-
-
-            match(input, Token.DOWN, null); 
-            _last = (CommonTree)input.LT(1);
-            {
-            CommonTree _save_last_2 = _last;
-            CommonTree _first_2 = null;
-            CommonTree root_2 = (CommonTree)adaptor.nil();
-            _last = (CommonTree)input.LT(1);
-            HEAD59=(CommonTree)match(input,HEAD,FOLLOW_HEAD_in_rule564); 
-            HEAD59_tree = (CommonTree)adaptor.dupNode(HEAD59);
-
-
-            root_2 = (CommonTree)adaptor.becomeRoot(HEAD59_tree, root_2);
-
-
-            match(input, Token.DOWN, null); 
-            _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_head_in_rule566);
-            head60=head();
-
-            state._fsp--;
-
-            adaptor.addChild(root_2, head60.getTree());
-
-
-            match(input, Token.UP, null); 
-            adaptor.addChild(root_1, root_2);
-            _last = _save_last_2;
-            }
-
-
-            _last = (CommonTree)input.LT(1);
-            {
-            CommonTree _save_last_2 = _last;
-            CommonTree _first_2 = null;
-            CommonTree root_2 = (CommonTree)adaptor.nil();
-            _last = (CommonTree)input.LT(1);
-            BODY61=(CommonTree)match(input,BODY,FOLLOW_BODY_in_rule570); 
-            BODY61_tree = (CommonTree)adaptor.dupNode(BODY61);
-
-
-            root_2 = (CommonTree)adaptor.becomeRoot(BODY61_tree, root_2);
-
-
-            match(input, Token.DOWN, null); 
-            _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_litlist_in_rule574);
-            body1=litlist();
-
-            state._fsp--;
-
-            adaptor.addChild(root_2, body1.getTree());
-
-
-            match(input, Token.UP, null); 
-            adaptor.addChild(root_1, root_2);
-            _last = _save_last_2;
-            }
-
-
-            _last = (CommonTree)input.LT(1);
-            {
-            CommonTree _save_last_2 = _last;
-            CommonTree _first_2 = null;
-            CommonTree root_2 = (CommonTree)adaptor.nil();
-            _last = (CommonTree)input.LT(1);
-            BODY62=(CommonTree)match(input,BODY,FOLLOW_BODY_in_rule578); 
-            BODY62_tree = (CommonTree)adaptor.dupNode(BODY62);
-
-
-            root_2 = (CommonTree)adaptor.becomeRoot(BODY62_tree, root_2);
-
-
-            if ( input.LA(1)==Token.DOWN ) {
-                match(input, Token.DOWN, null); 
-                // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:222:57: (body2= litlist )?
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:248:10: ( ^( RULE head litlist ) )+
+            int cnt21=0;
+            loop21:
+            do {
                 int alt21=2;
                 int LA21_0 = input.LA(1);
 
-                if ( (LA21_0==EXPR||LA21_0==PREDICATE) ) {
+                if ( (LA21_0==RULE) ) {
                     alt21=1;
                 }
+
+
                 switch (alt21) {
-                    case 1 :
-                        // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:222:57: body2= litlist
-                        {
-                        _last = (CommonTree)input.LT(1);
-                        pushFollow(FOLLOW_litlist_in_rule582);
-                        body2=litlist();
-
-                        state._fsp--;
-
-                        adaptor.addChild(root_2, body2.getTree());
-
-
-                        }
-                        break;
-
-                }
+            	case 1 :
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:248:11: ^( RULE head litlist )
+            	    {
+            	    _last = (CommonTree)input.LT(1);
+            	    {
+            	    CommonTree _save_last_1 = _last;
+            	    CommonTree _first_1 = null;
+            	    CommonTree root_1 = (CommonTree)adaptor.nil();
+            	    _last = (CommonTree)input.LT(1);
+            	    RULE58=(CommonTree)match(input,RULE,FOLLOW_RULE_in_rule591); 
+            	    RULE58_tree = (CommonTree)adaptor.dupNode(RULE58);
 
 
-                match(input, Token.UP, null); 
-            }
-            adaptor.addChild(root_1, root_2);
-            _last = _save_last_2;
-            }
+            	    root_1 = (CommonTree)adaptor.becomeRoot(RULE58_tree, root_1);
 
 
-            match(input, Token.UP, null); 
-            adaptor.addChild(root_0, root_1);
-            _last = _save_last_1;
-            }
+            	    match(input, Token.DOWN, null); 
+            	    _last = (CommonTree)input.LT(1);
+            	    pushFollow(FOLLOW_head_in_rule593);
+            	    head59=head();
+
+            	    state._fsp--;
+
+            	    adaptor.addChild(root_1, head59.getTree());
 
 
-               
-            	    ArrayList<Literal> body = new ArrayList<Literal>((body1!=null?body1.result:null));
-                    if (!headTmpVarAssigns.isEmpty()) {
-            	        for (AssignOp op:headTmpVarAssigns)
-                            body.add(new Expr(op));
-                        headTmpVarAssigns.clear();
-                    }
-            	    RuleDecl rd = new RuleDecl((head60!=null?head60.result:null), body);
-            	    if ((body2!=null?body2.result:null)==null) {
-            	        retval.result = rd;
-            	    } else {
-            	        ArrayList<RuleDecl> list = new ArrayList<RuleDecl>();
-            	        list.add((RuleDecl)rd);
-            	        rd = new RuleDecl((head60!=null?head60.result:null).clone(), (body2!=null?body2.result:null));
-            	        list.add((RuleDecl)rd);
-            	        retval.result = list;
+            	    _last = (CommonTree)input.LT(1);
+            	    pushFollow(FOLLOW_litlist_in_rule595);
+            	    litlist60=litlist();
+
+            	    state._fsp--;
+
+            	    adaptor.addChild(root_1, litlist60.getTree());
+
+
+            	    match(input, Token.UP, null); 
+            	    adaptor.addChild(root_0, root_1);
+            	    _last = _save_last_1;
             	    }
-            	    Variable.nextRule(); 
-            	    Const.nextRule();
-            	
+
+
+
+            	                Predicate head = (Predicate)(head59!=null?head59.result:null);
+            	                List<Literal> body;
+            	                if (first==null) { 
+            	                    first = (litlist60!=null?litlist60.result:null);
+            	                    body = new ArrayList<Literal>((litlist60!=null?litlist60.result:null));
+            	                } else {
+            	                    body = (litlist60!=null?litlist60.result:null).subList(first.size(), (litlist60!=null?litlist60.result:null).size());
+            	                }
+            	                if (!headTmpVarAssigns.isEmpty()) {
+            	                    for (AssignOp op:headTmpVarAssigns) {
+            	                        body.add(new Expr(op));
+            	                    }
+            	                }
+            	                ((List<RuleDecl>)retval.result).add(new RuleDecl(head.clone(), body));
+            	            
+
+            	    }
+            	    break;
+
+            	default :
+            	    if ( cnt21 >= 1 ) break loop21;
+                        EarlyExitException eee =
+                            new EarlyExitException(21, input);
+                        throw eee;
+                }
+                cnt21++;
+            } while (true);
+
+
+            _last = (CommonTree)input.LT(1);
+            DOT_END61=(CommonTree)match(input,DOT_END,FOLLOW_DOT_END_in_rule603); 
+            DOT_END61_tree = (CommonTree)adaptor.dupNode(DOT_END61);
+
+
+            adaptor.addChild(root_0, DOT_END61_tree);
+
+
+             headTmpVarAssigns.clear();
+                      nextRule();
+                    
 
             }
 
@@ -2564,7 +2536,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "head"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:244:1: head returns [Predicate result] : predicate ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:268:1: head returns [Predicate result] : predicate ;
     public final SociaLiteRule.head_return head() throws RecognitionException {
         SociaLiteRule.head_return retval = new SociaLiteRule.head_return();
         retval.start = input.LT(1);
@@ -2575,28 +2547,28 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _first_0 = null;
         CommonTree _last = null;
 
-        SociaLiteRule.predicate_return predicate63 =null;
+        SociaLiteRule.predicate_return predicate62 =null;
 
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:245:5: ( predicate )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:245:7: predicate
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:269:5: ( predicate )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:269:7: predicate
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_predicate_in_head605);
-            predicate63=predicate();
+            pushFollow(FOLLOW_predicate_in_head630);
+            predicate62=predicate();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, predicate63.getTree());
+            adaptor.addChild(root_0, predicate62.getTree());
 
 
 
-                    retval.result = (predicate63!=null?predicate63.result:null);
+                    retval.result = (predicate62!=null?predicate62.result:null);
             	    if (!tmpVarAssigns.isEmpty()) {
                         headTmpVarAssigns.addAll(tmpVarAssigns);
                         tmpVarAssigns.clear();
@@ -2629,7 +2601,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "litlist"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:253:1: litlist returns [List<Literal> result] :l1= literal (l2= literal )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:277:1: litlist returns [List<Literal> result] :l1= literal (l2= literal )* ;
     public final SociaLiteRule.litlist_return litlist() throws RecognitionException {
         SociaLiteRule.litlist_return retval = new SociaLiteRule.litlist_return();
         retval.start = input.LT(1);
@@ -2647,8 +2619,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:254:2: (l1= literal (l2= literal )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:254:4: l1= literal (l2= literal )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:278:2: (l1= literal (l2= literal )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:278:4: l1= literal (l2= literal )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -2656,7 +2628,7 @@ public TreeAdaptor getTreeAdaptor() {
              retval.result = new ArrayList<Literal>(); 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_literal_in_litlist629);
+            pushFollow(FOLLOW_literal_in_litlist654);
             l1=literal();
 
             state._fsp--;
@@ -2667,7 +2639,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             	    for (Variable v: dotVars) {
             	        String root=v.name.substring(0, v.name.indexOf('.'));
-            	        Variable rootVar=Variable.getVariable(root);
+            	        Variable rootVar=getVariable(root);
             	        AssignDotVar a;
             	        try { a=new AssignDotVar(v, rootVar); } 
             	        catch (InternalException e) { throw new RuntimeException(e);}
@@ -2681,7 +2653,7 @@ public TreeAdaptor getTreeAdaptor() {
             	    } else { retval.result.add((Literal)((l1!=null?l1.result:null))); }
             	
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:271:2: (l2= literal )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:295:2: (l2= literal )*
             loop22:
             do {
                 int alt22=2;
@@ -2694,10 +2666,10 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt22) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:271:3: l2= literal
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:295:3: l2= literal
             	    {
             	    _last = (CommonTree)input.LT(1);
-            	    pushFollow(FOLLOW_literal_in_litlist638);
+            	    pushFollow(FOLLOW_literal_in_litlist663);
             	    l2=literal();
 
             	    state._fsp--;
@@ -2708,7 +2680,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             	    	    for (Variable v: dotVars) {
             	    	        String root=v.name.substring(0, v.name.indexOf('.'));
-            	    	        Variable rootVar=Variable.getVariable(root);
+            	    	        Variable rootVar=getVariable(root);
             	    	        AssignDotVar a;
             	    	        try { a=new AssignDotVar(v, rootVar); } 
             	    	        catch (InternalException e) { throw new RuntimeException(e);}
@@ -2757,7 +2729,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "literal"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:288:1: literal returns [Object result] : ( ^( PREDICATE ( NOT )? predicate ) | ^( EXPR expr ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:312:1: literal returns [Object result] : ( ^( PREDICATE ( NOT )? predicate ) | ^( EXPR expr ) );
     public final SociaLiteRule.literal_return literal() throws RecognitionException {
         SociaLiteRule.literal_return retval = new SociaLiteRule.literal_return();
         retval.start = input.LT(1);
@@ -2768,20 +2740,20 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _first_0 = null;
         CommonTree _last = null;
 
-        CommonTree PREDICATE64=null;
-        CommonTree NOT65=null;
-        CommonTree EXPR67=null;
-        SociaLiteRule.predicate_return predicate66 =null;
+        CommonTree PREDICATE63=null;
+        CommonTree NOT64=null;
+        CommonTree EXPR66=null;
+        SociaLiteRule.predicate_return predicate65 =null;
 
-        SociaLiteRule.expr_return expr68 =null;
+        SociaLiteRule.expr_return expr67 =null;
 
 
-        CommonTree PREDICATE64_tree=null;
-        CommonTree NOT65_tree=null;
-        CommonTree EXPR67_tree=null;
+        CommonTree PREDICATE63_tree=null;
+        CommonTree NOT64_tree=null;
+        CommonTree EXPR66_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:289:2: ( ^( PREDICATE ( NOT )? predicate ) | ^( EXPR expr ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:313:2: ( ^( PREDICATE ( NOT )? predicate ) | ^( EXPR expr ) )
             int alt24=2;
             int LA24_0 = input.LA(1);
 
@@ -2800,7 +2772,7 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt24) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:289:3: ^( PREDICATE ( NOT )? predicate )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:313:3: ^( PREDICATE ( NOT )? predicate )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2811,15 +2783,15 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    PREDICATE64=(CommonTree)match(input,PREDICATE,FOLLOW_PREDICATE_in_literal656); 
-                    PREDICATE64_tree = (CommonTree)adaptor.dupNode(PREDICATE64);
+                    PREDICATE63=(CommonTree)match(input,PREDICATE,FOLLOW_PREDICATE_in_literal681); 
+                    PREDICATE63_tree = (CommonTree)adaptor.dupNode(PREDICATE63);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(PREDICATE64_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(PREDICATE63_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:289:15: ( NOT )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:313:15: ( NOT )?
                     int alt23=2;
                     int LA23_0 = input.LA(1);
 
@@ -2828,14 +2800,14 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt23) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:289:15: NOT
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:313:15: NOT
                             {
                             _last = (CommonTree)input.LT(1);
-                            NOT65=(CommonTree)match(input,NOT,FOLLOW_NOT_in_literal658); 
-                            NOT65_tree = (CommonTree)adaptor.dupNode(NOT65);
+                            NOT64=(CommonTree)match(input,NOT,FOLLOW_NOT_in_literal683); 
+                            NOT64_tree = (CommonTree)adaptor.dupNode(NOT64);
 
 
-                            adaptor.addChild(root_1, NOT65_tree);
+                            adaptor.addChild(root_1, NOT64_tree);
 
 
                             }
@@ -2845,12 +2817,12 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_predicate_in_literal661);
-                    predicate66=predicate();
+                    pushFollow(FOLLOW_predicate_in_literal686);
+                    predicate65=predicate();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_1, predicate66.getTree());
+                    adaptor.addChild(root_1, predicate65.getTree());
 
 
                     match(input, Token.UP, null); 
@@ -2860,15 +2832,15 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-                    	    retval.result = (predicate66!=null?predicate66.result:null);
-                    	    if ((NOT65!=null?NOT65.getText():null) != null) {
-                    	        ((Predicate)(predicate66!=null?predicate66.result:null)).setNegated(); 
+                    	    retval.result = (predicate65!=null?predicate65.result:null);
+                    	    if ((NOT64!=null?NOT64.getText():null) != null) {
+                    	        ((Predicate)(predicate65!=null?predicate65.result:null)).setNegated(); 
                     	    }
                     	    if (!tmpVarAssigns.isEmpty()) {
                     	        retval.result = new ArrayList<Literal>();
                     	        for (AssignOp op:tmpVarAssigns)
                     	            ((List<Literal>)retval.result).add(new Expr(op));
-                    	        ((List<Literal>)retval.result).add((predicate66!=null?predicate66.result:null));
+                    	        ((List<Literal>)retval.result).add((predicate65!=null?predicate65.result:null));
                     	        tmpVarAssigns.clear();
                     	    }
                     	
@@ -2876,7 +2848,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:301:5: ^( EXPR expr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:325:5: ^( EXPR expr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -2887,21 +2859,21 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    EXPR67=(CommonTree)match(input,EXPR,FOLLOW_EXPR_in_literal668); 
-                    EXPR67_tree = (CommonTree)adaptor.dupNode(EXPR67);
+                    EXPR66=(CommonTree)match(input,EXPR,FOLLOW_EXPR_in_literal693); 
+                    EXPR66_tree = (CommonTree)adaptor.dupNode(EXPR66);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(EXPR67_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(EXPR66_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_expr_in_literal670);
-                    expr68=expr();
+                    pushFollow(FOLLOW_expr_in_literal695);
+                    expr67=expr();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_1, expr68.getTree());
+                    adaptor.addChild(root_1, expr67.getTree());
 
 
                     match(input, Token.UP, null); 
@@ -2911,7 +2883,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-                    	    Expr e = new Expr((Op)(expr68!=null?expr68.result:null));
+                    	    Expr e = new Expr((Op)(expr67!=null?expr67.result:null));
                     	    retval.result = e;
                     	    if (!tmpVarAssigns.isEmpty()) {
                     	        retval.result = new ArrayList<Literal>();
@@ -2950,7 +2922,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "predicate"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:313:1: predicate returns [Predicate result] : ID paramlist ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:337:1: predicate returns [Predicate result] : ID paramlist ;
     public final SociaLiteRule.predicate_return predicate() throws RecognitionException {
         SociaLiteRule.predicate_return retval = new SociaLiteRule.predicate_return();
         retval.start = input.LT(1);
@@ -2961,47 +2933,47 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _first_0 = null;
         CommonTree _last = null;
 
-        CommonTree ID69=null;
-        SociaLiteRule.paramlist_return paramlist70 =null;
+        CommonTree ID68=null;
+        SociaLiteRule.paramlist_return paramlist69 =null;
 
 
-        CommonTree ID69_tree=null;
+        CommonTree ID68_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:314:2: ( ID paramlist )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:314:4: ID paramlist
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:338:2: ( ID paramlist )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:338:4: ID paramlist
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            ID69=(CommonTree)match(input,ID,FOLLOW_ID_in_predicate688); 
-            ID69_tree = (CommonTree)adaptor.dupNode(ID69);
+            ID68=(CommonTree)match(input,ID,FOLLOW_ID_in_predicate713); 
+            ID68_tree = (CommonTree)adaptor.dupNode(ID68);
 
 
-            adaptor.addChild(root_0, ID69_tree);
+            adaptor.addChild(root_0, ID68_tree);
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_paramlist_in_predicate690);
-            paramlist70=paramlist();
+            pushFollow(FOLLOW_paramlist_in_predicate715);
+            paramlist69=paramlist();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, paramlist70.getTree());
+            adaptor.addChild(root_0, paramlist69.getTree());
 
 
-               TableDecl decl=tableDeclMap.get((ID69!=null?ID69.getText():null));
+               TableDecl decl=tableDeclMap.get((ID68!=null?ID68.getText():null));
             	    if (decl==null) {
-                        throw new ParseException(getParser(), (ID69!=null?ID69.getLine():0)-1, (ID69!=null?ID69.getCharPositionInLine():0), "Table "+(ID69!=null?ID69.getText():null)+" is not declared");	 
+                        throw new ParseException(getParser(), (ID68!=null?ID68.getLine():0)-1, (ID68!=null?ID68.getCharPositionInLine():0), "Table "+(ID68!=null?ID68.getText():null)+" is not declared");	 
                     } else {
                        try {
-                           decl.checkTypes((paramlist70!=null?paramlist70.result:null));
+                           decl.checkTypes((paramlist69!=null?paramlist69.result:null));
                        } catch(InternalException e) {
-                           throw new ParseException(getParser(), (ID69!=null?ID69.getLine():0)-1, (ID69!=null?ID69.getCharPositionInLine():0), e.getMessage());
+                           throw new ParseException(getParser(), (ID68!=null?ID68.getLine():0)-1, (ID68!=null?ID68.getCharPositionInLine():0), e.getMessage());
                        }
                     }
-                    retval.result = new Predicate((ID69!=null?ID69.getText():null), (paramlist70!=null?paramlist70.result:null));
+                    retval.result = new Predicate((ID68!=null?ID68.getText():null), (paramlist69!=null?paramlist69.result:null));
                 
 
             }
@@ -3030,7 +3002,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "function"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:328:1: function returns [Function result] : ^( FUNC dotname ( fparamlist )? ) ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:352:1: function returns [Function result] : ^( FUNC dotname ( fparamlist )? ) ;
     public final SociaLiteRule.function_return function() throws RecognitionException {
         SociaLiteRule.function_return retval = new SociaLiteRule.function_return();
         retval.start = input.LT(1);
@@ -3041,17 +3013,17 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _first_0 = null;
         CommonTree _last = null;
 
-        CommonTree FUNC71=null;
-        SociaLiteRule.dotname_return dotname72 =null;
+        CommonTree FUNC70=null;
+        SociaLiteRule.dotname_return dotname71 =null;
 
-        SociaLiteRule.fparamlist_return fparamlist73 =null;
+        SociaLiteRule.fparamlist_return fparamlist72 =null;
 
 
-        CommonTree FUNC71_tree=null;
+        CommonTree FUNC70_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:329:2: ( ^( FUNC dotname ( fparamlist )? ) )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:329:4: ^( FUNC dotname ( fparamlist )? )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:353:2: ( ^( FUNC dotname ( fparamlist )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:353:4: ^( FUNC dotname ( fparamlist )? )
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -3062,41 +3034,41 @@ public TreeAdaptor getTreeAdaptor() {
             CommonTree _first_1 = null;
             CommonTree root_1 = (CommonTree)adaptor.nil();
             _last = (CommonTree)input.LT(1);
-            FUNC71=(CommonTree)match(input,FUNC,FOLLOW_FUNC_in_function711); 
-            FUNC71_tree = (CommonTree)adaptor.dupNode(FUNC71);
+            FUNC70=(CommonTree)match(input,FUNC,FOLLOW_FUNC_in_function736); 
+            FUNC70_tree = (CommonTree)adaptor.dupNode(FUNC70);
 
 
-            root_1 = (CommonTree)adaptor.becomeRoot(FUNC71_tree, root_1);
+            root_1 = (CommonTree)adaptor.becomeRoot(FUNC70_tree, root_1);
 
 
             match(input, Token.DOWN, null); 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_dotname_in_function713);
-            dotname72=dotname();
+            pushFollow(FOLLOW_dotname_in_function738);
+            dotname71=dotname();
 
             state._fsp--;
 
-            adaptor.addChild(root_1, dotname72.getTree());
+            adaptor.addChild(root_1, dotname71.getTree());
 
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:329:19: ( fparamlist )?
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:353:19: ( fparamlist )?
             int alt25=2;
             int LA25_0 = input.LA(1);
 
-            if ( (LA25_0==COMPOUND_EXPR||LA25_0==FUNCTION||LA25_0==TERM||(LA25_0 >= 67 && LA25_0 <= 68)||LA25_0==70||LA25_0==72||LA25_0==96) ) {
+            if ( (LA25_0==COMPOUND_EXPR||LA25_0==FUNCTION||LA25_0==TERM||(LA25_0 >= 68 && LA25_0 <= 69)||LA25_0==71||LA25_0==73||LA25_0==97) ) {
                 alt25=1;
             }
             switch (alt25) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:329:19: fparamlist
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:353:19: fparamlist
                     {
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_fparamlist_in_function715);
-                    fparamlist73=fparamlist();
+                    pushFollow(FOLLOW_fparamlist_in_function740);
+                    fparamlist72=fparamlist();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_1, fparamlist73.getTree());
+                    adaptor.addChild(root_1, fparamlist72.getTree());
 
 
                     }
@@ -3112,7 +3084,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-            	    retval.result = new Function((dotname72!=null?dotname72.result:null), (fparamlist73!=null?fparamlist73.result:null));
+            	    retval.result = new Function((dotname71!=null?dotname71.result:null), (fparamlist72!=null?fparamlist72.result:null));
             	
 
             }
@@ -3141,7 +3113,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "param"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:333:1: param returns [Object result] : simpleExpr ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:357:1: param returns [Object result] : simpleExpr ;
     public final SociaLiteRule.param_return param() throws RecognitionException {
         SociaLiteRule.param_return retval = new SociaLiteRule.param_return();
         retval.start = input.LT(1);
@@ -3152,45 +3124,45 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _first_0 = null;
         CommonTree _last = null;
 
-        SociaLiteRule.simpleExpr_return simpleExpr74 =null;
+        SociaLiteRule.simpleExpr_return simpleExpr73 =null;
 
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:334:2: ( simpleExpr )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:334:4: simpleExpr
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:358:2: ( simpleExpr )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:358:4: simpleExpr
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_simpleExpr_in_param733);
-            simpleExpr74=simpleExpr();
+            pushFollow(FOLLOW_simpleExpr_in_param758);
+            simpleExpr73=simpleExpr();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, simpleExpr74.getTree());
+            adaptor.addChild(root_0, simpleExpr73.getTree());
 
 
 
             	    if (tmpVarAssignHasFunc()) {
             	        throw new ParseException(getParser(), 
-            	                        (simpleExpr74!=null?((CommonTree)simpleExpr74.tree):null).getLine()-1,
-            	                        (simpleExpr74!=null?((CommonTree)simpleExpr74.tree):null).getCharPositionInLine()+1, 
+            	                        (simpleExpr73!=null?((CommonTree)simpleExpr73.tree):null).getLine()-1,
+            	                        (simpleExpr73!=null?((CommonTree)simpleExpr73.tree):null).getCharPositionInLine()+1, 
             	                        "Cannot use functions with operators in a param list");
             	    }
-            	    retval.result = (simpleExpr74!=null?simpleExpr74.result:null);
-            	    /*if ((simpleExpr74!=null?simpleExpr74.result:null) instanceof TypeCast) {
+            	    retval.result = (simpleExpr73!=null?simpleExpr73.result:null);
+            	    /*if ((simpleExpr73!=null?simpleExpr73.result:null) instanceof TypeCast) {
             	        TypeCast cast=(TypeCast)retval.result;
             	        if (cast.arg instanceof Function) {
             	           throw new ParseException(getParser(), 
-            	                        (simpleExpr74!=null?((CommonTree)simpleExpr74.tree):null).getLine()-1,
-            	                        (simpleExpr74!=null?((CommonTree)simpleExpr74.tree):null).getCharPositionInLine()+1, 
+            	                        (simpleExpr73!=null?((CommonTree)simpleExpr73.tree):null).getLine()-1,
+            	                        (simpleExpr73!=null?((CommonTree)simpleExpr73.tree):null).getCharPositionInLine()+1, 
             	                        "Cannot use type cast to aggregate functions");
             	        }
             	    }*/
-            	    if ((simpleExpr74!=null?simpleExpr74.result:null) instanceof Function) {
-            	        retval.result = new AggrFunction((Function)(simpleExpr74!=null?simpleExpr74.result:null)); 
+            	    if ((simpleExpr73!=null?simpleExpr73.result:null) instanceof Function) {
+            	        retval.result = new AggrFunction((Function)(simpleExpr73!=null?simpleExpr73.result:null)); 
             	    }
             	
 
@@ -3220,7 +3192,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "fparam"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:355:1: fparam returns [Object result] : simpleExpr ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:379:1: fparam returns [Object result] : simpleExpr ;
     public final SociaLiteRule.fparam_return fparam() throws RecognitionException {
         SociaLiteRule.fparam_return retval = new SociaLiteRule.fparam_return();
         retval.start = input.LT(1);
@@ -3231,27 +3203,27 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _first_0 = null;
         CommonTree _last = null;
 
-        SociaLiteRule.simpleExpr_return simpleExpr75 =null;
+        SociaLiteRule.simpleExpr_return simpleExpr74 =null;
 
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:356:2: ( simpleExpr )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:356:4: simpleExpr
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:380:2: ( simpleExpr )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:380:4: simpleExpr
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_simpleExpr_in_fparam747);
-            simpleExpr75=simpleExpr();
+            pushFollow(FOLLOW_simpleExpr_in_fparam772);
+            simpleExpr74=simpleExpr();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, simpleExpr75.getTree());
+            adaptor.addChild(root_0, simpleExpr74.getTree());
 
 
-             retval.result = (simpleExpr75!=null?simpleExpr75.result:null); 
+             retval.result = (simpleExpr74!=null?simpleExpr74.result:null); 
 
             }
 
@@ -3279,7 +3251,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "paramlist"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:358:1: paramlist returns [List<Param> result] :p1= param (p2= param )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:382:1: paramlist returns [List<Param> result] :p1= param (p2= param )* ;
     public final SociaLiteRule.paramlist_return paramlist() throws RecognitionException {
         SociaLiteRule.paramlist_return retval = new SociaLiteRule.paramlist_return();
         retval.start = input.LT(1);
@@ -3297,8 +3269,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:359:2: (p1= param (p2= param )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:359:3: p1= param (p2= param )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:383:2: (p1= param (p2= param )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:383:3: p1= param (p2= param )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -3306,7 +3278,7 @@ public TreeAdaptor getTreeAdaptor() {
              retval.result = new ArrayList<Param>(); 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_param_in_paramlist766);
+            pushFollow(FOLLOW_param_in_paramlist791);
             p1=param();
 
             state._fsp--;
@@ -3316,7 +3288,7 @@ public TreeAdaptor getTreeAdaptor() {
 
              
             	    if (isSimpleIntValue((p1!=null?p1.result:null))) {
-            	        retval.result.add(new Const(getSimpleIntValue((p1!=null?p1.result:null))));
+            	        retval.result.add(new Const(getSimpleIntValue((p1!=null?p1.result:null)), getNextConstId()));
             	    } else if (((p1!=null?p1.result:null) instanceof BinOp)||((p1!=null?p1.result:null) instanceof UnaryOp)) {
             	        Variable tmpVar = addTmpVarAssign((p1!=null?p1.result:null));
             	        retval.result.add(tmpVar);
@@ -3327,23 +3299,23 @@ public TreeAdaptor getTreeAdaptor() {
             	    } else { retval.result.add((Param)((p1!=null?p1.result:null))); }
             	
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:372:2: (p2= param )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:396:2: (p2= param )*
             loop26:
             do {
                 int alt26=2;
                 int LA26_0 = input.LA(1);
 
-                if ( (LA26_0==COMPOUND_EXPR||LA26_0==FUNCTION||LA26_0==TERM||(LA26_0 >= 67 && LA26_0 <= 68)||LA26_0==70||LA26_0==72||LA26_0==96) ) {
+                if ( (LA26_0==COMPOUND_EXPR||LA26_0==FUNCTION||LA26_0==TERM||(LA26_0 >= 68 && LA26_0 <= 69)||LA26_0==71||LA26_0==73||LA26_0==97) ) {
                     alt26=1;
                 }
 
 
                 switch (alt26) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:372:3: p2= param
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:396:3: p2= param
             	    {
             	    _last = (CommonTree)input.LT(1);
-            	    pushFollow(FOLLOW_param_in_paramlist774);
+            	    pushFollow(FOLLOW_param_in_paramlist799);
             	    p2=param();
 
             	    state._fsp--;
@@ -3353,7 +3325,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             	     
             	    	    if (isSimpleIntValue((p2!=null?p2.result:null))) {
-            	    	        retval.result.add(new Const(getSimpleIntValue((p2!=null?p2.result:null))));
+            	    	        retval.result.add(new Const(getSimpleIntValue((p2!=null?p2.result:null)), getNextConstId()));
             	    	    } else if (((p2!=null?p2.result:null) instanceof BinOp)||((p2!=null?p2.result:null) instanceof UnaryOp)) {
             	    	        Variable tmpVar = addTmpVarAssign((p2!=null?p2.result:null));
             	    	        retval.result.add(tmpVar);
@@ -3399,7 +3371,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "fparamlist"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:386:1: fparamlist returns [List<Param> result] :p1= fparam (p2= fparam )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:410:1: fparamlist returns [List<Param> result] :p1= fparam (p2= fparam )* ;
     public final SociaLiteRule.fparamlist_return fparamlist() throws RecognitionException {
         SociaLiteRule.fparamlist_return retval = new SociaLiteRule.fparamlist_return();
         retval.start = input.LT(1);
@@ -3417,8 +3389,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:387:2: (p1= fparam (p2= fparam )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:387:3: p1= fparam (p2= fparam )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:411:2: (p1= fparam (p2= fparam )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:411:3: p1= fparam (p2= fparam )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
@@ -3426,7 +3398,7 @@ public TreeAdaptor getTreeAdaptor() {
              retval.result = new ArrayList<Param>(); 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_fparam_in_fparamlist797);
+            pushFollow(FOLLOW_fparam_in_fparamlist822);
             p1=fparam();
 
             state._fsp--;
@@ -3445,23 +3417,23 @@ public TreeAdaptor getTreeAdaptor() {
             	    } else { retval.result.add((Param)((p1!=null?p1.result:null))); }
             	
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:398:2: (p2= fparam )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:422:2: (p2= fparam )*
             loop27:
             do {
                 int alt27=2;
                 int LA27_0 = input.LA(1);
 
-                if ( (LA27_0==COMPOUND_EXPR||LA27_0==FUNCTION||LA27_0==TERM||(LA27_0 >= 67 && LA27_0 <= 68)||LA27_0==70||LA27_0==72||LA27_0==96) ) {
+                if ( (LA27_0==COMPOUND_EXPR||LA27_0==FUNCTION||LA27_0==TERM||(LA27_0 >= 68 && LA27_0 <= 69)||LA27_0==71||LA27_0==73||LA27_0==97) ) {
                     alt27=1;
                 }
 
 
                 switch (alt27) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:398:3: p2= fparam
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:422:3: p2= fparam
             	    {
             	    _last = (CommonTree)input.LT(1);
-            	    pushFollow(FOLLOW_fparam_in_fparamlist805);
+            	    pushFollow(FOLLOW_fparam_in_fparamlist830);
             	    p2=fparam();
 
             	    state._fsp--;
@@ -3515,7 +3487,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "term"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:411:1: term returns [Object result] : ( ^( T_INT INT ) | ^( T_FLOAT FLOAT ) | ^( T_STR STRING ) | ^( T_UTF8 UTF8 ) | ^( T_VAR dotname ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:435:1: term returns [Object result] : ( ^( T_INT INT ) | ^( T_FLOAT FLOAT ) | ^( T_STR STRING ) | ^( T_UTF8 UTF8 ) | ^( T_VAR dotname ) );
     public final SociaLiteRule.term_return term() throws RecognitionException {
         SociaLiteRule.term_return retval = new SociaLiteRule.term_return();
         retval.start = input.LT(1);
@@ -3526,30 +3498,30 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _first_0 = null;
         CommonTree _last = null;
 
-        CommonTree T_INT76=null;
-        CommonTree INT77=null;
-        CommonTree T_FLOAT78=null;
-        CommonTree FLOAT79=null;
-        CommonTree T_STR80=null;
-        CommonTree STRING81=null;
-        CommonTree T_UTF882=null;
-        CommonTree UTF883=null;
-        CommonTree T_VAR84=null;
-        SociaLiteRule.dotname_return dotname85 =null;
+        CommonTree T_INT75=null;
+        CommonTree INT76=null;
+        CommonTree T_FLOAT77=null;
+        CommonTree FLOAT78=null;
+        CommonTree T_STR79=null;
+        CommonTree STRING80=null;
+        CommonTree T_UTF881=null;
+        CommonTree UTF882=null;
+        CommonTree T_VAR83=null;
+        SociaLiteRule.dotname_return dotname84 =null;
 
 
-        CommonTree T_INT76_tree=null;
-        CommonTree INT77_tree=null;
-        CommonTree T_FLOAT78_tree=null;
-        CommonTree FLOAT79_tree=null;
-        CommonTree T_STR80_tree=null;
-        CommonTree STRING81_tree=null;
-        CommonTree T_UTF882_tree=null;
-        CommonTree UTF883_tree=null;
-        CommonTree T_VAR84_tree=null;
+        CommonTree T_INT75_tree=null;
+        CommonTree INT76_tree=null;
+        CommonTree T_FLOAT77_tree=null;
+        CommonTree FLOAT78_tree=null;
+        CommonTree T_STR79_tree=null;
+        CommonTree STRING80_tree=null;
+        CommonTree T_UTF881_tree=null;
+        CommonTree UTF882_tree=null;
+        CommonTree T_VAR83_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:412:2: ( ^( T_INT INT ) | ^( T_FLOAT FLOAT ) | ^( T_STR STRING ) | ^( T_UTF8 UTF8 ) | ^( T_VAR dotname ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:436:2: ( ^( T_INT INT ) | ^( T_FLOAT FLOAT ) | ^( T_STR STRING ) | ^( T_UTF8 UTF8 ) | ^( T_VAR dotname ) )
             int alt28=5;
             switch ( input.LA(1) ) {
             case T_INT:
@@ -3587,7 +3559,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt28) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:412:3: ^( T_INT INT )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:436:3: ^( T_INT INT )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3598,20 +3570,20 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    T_INT76=(CommonTree)match(input,T_INT,FOLLOW_T_INT_in_term825); 
-                    T_INT76_tree = (CommonTree)adaptor.dupNode(T_INT76);
+                    T_INT75=(CommonTree)match(input,T_INT,FOLLOW_T_INT_in_term850); 
+                    T_INT75_tree = (CommonTree)adaptor.dupNode(T_INT75);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(T_INT76_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(T_INT75_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    INT77=(CommonTree)match(input,INT,FOLLOW_INT_in_term827); 
-                    INT77_tree = (CommonTree)adaptor.dupNode(INT77);
+                    INT76=(CommonTree)match(input,INT,FOLLOW_INT_in_term852); 
+                    INT76_tree = (CommonTree)adaptor.dupNode(INT76);
 
 
-                    adaptor.addChild(root_1, INT77_tree);
+                    adaptor.addChild(root_1, INT76_tree);
 
 
                     match(input, Token.UP, null); 
@@ -3621,19 +3593,19 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-                    	    if ((INT77!=null?INT77.getText():null).endsWith("l") || (INT77!=null?INT77.getText():null).endsWith("L")) {
-                    	        Long v = new Long(Long.parseLong((INT77!=null?INT77.getText():null).substring(0, (INT77!=null?INT77.getText():null).length()-1)));
-                    	        retval.result = new Const(v);
+                    	    if ((INT76!=null?INT76.getText():null).endsWith("l") || (INT76!=null?INT76.getText():null).endsWith("L")) {
+                    	        Long v = new Long(Long.parseLong((INT76!=null?INT76.getText():null).substring(0, (INT76!=null?INT76.getText():null).length()-1)));
+                    	        retval.result = new Const(v, getNextConstId());
                     	    } else {
-                    	        Integer v = new Integer(Integer.parseInt((INT77!=null?INT77.getText():null)));
-                    	        retval.result = new Const(v);
+                    	        Integer v = new Integer(Integer.parseInt((INT76!=null?INT76.getText():null)));
+                    	        retval.result = new Const(v, getNextConstId());
                     	    }
                     	 
 
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:420:6: ^( T_FLOAT FLOAT )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:444:6: ^( T_FLOAT FLOAT )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3644,20 +3616,20 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    T_FLOAT78=(CommonTree)match(input,T_FLOAT,FOLLOW_T_FLOAT_in_term835); 
-                    T_FLOAT78_tree = (CommonTree)adaptor.dupNode(T_FLOAT78);
+                    T_FLOAT77=(CommonTree)match(input,T_FLOAT,FOLLOW_T_FLOAT_in_term860); 
+                    T_FLOAT77_tree = (CommonTree)adaptor.dupNode(T_FLOAT77);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(T_FLOAT78_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(T_FLOAT77_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    FLOAT79=(CommonTree)match(input,FLOAT,FOLLOW_FLOAT_in_term837); 
-                    FLOAT79_tree = (CommonTree)adaptor.dupNode(FLOAT79);
+                    FLOAT78=(CommonTree)match(input,FLOAT,FOLLOW_FLOAT_in_term862); 
+                    FLOAT78_tree = (CommonTree)adaptor.dupNode(FLOAT78);
 
 
-                    adaptor.addChild(root_1, FLOAT79_tree);
+                    adaptor.addChild(root_1, FLOAT78_tree);
 
 
                     match(input, Token.UP, null); 
@@ -3667,22 +3639,22 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-                     	    if ((FLOAT79!=null?FLOAT79.getText():null).endsWith("f") || (FLOAT79!=null?FLOAT79.getText():null).endsWith("F")) {
-                     	        Float v = new Float(Float.parseFloat((FLOAT79!=null?FLOAT79.getText():null).substring(0, (FLOAT79!=null?FLOAT79.getText():null).length()-1)));
-                     	        retval.result = new Const(v);
-                     	    } else if ((FLOAT79!=null?FLOAT79.getText():null).endsWith("d") || (FLOAT79!=null?FLOAT79.getText():null).endsWith("D")) {
-                     	        Double v = new Double(Double.parseDouble((FLOAT79!=null?FLOAT79.getText():null).substring(0, (FLOAT79!=null?FLOAT79.getText():null).length()-1)));
-                     	        retval.result = new Const(v);
+                     	    if ((FLOAT78!=null?FLOAT78.getText():null).endsWith("f") || (FLOAT78!=null?FLOAT78.getText():null).endsWith("F")) {
+                     	        Float v = new Float(Float.parseFloat((FLOAT78!=null?FLOAT78.getText():null).substring(0, (FLOAT78!=null?FLOAT78.getText():null).length()-1)));
+                     	        retval.result = new Const(v, getNextConstId());
+                     	    } else if ((FLOAT78!=null?FLOAT78.getText():null).endsWith("d") || (FLOAT78!=null?FLOAT78.getText():null).endsWith("D")) {
+                     	        Double v = new Double(Double.parseDouble((FLOAT78!=null?FLOAT78.getText():null).substring(0, (FLOAT78!=null?FLOAT78.getText():null).length()-1)));
+                     	        retval.result = new Const(v, getNextConstId());
                      	    } else {
-                         	        Double v = new Double(Double.parseDouble((FLOAT79!=null?FLOAT79.getText():null)));
-                         	        retval.result = new Const(v);
+                         	        Double v = new Double(Double.parseDouble((FLOAT78!=null?FLOAT78.getText():null)));
+                         	        retval.result = new Const(v, getNextConstId());
                      	    }
                     	
 
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:432:3: ^( T_STR STRING )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:456:3: ^( T_STR STRING )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3693,20 +3665,20 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    T_STR80=(CommonTree)match(input,T_STR,FOLLOW_T_STR_in_term846); 
-                    T_STR80_tree = (CommonTree)adaptor.dupNode(T_STR80);
+                    T_STR79=(CommonTree)match(input,T_STR,FOLLOW_T_STR_in_term871); 
+                    T_STR79_tree = (CommonTree)adaptor.dupNode(T_STR79);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(T_STR80_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(T_STR79_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    STRING81=(CommonTree)match(input,STRING,FOLLOW_STRING_in_term848); 
-                    STRING81_tree = (CommonTree)adaptor.dupNode(STRING81);
+                    STRING80=(CommonTree)match(input,STRING,FOLLOW_STRING_in_term873); 
+                    STRING80_tree = (CommonTree)adaptor.dupNode(STRING80);
 
 
-                    adaptor.addChild(root_1, STRING81_tree);
+                    adaptor.addChild(root_1, STRING80_tree);
 
 
                     match(input, Token.UP, null); 
@@ -3715,12 +3687,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    String v = new String((STRING81!=null?STRING81.getText():null).substring(1, (STRING81!=null?STRING81.getText():null).length()-1)); retval.result = new Const(v); 
+                    String v = new String((STRING80!=null?STRING80.getText():null).substring(1, (STRING80!=null?STRING80.getText():null).length()-1)); retval.result = new Const(v, getNextConstId()); 
 
                     }
                     break;
                 case 4 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:433:3: ^( T_UTF8 UTF8 )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:457:3: ^( T_UTF8 UTF8 )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3731,20 +3703,20 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    T_UTF882=(CommonTree)match(input,T_UTF8,FOLLOW_T_UTF8_in_term857); 
-                    T_UTF882_tree = (CommonTree)adaptor.dupNode(T_UTF882);
+                    T_UTF881=(CommonTree)match(input,T_UTF8,FOLLOW_T_UTF8_in_term882); 
+                    T_UTF881_tree = (CommonTree)adaptor.dupNode(T_UTF881);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(T_UTF882_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(T_UTF881_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    UTF883=(CommonTree)match(input,UTF8,FOLLOW_UTF8_in_term859); 
-                    UTF883_tree = (CommonTree)adaptor.dupNode(UTF883);
+                    UTF882=(CommonTree)match(input,UTF8,FOLLOW_UTF8_in_term884); 
+                    UTF882_tree = (CommonTree)adaptor.dupNode(UTF882);
 
 
-                    adaptor.addChild(root_1, UTF883_tree);
+                    adaptor.addChild(root_1, UTF882_tree);
 
 
                     match(input, Token.UP, null); 
@@ -3753,12 +3725,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                     Utf8 v =  new Utf8((UTF883!=null?UTF883.getText():null).substring(2, (UTF883!=null?UTF883.getText():null).length()-1)); retval.result = new Const(v); 
+                     Utf8 v =  new Utf8((UTF882!=null?UTF882.getText():null).substring(2, (UTF882!=null?UTF882.getText():null).length()-1)); retval.result = new Const(v, getNextConstId()); 
 
                     }
                     break;
                 case 5 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:434:3: ^( T_VAR dotname )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:458:3: ^( T_VAR dotname )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3769,21 +3741,21 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    T_VAR84=(CommonTree)match(input,T_VAR,FOLLOW_T_VAR_in_term868); 
-                    T_VAR84_tree = (CommonTree)adaptor.dupNode(T_VAR84);
+                    T_VAR83=(CommonTree)match(input,T_VAR,FOLLOW_T_VAR_in_term893); 
+                    T_VAR83_tree = (CommonTree)adaptor.dupNode(T_VAR83);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(T_VAR84_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(T_VAR83_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_dotname_in_term870);
-                    dotname85=dotname();
+                    pushFollow(FOLLOW_dotname_in_term895);
+                    dotname84=dotname();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_1, dotname85.getTree());
+                    adaptor.addChild(root_1, dotname84.getTree());
 
 
                     match(input, Token.UP, null); 
@@ -3793,8 +3765,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-                    	    retval.result = Variable.getVariable((dotname85!=null?dotname85.result:null));
-                    	    if ((dotname85!=null?dotname85.result:null).indexOf('.')>=0) {
+                    	    retval.result = getVariable((dotname84!=null?dotname84.result:null));
+                    	    if ((dotname84!=null?dotname84.result:null).indexOf('.')>=0) {
                     	        dotVars.add((Variable)retval.result);
                     	    }
                     	
@@ -3827,7 +3799,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "expr"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:440:1: expr returns [Object result] : ( ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr ) | ^(eq= '=' e1= simpleExpr e2= simpleExpr ) | ^( MULTI_ASSIGN varlist function (c= cast )? ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:464:1: expr returns [Object result] : ( ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr ) | ^(eq= '=' e1= simpleExpr e2= simpleExpr ) | ^( MULTI_ASSIGN varlist function (c= cast )? ) );
     public final SociaLiteRule.expr_return expr() throws RecognitionException {
         SociaLiteRule.expr_return retval = new SociaLiteRule.expr_return();
         retval.start = input.LT(1);
@@ -3840,37 +3812,37 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree cmpStr=null;
         CommonTree eq=null;
-        CommonTree MULTI_ASSIGN86=null;
+        CommonTree MULTI_ASSIGN85=null;
         SociaLiteRule.simpleExpr_return e1 =null;
 
         SociaLiteRule.simpleExpr_return e2 =null;
 
         SociaLiteRule.cast_return c =null;
 
-        SociaLiteRule.varlist_return varlist87 =null;
+        SociaLiteRule.varlist_return varlist86 =null;
 
-        SociaLiteRule.function_return function88 =null;
+        SociaLiteRule.function_return function87 =null;
 
 
         CommonTree cmpStr_tree=null;
         CommonTree eq_tree=null;
-        CommonTree MULTI_ASSIGN86_tree=null;
+        CommonTree MULTI_ASSIGN85_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:441:2: ( ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr ) | ^(eq= '=' e1= simpleExpr e2= simpleExpr ) | ^( MULTI_ASSIGN varlist function (c= cast )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:465:2: ( ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr ) | ^(eq= '=' e1= simpleExpr e2= simpleExpr ) | ^( MULTI_ASSIGN varlist function (c= cast )? ) )
             int alt30=3;
             switch ( input.LA(1) ) {
-            case 63:
-            case 76:
+            case 64:
             case 77:
-            case 79:
+            case 78:
             case 80:
             case 81:
+            case 82:
                 {
                 alt30=1;
                 }
                 break;
-            case 78:
+            case 79:
                 {
                 alt30=2;
                 }
@@ -3890,7 +3862,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt30) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:441:3: ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:465:3: ^(cmpStr= ( '<' | '<=' | '>' | '>=' | '==' | '!=' ) e1= simpleExpr e2= simpleExpr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3902,7 +3874,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     cmpStr=(CommonTree)input.LT(1);
 
-                    if ( input.LA(1)==63||(input.LA(1) >= 76 && input.LA(1) <= 77)||(input.LA(1) >= 79 && input.LA(1) <= 81) ) {
+                    if ( input.LA(1)==64||(input.LA(1) >= 77 && input.LA(1) <= 78)||(input.LA(1) >= 80 && input.LA(1) <= 82) ) {
                         input.consume();
                         cmpStr_tree = (CommonTree)adaptor.dupNode(cmpStr);
 
@@ -3919,7 +3891,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_simpleExpr_in_expr903);
+                    pushFollow(FOLLOW_simpleExpr_in_expr928);
                     e1=simpleExpr();
 
                     state._fsp--;
@@ -3928,7 +3900,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_simpleExpr_in_expr907);
+                    pushFollow(FOLLOW_simpleExpr_in_expr932);
                     e2=simpleExpr();
 
                     state._fsp--;
@@ -3952,7 +3924,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:446:5: ^(eq= '=' e1= simpleExpr e2= simpleExpr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:470:5: ^(eq= '=' e1= simpleExpr e2= simpleExpr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -3963,7 +3935,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    eq=(CommonTree)match(input,78,FOLLOW_78_in_expr916); 
+                    eq=(CommonTree)match(input,79,FOLLOW_79_in_expr941); 
                     eq_tree = (CommonTree)adaptor.dupNode(eq);
 
 
@@ -3972,7 +3944,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_simpleExpr_in_expr920);
+                    pushFollow(FOLLOW_simpleExpr_in_expr945);
                     e1=simpleExpr();
 
                     state._fsp--;
@@ -3981,7 +3953,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_simpleExpr_in_expr924);
+                    pushFollow(FOLLOW_simpleExpr_in_expr949);
                     e2=simpleExpr();
 
                     state._fsp--;
@@ -4015,7 +3987,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:461:6: ^( MULTI_ASSIGN varlist function (c= cast )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:485:6: ^( MULTI_ASSIGN varlist function (c= cast )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4026,45 +3998,45 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    MULTI_ASSIGN86=(CommonTree)match(input,MULTI_ASSIGN,FOLLOW_MULTI_ASSIGN_in_expr932); 
-                    MULTI_ASSIGN86_tree = (CommonTree)adaptor.dupNode(MULTI_ASSIGN86);
+                    MULTI_ASSIGN85=(CommonTree)match(input,MULTI_ASSIGN,FOLLOW_MULTI_ASSIGN_in_expr957); 
+                    MULTI_ASSIGN85_tree = (CommonTree)adaptor.dupNode(MULTI_ASSIGN85);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(MULTI_ASSIGN86_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(MULTI_ASSIGN85_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_varlist_in_expr934);
-                    varlist87=varlist();
+                    pushFollow(FOLLOW_varlist_in_expr959);
+                    varlist86=varlist();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_1, varlist87.getTree());
+                    adaptor.addChild(root_1, varlist86.getTree());
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_function_in_expr936);
-                    function88=function();
+                    pushFollow(FOLLOW_function_in_expr961);
+                    function87=function();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_1, function88.getTree());
+                    adaptor.addChild(root_1, function87.getTree());
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:461:39: (c= cast )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:485:39: (c= cast )?
                     int alt29=2;
                     int LA29_0 = input.LA(1);
 
-                    if ( (LA29_0==ID||(LA29_0 >= 83 && LA29_0 <= 84)||LA29_0==89||LA29_0==91||(LA29_0 >= 94 && LA29_0 <= 95)) ) {
+                    if ( (LA29_0==ID||(LA29_0 >= 84 && LA29_0 <= 85)||LA29_0==90||LA29_0==92||(LA29_0 >= 95 && LA29_0 <= 96)) ) {
                         alt29=1;
                     }
                     switch (alt29) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:461:39: c= cast
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:485:39: c= cast
                             {
                             _last = (CommonTree)input.LT(1);
-                            pushFollow(FOLLOW_cast_in_expr940);
+                            pushFollow(FOLLOW_cast_in_expr965);
                             c=cast();
 
                             state._fsp--;
@@ -4091,9 +4063,9 @@ public TreeAdaptor getTreeAdaptor() {
                     	            int line=(c!=null?((CommonTree)c.tree):null).getLine()-1, pos=(c!=null?((CommonTree)c.tree):null).getCharPositionInLine()+1;
                     	            throw new ParseException(getParser(), line, pos, "Invalid type cast"); 
                     	        }
-                    	        retval.result = new AssignOp((varlist87!=null?varlist87.result:null), typecast, (function88!=null?function88.result:null)); 
+                    	        retval.result = new AssignOp((varlist86!=null?varlist86.result:null), typecast, (function87!=null?function87.result:null)); 
                     	    } catch (InternalException e) {
-                    	        int line=(varlist87!=null?((CommonTree)varlist87.tree):null).getLine()-1, pos=(varlist87!=null?((CommonTree)varlist87.tree):null).getCharPositionInLine()+1;
+                    	        int line=(varlist86!=null?((CommonTree)varlist86.tree):null).getLine()-1, pos=(varlist86!=null?((CommonTree)varlist86.tree):null).getCharPositionInLine()+1;
                     	        throw new ParseException(getParser(), line, pos, e.getMessage()); 
                     	    }
                     	
@@ -4126,7 +4098,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "simpleExpr"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:474:1: simpleExpr returns [Object result] : ( multExpr | ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:498:1: simpleExpr returns [Object result] : ( multExpr | ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr ) );
     public final SociaLiteRule.simpleExpr_return simpleExpr() throws RecognitionException {
         SociaLiteRule.simpleExpr_return retval = new SociaLiteRule.simpleExpr_return();
         retval.start = input.LT(1);
@@ -4142,20 +4114,20 @@ public TreeAdaptor getTreeAdaptor() {
 
         SociaLiteRule.simpleExpr_return e2 =null;
 
-        SociaLiteRule.multExpr_return multExpr89 =null;
+        SociaLiteRule.multExpr_return multExpr88 =null;
 
 
         CommonTree op_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:475:2: ( multExpr | ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:499:2: ( multExpr | ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr ) )
             int alt31=2;
             int LA31_0 = input.LA(1);
 
-            if ( (LA31_0==COMPOUND_EXPR||LA31_0==FUNCTION||LA31_0==TERM||LA31_0==67||LA31_0==72||LA31_0==96) ) {
+            if ( (LA31_0==COMPOUND_EXPR||LA31_0==FUNCTION||LA31_0==TERM||LA31_0==68||LA31_0==73||LA31_0==97) ) {
                 alt31=1;
             }
-            else if ( (LA31_0==68||LA31_0==70) ) {
+            else if ( (LA31_0==69||LA31_0==71) ) {
                 alt31=2;
             }
             else {
@@ -4167,26 +4139,26 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt31) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:475:3: multExpr
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:499:3: multExpr
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_multExpr_in_simpleExpr955);
-                    multExpr89=multExpr();
+                    pushFollow(FOLLOW_multExpr_in_simpleExpr980);
+                    multExpr88=multExpr();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, multExpr89.getTree());
+                    adaptor.addChild(root_0, multExpr88.getTree());
 
 
-                    retval.result = (multExpr89!=null?multExpr89.result:null);
+                    retval.result = (multExpr88!=null?multExpr88.result:null);
 
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:476:3: ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:500:3: ^(op= ( '+' | '-' ) e1= simpleExpr e2= simpleExpr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4198,7 +4170,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     op=(CommonTree)input.LT(1);
 
-                    if ( input.LA(1)==68||input.LA(1)==70 ) {
+                    if ( input.LA(1)==69||input.LA(1)==71 ) {
                         input.consume();
                         op_tree = (CommonTree)adaptor.dupNode(op);
 
@@ -4215,7 +4187,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_simpleExpr_in_simpleExpr972);
+                    pushFollow(FOLLOW_simpleExpr_in_simpleExpr997);
                     e1=simpleExpr();
 
                     state._fsp--;
@@ -4224,7 +4196,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_simpleExpr_in_simpleExpr976);
+                    pushFollow(FOLLOW_simpleExpr_in_simpleExpr1001);
                     e2=simpleExpr();
 
                     state._fsp--;
@@ -4277,7 +4249,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "multExpr"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:486:1: multExpr returns [Object result] : ( exprValue | ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:510:1: multExpr returns [Object result] : ( exprValue | ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr ) );
     public final SociaLiteRule.multExpr_return multExpr() throws RecognitionException {
         SociaLiteRule.multExpr_return retval = new SociaLiteRule.multExpr_return();
         retval.start = input.LT(1);
@@ -4293,20 +4265,20 @@ public TreeAdaptor getTreeAdaptor() {
 
         SociaLiteRule.multExpr_return v2 =null;
 
-        SociaLiteRule.exprValue_return exprValue90 =null;
+        SociaLiteRule.exprValue_return exprValue89 =null;
 
 
         CommonTree op_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:487:2: ( exprValue | ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:511:2: ( exprValue | ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr ) )
             int alt32=2;
             int LA32_0 = input.LA(1);
 
             if ( (LA32_0==COMPOUND_EXPR||LA32_0==FUNCTION||LA32_0==TERM) ) {
                 alt32=1;
             }
-            else if ( (LA32_0==67||LA32_0==72||LA32_0==96) ) {
+            else if ( (LA32_0==68||LA32_0==73||LA32_0==97) ) {
                 alt32=2;
             }
             else {
@@ -4318,26 +4290,26 @@ public TreeAdaptor getTreeAdaptor() {
             }
             switch (alt32) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:487:4: exprValue
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:511:4: exprValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_exprValue_in_multExpr991);
-                    exprValue90=exprValue();
+                    pushFollow(FOLLOW_exprValue_in_multExpr1016);
+                    exprValue89=exprValue();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, exprValue90.getTree());
+                    adaptor.addChild(root_0, exprValue89.getTree());
 
 
-                     retval.result = (exprValue90!=null?exprValue90.result:null); 
+                     retval.result = (exprValue89!=null?exprValue89.result:null); 
 
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:488:3: ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:512:3: ^(op= ( '*' | '/' | 'mod' ) v1= multExpr v2= multExpr )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4349,7 +4321,7 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     op=(CommonTree)input.LT(1);
 
-                    if ( input.LA(1)==67||input.LA(1)==72||input.LA(1)==96 ) {
+                    if ( input.LA(1)==68||input.LA(1)==73||input.LA(1)==97 ) {
                         input.consume();
                         op_tree = (CommonTree)adaptor.dupNode(op);
 
@@ -4366,7 +4338,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_multExpr_in_multExpr1010);
+                    pushFollow(FOLLOW_multExpr_in_multExpr1035);
                     v1=multExpr();
 
                     state._fsp--;
@@ -4375,7 +4347,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_multExpr_in_multExpr1014);
+                    pushFollow(FOLLOW_multExpr_in_multExpr1039);
                     v2=multExpr();
 
                     state._fsp--;
@@ -4428,7 +4400,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "compExpr"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:498:1: compExpr returns [Object result] : e1= simpleExpr ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:522:1: compExpr returns [Object result] : e1= simpleExpr ;
     public final SociaLiteRule.compExpr_return compExpr() throws RecognitionException {
         SociaLiteRule.compExpr_return retval = new SociaLiteRule.compExpr_return();
         retval.start = input.LT(1);
@@ -4444,14 +4416,14 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:499:2: (e1= simpleExpr )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:499:4: e1= simpleExpr
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:523:2: (e1= simpleExpr )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:523:4: e1= simpleExpr
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_simpleExpr_in_compExpr1031);
+            pushFollow(FOLLOW_simpleExpr_in_compExpr1056);
             e1=simpleExpr();
 
             state._fsp--;
@@ -4487,7 +4459,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "varlist"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:501:1: varlist returns [Object result] : id1= dotname (id2= dotname )+ ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:525:1: varlist returns [Object result] : id1= dotname (id2= dotname )+ ;
     public final SociaLiteRule.varlist_return varlist() throws RecognitionException {
         SociaLiteRule.varlist_return retval = new SociaLiteRule.varlist_return();
         retval.start = input.LT(1);
@@ -4505,14 +4477,14 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:502:2: (id1= dotname (id2= dotname )+ )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:502:3: id1= dotname (id2= dotname )+
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:526:2: (id1= dotname (id2= dotname )+ )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:526:3: id1= dotname (id2= dotname )+
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_dotname_in_varlist1051);
+            pushFollow(FOLLOW_dotname_in_varlist1076);
             id1=dotname();
 
             state._fsp--;
@@ -4522,9 +4494,9 @@ public TreeAdaptor getTreeAdaptor() {
 
              
             	    List<Variable> vars = new ArrayList<Variable>();
-            	    vars.add(Variable.getVariable((id1!=null?id1.result:null))); retval.result = vars; 
+            	    vars.add(getVariable((id1!=null?id1.result:null))); retval.result = vars; 
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:505:2: (id2= dotname )+
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:529:2: (id2= dotname )+
             int cnt33=0;
             loop33:
             do {
@@ -4538,10 +4510,10 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt33) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:505:3: id2= dotname
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:529:3: id2= dotname
             	    {
             	    _last = (CommonTree)input.LT(1);
-            	    pushFollow(FOLLOW_dotname_in_varlist1058);
+            	    pushFollow(FOLLOW_dotname_in_varlist1083);
             	    id2=dotname();
 
             	    state._fsp--;
@@ -4550,7 +4522,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             	     
-            	    	    vars.add(Variable.getVariable((id2!=null?id2.result:null)));
+            	    	    vars.add(getVariable((id2!=null?id2.result:null)));
 
             	    }
             	    break;
@@ -4591,7 +4563,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "exprValue"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:508:1: exprValue returns [Object result] : ( ^( TERM term (neg= '-' )? (c= cast )? ) | ^( FUNCTION function (c= cast )? ) | ^( COMPOUND_EXPR compExpr (c= cast )? ) );
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:532:1: exprValue returns [Object result] : ( ^( TERM term (neg= '-' )? (c= cast )? ) | ^( FUNCTION function (c= cast )? ) | ^( COMPOUND_EXPR compExpr (c= cast )? ) );
     public final SociaLiteRule.exprValue_return exprValue() throws RecognitionException {
         SociaLiteRule.exprValue_return retval = new SociaLiteRule.exprValue_return();
         retval.start = input.LT(1);
@@ -4603,25 +4575,25 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _last = null;
 
         CommonTree neg=null;
-        CommonTree TERM91=null;
-        CommonTree FUNCTION93=null;
-        CommonTree COMPOUND_EXPR95=null;
+        CommonTree TERM90=null;
+        CommonTree FUNCTION92=null;
+        CommonTree COMPOUND_EXPR94=null;
         SociaLiteRule.cast_return c =null;
 
-        SociaLiteRule.term_return term92 =null;
+        SociaLiteRule.term_return term91 =null;
 
-        SociaLiteRule.function_return function94 =null;
+        SociaLiteRule.function_return function93 =null;
 
-        SociaLiteRule.compExpr_return compExpr96 =null;
+        SociaLiteRule.compExpr_return compExpr95 =null;
 
 
         CommonTree neg_tree=null;
-        CommonTree TERM91_tree=null;
-        CommonTree FUNCTION93_tree=null;
-        CommonTree COMPOUND_EXPR95_tree=null;
+        CommonTree TERM90_tree=null;
+        CommonTree FUNCTION92_tree=null;
+        CommonTree COMPOUND_EXPR94_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:509:2: ( ^( TERM term (neg= '-' )? (c= cast )? ) | ^( FUNCTION function (c= cast )? ) | ^( COMPOUND_EXPR compExpr (c= cast )? ) )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:533:2: ( ^( TERM term (neg= '-' )? (c= cast )? ) | ^( FUNCTION function (c= cast )? ) | ^( COMPOUND_EXPR compExpr (c= cast )? ) )
             int alt38=3;
             switch ( input.LA(1) ) {
             case TERM:
@@ -4649,7 +4621,7 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt38) {
                 case 1 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:509:3: ^( TERM term (neg= '-' )? (c= cast )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:533:3: ^( TERM term (neg= '-' )? (c= cast )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4660,36 +4632,36 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    TERM91=(CommonTree)match(input,TERM,FOLLOW_TERM_in_exprValue1075); 
-                    TERM91_tree = (CommonTree)adaptor.dupNode(TERM91);
+                    TERM90=(CommonTree)match(input,TERM,FOLLOW_TERM_in_exprValue1100); 
+                    TERM90_tree = (CommonTree)adaptor.dupNode(TERM90);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(TERM91_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(TERM90_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_term_in_exprValue1077);
-                    term92=term();
+                    pushFollow(FOLLOW_term_in_exprValue1102);
+                    term91=term();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_1, term92.getTree());
+                    adaptor.addChild(root_1, term91.getTree());
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:509:15: (neg= '-' )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:533:15: (neg= '-' )?
                     int alt34=2;
                     int LA34_0 = input.LA(1);
 
-                    if ( (LA34_0==70) ) {
+                    if ( (LA34_0==71) ) {
                         alt34=1;
                     }
                     switch (alt34) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:509:16: neg= '-'
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:533:16: neg= '-'
                             {
                             _last = (CommonTree)input.LT(1);
-                            neg=(CommonTree)match(input,70,FOLLOW_70_in_exprValue1082); 
+                            neg=(CommonTree)match(input,71,FOLLOW_71_in_exprValue1107); 
                             neg_tree = (CommonTree)adaptor.dupNode(neg);
 
 
@@ -4702,19 +4674,19 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:509:27: (c= cast )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:533:27: (c= cast )?
                     int alt35=2;
                     int LA35_0 = input.LA(1);
 
-                    if ( (LA35_0==ID||(LA35_0 >= 83 && LA35_0 <= 84)||LA35_0==89||LA35_0==91||(LA35_0 >= 94 && LA35_0 <= 95)) ) {
+                    if ( (LA35_0==ID||(LA35_0 >= 84 && LA35_0 <= 85)||LA35_0==90||LA35_0==92||(LA35_0 >= 95 && LA35_0 <= 96)) ) {
                         alt35=1;
                     }
                     switch (alt35) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:509:27: c= cast
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:533:27: c= cast
                             {
                             _last = (CommonTree)input.LT(1);
-                            pushFollow(FOLLOW_cast_in_exprValue1088);
+                            pushFollow(FOLLOW_cast_in_exprValue1113);
                             c=cast();
 
                             state._fsp--;
@@ -4735,14 +4707,14 @@ public TreeAdaptor getTreeAdaptor() {
 
 
 
-                    	    retval.result = (term92!=null?term92.result:null);
+                    	    retval.result = (term91!=null?term91.result:null);
                     	    if ((c!=null?c.result:null) != null) {
                     	        TypeCast cast = new TypeCast((c!=null?c.result:null), retval.result);
                     	        retval.result = cast;
                     	    }
                     	    if ((neg!=null?neg.getText():null) != null) {
-                    	        if ((term92!=null?term92.result:null) instanceof Const) {
-                    	            ((Const)(term92!=null?term92.result:null)).negate();
+                    	        if ((term91!=null?term91.result:null) instanceof Const) {
+                    	            ((Const)(term91!=null?term91.result:null)).negate();
                     	        } else {
                     	            try { retval.result = new UnaryMinus(retval.result); }
                     	            catch (InternalException e) {
@@ -4755,7 +4727,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:526:3: ^( FUNCTION function (c= cast )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:550:3: ^( FUNCTION function (c= cast )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4766,36 +4738,36 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    FUNCTION93=(CommonTree)match(input,FUNCTION,FOLLOW_FUNCTION_in_exprValue1097); 
-                    FUNCTION93_tree = (CommonTree)adaptor.dupNode(FUNCTION93);
+                    FUNCTION92=(CommonTree)match(input,FUNCTION,FOLLOW_FUNCTION_in_exprValue1122); 
+                    FUNCTION92_tree = (CommonTree)adaptor.dupNode(FUNCTION92);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(FUNCTION93_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(FUNCTION92_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_function_in_exprValue1099);
-                    function94=function();
+                    pushFollow(FOLLOW_function_in_exprValue1124);
+                    function93=function();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_1, function94.getTree());
+                    adaptor.addChild(root_1, function93.getTree());
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:526:24: (c= cast )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:550:24: (c= cast )?
                     int alt36=2;
                     int LA36_0 = input.LA(1);
 
-                    if ( (LA36_0==ID||(LA36_0 >= 83 && LA36_0 <= 84)||LA36_0==89||LA36_0==91||(LA36_0 >= 94 && LA36_0 <= 95)) ) {
+                    if ( (LA36_0==ID||(LA36_0 >= 84 && LA36_0 <= 85)||LA36_0==90||LA36_0==92||(LA36_0 >= 95 && LA36_0 <= 96)) ) {
                         alt36=1;
                     }
                     switch (alt36) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:526:24: c= cast
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:550:24: c= cast
                             {
                             _last = (CommonTree)input.LT(1);
-                            pushFollow(FOLLOW_cast_in_exprValue1103);
+                            pushFollow(FOLLOW_cast_in_exprValue1128);
                             c=cast();
 
                             state._fsp--;
@@ -4816,9 +4788,9 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                      
-                    	    retval.result = (function94!=null?function94.result:null); 
+                    	    retval.result = (function93!=null?function93.result:null); 
                     	    if ((c!=null?c.result:null) != null) {
-                    	        Object tmpvar = addTmpVarAssign((function94!=null?function94.result:null));
+                    	        Object tmpvar = addTmpVarAssign((function93!=null?function93.result:null));
                     	        TypeCast cast = new TypeCast((c!=null?c.result:null), tmpvar);
                     	        retval.result = cast;
                     	    }
@@ -4827,7 +4799,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:534:3: ^( COMPOUND_EXPR compExpr (c= cast )? )
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:558:3: ^( COMPOUND_EXPR compExpr (c= cast )? )
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
@@ -4838,36 +4810,36 @@ public TreeAdaptor getTreeAdaptor() {
                     CommonTree _first_1 = null;
                     CommonTree root_1 = (CommonTree)adaptor.nil();
                     _last = (CommonTree)input.LT(1);
-                    COMPOUND_EXPR95=(CommonTree)match(input,COMPOUND_EXPR,FOLLOW_COMPOUND_EXPR_in_exprValue1112); 
-                    COMPOUND_EXPR95_tree = (CommonTree)adaptor.dupNode(COMPOUND_EXPR95);
+                    COMPOUND_EXPR94=(CommonTree)match(input,COMPOUND_EXPR,FOLLOW_COMPOUND_EXPR_in_exprValue1137); 
+                    COMPOUND_EXPR94_tree = (CommonTree)adaptor.dupNode(COMPOUND_EXPR94);
 
 
-                    root_1 = (CommonTree)adaptor.becomeRoot(COMPOUND_EXPR95_tree, root_1);
+                    root_1 = (CommonTree)adaptor.becomeRoot(COMPOUND_EXPR94_tree, root_1);
 
 
                     match(input, Token.DOWN, null); 
                     _last = (CommonTree)input.LT(1);
-                    pushFollow(FOLLOW_compExpr_in_exprValue1114);
-                    compExpr96=compExpr();
+                    pushFollow(FOLLOW_compExpr_in_exprValue1139);
+                    compExpr95=compExpr();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_1, compExpr96.getTree());
+                    adaptor.addChild(root_1, compExpr95.getTree());
 
 
-                    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:534:29: (c= cast )?
+                    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:558:29: (c= cast )?
                     int alt37=2;
                     int LA37_0 = input.LA(1);
 
-                    if ( (LA37_0==ID||(LA37_0 >= 83 && LA37_0 <= 84)||LA37_0==89||LA37_0==91||(LA37_0 >= 94 && LA37_0 <= 95)) ) {
+                    if ( (LA37_0==ID||(LA37_0 >= 84 && LA37_0 <= 85)||LA37_0==90||LA37_0==92||(LA37_0 >= 95 && LA37_0 <= 96)) ) {
                         alt37=1;
                     }
                     switch (alt37) {
                         case 1 :
-                            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:534:29: c= cast
+                            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:558:29: c= cast
                             {
                             _last = (CommonTree)input.LT(1);
-                            pushFollow(FOLLOW_cast_in_exprValue1118);
+                            pushFollow(FOLLOW_cast_in_exprValue1143);
                             c=cast();
 
                             state._fsp--;
@@ -4888,7 +4860,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                      
-                    	    retval.result = (compExpr96!=null?compExpr96.result:null);
+                    	    retval.result = (compExpr95!=null?compExpr95.result:null);
                     	    if ((c!=null?c.result:null) != null) {
                     	        TypeCast cast=new TypeCast((c!=null?c.result:null), retval.result);
                     	        retval.result = cast;
@@ -4923,7 +4895,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "cast"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:542:1: cast returns [Class result] : type ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:566:1: cast returns [Class result] : type ;
     public final SociaLiteRule.cast_return cast() throws RecognitionException {
         SociaLiteRule.cast_return retval = new SociaLiteRule.cast_return();
         retval.start = input.LT(1);
@@ -4934,27 +4906,27 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _first_0 = null;
         CommonTree _last = null;
 
-        SociaLiteRule.type_return type97 =null;
+        SociaLiteRule.type_return type96 =null;
 
 
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:543:2: ( type )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:543:3: type
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:567:2: ( type )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:567:3: type
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            pushFollow(FOLLOW_type_in_cast1135);
-            type97=type();
+            pushFollow(FOLLOW_type_in_cast1160);
+            type96=type();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, type97.getTree());
+            adaptor.addChild(root_0, type96.getTree());
 
 
-            retval.result = (type97!=null?type97.result:null); 
+            retval.result = (type96!=null?type96.result:null); 
 
             }
 
@@ -4982,7 +4954,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "dotname"
-    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:545:1: dotname returns [String result] : ID ( DOT_ID )* ;
+    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:569:1: dotname returns [String result] : ID ( DOT_ID )* ;
     public final SociaLiteRule.dotname_return dotname() throws RecognitionException {
         SociaLiteRule.dotname_return retval = new SociaLiteRule.dotname_return();
         retval.start = input.LT(1);
@@ -4993,30 +4965,30 @@ public TreeAdaptor getTreeAdaptor() {
         CommonTree _first_0 = null;
         CommonTree _last = null;
 
-        CommonTree ID98=null;
-        CommonTree DOT_ID99=null;
+        CommonTree ID97=null;
+        CommonTree DOT_ID98=null;
 
-        CommonTree ID98_tree=null;
-        CommonTree DOT_ID99_tree=null;
+        CommonTree ID97_tree=null;
+        CommonTree DOT_ID98_tree=null;
 
         try {
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:546:2: ( ID ( DOT_ID )* )
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:546:3: ID ( DOT_ID )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:570:2: ( ID ( DOT_ID )* )
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:570:3: ID ( DOT_ID )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
             _last = (CommonTree)input.LT(1);
-            ID98=(CommonTree)match(input,ID,FOLLOW_ID_in_dotname1149); 
-            ID98_tree = (CommonTree)adaptor.dupNode(ID98);
+            ID97=(CommonTree)match(input,ID,FOLLOW_ID_in_dotname1174); 
+            ID97_tree = (CommonTree)adaptor.dupNode(ID97);
 
 
-            adaptor.addChild(root_0, ID98_tree);
+            adaptor.addChild(root_0, ID97_tree);
 
 
-             retval.result = new String((ID98!=null?ID98.getText():null)); 
+             retval.result = new String((ID97!=null?ID97.getText():null)); 
 
-            // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:547:3: ( DOT_ID )*
+            // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:571:3: ( DOT_ID )*
             loop39:
             do {
                 int alt39=2;
@@ -5029,17 +5001,17 @@ public TreeAdaptor getTreeAdaptor() {
 
                 switch (alt39) {
             	case 1 :
-            	    // /Users/jiwon/workspace/linkedin_socialite_backup/grammar/SociaLiteRule.g:547:4: DOT_ID
+            	    // /Users/jiwon/workspace/socialite/grammar/SociaLiteRule.g:571:4: DOT_ID
             	    {
             	    _last = (CommonTree)input.LT(1);
-            	    DOT_ID99=(CommonTree)match(input,DOT_ID,FOLLOW_DOT_ID_in_dotname1156); 
-            	    DOT_ID99_tree = (CommonTree)adaptor.dupNode(DOT_ID99);
+            	    DOT_ID98=(CommonTree)match(input,DOT_ID,FOLLOW_DOT_ID_in_dotname1181); 
+            	    DOT_ID98_tree = (CommonTree)adaptor.dupNode(DOT_ID98);
 
 
-            	    adaptor.addChild(root_0, DOT_ID99_tree);
+            	    adaptor.addChild(root_0, DOT_ID98_tree);
 
 
-            	     retval.result += new String((DOT_ID99!=null?DOT_ID99.getText():null)); 
+            	     retval.result += new String((DOT_ID98!=null?DOT_ID98.getText():null)); 
 
             	    }
             	    break;
@@ -5072,141 +5044,138 @@ public TreeAdaptor getTreeAdaptor() {
 
  
 
-    public static final BitSet FOLLOW_stat_in_prog65 = new BitSet(new long[]{0x0001400000012080L});
-    public static final BitSet FOLLOW_EOF_in_prog77 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_table_decl_in_stat90 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_rule_in_stat96 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_query_in_stat102 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_table_stmt_in_stat107 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_CLEAR_in_table_stmt124 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_ID_in_table_stmt126 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_DROP_in_table_stmt135 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_ID_in_table_stmt137 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_QUERY_in_query155 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_predicate_in_query157 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_DECL_in_table_decl177 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_ID_in_table_decl179 = new BitSet(new long[]{0x0000000000000200L});
-    public static final BitSet FOLLOW_decls_in_table_decl181 = new BitSet(new long[]{0x0000020000000000L});
-    public static final BitSet FOLLOW_OPTION_in_table_decl184 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_table_opts_in_table_decl186 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_t_opt_in_table_opts213 = new BitSet(new long[]{0x00020C1042001002L});
-    public static final BitSet FOLLOW_t_opt_in_table_opts221 = new BitSet(new long[]{0x00020C1042001002L});
-    public static final BitSet FOLLOW_SORT_BY_in_t_opt240 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_ID_in_t_opt244 = new BitSet(new long[]{0x0004000000000008L});
-    public static final BitSet FOLLOW_SORT_ORDER_in_t_opt249 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ORDER_BY_in_t_opt259 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_ID_in_t_opt261 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_INDEX_BY_in_t_opt269 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_stat_in_prog74 = new BitSet(new long[]{0x0001400000012080L});
+    public static final BitSet FOLLOW_EOF_in_prog80 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_table_decl_in_stat93 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_rule_in_stat99 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_query_in_stat105 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_table_stmt_in_stat110 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_CLEAR_in_table_stmt127 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_ID_in_table_stmt129 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_DROP_in_table_stmt138 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_ID_in_table_stmt140 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_QUERY_in_query158 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_predicate_in_query160 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_DECL_in_table_decl180 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_ID_in_table_decl182 = new BitSet(new long[]{0x0000000000000200L});
+    public static final BitSet FOLLOW_decls_in_table_decl184 = new BitSet(new long[]{0x0000020000000000L});
+    public static final BitSet FOLLOW_OPTION_in_table_decl187 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_table_opts_in_table_decl189 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_t_opt_in_table_opts223 = new BitSet(new long[]{0x00040C1042001002L});
+    public static final BitSet FOLLOW_t_opt_in_table_opts231 = new BitSet(new long[]{0x00040C1042001002L});
+    public static final BitSet FOLLOW_SORT_BY_in_t_opt250 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_ID_in_t_opt254 = new BitSet(new long[]{0x0008000000000008L});
+    public static final BitSet FOLLOW_SORT_ORDER_in_t_opt259 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ORDER_BY_in_t_opt269 = new BitSet(new long[]{0x0000000000000004L});
     public static final BitSet FOLLOW_ID_in_t_opt271 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_GROUP_BY_in_t_opt279 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_INT_in_t_opt281 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_PREDEFINED_in_t_opt289 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_CONCURRENT_in_t_opt296 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_MULTISET_in_t_opt303 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_COL_DECLS_in_decls320 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_col_decls_in_decls322 = new BitSet(new long[]{0x0000000000002000L});
-    public static final BitSet FOLLOW_DECL_in_decls325 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_decls_in_decls329 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_col_decl_in_col_decls349 = new BitSet(new long[]{0x0000000000000102L});
-    public static final BitSet FOLLOW_col_decl_in_col_decls358 = new BitSet(new long[]{0x0000000000000102L});
-    public static final BitSet FOLLOW_COL_DECL_in_col_decl379 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_type_in_col_decl381 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_ID_in_col_decl383 = new BitSet(new long[]{0x0000800100000008L});
-    public static final BitSet FOLLOW_col_opt_in_col_decl385 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_RANGE_in_col_opt403 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_INT_in_col_opt407 = new BitSet(new long[]{0x0000000080000000L});
-    public static final BitSet FOLLOW_INT_in_col_opt411 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ITER_in_col_opt419 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_94_in_type434 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type439 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type441 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_95_in_type452 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type456 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type458 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_91_in_type467 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type472 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type474 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_89_in_type484 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type489 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type491 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_84_in_type501 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type506 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type508 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_83_in_type518 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type522 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type524 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_type535 = new BitSet(new long[]{0x0000000000000002L,0x0000000000200000L});
-    public static final BitSet FOLLOW_85_in_type540 = new BitSet(new long[]{0x0000000000000000L,0x0000000000400000L});
-    public static final BitSet FOLLOW_86_in_type542 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_RULE_in_rule561 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_HEAD_in_rule564 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_head_in_rule566 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_BODY_in_rule570 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_litlist_in_rule574 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_BODY_in_rule578 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_litlist_in_rule582 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_predicate_in_head605 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_literal_in_litlist629 = new BitSet(new long[]{0x0000100000080002L});
-    public static final BitSet FOLLOW_literal_in_litlist638 = new BitSet(new long[]{0x0000100000080002L});
-    public static final BitSet FOLLOW_PREDICATE_in_literal656 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_NOT_in_literal658 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_predicate_in_literal661 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_EXPR_in_literal668 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_expr_in_literal670 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ID_in_predicate688 = new BitSet(new long[]{0x0020000000800800L,0x0000000100000158L});
-    public static final BitSet FOLLOW_paramlist_in_predicate690 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_FUNC_in_function711 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_dotname_in_function713 = new BitSet(new long[]{0x0020000000800808L,0x0000000100000158L});
-    public static final BitSet FOLLOW_fparamlist_in_function715 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_simpleExpr_in_param733 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleExpr_in_fparam747 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_param_in_paramlist766 = new BitSet(new long[]{0x0020000000800802L,0x0000000100000158L});
-    public static final BitSet FOLLOW_param_in_paramlist774 = new BitSet(new long[]{0x0020000000800802L,0x0000000100000158L});
-    public static final BitSet FOLLOW_fparam_in_fparamlist797 = new BitSet(new long[]{0x0020000000800802L,0x0000000100000158L});
-    public static final BitSet FOLLOW_fparam_in_fparamlist805 = new BitSet(new long[]{0x0020000000800802L,0x0000000100000158L});
-    public static final BitSet FOLLOW_T_INT_in_term825 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_INT_in_term827 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_T_FLOAT_in_term835 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_FLOAT_in_term837 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_T_STR_in_term846 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_STRING_in_term848 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_T_UTF8_in_term857 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_UTF8_in_term859 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_T_VAR_in_term868 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_dotname_in_term870 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_set_in_expr887 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_simpleExpr_in_expr903 = new BitSet(new long[]{0x0020000000800800L,0x0000000100000158L});
-    public static final BitSet FOLLOW_simpleExpr_in_expr907 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_78_in_expr916 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_simpleExpr_in_expr920 = new BitSet(new long[]{0x0020000000800800L,0x0000000100000158L});
-    public static final BitSet FOLLOW_simpleExpr_in_expr924 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_MULTI_ASSIGN_in_expr932 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_varlist_in_expr934 = new BitSet(new long[]{0x0000000000400000L});
-    public static final BitSet FOLLOW_function_in_expr936 = new BitSet(new long[]{0x0000000010000008L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_cast_in_expr940 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_multExpr_in_simpleExpr955 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_set_in_simpleExpr964 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_simpleExpr_in_simpleExpr972 = new BitSet(new long[]{0x0020000000800800L,0x0000000100000158L});
-    public static final BitSet FOLLOW_simpleExpr_in_simpleExpr976 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_exprValue_in_multExpr991 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_set_in_multExpr1000 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_multExpr_in_multExpr1010 = new BitSet(new long[]{0x0020000000800800L,0x0000000100000108L});
-    public static final BitSet FOLLOW_multExpr_in_multExpr1014 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_simpleExpr_in_compExpr1031 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_dotname_in_varlist1051 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_dotname_in_varlist1058 = new BitSet(new long[]{0x0000000010000002L});
-    public static final BitSet FOLLOW_TERM_in_exprValue1075 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_term_in_exprValue1077 = new BitSet(new long[]{0x0000000010000008L,0x00000000CA180040L});
-    public static final BitSet FOLLOW_70_in_exprValue1082 = new BitSet(new long[]{0x0000000010000008L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_cast_in_exprValue1088 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_FUNCTION_in_exprValue1097 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_function_in_exprValue1099 = new BitSet(new long[]{0x0000000010000008L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_cast_in_exprValue1103 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_COMPOUND_EXPR_in_exprValue1112 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_compExpr_in_exprValue1114 = new BitSet(new long[]{0x0000000010000008L,0x00000000CA180000L});
-    public static final BitSet FOLLOW_cast_in_exprValue1118 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_type_in_cast1135 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_dotname1149 = new BitSet(new long[]{0x0000000000008002L});
-    public static final BitSet FOLLOW_DOT_ID_in_dotname1156 = new BitSet(new long[]{0x0000000000008002L});
+    public static final BitSet FOLLOW_INDEX_BY_in_t_opt279 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_ID_in_t_opt281 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_GROUP_BY_in_t_opt289 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_INT_in_t_opt291 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_PREDEFINED_in_t_opt299 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_CONCURRENT_in_t_opt306 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_MULTISET_in_t_opt313 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_COL_DECLS_in_decls330 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_col_decls_in_decls332 = new BitSet(new long[]{0x0000000000002000L});
+    public static final BitSet FOLLOW_DECL_in_decls335 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_decls_in_decls339 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_col_decl_in_col_decls359 = new BitSet(new long[]{0x0000000000000102L});
+    public static final BitSet FOLLOW_col_decl_in_col_decls368 = new BitSet(new long[]{0x0000000000000102L});
+    public static final BitSet FOLLOW_COL_DECL_in_col_decl389 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_type_in_col_decl391 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_ID_in_col_decl393 = new BitSet(new long[]{0x0000800100000008L});
+    public static final BitSet FOLLOW_col_opt_in_col_decl395 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_RANGE_in_col_opt413 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_INT_in_col_opt417 = new BitSet(new long[]{0x0000000080000000L});
+    public static final BitSet FOLLOW_INT_in_col_opt421 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ITER_in_col_opt429 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_95_in_type444 = new BitSet(new long[]{0x0000000000000002L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type449 = new BitSet(new long[]{0x0000000000000000L,0x0000000000800000L});
+    public static final BitSet FOLLOW_87_in_type451 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_96_in_type462 = new BitSet(new long[]{0x0000000000000002L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type466 = new BitSet(new long[]{0x0000000000000000L,0x0000000000800000L});
+    public static final BitSet FOLLOW_87_in_type468 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_92_in_type477 = new BitSet(new long[]{0x0000000000000002L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type482 = new BitSet(new long[]{0x0000000000000000L,0x0000000000800000L});
+    public static final BitSet FOLLOW_87_in_type484 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_90_in_type494 = new BitSet(new long[]{0x0000000000000002L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type499 = new BitSet(new long[]{0x0000000000000000L,0x0000000000800000L});
+    public static final BitSet FOLLOW_87_in_type501 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_85_in_type511 = new BitSet(new long[]{0x0000000000000002L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type516 = new BitSet(new long[]{0x0000000000000000L,0x0000000000800000L});
+    public static final BitSet FOLLOW_87_in_type518 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_84_in_type528 = new BitSet(new long[]{0x0000000000000002L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type532 = new BitSet(new long[]{0x0000000000000000L,0x0000000000800000L});
+    public static final BitSet FOLLOW_87_in_type534 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_type545 = new BitSet(new long[]{0x0000000000000002L,0x0000000000400000L});
+    public static final BitSet FOLLOW_86_in_type550 = new BitSet(new long[]{0x0000000000000000L,0x0000000000800000L});
+    public static final BitSet FOLLOW_87_in_type552 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_RULE_in_rule591 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_head_in_rule593 = new BitSet(new long[]{0x0000100000080000L});
+    public static final BitSet FOLLOW_litlist_in_rule595 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_DOT_END_in_rule603 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_predicate_in_head630 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_literal_in_litlist654 = new BitSet(new long[]{0x0000100000080002L});
+    public static final BitSet FOLLOW_literal_in_litlist663 = new BitSet(new long[]{0x0000100000080002L});
+    public static final BitSet FOLLOW_PREDICATE_in_literal681 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_NOT_in_literal683 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_predicate_in_literal686 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_EXPR_in_literal693 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_expr_in_literal695 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ID_in_predicate713 = new BitSet(new long[]{0x0040000000800800L,0x00000002000002B0L});
+    public static final BitSet FOLLOW_paramlist_in_predicate715 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_FUNC_in_function736 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_dotname_in_function738 = new BitSet(new long[]{0x0040000000800808L,0x00000002000002B0L});
+    public static final BitSet FOLLOW_fparamlist_in_function740 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_simpleExpr_in_param758 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleExpr_in_fparam772 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_param_in_paramlist791 = new BitSet(new long[]{0x0040000000800802L,0x00000002000002B0L});
+    public static final BitSet FOLLOW_param_in_paramlist799 = new BitSet(new long[]{0x0040000000800802L,0x00000002000002B0L});
+    public static final BitSet FOLLOW_fparam_in_fparamlist822 = new BitSet(new long[]{0x0040000000800802L,0x00000002000002B0L});
+    public static final BitSet FOLLOW_fparam_in_fparamlist830 = new BitSet(new long[]{0x0040000000800802L,0x00000002000002B0L});
+    public static final BitSet FOLLOW_T_INT_in_term850 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_INT_in_term852 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_T_FLOAT_in_term860 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_FLOAT_in_term862 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_T_STR_in_term871 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_STRING_in_term873 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_T_UTF8_in_term882 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_UTF8_in_term884 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_T_VAR_in_term893 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_dotname_in_term895 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_set_in_expr912 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_simpleExpr_in_expr928 = new BitSet(new long[]{0x0040000000800800L,0x00000002000002B0L});
+    public static final BitSet FOLLOW_simpleExpr_in_expr932 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_79_in_expr941 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_simpleExpr_in_expr945 = new BitSet(new long[]{0x0040000000800800L,0x00000002000002B0L});
+    public static final BitSet FOLLOW_simpleExpr_in_expr949 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_MULTI_ASSIGN_in_expr957 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_varlist_in_expr959 = new BitSet(new long[]{0x0000000000400000L});
+    public static final BitSet FOLLOW_function_in_expr961 = new BitSet(new long[]{0x0000000010000008L,0x0000000194300000L});
+    public static final BitSet FOLLOW_cast_in_expr965 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_multExpr_in_simpleExpr980 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_set_in_simpleExpr989 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_simpleExpr_in_simpleExpr997 = new BitSet(new long[]{0x0040000000800800L,0x00000002000002B0L});
+    public static final BitSet FOLLOW_simpleExpr_in_simpleExpr1001 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_exprValue_in_multExpr1016 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_set_in_multExpr1025 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_multExpr_in_multExpr1035 = new BitSet(new long[]{0x0040000000800800L,0x0000000200000210L});
+    public static final BitSet FOLLOW_multExpr_in_multExpr1039 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_simpleExpr_in_compExpr1056 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_dotname_in_varlist1076 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_dotname_in_varlist1083 = new BitSet(new long[]{0x0000000010000002L});
+    public static final BitSet FOLLOW_TERM_in_exprValue1100 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_term_in_exprValue1102 = new BitSet(new long[]{0x0000000010000008L,0x0000000194300080L});
+    public static final BitSet FOLLOW_71_in_exprValue1107 = new BitSet(new long[]{0x0000000010000008L,0x0000000194300000L});
+    public static final BitSet FOLLOW_cast_in_exprValue1113 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_FUNCTION_in_exprValue1122 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_function_in_exprValue1124 = new BitSet(new long[]{0x0000000010000008L,0x0000000194300000L});
+    public static final BitSet FOLLOW_cast_in_exprValue1128 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_COMPOUND_EXPR_in_exprValue1137 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_compExpr_in_exprValue1139 = new BitSet(new long[]{0x0000000010000008L,0x0000000194300000L});
+    public static final BitSet FOLLOW_cast_in_exprValue1143 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_type_in_cast1160 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ID_in_dotname1174 = new BitSet(new long[]{0x0000000000008002L});
+    public static final BitSet FOLLOW_DOT_ID_in_dotname1181 = new BitSet(new long[]{0x0000000000008002L});
 
 }

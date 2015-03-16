@@ -45,7 +45,11 @@ options {
     Set<Variable> dotVars = new LinkedHashSet<Variable>();
     List<AssignOp> headTmpVarAssigns = new ArrayList<AssignOp>();
     List<AssignOp> tmpVarAssigns = new ArrayList<AssignOp>();
-    int kind=0;
+
+    HashMap<String, Variable> varMapInRule = new HashMap<String, Variable>();
+    int tmpVarCount=0;
+    int constCount=0;
+
     public Parser getParser() { return parser; }
     public String maybeGetDuplicateColumnName(List<ColumnDecl> decls) {
         LinkedHashSet<String> names = new LinkedHashSet<String>(decls.size());
@@ -60,6 +64,26 @@ options {
 //        String hdr = getErrorHeader(e);
         String msg = getErrorMessage(e, tokenNames);
         throw new ParseException(parser, e, msg);
+    }
+
+    Variable getVariable(String name) {
+        if (name.equals("_")) {
+            tmpVarCount++;
+            return new Variable(name+"$"+tmpVarCount, true);
+        }
+        if (varMapInRule.containsKey(name)) {return varMapInRule.get(name);}
+        Variable v = new Variable(name);
+        varMapInRule.put(name, v);
+        return v;
+    }
+    Variable getNextTmpVar() {
+        tmpVarCount++;
+        return new Variable("_tmp$"+tmpVarCount);
+    }
+    int getNextConstId() { return constCount++; }
+    void nextRule() {
+        varMapInRule.clear();
+        constCount = 0;
     }
 
     public boolean isSimpleIntValue(Object o) {
@@ -94,7 +118,7 @@ options {
     }
 
     public Variable addTmpVarAssign(Object rhs) {
-        Variable tmpVar = Variable.getTmpVar();
+        Variable tmpVar = getNextTmpVar();
         try { tmpVarAssigns.add(new AssignOp(tmpVar, rhs));}
         catch (InternalException e) {}
         return tmpVar;
@@ -109,13 +133,13 @@ options {
     }
 }
 prog returns [List result]
-	: {$result = new ArrayList();}
-	(stat {
-	    if ($stat.result instanceof List)
-	        $result.addAll((List)($stat.result));
-	    else
-    	        $result.add($stat.result);}
-    	)+ EOF
+    : {$result = new ArrayList();}
+       (stat {
+        if ($stat.result instanceof List)
+            $result.addAll((List)($stat.result));
+        else
+            $result.add($stat.result);
+        })+ EOF
 	;
 stat returns [Object result]
 	:table_decl {$result = $table_decl.result;}
@@ -130,40 +154,38 @@ table_stmt returns [TableStmt result]
 query returns [Query result]
 	:^(QUERY predicate) { 
 	$result = new Query($predicate.result);
-	Variable.nextRule();
-	Const.nextRule();
+	nextRule();
 	tmpVarAssigns.clear();
 	}
 	;
 table_decl returns [TableDecl result]
     :^(DECL ID decls ^(OPTION table_opts?))
-	//:^(DECL (KIND1{kind=1;} | KIND2 {kind=2;})  ID decls ^(OPTION table_opts?) )
-	  {
-	    String dupCol=maybeGetDuplicateColumnName($decls.result.getAllColDecls());
-	    if (dupCol!=null) 
-	        throw new ParseException(getParser(), $ID.line-1, $ID.pos,  "Duplicate column name "+dupCol+" in "+$ID);
-	    $result = new TableDecl($ID.text, $decls.result.colDecls, $decls.result.nestedTable);    
-	    if ($result.nestedTable!=null) {
-	        for (ColumnDecl d:$result.nestedTable.getAllColDecls()) {
-	            if (d.option() instanceof ColIter) {
-	                throw new ParseException(getParser(), $ID.line-1, $ID.pos+$ID.text.length()+1, "Iteration column cannot be nested."); 
-	            }
-	        }
-	    }
-	    try { $result.setOptions($table_opts.result); }
-	    catch (ParseException e) {
-	        e.setLine($ID.line-1); e.setPos(0);e.setParser(getParser());
-	        throw e;
-	    }
-	    if (tableDeclMap.containsKey($ID.text)) {
-	        if (!$result.equals(tableDeclMap.get($ID.text))) {
-	            throw new ParseException(getParser(), $ID.line-1, $ID.pos, 
-	                        $ID.text+" was previously declared with different signature.");	 
-	        }
-	        $result=null;
-	    } else { tableDeclMap.put($ID.text, $result); }
-	}
-	;	
+      {
+        String dupCol=maybeGetDuplicateColumnName($decls.result.getAllColDecls());
+        if (dupCol!=null) 
+            throw new ParseException(getParser(), $ID.line-1, $ID.pos,  "Duplicate column name "+dupCol+" in "+$ID);
+        $result = new TableDecl($ID.text, $decls.result.colDecls, $decls.result.nestedTable);    
+        if ($result.nestedTable!=null) {
+            for (ColumnDecl d:$result.nestedTable.getAllColDecls()) {
+                if (d.option() instanceof ColIter) {
+                    throw new ParseException(getParser(), $ID.line-1, $ID.pos+$ID.text.length()+1, "Iteration column cannot be nested."); 
+                }
+            }
+        }
+        try { $result.setOptions($table_opts.result); }
+        catch (ParseException e) {
+            e.setLine($ID.line-1); e.setPos(0);e.setParser(getParser());
+            throw e;
+        }
+        if (tableDeclMap.containsKey($ID.text)) {
+            if (!$result.equals(tableDeclMap.get($ID.text))) {
+                throw new ParseException(getParser(), $ID.line-1, $ID.pos, 
+                            $ID.text+" was previously declared with different signature.");     
+            }
+            $result=null;
+        } else { tableDeclMap.put($ID.text, $result); }
+    }
+    ;    
 
 table_opts returns [List<TableOpt> result]
 	:opt1=t_opt {$result = new ArrayList<TableOpt>(); $result.add($opt1.result);}
@@ -218,28 +240,30 @@ type returns [Class result]
 	    }
 	} ('[' ']' {$result = Array.newInstance((Class)$result,0).getClass();})? 
 	;
+
 rule returns [Object result]
-	:^(RULE ^(HEAD head) ^(BODY body1=litlist) ^(BODY body2=litlist?))
-	{   
-	    ArrayList<Literal> body = new ArrayList<Literal>($body1.result);
-        if (!headTmpVarAssigns.isEmpty()) {
-	        for (AssignOp op:headTmpVarAssigns)
-                body.add(new Expr(op));
-            headTmpVarAssigns.clear();
+        :{ $result = new ArrayList<RuleDecl>(); 
+            List<Literal> first = null;
+         }
+         (^(RULE head litlist) {
+            Predicate head = (Predicate)$head.result;
+            List<Literal> body;
+            if (first==null) { 
+                first = $litlist.result;
+                body = new ArrayList<Literal>($litlist.result);
+            } else {
+                body = $litlist.result.subList(first.size(), $litlist.result.size());
+            }
+            if (!headTmpVarAssigns.isEmpty()) {
+                for (AssignOp op:headTmpVarAssigns) {
+                    body.add(new Expr(op));
+                }
+            }
+            ((List<RuleDecl>)$result).add(new RuleDecl(head.clone(), body));
+        })+  DOT_END
+        { headTmpVarAssigns.clear();
+          nextRule();
         }
-	    RuleDecl rd = new RuleDecl($head.result, body);
-	    if ($body2.result==null) {
-	        $result = rd;
-	    } else {
-	        ArrayList<RuleDecl> list = new ArrayList<RuleDecl>();
-	        list.add((RuleDecl)rd);
-	        rd = new RuleDecl($head.result.clone(), $body2.result);
-	        list.add((RuleDecl)rd);
-	        $result = list;
-	    }
-	    Variable.nextRule(); 
-	    Const.nextRule();
-	}
 	;
 head returns [Predicate result]
     : predicate {
@@ -255,7 +279,7 @@ litlist returns [List<Literal> result]
 	l1=literal  {
 	    for (Variable v: dotVars) {
 	        String root=v.name.substring(0, v.name.indexOf('.'));
-	        Variable rootVar=Variable.getVariable(root);
+	        Variable rootVar=getVariable(root);
 	        AssignDotVar a;
 	        try { a=new AssignDotVar(v, rootVar); } 
 	        catch (InternalException e) { throw new RuntimeException(e);}
@@ -271,7 +295,7 @@ litlist returns [List<Literal> result]
 	(l2=literal {
 	    for (Variable v: dotVars) {
 	        String root=v.name.substring(0, v.name.indexOf('.'));
-	        Variable rootVar=Variable.getVariable(root);
+	        Variable rootVar=getVariable(root);
 	        AssignDotVar a;
 	        try { a=new AssignDotVar(v, rootVar); } 
 	        catch (InternalException e) { throw new RuntimeException(e);}
@@ -359,7 +383,7 @@ paramlist returns [List<Param> result]
 	:{ $result = new ArrayList<Param>(); }
 	p1=param { 
 	    if (isSimpleIntValue($p1.result)) {
-	        $result.add(new Const(getSimpleIntValue($p1.result)));
+	        $result.add(new Const(getSimpleIntValue($p1.result), getNextConstId()));
 	    } else if (($p1.result instanceof BinOp)||($p1.result instanceof UnaryOp)) {
 	        Variable tmpVar = addTmpVarAssign($p1.result);
 	        $result.add(tmpVar);
@@ -371,7 +395,7 @@ paramlist returns [List<Param> result]
 	}
 	(p2=param { 
 	    if (isSimpleIntValue($p2.result)) {
-	        $result.add(new Const(getSimpleIntValue($p2.result)));
+	        $result.add(new Const(getSimpleIntValue($p2.result), getNextConstId()));
 	    } else if (($p2.result instanceof BinOp)||($p2.result instanceof UnaryOp)) {
 	        Variable tmpVar = addTmpVarAssign($p2.result);
 	        $result.add(tmpVar);
@@ -412,27 +436,27 @@ term returns [Object result]
 	:^(T_INT INT)  {
 	    if ($INT.text.endsWith("l") || $INT.text.endsWith("L")) {
 	        Long v = new Long(Long.parseLong($INT.text.substring(0, $INT.text.length()-1)));
-	        $result = new Const(v);
+	        $result = new Const(v, getNextConstId());
 	    } else {
 	        Integer v = new Integer(Integer.parseInt($INT.text));
-	        $result = new Const(v);
+	        $result = new Const(v, getNextConstId());
 	    }
 	 } |^(T_FLOAT FLOAT)  {
  	    if ($FLOAT.text.endsWith("f") || $FLOAT.text.endsWith("F")) {
  	        Float v = new Float(Float.parseFloat($FLOAT.text.substring(0, $FLOAT.text.length()-1)));
- 	        $result = new Const(v);
+ 	        $result = new Const(v, getNextConstId());
  	    } else if ($FLOAT.text.endsWith("d") || $FLOAT.text.endsWith("D")) {
  	        Double v = new Double(Double.parseDouble($FLOAT.text.substring(0, $FLOAT.text.length()-1)));
- 	        $result = new Const(v);
+ 	        $result = new Const(v, getNextConstId());
  	    } else {
      	        Double v = new Double(Double.parseDouble($FLOAT.text));
-     	        $result = new Const(v);
+     	        $result = new Const(v, getNextConstId());
  	    }
 	}
-	|^(T_STR STRING)  {String v = new String($STRING.text.substring(1, $STRING.text.length()-1)); $result = new Const(v); }
-	|^(T_UTF8 UTF8)  { Utf8 v =  new Utf8($UTF8.text.substring(2, $UTF8.text.length()-1)); $result = new Const(v); }
+	|^(T_STR STRING)  {String v = new String($STRING.text.substring(1, $STRING.text.length()-1)); $result = new Const(v, getNextConstId()); }
+	|^(T_UTF8 UTF8)  { Utf8 v =  new Utf8($UTF8.text.substring(2, $UTF8.text.length()-1)); $result = new Const(v, getNextConstId()); }
 	|^(T_VAR dotname) {
-	    $result = Variable.getVariable($dotname.result);
+	    $result = getVariable($dotname.result);
 	    if ($dotname.result.indexOf('.')>=0) {
 	        dotVars.add((Variable)$result);
 	    }
@@ -501,9 +525,9 @@ compExpr returns [Object result]
 varlist returns [Object result]
 	:id1=dotname{ 
 	    List<Variable> vars = new ArrayList<Variable>();
-	    vars.add(Variable.getVariable($id1.result)); $result = vars; }
+	    vars.add(getVariable($id1.result)); $result = vars; }
 	(id2=dotname{ 
-	    vars.add(Variable.getVariable($id2.result));})+
+	    vars.add(getVariable($id2.result));})+
 	;
 exprValue returns [Object result]
 	:^(TERM term (neg='-')? c=cast?) {

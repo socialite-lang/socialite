@@ -458,6 +458,13 @@ class TableIterator(QueryVisitor):
         n = self.__next__()
         return n
         
+    def isEmpty(self):
+        try: 
+            self.next()
+            return False
+        except StopIteration:
+            return True
+
     def __iter__(self):
         self.startThread()
         return self

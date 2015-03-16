@@ -11,7 +11,7 @@ import socialite.util.SociaLiteException;
 
 public class Variable implements Param {
 	private static final long serialVersionUID = 1L;
-
+/*
 	static HashMap<String, Variable> varMapInARule=new HashMap<String, Variable>();
 	public static Variable getVariable(String name) {
 		if (name.equals("_")) return new Variable(name);
@@ -28,19 +28,19 @@ public class Variable implements Param {
 		varMapInARule.clear();
 		varCountInARule=0;
 	}
-	private static int varCountInARule=0;
+	private static int varCountInARule=0;*/
 	
 	
 	public String name;
 	public Class type;	
 	public boolean dontCare=false;
 
-    public Variable() { }
-	public Variable(String _name) {
-		if (_name.equals("_")) { // don't care variable
-			_name = "_$"+(varCountInARule++);
-			dontCare=true;
-		}
+  public Variable() { }
+  public Variable(String _name) {
+    this(_name, false);
+  }
+	public Variable(String _name, boolean _dontcare) {
+		if (_dontcare) { dontCare=true;}
 		name = _name;
 		type = NoType.class;
 	}

@@ -1392,27 +1392,8 @@ outer:	for (Variable v:sortedVars) {
 				}						
 			}
 		}
-		prepareNextId();
 	}	
-	void prepareNextId() {
-		for (Rule r: rules) {
-			if (r.getHead().hasFunctionParam() && 
-					r.getHead().getAggrF().name().equals("Builtin.nextId")) {
-				prepareNextIdReally(r.getHead());				
-			}
-		}
-	}
-	void prepareNextIdReally(Predicate h) {
-		AggrFunction aggr = h.getAggrF();
-		if (aggr.getArgs().size()==0) {
-			SArrayList<Param> args=new SArrayList<Param>(1);
-			if (conf.isDistributed()) {
-				 int clusterSize= SRuntimeMaster.getInst().getWorkerAddrMap().size();
-				 args.add(new Const(clusterSize));
-			} else { args.add(new Const(1)); }
-			aggr.setArgs(args);
-		}
-	}
+
 	void prepareAggrFunction(Predicate p) {
 		Table t = tableMap.get(p.name());
 		prepareAggrFunction(p, t);

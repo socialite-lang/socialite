@@ -13,6 +13,7 @@ tokens {
     FALSE;
     COL_DECLS;
     OPTION;
+    RULES;
     RULE;
     QUERY;
     HEAD;
@@ -97,10 +98,9 @@ table_stmt	: 'clear' ID DOT_END -> ^(CLEAR ID)
 query	:'?-' predicate DOT_END -> ^(QUERY predicate)
 	;
 
-rule    : head ':-' body1=litlist 
-                (DOT_END | (';' ':-' body2=litlist DOT_END)) 
-          -> ^(RULE ^(HEAD head) ^(BODY $body1) ^(BODY  $body2?));
-
+rule    : head ':-' litlist (';' ':-' litlist)* DOT_END
+        -> ^(RULE head litlist)+ DOT_END
+        ;
 head : predicate;
 
 litlist	:literal (','! literal)*;

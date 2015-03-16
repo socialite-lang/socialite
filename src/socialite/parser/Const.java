@@ -8,29 +8,26 @@ import socialite.type.Utf8;
 
 public class Const implements Param, Comparable<Const> {
 	private static final long serialVersionUID = 1L;
-	static int constCountInARule = 0;
+	/*static int constCountInARule = 0;
 	public static void nextRule() {
 		constCountInARule = 0;
-	}
+	}*/
 	public Class type;
 	public Object val;
-	public int pos;
-    public Const() { }
-	public Const(Object v) {
-		assert v instanceof Integer ||
-				v instanceof Long ||
-				v instanceof Float ||
-				v instanceof Double ||
-				v instanceof String ||
-				v instanceof Utf8;
+	public int id;
+  public Const() {}
+	public Const(Object v, int _id) {
+		assert v instanceof Integer || v instanceof Long ||
+				   v instanceof Float || v instanceof Double ||
+				   v instanceof String || v instanceof Utf8;
 		val = v;
 		type = val.getClass();
-		pos = constCountInARule++;
+		id = _id;
 	}
 	
 	@Override	
 	public String toString() {
-		return "$const"+pos;
+		return "$const"+id;
 	}
 
 	public void negate() {
@@ -44,7 +41,7 @@ public class Const implements Param, Comparable<Const> {
 		} else if (val instanceof Double) {
 			val = -(Double)val;
 		} else {
-			assert false:"Unexpected constant type:"+val.getClass();
+      throw new AssertionError("Unexpected constant type:"+val.getClass());
 		}
 	}
 	public String constValStr() {
@@ -66,12 +63,12 @@ public class Const implements Param, Comparable<Const> {
 	public boolean equals(Object o) {
 		if (!(o instanceof Const)) return false;
 		Const c=(Const)o;
-		return val.equals(c.val) && pos==c.pos;
+		return val.equals(c.val) && id==c.id;
 	}
 
 	@Override
 	public int compareTo(Const other) {
-		return pos - other.pos;
+		return id - other.id;
 	}
 
 	@Override
@@ -82,7 +79,7 @@ public class Const implements Param, Comparable<Const> {
 			typename[i] = in.readChar();
 		type = Class.forName(new String(typename));
 		val = in.readObject();
-		pos = in.readInt();
+		id = in.readInt();
 	}
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
@@ -90,6 +87,6 @@ public class Const implements Param, Comparable<Const> {
 		out.writeInt(typename.length());
 		out.writeChars(typename);
 		out.writeObject(val);
-		out.writeInt(pos);
+		out.writeInt(id);
 	}
 }

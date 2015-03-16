@@ -132,7 +132,9 @@ public class Parser {
 			lineNum = lines.length-1;
 			pos = lines[lineNum].length();
 		}
-		String line = lines[lineNum];		
+		String line;
+    if (lineNum>=0) { line = lines[lineNum]; }
+    else { line = ""; }
 		
 		msg += line+"\n";
 		for (int i=0; i<pos; i++)
