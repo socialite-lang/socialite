@@ -75,6 +75,10 @@ public class Column implements Externalizable {
 	public int position() { return decl.pos(); }
 	public String name() { return decl.name(); }
 	public Class type() { return decl.type(); }
+  public Class getComponentType() {
+      if (type().isArray()) { return type().getComponentType(); }
+      else { return type(); }
+  }
 	
 	public boolean isPrimitive() { return type().isPrimitive(); }
 	public boolean isConst() { return isConst; }

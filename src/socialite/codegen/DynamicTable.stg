@@ -43,7 +43,7 @@ package socialite.tables;
         }
         void expand() {
         	int size = len*2;
-        	<columns:{c|<c.type>[] _col<i0> = new <c.type>[size];<\n>}>
+        	<columns:{c|<c.type>[] _col<i0> = <if(c.arrayType)>new <c.componentType>[size][];<else>new <c.type>[size];<endif><\n>}>
         	<columns:{c|System.arraycopy(col<i0>, 0, _col<i0>, 0, len);<\n>}>
         	<columns:{c|col<i0> = _col<i0>;<\n>}>            
         }
@@ -68,7 +68,7 @@ package socialite.tables;
 
         Node() { this(CHUNK_SIZE); }
         Node(int capacity) {
-            <columns:{c|col<i0> = new <c.type>[capacity];<\n>}>
+            <columns:{c|col<i0> = <if(c.arrayType)>new <c.componentType>[capacity][];<else>new <c.type>[capacity];<endif><\n>}>
         }
         void init() {len = 0;}
         public void free() { Node.free(this); }
