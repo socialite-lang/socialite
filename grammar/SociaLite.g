@@ -7,21 +7,13 @@ options {
 tokens {
     PROG;
     DECL;
-    KIND1;
-    KIND2;
-    TRUE;
-    FALSE;
     COL_DECLS;
     OPTION;
-    RULES;
     RULE;
     QUERY;
-    HEAD;
-    BODY;
     PREDICATE;
     FUNCTION;
     FUNC;
-    FUNC_ARG;
     EXPR;
     COMPOUND_EXPR;    
     TERM;
@@ -32,7 +24,6 @@ tokens {
     T_UTF8;
     T_VAR;
     INDEX;
-    OPT;
     COL_DECL;
     CLEAR; // db clear
     DROP; // db drop
@@ -46,7 +37,6 @@ tokens {
     CONCURRENT;
     APPROX;
     MULTISET;
-    TABLE_OPT;
 }
 @header {
     package socialite.parser.antlr;    
