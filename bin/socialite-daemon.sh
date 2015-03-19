@@ -21,13 +21,15 @@ shift
 socialite_rotate_log() {
     log=$1;
     num=10;
-    if [ -f "$log" ]; then # do rotate
-        while [ $num -gt 1 ] ; do
+    # XXX either $log or $log.0 can exist, not both
+    if [ -f "$log" -o -f "$log".0 ]; then # do rotate
+        while [ $num -ge 1 ] ; do
             prev=`expr $num - 1`
             [ -f "$log.$prev" ] && mv "$log.$prev" "$log.$num"
             num=$prev
         done
-        mv "$log" "$log.$num";
+        ! [ -f "$log" ] ||
+            mv "$log" "$log.1"
     fi
 }
 
