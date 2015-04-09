@@ -325,6 +325,8 @@ class AsyncEngine:
         self.engine.shutdown()
     def update(self, func):
         self.engine.update(func)
+    def runGc(self):
+        self.engine.runGc()
 
 @internal
 def returns(*types):
@@ -343,6 +345,8 @@ def passVars(*vars):
     for v in vars:
         if type(v) == type(0):
             tmp.append(str(v))
+        elif type(v) == type(0L):
+            tmp.append(str(v)+"L")
         elif type(v) == type(0.0):
             tmp.append(str(v))
         elif type(v) == type(""):
@@ -355,7 +359,8 @@ def passVars(*vars):
             v = v.toString().replace('"', '\\"')
             tmp.append('u"'+v+'"')
         else:
-            raise SociaLiteException("Only numbers and Strings can be passed to SociaLite queries")
+            raise SociaLiteException("Only numbers and Strings can be passed to SociaLite queries:"+
+                                        str(v)+" is "+str(type(v)))
     return tuple(tmp)
 
 class IdFactory:

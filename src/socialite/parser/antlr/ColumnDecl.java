@@ -40,7 +40,10 @@ public class ColumnDecl implements Externalizable {
 		klass = MyType.javaType(klass);
 		if (klass.isPrimitive()) {
 			return getPrimTypeSize(klass);			
-		} else {
+		} else if (klass.equals(Utf8.class)) {
+            // XXX: HACK!
+            return 10;
+        } else {
 			return refSize;
 		}
 	}

@@ -66,7 +66,7 @@ public class SLongArrayList extends TLongArrayList {
 		// POSITION
 		_pos = in.readInt();
 		// NO_ENTRY_VALUE
-		no_entry_value = in.readInt();
+		no_entry_value = in.readLong();
 
 		// ENTRIES
 		int len = in.readInt();
@@ -74,7 +74,7 @@ public class SLongArrayList extends TLongArrayList {
 		if (_data.length < len) _data = new long[len];
 		
 		for (int i = 0; i < len; i++) {
-			_data[i] = in.readInt();
+			_data[i] = in.readLong();
 		}
 	}	
 }

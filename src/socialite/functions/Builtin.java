@@ -21,8 +21,8 @@ import socialite.type.Utf8;
 import socialite.util.SociaLiteException;
 
 public class Builtin {
-  public static int nextId() { return NextId.invoke(1); }
-  public static int nextId(int inc) { return NextId.invoke(inc); }
+    public static int nextId() { return NextId.invoke(1); }
+    public static int nextId(int inc) { return NextId.invoke(inc); }
 	public static int nextId(int prevId, int ignored) { return prevId; }
 	public static int resetId() { NextId.reset(); return 0; }
 	
@@ -119,9 +119,11 @@ public class Builtin {
 	public static boolean argmin(socialite.type.ArgMin a, int i, double v) { return a.argmin(i,v); }
 	
 	public static Iterator<String> read(String file) { return Read.invoke(file); }
+    public static Iterator<String> listdir(String dir) { return FileFunc.listdir(dir); }
 
 	public static String[] split(String s, String delim, int maxsplit) { return Str.split(s, delim, maxsplit); }
 	public static String[] split(String s, String delim) { return Str.split(s, delim); }
+    public static String[] split(String s, int maxsplit) { return Str.split(s, "\t", maxsplit); }
 	public static String[] split(String s) { return Str.split(s, "\t"); }
 
 	public static Iterator<String> splitIter(String s) { return Str.splitIter(s, "\t"); }
@@ -176,13 +178,13 @@ public class Builtin {
 	public static TFloatIterator iterate(float[] a) { return new TFloatArrayList(a).iterator(); }
 	public static TDoubleIterator iterate(double[] a) { return new TDoubleArrayList(a).iterator(); }
 
-  public static int len(Object[] o) { return o.length; }
-  public static int len(String[] s) { return s.length; }
-  public static int len(Utf8[] u) { return u.length; }
-  public static int len(int[] a) { return a.length; }
-  public static int len(long[] a) { return a.length; }
-  public static int len(float[] a) { return a.length; }
-  public static int len(double[] a) { return a.length; }
+    public static int len(Object[] o) { return o.length; }
+    public static int len(String[] s) { return s.length; }
+    public static int len(Utf8[] u) { return u.length; }
+    public static int len(int[] a) { return a.length; }
+    public static int len(long[] a) { return a.length; }
+    public static int len(float[] a) { return a.length; }
+    public static int len(double[] a) { return a.length; }
 }
 
 class ArrayUtil {

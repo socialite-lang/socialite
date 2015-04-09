@@ -38,10 +38,10 @@ public class <name> extends TmpTableInst {
 		if (small) { bufsize = ByteBufferPool.smallBufferSize()-overhead; }
 		bufsize = (int)(bufsize/sizeEstimFactor());
 		
-		float row0size = 0<cols0:{c|+<c.typeSize>;<\n>}>;
-		float row1size = 0<cols1:{c|+<c.typeSize>;<\n>}>;
-		float row2size = 0<cols2:{c|+<c.typeSize>;<\n>}>;
-		float row3size = 0<cols3:{c|+<c.typeSize>;<\n>}>;
+		float row0size = 0<cols0:{c|+<c.typeSize>}>;
+		float row1size = 0<cols1:{c|+<c.typeSize>}>;
+		float row2size = 0<cols2:{c|+<c.typeSize>}>;
+		float row3size = 0<cols3:{c|+<c.typeSize>}>;
 		
 		if(<nest>==1) { // nesting level 1
 			col0size = (int)(bufsize / row0size);

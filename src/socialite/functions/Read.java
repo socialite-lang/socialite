@@ -35,13 +35,16 @@ public class Read {
 
 	public static Iterator<String> invoke(String file, String encoding) {
 		if (file.startsWith("hdfs://") || file.startsWith("HDFS://")) {
-			if (SRuntimeWorker.getInst() == null) {
-				return readFromHdfs(file, encoding);
+            return readFromHdfs(file, encoding);
+        } else {
+            return new LineIterator(file, encoding);
+        }
+            /* XXX: SplitRead has bugs.
+            if (SRuntimeWorker.getInst() == null) {
+			    return readFromHdfs(file, encoding);
 			} else {
 				return SplitRead.invoke(file, encoding);
-			}
-		}
-		return new LineIterator(file, encoding);
+			} */
 	}
 	
 	static class LineIterator implements Iterator<String> {

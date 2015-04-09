@@ -47,7 +47,7 @@ import socialite.resource.*;
 import socialite.tables.ConstsWritable;
 import socialite.tables.QueryRunnable;
 import socialite.tables.QueryVisitor;
-import socialite.tables.TableInst;
+import socialite.eval.TmpTablePool;
 import socialite.util.*;
 
 
@@ -395,11 +395,12 @@ public class CmdListener implements WorkerCmd {
 	
 	@Override
 	public void runGc() {
-		L.info("Running System.gc()");
-		System.gc();
-		System.gc();
-		
-		printMemInfo("After System.gc():");
+        L.info("Running System.gc()");
+        TmpTablePool.clear();
+        System.gc();
+        System.gc();
+        TmpTablePool.clear();
+        printMemInfo("After System.gc():");
 	}
 	
 	@Override

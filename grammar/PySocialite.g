@@ -80,7 +80,7 @@ tokens {
     }
     boolean isEndOfVarChar(char c) {
         if (Character.isWhitespace(c)) return true;
-        if (c==')' || c==',' || 
+        if (c==')' || c==',' || c==';' ||
             c=='+' || c=='-' || c=='*' || c=='/' ||
             c=='=' || c=='<' || c=='>' || c==Format.percent()) {
             return true;

@@ -462,8 +462,8 @@ public class QueryListener implements QueryProtocol {
 			String ruleEvalStat="";
 			Rule r=getEngine().getParser().getRuleById(rule);
 			ruleEvalStat += r+"\n";
-			int minEval=Integer.MAX_VALUE;
-			String minEvalInfo="";
+			int minEval=Integer.MAX_VALUE, maxEval=Integer.MIN_VALUE;
+			String minEvalInfo="", maxEvalInfo="";
 			for (int i=0; i<progStats.length; i++) {
 				if (!progStats[i].contains(rule)) continue next_rule;
 					
@@ -474,6 +474,10 @@ public class QueryListener implements QueryProtocol {
 					minEval = x;
 					minEvalInfo = "  Min progress: "+evalInfo;
 				}
+                if (x >= maxEval) {
+                    maxEval = x;
+                    maxEvalInfo = "  Max progress: "+evalInfo;
+                }
 			}
 			if (minEval==100) {
 				allEvalStat += r+": Finished\n";
@@ -483,8 +487,9 @@ public class QueryListener implements QueryProtocol {
 				aggrEvalStat += r+": Finished (error thrown)\n";
 			} else {
 				allEvalStat += ruleEvalStat;
-				aggrEvalStat += r+"\n"+minEvalInfo;		
-			}
+				aggrEvalStat += r+"\n"+minEvalInfo;
+                aggrEvalStat += maxEvalInfo;
+            }
 		}
 		if (verbose==0) summary.putProgress(aggrEvalStat);
 		else summary.putProgress(allEvalStat);

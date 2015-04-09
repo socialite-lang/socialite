@@ -7,15 +7,29 @@ public class NextId {
 	// and is incremented by the cluster size.
 	static AtomicInteger id=new AtomicInteger(0);
 	
-	public static void set(int val) { id.set(val); }
-	public static void reset() { id.set(0); }
-	
+	public static int set(int val) {
+      id.set(val);
+      return val;
+  }
+	public static int reset() {
+      id.set(0);
+      return 0;
+  }
+
+  static void maybeInit() {
+      if (id.get()==0) {
+          int init = Builtin.id();
+          id.compareAndSet(0, init);
+      }
+  }
 	public static int invoke() {
-		return id.getAndIncrement();
+		  maybeInit();
+      return id.getAndIncrement();
 	}
 	
 	public static int invoke(int inc) {
-		return id.getAndAdd(inc);
+      maybeInit();
+		  return id.getAndAdd(inc);
 	}
 	public static int invoke(int old, int incr) {
 		return old;

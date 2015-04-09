@@ -1,4 +1,4 @@
-// $ANTLR 3.4 /Users/jiwon/workspace/socialite/grammar/PySocialite.g 2014-08-03 16:22:02
+// $ANTLR 3.4 /Users/jiwon/workspace/socialite/grammar/PySocialite.g 2015-03-29 00:41:20
 
     package pysocialite.antlr;
     import org.python.core.PyObject;
@@ -86,7 +86,7 @@ public class PySocialiteLexer extends Lexer {
         }
         boolean isEndOfVarChar(char c) {
             if (Character.isWhitespace(c)) return true;
-            if (c==')' || c==',' || 
+            if (c==')' || c==',' || c==';' || c=='.' ||
                 c=='+' || c=='-' || c=='*' || c=='/' ||
                 c=='=' || c=='<' || c=='>' || c==Format.percent()) {
                 return true;

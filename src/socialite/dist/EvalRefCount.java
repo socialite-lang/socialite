@@ -103,22 +103,13 @@ public class EvalRefCount {
             AtomicInteger ts = idleTimestampMap.get(id);
             callback.call(id, ts.incrementAndGet());
         }
-        if (x<0) {
-            System.err.println("Counter < 0 for id:"+id);
-        }
     }
 
     public boolean stillIdle(int id, int ts) {
-    boolean stillIdle=false;
-try{ // XXX
-        stillIdle = counterMap.get(id).get()==0 &&
-                idleTimestampMap.get(id).get()==ts;
-} catch (Throwable t) {
-L.error("Exception in stillIdle:"+ExceptionUtils.getStackTrace(t));
-L.error("                      :counterMap.get("+id+"):"+counterMap.get(id)+", idleTimeStampMap.get("+id+"):"+idleTimestampMap.get(id));
-
-} finally { return stillIdle; }
-
+        AtomicInteger counter = counterMap.get(id);
+        AtomicInteger timestamp = idleTimestampMap.get(id);
+        if (counter==null || timestamp==null) { return false; }
+        return counter.get() == 0 && timestamp.get() == ts;
     }
 
     public void clear(int id) {

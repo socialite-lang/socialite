@@ -28,8 +28,10 @@ public class Str {
 			if (maxsplit>0 && splitnum+1 >= maxsplit)
 				break;
 		}
-		if (idx < str.length()) splitted.add(str.substring(idx));
-
+		if (idx < str.length()) {splitted.add(str.substring(idx));}
+        if (splitted.size() < maxsplit) {
+            fill(splitted, maxsplit-splitted.size());
+        }
 		return splitted.toArray(new String[splitted.size()]);
 	}
 	
@@ -51,11 +53,43 @@ public class Str {
 			if (maxsplit>0 && splitnum+1 >= maxsplit)
 				break;
 		}
-		if (idx < str.length()) splitted.add(str.substring(idx));
-		
+		if (idx < str.length()) {splitted.add(str.substring(idx));}
+
+        if (splitted.size() < maxsplit) {
+            fill(splitted, maxsplit-splitted.size());
+        }
 		return splitted.toArray(new String[splitted.size()]);	
 	}
-	
+    static void fill(ArrayList<String> strList, int count) {
+        for (int i=0; i<count; i++) {
+            strList.add("");
+        }
+    }
+    public static int nonnegHash(String s) {
+        int h = s.hashCode();
+        if (h < 0) {
+            h = -h;
+            if (h < 0) { h = 0; }
+        }
+        return h;
+    }
+    public static int hash(String s) {
+    return s.hashCode();
+  }
+    public static int isNumber(String s) {
+        if (s.length()==0) {return 0;}
+        if (s.length()==1 && s.charAt(0)=='-') {return 0;}
+        for (int i=0; i<s.length(); i++) {
+            if (Character.isDigit(s.charAt(i))) {
+                continue;
+            } else if (i==0 && s.charAt(i)=='-') {
+                continue;
+            } else {
+                return 0;
+            }
+        }
+        return 1;
+    }
 	public static Iterator<String> splitIter(String str, String delim) {
 		String[] splitted = split(str, delim);
 		return new StrIter(splitted);

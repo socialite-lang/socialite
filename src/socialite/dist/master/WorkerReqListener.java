@@ -81,7 +81,7 @@ public class WorkerReqListener implements WorkerRequest {
         master.addRegisteredWorker(Host.getAddr(addr));
 	}
 
-	public void reportIdle(IntWritable _epochId, IntWritable _workerId, IntWritable _time) {
+	public synchronized void reportIdle(IntWritable _epochId, IntWritable _workerId, IntWritable _time) {
         SRuntimeMaster runtime = SRuntimeMaster.getInst();
         int epochId = _epochId.get();
         IdleStat idleStat = runtime.getIdleStat(epochId);
