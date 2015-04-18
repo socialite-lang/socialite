@@ -108,7 +108,11 @@ public class Manager extends Thread {
 	}
 	VisitorBuilder builder(int rule) {
 		assert runtime!=null:"runtime is null";
-		return runtime.getVisitorBuilder(rule);
+		VisitorBuilder builder = runtime.getVisitorBuilder(rule);
+        if (builder == null) {
+            L.error("Builder for rule["+rule+"] is null");
+        }
+        return builder;
 	}
 	
 	void initWorkers(int _workerNum) {

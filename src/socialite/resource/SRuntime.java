@@ -153,7 +153,6 @@ public class SRuntime {
 		for (Rule r:e.getRules()) {
 			if (r.isSimpleArrayInit()) continue;
 			String visitorClsName = e.getVisitorClassName(r.id());
-
 			if (visitorClsName!=null) {
 				Class<?> visitorCls = Loader.forName(visitorClsName);
 				getVisitorBuilder(r.id()).setVisitorClass(r.id(), visitorCls);

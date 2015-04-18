@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import socialite.visitors.IntVisitor;
 import socialite.visitors.ObjectVisitor;
 
-public final class SPosIndex {
+public class SPosIndex {
 	public static final Log L = LogFactory.getLog(SPosIndex.class);
 
 	Object index;

@@ -195,7 +195,7 @@ public class EvalParallel extends Eval {
 			initTable(init, consts);
 			idx++;
 		}
-
+        L.info(" NOTICE set epoch ready (epoch.id="+epoch.id()+")");
         EvalRefCount.getInst().setReady(epoch.id());
         shutdownInitThreads();
 	}

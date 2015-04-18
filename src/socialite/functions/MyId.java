@@ -13,6 +13,7 @@ public class MyId {
 	
 	public static int invoke() {
 		SRuntimeWorker runtime=SRuntimeWorker.getInst();
+        if (runtime==null) return 0;
 		int id = runtime.getWorkerAddrMap().myIndex();
 		return id;
 	}

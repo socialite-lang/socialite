@@ -38,6 +38,8 @@ public class TmpTablePool {
 	static final int globalListSize=512+64;
 	static final int smallListSize=1024+1024;
     static AtomicInteger allocKB=new AtomicInteger(0);
+    static AtomicInteger urgencyWait=new AtomicInteger(0);
+    static AtomicInteger urgencyWaitSmall=new AtomicInteger(0);
     static int maxAllocKB = -1;
     static int maxUrgentAllocKB = -1;
     static int maxRecvAllocKB = -1;
@@ -56,10 +58,12 @@ public class TmpTablePool {
     public static void clear() {
       //XXX: used by runGc(). Need to be called before and after System.gc()
       //     because allocKB is updated by gc (weak-ref-queue)
-      globalFreeTableList.clear();
-      freeSmallTableList.clear();
+        globalFreeTableList.clear();
+        freeSmallTableList.clear();
 
-      allocKB.set(0);
+        allocKB.set(0);
+        urgencyWait.set(0);
+        urgencyWaitSmall.set(0);
     }
     public static void clear(Class klass) {
     	L.info("Clearing "+klass);
@@ -196,33 +200,44 @@ public class TmpTablePool {
     }
 	static TmpTableInst get_global(int urgency, Class tableCls, Object... args) {
 		WeakArrayQueue<TmpTableInst> q = getQueueFromGlobal(tableCls);
-        int maxAlloc=maxAllocKB();
-        if (urgency==1) maxAlloc = maxRecvAllocKB();
-        if (urgency==2) maxAlloc = maxUrgentAllocKB();
-
         TmpTableInst t;
-        int waitTime=2, maxTry=50;
-        if (urgency==1) maxTry=25;
+        int waitTime=2, maxTry=10000;
+        if (urgency==1) maxTry=15;
         if (urgency==2) maxTry=5;
 
         int trycnt = 0;
-		do {
-			synchronized(q) { t = q.dequeue(); }
-			if (t!=null) {
-				assert t.isEmpty();
-				return t;
-			}
-            long freeMem = freeMemory();
-            if (freeMem > 1024*1024*(1024+512)) { break; }
-            if (urgency>=1 && freeMem > 1024*1024*(512+128)) { break; }
-            if (urgency>=2 && freeMem > 1024*1024*(256+128)) { break; }
-            if (trycnt > maxTry) { break; }
-			synchronized(q) {
-				try { q.wait(waitTime); }
-				catch (InterruptedException e) {throw new SociaLiteException(e);}
-			}
-			trycnt++;
-		} while (true);
+        boolean urgencyWaitIncremented = false;
+        try {
+            do {
+                if (urgency == 0 && urgencyWait.get() > 5) {
+                    t = null;
+                } else {
+                    synchronized (q) { t = q.dequeue(); }
+                }
+                if (t != null) {
+                    assert t.isEmpty();
+                    return t;
+                }
+                long freeMem = freeMemory();
+                if (freeMem > 1024 * 1024 * (1024*2)) { break;}
+                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024)) { break; }
+                if (urgency >= 2 && freeMem > 1024 * 1024 * 512) { break; }
+                if (trycnt > maxTry) { break;}
+                synchronized (q) {
+                    if (urgency >= 1 && !urgencyWaitIncremented) {
+                        urgencyWait.incrementAndGet();
+                        urgencyWaitIncremented = true;
+                    }
+                    try { q.wait(waitTime); }
+                    catch (InterruptedException e) { throw new SociaLiteException(e); }
+                }
+                trycnt++;
+            } while (true);
+        } finally {
+            if (urgencyWaitIncremented) {
+                urgencyWait.decrementAndGet();
+            }
+        }
 		
 		t = alloc(tableCls, args);
 		return t;
@@ -307,34 +322,44 @@ public class TmpTablePool {
 	}	
 	public static TmpTableInst getSmall(int urgency, Class tableCls) {
 		WeakArrayQueue<TmpTableInst> q = getSmallQueueFromGlobal(tableCls);
-		int maxAlloc = maxAllocKB();
-		if (urgency==1) maxAlloc = maxRecvAllocKB();
-		if (urgency==2) maxAlloc = maxUrgentAllocKB();
-		
 		TmpTableInst t;
-		int waitTime=2, maxTry=50;
-        if (urgency==1) maxTry=25;
+        int waitTime=2, maxTry=10000;
+        if (urgency==1) maxTry=15;
         if (urgency==2) maxTry=5;
+
 		int trycnt = 0;
-		do {
-			synchronized(q) { t = q.dequeue(); }
-			if (t!=null) {
-				assert t.isEmpty():"Table["+t.id()+"] is not empty.";
-				return t;
-			}
-            long freeMem = freeMemory();
-            if (freeMem > 1024*1024*(1024+512)) { break; }
-            if (urgency>=1 && freeMem > 1024*1024*(512+128)) { break; }
-            if (urgency>=2 && freeMem > 1024*1024*(256+128)) { break; }
-			//if (allocKB.get() < maxAlloc) { break; }
-			if (trycnt > maxTry) { break; }
-			synchronized(q) {
-				try { q.wait(waitTime); }
-				catch (InterruptedException e) { throw new SociaLiteException(e); }
-			}
-			trycnt++;
-		} while (true);
-				
+        boolean urgencyWaitIncremented = false;
+        try {
+            do {
+                if (urgency == 0 && urgencyWaitSmall.get() > 5) {
+                    t = null;
+                } else {
+                    synchronized (q) { t = q.dequeue(); }
+                }
+                if (t != null) {
+                    assert t.isEmpty() : "Table[" + t.id() + "] is not empty.";
+                    return t;
+                }
+                long freeMem = freeMemory();
+                if (freeMem > 1024 * 1024 * (1024*2)) { break;}
+                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024)) { break; }
+                if (urgency >= 2 && freeMem > 1024 * 1024 * (512)) { break; }
+                if (trycnt > maxTry) { break; }
+                synchronized (q) {
+                    if (urgency >= 1 && !urgencyWaitIncremented) {
+                        urgencyWaitSmall.incrementAndGet();
+                        urgencyWaitIncremented = true;
+                    }
+                    try { q.wait(waitTime); }
+                    catch (InterruptedException e) { throw new SociaLiteException(e); }
+                }
+                trycnt++;
+            } while (true);
+        } finally {
+            if (urgencyWaitIncremented) {
+                urgencyWaitSmall.decrementAndGet();
+            }
+        }
 		t = allocSmall(tableCls);
 		return t;
 	}	

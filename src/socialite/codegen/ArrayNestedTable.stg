@@ -33,7 +33,7 @@ package socialite.tables;
 
 	<first(columns).type> base;	
 	<rest(columns): {c|<c.type> col<i>[];<\n>}>
-	<idxCols:{ic|SPosIndex index<ic.relPos>;<\n>}>
+	<idxCols:{ic|SPosLockedIndex index<ic.relPos>;<\n>}>
 		
 	<refArrayClass>\<<nestedTable>\> nestedTables;
 	boolean isEmpty = true;
@@ -42,7 +42,7 @@ package socialite.tables;
 	public <name>(<first(columns).type> _base, int size) {
 		base = _base;		
 		<rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[size][]<else><c.type>[size]<endif>;<\n>}>;
-		<idxCols:{ic|index<ic.relPos> = new SPosIndex();<\n>}>
+		<idxCols:{ic|index<ic.relPos> = new SPosLockedIndex();<\n>}>
 		nestedTables = new <refArrayClass>\<<nestedTable>\>(size);
 	}
 
@@ -380,7 +380,7 @@ groupbyArr() ::= <<
   									   <gbNestedColumns:{c|, <c.type> b<i0>}>) {
 		int i=(int)(a0-base); rangeCheck(i);
 		
-		if (nestedTables.get(i)==null || nestedTables.get(i).isEmpty())
+		if (nestedTables.get(i)==null)
 			throw new SociaLiteException("Unexpected groupby operation");
 		
 		if (true<rest(gbColumns):{c|&&(col<i>[i]<EqOpMap.(c.type)>(a<i>))}>) {
@@ -392,7 +392,7 @@ groupbyArr() ::= <<
 	public boolean contains(<gbColumns:{c|<c.type> a<i0>};separator=", ">
 							<gbNestedColumns:{c|, <c.type> b<i0>}>) {
 		int i=(int)(a0-base); rangeCheck(i);
-		if (nestedTables.get(i)==null || nestedTables.get(i).isEmpty())
+		if (nestedTables.get(i)==null)
 			return false;
 	
 		if (true<rest(gbColumns):{c|&&(col<i>[i]<EqOpMap.(c.type)>(a<i>))}>)
@@ -413,7 +413,7 @@ groupbyArr() ::= <<
 	public <gbAggrColumn.type> groupby(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
 		int i=(int)(a0-base); rangeCheck(i);
 		
-		if (nestedTables.get(i)==null || nestedTables.get(i).isEmpty())
+		if (nestedTables.get(i)==null)
 			throw new SociaLiteException("Unexpected groupby operation");
 		
 		if (true<rest(gbColumns):{c|&&(col<i>[i]<EqOpMap.(c.type)>(a<i>))}>) {
@@ -427,14 +427,14 @@ groupbyArr() ::= <<
 	public <gbAggrColumn.type> groupby(<first(gbColumns).type> a0) {
 		int i=(int)(a0-base); rangeCheck(i);
 		
-		if (nestedTables.get(i)==null || nestedTables.get(i).isEmpty())
+		if (nestedTables.get(i)==null)
 			throw new SociaLiteException("Unexpected groupby operation");
 		return col<gbAggrColumn.relPos>[i];
 	}
 	<endif>
 	public boolean contains(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
 		int i=(int)(a0-base); rangeCheck(i);
-		if (nestedTables.get(i)==null || nestedTables.get(i).isEmpty())
+		if (nestedTables.get(i)==null)
 			return false;
 			
 		if (true<rest(gbColumns):{c|&&(col<i>[i]<EqOpMap.(c.type)>(a<i>))}>)

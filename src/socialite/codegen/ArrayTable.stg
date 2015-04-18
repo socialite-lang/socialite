@@ -30,7 +30,7 @@ package socialite.tables;
 	<first(columns).type> base;
 	<byteArrayClass> filled;
 	<rest(columns):{c|<c.type> col<i>[];<\n>}>
-	<idxCols:{ic|SPosIndex index<ic.relPos>;<\n>}>
+	<idxCols:{ic|SPosLockedIndex index<ic.relPos>;<\n>}>
 	 
 	<if(concurrent)>volatile<endif> boolean isEmpty = true;
 	
@@ -39,7 +39,7 @@ package socialite.tables;
 		base = _base;
 		filled = new <byteArrayClass>(size);
 		<rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[size][]<else><c.type>[size]<endif>;<\n>}>;
-		<idxCols:{ic|index<ic.relPos> = new SPosIndex();<\n>}>
+		<idxCols:{ic|index<ic.relPos> = new SPosLockedIndex();<\n>}>
 	}
 	
 <rest(columns):{c| private <c.type> col<i>(int i) { return col<i>[i]; \}<\n>}>
