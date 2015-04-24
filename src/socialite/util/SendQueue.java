@@ -3,7 +3,12 @@ package socialite.util;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -18,12 +23,18 @@ public class SendQueue {
 	ArrayQueue<WorkerMessage> queue;
 	TLongObjectHashMap<WorkerMessage> msgs; 
 	List<WorkerMessage> reserved;
-	
+    AtomicInteger serializedMsgCount = new AtomicInteger(0);
+
+    Lock lock = new ReentrantLock(true);
+    Condition notEmpty = lock.newCondition();
+    Condition notFull = lock.newCondition();
+
 	public SendQueue() {
 		queue = new ArrayQueue<WorkerMessage>(4*1024);
 		msgs = new TLongObjectHashMap<WorkerMessage>(128, 0.8f, 0L);
 		reserved = new ArrayList<WorkerMessage>(128);
-	}
+        reserved = Collections.synchronizedList(reserved);
+    }
 	public synchronized boolean isEmpty() {
 		return queue.isEmpty() && reserved.isEmpty();
 	}
@@ -39,39 +50,47 @@ public class SendQueue {
 		return ((long)msg.getSlaveId())<<32 | 
 			   ((long)msg.getTableId())<<1 | 1L;
 	}	
-	public synchronized WorkerMessage reserve() throws InterruptedException {
+	public WorkerMessage reserve() throws InterruptedException {
 		WorkerMessage msg=null;
-		while (queue.isEmpty()) {
-			wait();
-		}
-		msg = queue.get();		
-		reserved.add(msg);
-		
-		long key = key(msg);
-		msgs.remove(key);
-		
+        lock.lock();
+        try {
+            while (queue.isEmpty()) {
+                notEmpty.await();
+            }
+            msg = queue.get();
+            long key = key(msg);
+            msgs.remove(key);
+        } finally {
+            lock.unlock();
+        }
+
+        reserved.add(msg);
+        if (msg.isSerialized()) {
+            serializedMsgCount.decrementAndGet();
+        }
+        lock.lock();
+        try { notFull.signalAll(); }
+        finally { lock.unlock(); }
 		return msg;
 	}
 
 	public void pop(WorkerMessage m) {
         EvalRefCount.getInst().dec(m.getEpochId());
-        synchronized (this) {
-            reserved.remove(m);
-        }
-		synchronized(condFull) {
-			condFull.notifyAll();
-		}
+        reserved.remove(m);
 	}
 	public boolean add(WorkerMessage m) {
 		assert !queue.contains(m);
 		boolean reuseTableInMsg=false;
-		if (!m.isSerialized()) {
-			waitIfFull();
-		}		
+
+        if (m.isSerialized()) {
+            serializedMsgCount.incrementAndGet();
+        }
+        waitIfFull(m);
 		long key = key(m);
         boolean incEvalRef=false;
-		synchronized(this) {
-			WorkerMessage prevMsg = msgs.get(key);
+        lock.lock();
+		try {
+            WorkerMessage prevMsg = msgs.get(key);
 			if (m.isSerialized()) {
 				queue.add(m);
 				reuseTableInMsg = true;
@@ -92,28 +111,37 @@ public class SendQueue {
                     incEvalRef = true;
 				}
 			}
-			notifyAll();
-		}
+			notEmpty.signalAll();
+		} finally {
+            lock.unlock();
+        }
         if (incEvalRef) EvalRefCount.getInst().inc(m.getEpochId());
 		return reuseTableInMsg;
 	}
 	
-	final int queueSizeLimit=
-			(int)(ByteBufferPool.getDirectBufferAlloc()/ByteBufferPool.bufferSize()*2);
-	Object condFull = new Object();
-	boolean isFull() {	
-		return queue.size() > queueSizeLimit;
+	final int queueSizeLimit=4096;
+    final int serializedMsgLimit=(int)(ByteBufferPool.getBufferQueueSize()*2/3);
+    boolean isFull(WorkerMessage m) {
+        if (m.isSerialized()) {
+            return serializedMsgCount.get() > serializedMsgLimit;
+        } else {
+            return queue.size() > queueSizeLimit;
+        }
 	}
-	void waitIfFull() {
-		synchronized (condFull) {
-			while (isFull()) {
-				try { condFull.wait(); }
-				catch (InterruptedException e) {
-					throw new SociaLiteException();
-				}
-			}	
-		}
-	}	
+	void waitIfFull(WorkerMessage m) {
+        lock.lock();
+        try {
+            while (isFull(m)) {
+                try {
+                    notFull.await();
+                } catch (InterruptedException e) {
+                    throw new SociaLiteException();
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
 	boolean mergeMsg(WorkerMessage prevMsg, WorkerMessage newMsg) {
 		if (prevMsg.isSerialized()) return false;
 		
@@ -121,7 +149,7 @@ public class SendQueue {
 		EvalWithTable newEvalT = newMsg.evalT;
 		assert prevEvalT.getTable().id() == newEvalT.getTable().id();
 		
-		if (prevEvalT.getTable().vacancy() >= newEvalT.getTable().size()) {
+		if (prevEvalT.getTable().vacancy() > newEvalT.getTable().size()) {
 			prevEvalT.getTable().addAll(newEvalT.getTable());			
 			return true;
 		} else {			

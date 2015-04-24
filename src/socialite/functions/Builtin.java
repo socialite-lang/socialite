@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.apache.hadoop.fs.FSDataOutputStream;
 import socialite.type.ApproxCount;
 import socialite.type.ApproxSet;
 import socialite.type.Avg;
@@ -117,7 +118,10 @@ public class Builtin {
 	public static boolean argmin(socialite.type.ArgMin a, int i, long v) { return a.argmin(i,v); }
 	public static boolean argmin(socialite.type.ArgMin a, int i, float v) { return a.argmin(i,v); }
 	public static boolean argmin(socialite.type.ArgMin a, int i, double v) { return a.argmin(i,v); }
-	
+
+    public static FSDataOutputStream create(String file) { return FileFunc.create(file); }
+    public static int close(Object fs) { return FileFunc.close(fs); }
+    public static int writeline(Object os, String line) { return FileFunc.writeLine(os, line); }
 	public static Iterator<String> read(String file) { return Read.invoke(file); }
     public static Iterator<String> listdir(String dir) { return FileFunc.listdir(dir); }
 

@@ -699,7 +699,7 @@ public class VisitorCodeGen {
 
 	List<Integer> tableSendPos() {
 		if (tableSendPos == null)
-			tableSendPos = Analysis.tableSendPos(rule);
+			tableSendPos = Analysis.tableSendPos(rule, tableMap);
 		return tableSendPos;
 	}
 
@@ -1578,12 +1578,12 @@ public class VisitorCodeGen {
 
 	boolean hasRemoteRuleBody() {
 		if (!conf.isDistributed()) return false;
-		return Analysis.hasRemoteRuleBody(rule);
+		return Analysis.hasRemoteRuleBody(rule, tableMap);
 	}
 
 	boolean hasRemoteRuleHead() {
 		if (!conf.isDistributed()) return false;		
-		return Analysis.hasRemoteRuleHead(rule);
+		return Analysis.hasRemoteRuleHead(rule, tableMap);
 	}
 
 	ST ifLocalHead(ST code) {

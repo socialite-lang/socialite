@@ -120,7 +120,7 @@ public class Manager extends Thread {
 		if (workers == null) {
 			if (_workerNum==1) urgentWorkers=0;
 			else {
-                urgentWorkers = _workerNum/4;
+                urgentWorkers = _workerNum/3;
                 if (urgentWorkers<2) urgentWorkers=2;
                 if (urgentWorkers>12) urgentWorkers=12;
             }

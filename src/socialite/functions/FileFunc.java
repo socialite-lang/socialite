@@ -3,9 +3,11 @@ package socialite.functions;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import socialite.util.SociaLiteException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +32,38 @@ public class FileFunc {
         } catch (IOException e) {
             L.error("Error while accessing "+dir+":"+e);
             return (new ArrayList<String>()).iterator();
+        }
+    }
+    public static int close(Object _fs) {
+        FSDataOutputStream fs = (FSDataOutputStream)_fs;
+        try {
+            fs.close();
+        } catch (IOException e) {
+            L.error("Exception while closing file output stream:"+e);
+        }
+        return 0;
+    }
+    public static FSDataOutputStream create(String filename) {
+        try {
+            FileSystem fs = FileSystem.get(new Configuration());
+            Path f = new Path(filename);
+            return fs.create(f);
+        } catch (IOException e) {
+            L.error("Error while creating " + filename + ":" + e);
+            throw new SociaLiteException(e);
+        }
+    }
+    public static int writeLine(Object _os, String line) {
+        FSDataOutputStream os = (FSDataOutputStream)_os;
+        try {
+            synchronized(os) {
+                os.write(line.getBytes());
+                os.write("\n".getBytes());
+            }
+            return line.length() + 1;
+        } catch (IOException e) {
+            L.error("Error while writing line[" + line + "]:" + e);
+            return -1;
         }
     }
 }

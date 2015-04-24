@@ -63,7 +63,7 @@ public class Sender {
 		workerConn = _workerConn;
 		sendChannel$ = new ChannelMux[workerAddrMap.size()];
 		int senderNum = Runtime.getRuntime().availableProcessors()/4;
-		if (senderNum < 8) senderNum = 8;
+		if (senderNum < 10) senderNum = 10;
 		if (senderNum > 64) senderNum = 64;
 		initSenderThreads(senderNum);
 	}

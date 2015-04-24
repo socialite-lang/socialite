@@ -35,7 +35,7 @@ public class TmpTablePool {
 
 	static Map<Class, Method> tableAlloc = Collections.synchronizedMap(new WeakHashMap<Class, Method>());
     static Map<Class, Method> tableAllocSmall = Collections.synchronizedMap(new WeakHashMap<Class, Method>());
-	static final int globalListSize=512+64;
+	static final int globalListSize=512+128;
 	static final int smallListSize=1024+1024;
     static AtomicInteger allocKB=new AtomicInteger(0);
     static AtomicInteger urgencyWait=new AtomicInteger(0);
@@ -201,28 +201,38 @@ public class TmpTablePool {
 	static TmpTableInst get_global(int urgency, Class tableCls, Object... args) {
 		WeakArrayQueue<TmpTableInst> q = getQueueFromGlobal(tableCls);
         TmpTableInst t;
-        int waitTime=2, maxTry=10000;
-        if (urgency==1) maxTry=15;
-        if (urgency==2) maxTry=5;
+        int waitTime=2, maxTry=200000;
+        if (urgency==1) maxTry=30;
+        if (urgency==2) maxTry=20;
 
-        int trycnt = 0;
+        long waitStart = 0;
+        int tryCnt = 0;
         boolean urgencyWaitIncremented = false;
         try {
             do {
-                if (urgency == 0 && urgencyWait.get() > 5) {
-                    t = null;
-                } else {
-                    synchronized (q) { t = q.dequeue(); }
+                t = null;
+                synchronized (q) {
+                    if (tryCnt == 0) {
+                        t = q.dequeue();
+                    } else if (urgency >= 1) {
+                        t = q.dequeue();
+                    } else if (urgencyWait.get() < 3) {
+                        t = q.dequeue();
+                    }
+                    if (t == null && q.size() > 3) {
+                        t = q.dequeue();
+                    }
                 }
                 if (t != null) {
                     assert t.isEmpty();
                     return t;
                 }
+
                 long freeMem = freeMemory();
-                if (freeMem > 1024 * 1024 * (1024*2)) { break;}
-                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024)) { break; }
-                if (urgency >= 2 && freeMem > 1024 * 1024 * 512) { break; }
-                if (trycnt > maxTry) { break;}
+                if (freeMem > 1024 * 1024 * (1024+1024)) { break;}
+                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024+512)) { break; }
+                if (urgency >= 2 && freeMem > 1024 * 1024 * (1024)) { break; }
+                if (tryCnt > maxTry) { break;}
                 synchronized (q) {
                     if (urgency >= 1 && !urgencyWaitIncremented) {
                         urgencyWait.incrementAndGet();
@@ -231,7 +241,11 @@ public class TmpTablePool {
                     try { q.wait(waitTime); }
                     catch (InterruptedException e) { throw new SociaLiteException(e); }
                 }
-                trycnt++;
+                long now = System.currentTimeMillis();
+                if (now - waitStart >= 1) {
+                    tryCnt++;
+                    waitStart = now;
+                }
             } while (true);
         } finally {
             if (urgencyWaitIncremented) {
@@ -323,28 +337,38 @@ public class TmpTablePool {
 	public static TmpTableInst getSmall(int urgency, Class tableCls) {
 		WeakArrayQueue<TmpTableInst> q = getSmallQueueFromGlobal(tableCls);
 		TmpTableInst t;
-        int waitTime=2, maxTry=10000;
-        if (urgency==1) maxTry=15;
-        if (urgency==2) maxTry=5;
+        int waitTime=2, maxTry=200000;
+        if (urgency==1) maxTry=30;
+        if (urgency==2) maxTry=20;
 
-		int trycnt = 0;
+        long waitStart = 0;
+        int tryCnt = 0;
         boolean urgencyWaitIncremented = false;
         try {
             do {
-                if (urgency == 0 && urgencyWaitSmall.get() > 5) {
-                    t = null;
-                } else {
-                    synchronized (q) { t = q.dequeue(); }
+                t = null;
+                synchronized (q) {
+                    if (tryCnt == 0) {
+                        t = q.dequeue();
+                    } else if (urgency >= 1) {
+                        t = q.dequeue();
+                    } else if (urgencyWaitSmall.get() < 3) {
+                        t = q.dequeue();
+                    }
+                    if (t == null && q.size() > 3) {
+                        t = q.dequeue();
+                    }
                 }
                 if (t != null) {
                     assert t.isEmpty() : "Table[" + t.id() + "] is not empty.";
                     return t;
                 }
+
                 long freeMem = freeMemory();
-                if (freeMem > 1024 * 1024 * (1024*2)) { break;}
-                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024)) { break; }
-                if (urgency >= 2 && freeMem > 1024 * 1024 * (512)) { break; }
-                if (trycnt > maxTry) { break; }
+                if (freeMem > 1024 * 1024 * (1024+1024)) { break;}
+                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024+512)) { break; }
+                if (urgency >= 2 && freeMem > 1024 * 1024 * (1024)) { break; }
+                if (tryCnt > maxTry) { break; }
                 synchronized (q) {
                     if (urgency >= 1 && !urgencyWaitIncremented) {
                         urgencyWaitSmall.incrementAndGet();
@@ -353,13 +377,18 @@ public class TmpTablePool {
                     try { q.wait(waitTime); }
                     catch (InterruptedException e) { throw new SociaLiteException(e); }
                 }
-                trycnt++;
+                long now = System.currentTimeMillis();
+                if (now - waitStart >= 1) {
+                    tryCnt++;
+                    waitStart = now;
+                }
             } while (true);
         } finally {
             if (urgencyWaitIncremented) {
                 urgencyWaitSmall.decrementAndGet();
             }
         }
+
 		t = allocSmall(tableCls);
 		return t;
 	}	

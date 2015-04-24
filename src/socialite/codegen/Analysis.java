@@ -695,18 +695,42 @@ public class Analysis {
 		return tmp;
 	}
 
-	public static boolean hasRemoteRuleBody(Rule r) {
+	public static boolean hasRemoteRuleBody(Rule r, Map<String, Table> tableMap) {
 		List<Predicate> bodyP = r.getBodyP();
 		if (bodyP.size() <= 1)
 			return false;
 
-		List<Integer> sendPos = tableSendPos(r);//tableSendPos(bodyP);
+		List<Integer> sendPos = tableSendPos(r, tableMap);
 		if (sendPos.isEmpty())
 			return false;
 		return true;
 	}
 
-	public static List<Integer> tableSendPos(Rule r) {
+    static boolean hasSamePartition(Table t1, Table t2) {
+        if (t1.isModTable() && t2.isModTable()) {
+            return t1.getColumn(0).type().equals(t2.getColumn(0).type());
+        }
+        if (t1.isArrayTable() && t2.isArrayTable()) {
+            return t1.arrayBeginIndex() == t2.arrayBeginIndex() &&
+                    t1.arrayEndIndex() == t2.arrayEndIndex();
+        }
+        return false;
+    }
+    static boolean requireTransfer(Predicate prev, Predicate p, Map<String, Table> tableMap) {
+        if (!prev.first().equals(p.first())) {
+            return true;
+        }
+        Table t1 = tableMap.get(prev.name());
+        Table t2 = tableMap.get(p.name());
+        if (t1 instanceof RemoteHeadTable || t2 instanceof RemoteHeadTable) {
+            return false;
+        }
+        if (t1 instanceof RemoteBodyTable || t2 instanceof RemoteBodyTable) {
+            return false;
+        }
+        return !hasSamePartition(t1, t2);
+    }
+	public static List<Integer> tableSendPos(Rule r, Map<String, Table> tableMap) {
 		List<Predicate> bodyP = r.getBodyP();
 		
 		List<Integer> sendPos = new ArrayList<Integer>();
@@ -716,7 +740,7 @@ public class Analysis {
 				prevp = p;
 				continue;
 			}
-			if (!prevp.first().equals(p.first())) {
+			if (requireTransfer(prevp, p, tableMap)) {
 				if (collectLiveVarsAt(r, p.getPos()).isEmpty()) {
 					Assert.impossible();
 					continue;			
@@ -728,30 +752,14 @@ public class Analysis {
 		return sendPos;	
 	}
 	
-	public static List<Integer> tableSendPos(List<Predicate> bodyP) {
-		List<Integer> sendPos = new ArrayList<Integer>();
-		Predicate prevp = null;
-		for (Predicate p : bodyP) {
-			if (prevp != null) {
-				if (!prevp.first().equals(p.first())) {			
-					sendPos.add(p.getPos());
-				}
-			}
-			prevp = p;
-		}
-		return sendPos;
-	}
-
-	public static boolean hasRemoteRuleHead(Rule r) {
+	public static boolean hasRemoteRuleHead(Rule r, Map<String, Table> tableMap) {
 		Predicate h = r.getHead();
 		if (r.isSimpleArrayInit()) return false;
 		if (r.getBodyP().size()==0) return true;
 		
 		List<Predicate> body = r.getBodyP();
 		Predicate p=body.get(body.size()-1);
-		if (p.first().equals(h.first()))
-			return false;
-		else return true;		
+        return requireTransfer(p, h, tableMap);
 	}
 
 	void processRemoteRules() {
@@ -760,13 +768,13 @@ public class Analysis {
 		List<Rule> toAdd = new ArrayList<Rule>();
 		for (RuleComp rc : ruleComps) {
 			for (Rule r : rc.getRules()) {
-				if (hasRemoteRuleHead(r))
+				if (hasRemoteRuleHead(r, tableMap))
 					processRemoteRuleHead(r, toAdd);
 			}
 			rc.addAll(toAdd);
 			toAdd.clear();
 			for (Rule r : rc.getRules()) {
-				if (hasRemoteRuleBody(r))
+				if (hasRemoteRuleBody(r, tableMap))
 					processRemoteRuleBody(r, toAdd);
 			}
 			rc.addAll(toAdd);
@@ -774,9 +782,9 @@ public class Analysis {
 			while (!toAdd.isEmpty()) {
 				List<Rule> toAdd2 = new ArrayList<Rule>();
 				for (Rule r : toAdd) {
-					if (hasRemoteRuleHead(r))
+					if (hasRemoteRuleHead(r, tableMap))
 						processRemoteRuleHead(r, toAdd2);
-					if (hasRemoteRuleBody(r))
+					if (hasRemoteRuleBody(r, tableMap))
 						processRemoteRuleBody(r, toAdd2);
 				}
 				rc.addAll(toAdd2);
@@ -967,7 +975,7 @@ outer:	for (Variable v:sortedVars) {
 
 	@SuppressWarnings("unchecked")
 	void processRemoteRuleBody(Rule r, List<Rule> toAdd) {
-		List<Integer> sendPos = tableSendPos(r);//tableSendPos(r.getBodyP());
+		List<Integer> sendPos = tableSendPos(r, tableMap);//tableSendPos(r.getBodyP());
 		assert !sendPos.isEmpty();
 		for (int pos : sendPos) {
 			List<Variable> vars = collectLiveVarsAt(r, pos);

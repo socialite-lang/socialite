@@ -53,7 +53,10 @@ public class EvalRefCount {
         }
     }
     public void waitUntilReady(int id) throws InterruptedException {
-        if (ready.containsKey(id)) return;
+        if (ready.containsKey(id)) {
+            ready.get(id);
+            return;
+        }
 
         Object o = new Object();
         synchronized (o) {
