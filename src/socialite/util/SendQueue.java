@@ -119,8 +119,8 @@ public class SendQueue {
 		return reuseTableInMsg;
 	}
 	
-	final int queueSizeLimit=4096;
-    final int serializedMsgLimit=(int)(ByteBufferPool.getBufferQueueSize()*2/3);
+	final int queueSizeLimit=4096*2;
+    final int serializedMsgLimit=(int)(ByteBufferPool.getBufferQueueSize()*3/5);
     boolean isFull(WorkerMessage m) {
         if (m.isSerialized()) {
             return serializedMsgCount.get() > serializedMsgLimit;

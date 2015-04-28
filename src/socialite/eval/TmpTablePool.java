@@ -35,8 +35,8 @@ public class TmpTablePool {
 
 	static Map<Class, Method> tableAlloc = Collections.synchronizedMap(new WeakHashMap<Class, Method>());
     static Map<Class, Method> tableAllocSmall = Collections.synchronizedMap(new WeakHashMap<Class, Method>());
-	static final int globalListSize=512+128;
-	static final int smallListSize=1024+1024;
+	static final int globalListSize=256;
+	static final int smallListSize=1024+1024+256;
     static AtomicInteger allocKB=new AtomicInteger(0);
     static AtomicInteger urgencyWait=new AtomicInteger(0);
     static AtomicInteger urgencyWaitSmall=new AtomicInteger(0);
