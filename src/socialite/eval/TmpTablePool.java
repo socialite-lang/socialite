@@ -31,11 +31,11 @@ public class TmpTablePool {
                         Collections.synchronizedMap(new WeakHashMap<Class, WeakArrayQueue<TmpTableInst>>());
     static Map<Class, WeakArrayQueue<TmpTableInst>> freeSmallTableList =
                         Collections.synchronizedMap(new WeakHashMap<Class, WeakArrayQueue<TmpTableInst>>());
-    static ReferenceQueue<TmpTableInst> refQueue = new ReferenceQueue<TmpTableInst>();
+    //static ReferenceQueue<TmpTableInst> refQueue = new ReferenceQueue<TmpTableInst>();
 
 	static Map<Class, Method> tableAlloc = Collections.synchronizedMap(new WeakHashMap<Class, Method>());
     static Map<Class, Method> tableAllocSmall = Collections.synchronizedMap(new WeakHashMap<Class, Method>());
-	static final int globalListSize=256;
+	static final int globalListSize=128+64+32;
 	static final int smallListSize=1024+1024+256;
     static AtomicInteger allocKB=new AtomicInteger(0);
     static AtomicInteger urgencyWait=new AtomicInteger(0);
@@ -60,6 +60,8 @@ public class TmpTablePool {
       //     because allocKB is updated by gc (weak-ref-queue)
         globalFreeTableList.clear();
         freeSmallTableList.clear();
+        tableAlloc.clear();
+        tableAllocSmall.clear();
 
         allocKB.set(0);
         urgencyWait.set(0);
@@ -193,17 +195,20 @@ public class TmpTablePool {
 
     static MemoryUsage heapMemUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
     static long freeMemory() {
-        if (heapMemUsage.getMax() > heapMemUsage.getCommitted()*3/2) {
+        long free = heapMemUsage.getMax() - heapMemUsage.getUsed() - 256*1024*1024;
+        if (free < 0) free = 0;
+        return free;
+        /*if (heapMemUsage.getMax() > heapMemUsage.getCommitted()*3/2) {
             return heapMemUsage.getMax() - heapMemUsage.getUsed();
         }
-        return heapMemUsage.getCommitted() - heapMemUsage.getUsed();
+        return heapMemUsage.getCommitted() - heapMemUsage.getUsed();*/
     }
 	static TmpTableInst get_global(int urgency, Class tableCls, Object... args) {
 		WeakArrayQueue<TmpTableInst> q = getQueueFromGlobal(tableCls);
         TmpTableInst t;
-        int waitTime=2, maxTry=200000;
-        if (urgency==1) maxTry=30;
-        if (urgency==2) maxTry=20;
+        int waitTime=2, maxTry=500000;
+        if (urgency==1) maxTry=40;
+        if (urgency==2) maxTry=30;
 
         long waitStart = 0;
         int tryCnt = 0;
@@ -229,9 +234,9 @@ public class TmpTablePool {
                 }
 
                 long freeMem = freeMemory();
-                if (freeMem > 1024 * 1024 * (1024+1024)) { break;}
-                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024+512)) { break; }
-                if (urgency >= 2 && freeMem > 1024 * 1024 * (1024)) { break; }
+                if (freeMem > 1024 * 1024 * (1024+1024+512)) { break;}
+                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024+512+256)) { break; }
+                if (urgency >= 2 && freeMem > 1024 * 1024 * (1024+512)) { break; }
                 if (tryCnt > maxTry) { break;}
                 synchronized (q) {
                     if (urgency >= 1 && !urgencyWaitIncremented) {
@@ -337,9 +342,9 @@ public class TmpTablePool {
 	public static TmpTableInst getSmall(int urgency, Class tableCls) {
 		WeakArrayQueue<TmpTableInst> q = getSmallQueueFromGlobal(tableCls);
 		TmpTableInst t;
-        int waitTime=2, maxTry=200000;
-        if (urgency==1) maxTry=30;
-        if (urgency==2) maxTry=20;
+        int waitTime=2, maxTry=500000;
+        if (urgency==1) maxTry=40;
+        if (urgency==2) maxTry=30;
 
         long waitStart = 0;
         int tryCnt = 0;
@@ -365,9 +370,9 @@ public class TmpTablePool {
                 }
 
                 long freeMem = freeMemory();
-                if (freeMem > 1024 * 1024 * (1024+1024)) { break;}
-                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024+512)) { break; }
-                if (urgency >= 2 && freeMem > 1024 * 1024 * (1024)) { break; }
+                if (freeMem > 1024 * 1024 * (1024+1024+512)) { break;}
+                if (urgency >= 1 && freeMem > 1024 * 1024 * (1024+512+256)) { break; }
+                if (urgency >= 2 && freeMem > 1024 * 1024 * (1024+512)) { break; }
                 if (tryCnt > maxTry) { break; }
                 synchronized (q) {
                     if (urgency >= 1 && !urgencyWaitIncremented) {

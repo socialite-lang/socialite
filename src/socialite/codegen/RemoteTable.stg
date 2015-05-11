@@ -33,7 +33,7 @@ public class <name> extends TmpTableInst {
 	public <name>() { this(true); }	
 	public <name>(boolean small) {
 		int col0size=0, col1size=0, col2size=0, col3size=0;
-		int overhead = 256+32*(<length(cols0)>+<length(cols1)>+<length(cols2)>+<length(cols3)>);
+		int overhead = 256+64*(<length(cols0)>+<length(cols1)>+<length(cols2)>+<length(cols3)>);
 		int bufsize = ByteBufferPool.bufferSize()-overhead;
 		if (small) { bufsize = ByteBufferPool.smallBufferSize()-overhead; }
 		bufsize = (int)(bufsize/sizeEstimFactor());
@@ -96,7 +96,12 @@ public class <name> extends TmpTableInst {
 		<elseif(cols1)> return col<first(cols1).absPos>.size();
 		<else> return col<first(cols0).absPos>.size();<endif> 
 	}
-	public int vacancy() { return capacity() - size(); }
+	public int vacancy() {
+	    int vacancy = capacity() - size();
+	    if (vacancy >= 8) { vacancy -= 8; }
+	    else { vacancy = 0; }
+	    return vacancy;
+	}
 	public boolean isSmall() { return size() \< ordinaryCapacity()/10; }		
 	
 	public int totalAllocSize() {
@@ -113,11 +118,11 @@ public class <name> extends TmpTableInst {
 	public int totalDataSize() {
 		int total = 256 /*overhead*/;
 		<cols0:{c|total += 32+col<c.absPos>.size()*<c.typeSize>;<\n>}>
-		<if(cols1)>total += col<first(cols0).absPos>.size()*4;<endif>
+		<if(cols1)>total += 32+col<first(cols0).absPos>.size()*4;<endif>
 		<cols1:{c|total += 32+col<c.absPos>.size()*<c.typeSize>;<\n>}>
-		<if(cols2)>total += col<first(cols1).absPos>.size()*4;<endif>
+		<if(cols2)>total += 32+col<first(cols1).absPos>.size()*4;<endif>
 		<cols2:{c|total += 32+col<c.absPos>.size()*<c.typeSize>;<\n>}>
-		<if(cols3)>total += col<first(cols2).absPos>.size()*4;<endif>
+		<if(cols3)>total += 32+col<first(cols2).absPos>.size()*4;<endif>
 		<cols3:{c|total += 32+col<c.absPos>.size()*<c.typeSize>;<\n>}>
 		return (int)(total*sizeEstimFactor());
 	}

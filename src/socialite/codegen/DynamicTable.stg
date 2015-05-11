@@ -32,7 +32,7 @@ package socialite.tables;
         static final int INIT_CHUNK_SIZE=4;
         Node$Init() { super(INIT_CHUNK_SIZE); }
         boolean isFull() {
-            if (len \< CHUNK_SIZE) return false;
+            if (len \< CHUNK_SIZE) {return false;}
             return super.isFull();
         }
         int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
@@ -62,7 +62,7 @@ package socialite.tables;
 	    }
 	    static void free(Node n) { pool.add(n); }
 
-        static final int CHUNK_SIZE=128;
+        static final int CHUNK_SIZE=256;
         
 	    <columns:{c|Object col<i0>;<\n>}>
         <if(concurrent)>volatile<endif> int len;

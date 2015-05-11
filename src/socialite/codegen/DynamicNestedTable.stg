@@ -44,7 +44,8 @@ package socialite.tables;
         	return super.insert(<columns:{c|a<i0>}; separator=", "><nestedColumns:{c|, b<i0>}>);
         }
         void expand() {
-        	int size = len*2;
+        	int size = len*3/2;
+        	if (size > CHUNK_SIZE) {size=CHUNK_SIZE;}
         	<columns:{c|<c.type>[] _col<i0> = new <c.type>[size];<\n>}>
         	<columns:{c|System.arraycopy(col<i0>, 0, _col<i0>, 0, len);<\n>}>
         	<columns:{c|col<i0> = _col<i0>;<\n>}>            
@@ -66,7 +67,7 @@ package socialite.tables;
         }
         static void free(Node n) { pool.add(n); }
 
-        static final int CHUNK_SIZE=128;
+        static final int CHUNK_SIZE=256;
 
 	    <columns:{c|Object col<i0>;<\n>}>
 	    <nestedTable>[] nested;

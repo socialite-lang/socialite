@@ -53,6 +53,18 @@ public class FileFunc {
             throw new SociaLiteException(e);
         }
     }
+    public static int write(Object _os, String s) {
+        FSDataOutputStream os = (FSDataOutputStream)_os;
+        try {
+            synchronized(os) {
+                os.write(s.getBytes());
+            }
+            return s.length() + 1;
+        } catch (IOException e) {
+            L.error("Error while writing [" + s + "]:" + e);
+            return -1;
+        }
+    }
     public static int writeLine(Object _os, String line) {
         FSDataOutputStream os = (FSDataOutputStream)_os;
         try {

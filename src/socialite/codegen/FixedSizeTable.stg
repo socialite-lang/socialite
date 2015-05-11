@@ -37,7 +37,12 @@ public final class <name> extends TmpTableInst {
 	public int ordinaryCapacity() { return <size>; }
 	public int capacity() { return col0.capacity(); } 	
 	public int size() { return col0.size(); }	
-	public int vacancy() { return capacity() - size(); }
+	public int vacancy() {
+	    int vacancy = capacity() - size();
+	    if (vacancy >= 8) { vacancy -= 8; }
+	    else { vacancy = 0; }
+	    return vacancy;
+	}
 	public boolean isSmall() { return col0.size() \< <size>/10; }
 
 	public boolean isEmpty() { return col0.size()==0; }
@@ -50,7 +55,7 @@ public final class <name> extends TmpTableInst {
 	}	
 	public int totalDataSize() {
 		int size = col0.size();
-		int totalData = 0;
+		int totalData = 128;
 		<columns:{c|totalData += 32+size*<c.typeSize>;<\n>}>
 		return (int)(totalData*sizeEstimFactor());
 	}

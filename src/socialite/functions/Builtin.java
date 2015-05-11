@@ -119,8 +119,9 @@ public class Builtin {
 	public static boolean argmin(socialite.type.ArgMin a, int i, float v) { return a.argmin(i,v); }
 	public static boolean argmin(socialite.type.ArgMin a, int i, double v) { return a.argmin(i,v); }
 
-    public static FSDataOutputStream create(String file) { return FileFunc.create(file); }
+    public static Object create(String file) { return FileFunc.create(file); }
     public static int close(Object fs) { return FileFunc.close(fs); }
+    public static int write(Object os, String s) { return FileFunc.write(os, s); }
     public static int writeline(Object os, String line) { return FileFunc.writeLine(os, line); }
 	public static Iterator<String> read(String file) { return Read.invoke(file); }
     public static Iterator<String> listdir(String dir) { return FileFunc.listdir(dir); }

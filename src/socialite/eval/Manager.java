@@ -191,7 +191,15 @@ public class Manager extends Thread {
         SRuntime _runtime = runtime;
         EvalRefCount.getInst().waitUntilReady(evalCmd.getEpochId());
         Task[] tasks=null;
-        tasks = taskFactory.make(evalCmd, builder(evalCmd.getRuleId()), _runtime);
+        VisitorBuilder builder = builder(evalCmd.getRuleId());
+        if (builder == null) {
+            do {
+                L.error("Builder for rule["+evalCmd.getRuleId()+"] is null, epochId:"+evalCmd.getEpochId()+", try waiting once more");
+                EvalRefCount.getInst().waitUntilReady(evalCmd.getEpochId());
+                builder = builder(evalCmd.getRuleId());
+            } while (builder == null);
+        }
+        tasks = taskFactory.make(evalCmd, builder, _runtime);
         int taskCount=0;
         for (Task t:tasks) {
             if (t==null) continue;

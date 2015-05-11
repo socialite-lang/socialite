@@ -13,7 +13,7 @@ public class EvalRefCount {
 
     public interface IdleCallback { public void call(int id, int idleTimestamp); }
 
-	static EvalRefCount theInst;
+	static volatile EvalRefCount theInst;
     public static EvalRefCount getInst(IdleCallback callback) {
         theInst = new EvalRefCount(callback);
         return theInst;
@@ -25,44 +25,42 @@ public class EvalRefCount {
         return theInst;
     }
 
-    ConcurrentHashMap<Integer, Object> ready;
+    ConcurrentHashMap<Integer, AtomicInteger> ready;
     ConcurrentHashMap<Integer, AtomicInteger> counterMap;
     ConcurrentHashMap<Integer, AtomicInteger> idleTimestampMap;
     IdleCallback callback;
 
     public EvalRefCount(IdleCallback _callback) { this(_callback, 32); }
     public EvalRefCount(IdleCallback _callback, int concurrencyLevel) {
-        ready = new ConcurrentHashMap<Integer, Object>(256, 0.75f, concurrencyLevel);
+        ready = new ConcurrentHashMap<Integer, AtomicInteger>(256, 0.75f, concurrencyLevel);
         counterMap = new ConcurrentHashMap<Integer, AtomicInteger>(256, 0.75f, concurrencyLevel);
         idleTimestampMap = new ConcurrentHashMap<Integer, AtomicInteger>(256, 0.75f, concurrencyLevel);
         callback = _callback;
 	}
 
     public void setReady(int id) {
-        Object o;
-        if (ready.containsKey(id)) {
-            o = ready.get(id);
-        } else {
-            o = new Object();
-            Object prev = ready.putIfAbsent(id, o);
-            if (prev!=null) o = prev;
-        }
+        synchronized (ready) {}
 
-        synchronized (o) {
-            o.notify();
+        AtomicInteger val = new AtomicInteger(1);
+        AtomicInteger prev = ready.putIfAbsent(id, val);
+        if (prev!=null) { val = prev; }
+        val.incrementAndGet();
+
+        synchronized (val) {
+            val.notifyAll();
         }
     }
     public void waitUntilReady(int id) throws InterruptedException {
-        if (ready.containsKey(id)) {
-            ready.get(id);
-            return;
-        }
+        synchronized (ready) {}
 
-        Object o = new Object();
-        synchronized (o) {
-            Object prev = ready.putIfAbsent(id, o);
-            if (prev!=null) { return; }
-            o.wait();
+        AtomicInteger val = new AtomicInteger(0);
+        AtomicInteger prev = ready.putIfAbsent(id, val);
+        if (prev!=null) { val = prev;}
+        synchronized (val) {
+            while (true) {
+                if (val.get() > 0) { break; }
+                val.wait(1);
+            }
         }
     }
     public void incBy(int id, int by) {

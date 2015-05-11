@@ -742,7 +742,7 @@ public class Analysis {
 			}
 			if (requireTransfer(prevp, p, tableMap)) {
 				if (collectLiveVarsAt(r, p.getPos()).isEmpty()) {
-					Assert.impossible();
+					//Assert.impossible();
 					continue;			
 				}
 				sendPos.add(p.getPos());

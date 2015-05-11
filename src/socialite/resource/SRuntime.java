@@ -155,6 +155,9 @@ public class SRuntime {
 			String visitorClsName = e.getVisitorClassName(r.id());
 			if (visitorClsName!=null) {
 				Class<?> visitorCls = Loader.forName(visitorClsName);
+                if (visitorCls == null) {
+                    L.error("Visitor class ("+visitorClsName+") is null for rule:"+r.id());
+                }
 				getVisitorBuilder(r.id()).setVisitorClass(r.id(), visitorCls);
 			}
 		}
