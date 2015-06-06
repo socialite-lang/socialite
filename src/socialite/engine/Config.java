@@ -149,7 +149,7 @@ public class Config {
 				} else {
 					Assert.impossible("systemWorkerNum<0 and cpuNum<0");
 					//System.out.println(" WARN uncomment Assert.impossible in Config::setWorkerThreadNum");
-				}				
+				}
 			} else if (type == EngineType.PARALLEL) {
 				workerThreadNum = Runtime.getRuntime().availableProcessors();
 			} else {

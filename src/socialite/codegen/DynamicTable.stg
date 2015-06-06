@@ -162,6 +162,18 @@ package socialite.tables;
         	<columns:{c|col<i0>()[pos] = a<i0>;<\n>}>
         	return len++;
         }
+        boolean iterate_sorted_by_<sortedCol.absPos>(<sortedCol.type> a, <visitorClass> v) {
+            int pos = Arrays.binarySearch(col<sortedCol.relPos>(), 0, len, a);
+            if (pos \< 0) { return false; }
+
+            System.out.println("Node.iterate_sorted_by<sortedCol.absPos>: pos="+pos);
+            for (int i=pos; i\<len; i++) {
+                if (col<sortedCol.relPos>()[i] != a) { break; }
+                boolean cont = v.visit(<columns:{c|col<i0>()[i]}; separator=", ">);
+                if (!cont) return false;
+            }
+            return true;
+        }
     <endif>
         int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
         	<if(sortedCol)>if (true) {return insert_sorted(<columns:{c|a<i0>}; separator=", ">);}<endif>
@@ -436,6 +448,16 @@ package socialite.tables;
 	\}
 }>
 <if(sortedCol)>
+public void iterate_by_<sortedCol.absPos>(<sortedCol.type> a, final <visitorClass> v) {
+	int nodePos = binarySearch1(a);
+	if (nodePos \< 0) { nodePos = -nodePos-1; }
+	for (int i=nodePos; i\<nodeList.size(); i++) {
+		Node n = nodeList.getQuick(i);
+		boolean cont = n.iterate_sorted_by_<sortedCol.absPos>(a, v);
+		if (!cont) { break; }
+	}
+	return;
+}
 public void iterate_part_from_<sortedCol.absPos>(<sortedCol.type> from, boolean inclusive, final <visitorClass> v) {
 	int nodePos = binarySearch1(from);
 	if (nodePos \< 0) { nodePos = -nodePos-1; }

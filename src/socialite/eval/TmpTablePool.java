@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -206,9 +207,9 @@ public class TmpTablePool {
 	static TmpTableInst get_global(int urgency, Class tableCls, Object... args) {
 		WeakArrayQueue<TmpTableInst> q = getQueueFromGlobal(tableCls);
         TmpTableInst t;
-        int waitTime=2, maxTry=500000;
-        if (urgency==1) maxTry=40;
-        if (urgency==2) maxTry=30;
+        int waitTime=2, maxTry=1000000;
+        if (urgency==1) maxTry=50;
+        if (urgency==2) maxTry=40;
 
         long waitStart = 0;
         int tryCnt = 0;
@@ -326,7 +327,7 @@ public class TmpTablePool {
 			allocKB.addAndGet((t.totalAllocSize()+1023)/1024);
 			return t;
 		} catch (Exception e) {
-			throw new SociaLiteException(e);
+            throw new SociaLiteException(e);
 		}
 	}	
 	
@@ -342,9 +343,9 @@ public class TmpTablePool {
 	public static TmpTableInst getSmall(int urgency, Class tableCls) {
 		WeakArrayQueue<TmpTableInst> q = getSmallQueueFromGlobal(tableCls);
 		TmpTableInst t;
-        int waitTime=2, maxTry=500000;
-        if (urgency==1) maxTry=40;
-        if (urgency==2) maxTry=30;
+        int waitTime=2, maxTry=1000000;
+        if (urgency==1) maxTry=50;
+        if (urgency==2) maxTry=40;
 
         long waitStart = 0;
         int tryCnt = 0;

@@ -26,7 +26,8 @@ public class Builtin {
     public static int nextId(int inc) { return NextId.invoke(inc); }
 	public static int nextId(int prevId, int ignored) { return prevId; }
 	public static int resetId() { NextId.reset(); return 0; }
-	
+
+    public static String concat(String a, String b) { return a+" "+b;}
 	public static int contains(ApproxSet s, int v) { return s.contains(v)?1:0; }
 	public static boolean add(ApproxSet s, int v) { return s.add(v); }
 	public static boolean add(ApproxCount c, int v) { return c.add(v); }
