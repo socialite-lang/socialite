@@ -41,10 +41,15 @@ public class SocialiteAppMaster implements AMRMClientAsync.CallbackHandler {
     public static final Log L= LogFactory.getLog(SocialiteAppMaster.class);
     Configuration configuration;
     NMClient nmClient;
+    AMRMClientAsync<ContainerRequest> rmClient;
     int numAllocedContainers;
     final Path jarPath;
+    volatile boolean alive = true;
+    volatile FinalApplicationStatus finalStatus = FinalApplicationStatus.UNDEFINED;
+    String appMessage = "";
 
     public SocialiteAppMaster(Path _jarPath) {
+
         jarPath = _jarPath;
         configuration = new YarnConfiguration();
         numAllocedContainers = 0;
@@ -52,6 +57,10 @@ public class SocialiteAppMaster implements AMRMClientAsync.CallbackHandler {
         nmClient = NMClient.createNMClient();
         nmClient.init(configuration);
         nmClient.start();
+
+        rmClient = AMRMClientAsync.createAMRMClientAsync(100, this);
+        rmClient.init(getConfiguration());
+        rmClient.start();
     }
 
     void setupWorkerJar(LocalResource workerJar) throws IOException {
@@ -111,6 +120,7 @@ public class SocialiteAppMaster implements AMRMClientAsync.CallbackHandler {
             try { launchWorkerNode(container); }
             catch (Exception e) {
                 L.error("Error launching worker-node: container-id="+container.getId()+" "+e);
+                die();
             }
         }
     }
@@ -119,8 +129,17 @@ public class SocialiteAppMaster implements AMRMClientAsync.CallbackHandler {
         for (ContainerStatus status : statuses) {
             synchronized (this) {
                 numAllocedContainers++;
+                if (allContainersAllocated()) {
+                    L.info("Successfully allocated "+numAllocedContainers+" worker nodes.");
+                }
+                finalStatus = FinalApplicationStatus.SUCCEEDED;
             }
         }
+    }
+
+    void die() {
+        finalStatus = FinalApplicationStatus.FAILED;
+        alive = false;
     }
 
     public void onNodesUpdated(List<NodeReport> updated) {
@@ -133,10 +152,13 @@ public class SocialiteAppMaster implements AMRMClientAsync.CallbackHandler {
 
     public void onShutdownRequest() {
         L.warn("onShutdownRequest");
+        alive = false;
     }
 
     public void onError(Throwable t) {
-        L.fatal("onError:" + t);
+        appMessage = "Cannot allocate workers:" + t.getMessage();
+        L.fatal(appMessage);
+        die();
     }
 
     public float getProgress() {
@@ -161,9 +183,6 @@ public class SocialiteAppMaster implements AMRMClientAsync.CallbackHandler {
     }
 
     public void runMainLoop() throws Exception {
-        final AMRMClientAsync<ContainerRequest> rmClient = AMRMClientAsync.createAMRMClientAsync(100, this);
-        rmClient.init(getConfiguration());
-        rmClient.start();
 
         rmClient.registerApplicationMaster("", 0, "");
 
@@ -185,33 +204,10 @@ public class SocialiteAppMaster implements AMRMClientAsync.CallbackHandler {
             containerReq.add(containerAsk);
         }
 
-        int lastNumContainers = 0;
-        do {
-            Thread.sleep(100);
-            if (lastNumContainers != numAllocedContainers) {
-                System.out.println("Allocated " + numAllocedContainers + "/" +
-                                    ClusterConf.get().getNumWorkers() + " workers");
-                lastNumContainers = numAllocedContainers;
-            }
-        } while (!allContainersAllocated());
-        System.out.println("Allocated " + numAllocedContainers + "/" +
-                            ClusterConf.get().getNumWorkers() + " workers");
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    rmClient.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED, "", "");
-                    nmClient.stop();
-                } catch (Exception e) {
-                    L.warn("Exception while unregistering application master:"+e);
-                }
-            }
-        });
-
-        while (true) {
+        while (alive) {
             Thread.sleep(1000);
         }
+        finish();
 
         /*
         for (ContainerRequest req : containerReq) {
@@ -234,14 +230,17 @@ public class SocialiteAppMaster implements AMRMClientAsync.CallbackHandler {
         */
 
     }
+    void finish() throws IOException, YarnException {
+        rmClient.unregisterApplicationMaster(finalStatus, appMessage, null);
+        nmClient.stop();
+    }
+
 
     void addIpcEndpoint(ServiceRecord record, String ident, int port) {
         InetSocketAddress addr = new InetSocketAddress(NetUtils.getHostname().split("/")[1], port);
         record.addExternalEndpoint(RegistryTypeUtils.ipcEndpoint(ident, addr));
     }
     void initRegistry() throws IOException {
-        System.out.println("Init Registry");
-
         RegistryOperations regOps = RegistryOperationsFactory.createInstance(new YarnConfiguration());
 
         regOps.start();
@@ -258,15 +257,5 @@ public class SocialiteAppMaster implements AMRMClientAsync.CallbackHandler {
         addIpcEndpoint(record, "tupleReq", portmap.getPort("tupleReq"));
 
         regOps.bind(path, record, BindFlags.CREATE | BindFlags.OVERWRITE);
-
-        /*
-        RPC.Server server = new RPC.Builder(new Configuration()).
-            setInstance(this).
-            setProtocol(SocialiteMasterProto.class).
-            setBindAddress("171.64.73.5"). //NetUtils.getHostname()).
-            setPort(port).
-            build();
-        server.start();
-        */
     }
 }

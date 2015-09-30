@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="EclipseModuleManager">
+    <libelement value="jar://$MODULE_DIR$/ext/antlr-3.5.2-complete-no-st3.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/commons-configuration-1.6.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/commons-lang-2.6.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/commons-lang3-3.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/commons-logging-1.1.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/commons-logging-api-1.0.4.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/hadoop-core-1.2.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/jython.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/log4j-1.2.16.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/ST-4.0.7.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/ext/trove-3.0.3.jar!/" />
+    <src_description expected_position="0">
+      <src_folder value="file://$MODULE_DIR$/src" expected_position="0" />
+    </src_description>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/classes" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="module-library">
+      <library name="antlr-3.5.2-complete-no-st3.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/antlr-3.5.2-complete-no-st3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-configuration-1.6.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/commons-configuration-1.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-lang-2.6.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/commons-lang-2.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-lang3-3.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/commons-lang3-3.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-logging-1.1.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/commons-logging-1.1.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-logging-api-1.0.4.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/commons-logging-api-1.0.4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hadoop-core-1.2.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/hadoop-core-1.2.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jython.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/jython.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="log4j-1.2.16.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/log4j-1.2.16.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="ST-4.0.7.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/ST-4.0.7.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="trove-3.0.3.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/trove-3.0.3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="hadoop-common-2.7.1" level="project" />
+    <orderEntry type="library" name="hadoop-yarn-client-2.7.1" level="project" />
+    <orderEntry type="library" name="hadoop-yarn-api-2.7.1" level="project" />
+    <orderEntry type="library" name="hadoop-yarn-common-2.7.1" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/ext/hadoop/hadoop-yarn-registry-2.7.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="hadoop-yarn-registry-2.7.1" level="project" />
+  </component>
+</module>

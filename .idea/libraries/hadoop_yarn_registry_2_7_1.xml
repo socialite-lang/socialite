@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="hadoop-yarn-registry-2.7.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/ext/hadoop/hadoop-yarn-registry-2.7.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
