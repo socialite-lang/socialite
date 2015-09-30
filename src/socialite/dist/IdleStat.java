@@ -1,6 +1,7 @@
 package socialite.dist;
 
 import socialite.engine.Config;
+import socialite.yarn.ClusterConf;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -11,7 +12,7 @@ public class IdleStat {
     AtomicInteger idleWorkerNum;
 
     public IdleStat() {
-        int workerNum = Config.getWorkerNodeNum();
+        int workerNum = ClusterConf.get().getNumWorkers();
         idleWorkerNum = new AtomicInteger(0);
 
         int[] ts = new int[workerNum];

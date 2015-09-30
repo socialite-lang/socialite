@@ -83,7 +83,7 @@ public class RemoteHeadTable extends Table implements GeneratedT, FixedSizeTable
 	}
 	
 	@Override
-	public boolean isSliced() {
+	public boolean isPartitioned() {
 		return false;
 	}
 	

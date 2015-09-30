@@ -33,12 +33,14 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RemoteException;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.python.core.PyFunction;
 import org.python.core.PyTableCode;
 
 import socialite.dist.Host;
 import socialite.dist.PathTo;
+import socialite.dist.PortMap;
 import socialite.dist.Status;
 import socialite.dist.client.TupleReqListener;
 import socialite.dist.master.QueryProtocol;
@@ -47,22 +49,17 @@ import socialite.functions.PyInterp;
 import socialite.functions.returns;
 import socialite.parser.Parser;
 import socialite.tables.QueryVisitor;
+import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 
 
 public class ClientEngine {
 	public static final Log L=LogFactory.getLog(ClientEngine.class);
 	
-	public Config conf;
 	QueryClient client;
 
 	public ClientEngine() {
-		this(Config.client());
-	}
-	
-	public ClientEngine(Config _conf) {
-		conf = _conf;
-		client = new QueryClient(conf);	
+		client = new QueryClient();
 		
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
@@ -110,54 +107,35 @@ public class ClientEngine {
 class QueryClient {
 	public static final Log L=LogFactory.getLog(ClientEngine.class);
 	
-	static long machineId;
-	static {
-		byte[] addr;
-		try { addr = InetAddress.getByName(Host.get()).getAddress(); }
-		catch (UnknownHostException e) {
-			throw new SociaLiteException("Cannot determine host address:"+e);
-		}
-		machineId = 0;
+	static long machineId = getUidByHostname();
+	static long getUidByHostname() {
+		long uid = 0;
+		byte[] addr = null;
+		try { addr = InetAddress.getByName(NetUtils.getHostname().split("/")[1]).getAddress(); }
+		catch (UnknownHostException e) { Assert.impossible(""+e); }
+
 		for (int i=0; i<addr.length; i++) {
-			machineId <<= 8;
-			machineId |= addr[i] & 0xff;
+			uid <<= 8;
+			uid |= addr[i] & 0xff;
 		}
-		machineId = machineId << 10;
+		uid = uid << 10;
+		return uid;
 	}
 	
-	Config conf;
-	String masterAddr;
-	int queryPort;
-	Socket sock;
 	QueryProtocol proto;
-	int tupleReqListenPort;
 	TupleReqListener listener;
 	volatile boolean shutdown=false;
 	
-	public QueryClient(Config _conf) {
-		conf = _conf;
-		masterAddr = conf.portMap().masterAddr();
-		queryPort = conf.portMap().queryListen();
-		
-		Configuration hConf=new Configuration();
-		InetSocketAddress addr = new InetSocketAddress(masterAddr, queryPort);
+	public QueryClient() {
+		InetSocketAddress addr = new InetSocketAddress(PortMap.client().masterAddr(),
+													   PortMap.client().getPort("query"));
 		try {
-			proto = (QueryProtocol)RPC.waitForProxy(QueryProtocol.class,
-													   QueryProtocol.versionID, 
-													   addr, hConf);
-		} catch (IOException e) {
-			L.error("Cannot connect to master:"+e);
-		}
-		boolean success=false;
-		tupleReqListenPort = conf.portMap().tupleReqClientListen();
-		do {
-			try {
-				listener = new TupleReqListener(conf, tupleReqListenPort);
-				success = true;
-			} catch (java.net.BindException e) {
-				tupleReqListenPort++;
-			}
-		} while (!success);
+			proto = RPC.waitForProxy(QueryProtocol.class,
+									 QueryProtocol.versionID,
+									 addr, new Configuration());
+		} catch (IOException e) { L.fatal("Cannot connect to master:"+e); }
+
+		listener = new TupleReqListener(PortMap.client());
 	}
 
 	Map<String, PyFunction> pyfuncMap = new HashMap<String, PyFunction>(512);
@@ -227,9 +205,10 @@ class QueryClient {
 		long longid = machineId + _id;
 		
 		listener.registerQueryVisitor(longid, qv);
-		IntWritable port=new IntWritable(tupleReqListenPort);
+		IntWritable port=new IntWritable(PortMap.client().getPort("tupleReq"));
 		LongWritable id = new LongWritable(longid);
-		proto.run(new Text(program), new Text(Host.get()), port, id);
+		String addr = NetUtils.getHostname().split("/")[1];
+		proto.run(new Text(program), new Text(addr), port, id);
 	}
 	
 	public Status status(int verbose) {

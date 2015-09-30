@@ -9,33 +9,36 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.*;
+import org.apache.hadoop.io.ArrayWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.RPC;
 
-import socialite.dist.Host;
+import org.apache.hadoop.net.NetUtils;
 import socialite.dist.worker.WorkerCmd;
 import socialite.engine.Config;
 import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
-import socialite.resource.SRuntime;
 import socialite.resource.WorkerAddrMapW;
 import socialite.util.SociaLiteException;
+import socialite.util.TextArrayWritable;
+import socialite.yarn.ClusterConf;
 
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class Call {
-	public Method m;
-	public Object obj;
-	public Object[] params;
+    public Method m;
+    public Object obj;
+    public Object[] params;
     public ReturnHandler handler;
-	Call(Method _m, Object _obj, Object[] _params, ReturnHandler _handler) {
-		m = _m;
-		obj = _obj;
-		params = _params;
+    Call(Method _m, Object _obj, Object[] _params, ReturnHandler _handler) {
+        m = _m;
+        obj = _obj;
+        params = _params;
         handler = _handler;
-	}
+    }
     public void call() {
         try {
             Object ret = m.invoke(obj, params);
@@ -80,38 +83,41 @@ class ReturnHandler {
 }
 
 class ParallelRPC implements Runnable {
-	ArrayBlockingQueue<Call> queue;
-	public ParallelRPC(ArrayBlockingQueue<Call> _queue) {
-		queue = _queue;
-	}
-	public void run()  {
-		while (true) {
+    ArrayBlockingQueue<Call> queue;
+    public ParallelRPC(ArrayBlockingQueue<Call> _queue) {
+        queue = _queue;
+    }
+    public void run()  {
+        while (true) {
             Call call;
             try { call = queue.take(); }
             catch (InterruptedException e) { break; }
             call.call();
-		}
-	}
+        }
+    }
 }
 
 public class MasterNode {
-	public static final Log L=LogFactory.getLog(MasterNode.class);
-	
-	static MasterNode theInstance=null;
-	public static MasterNode getInstance() {
-		if (theInstance==null) 
-			theInstance = new MasterNode(Config.dist());
-		return theInstance;
-	}
+    public static final Log L=LogFactory.getLog(MasterNode.class);
+
+    static MasterNode theInstance=null;
+    public static MasterNode create() {
+        if (theInstance != null) {
+            throw new AssertionError("MasterNode is already created");
+        }
+        theInstance = new MasterNode(Config.dist());
+        return theInstance;
+    }
+    public static MasterNode getInstance() { return theInstance; }
 
     static ArrayBlockingQueue<Call> cmdQueue;
     static {
-        int workerNum = Config.getWorkerNodeNum();
-        cmdQueue = new ArrayBlockingQueue<Call>(workerNum*256);
-        int cmdThreadNum = workerNum;
-        if (cmdThreadNum>32) cmdThreadNum = 32;
-        for (int i=0; i<cmdThreadNum; i++) {
-            Thread t = new Thread(new ParallelRPC(cmdQueue), "RPC Thread #"+i);            
+        int cmdIssueThreadNum = ClusterConf.get().getNumWorkers()/4;
+        cmdIssueThreadNum = Math.max(cmdIssueThreadNum, 2);
+        cmdIssueThreadNum = Math.min(cmdIssueThreadNum, 8);
+        cmdQueue = new ArrayBlockingQueue<Call>(cmdIssueThreadNum * 128);
+        for (int i = 0; i< cmdIssueThreadNum; i++) {
+            Thread t = new Thread(new ParallelRPC(cmdQueue), "RPC Thread #"+i);
             t.start();
         }
     }
@@ -150,162 +156,133 @@ public class MasterNode {
     public static void callWorkersAsync(Method m, Object[] param) throws InterruptedException {
         callWorkers(m, param, true);
     }
-	public static Object[] callWorkers(Method m, Object[] param) throws InterruptedException {
-		return callWorkers(m, param, false);
+    public static Object[] callWorkers(Method m, Object[] param) throws InterruptedException {
+        return callWorkers(m, param, false);
     }
 
-	Config conf; // master node conf
-	Config workerConf; // worker node may have different config (e.g. cpu #)
-	QueryListener queryListener;
-	WorkerReqListener workerListener;
-	Map<InetAddress, WorkerCmd> workerMap;
-    Set<InetAddress> workersToRegister;
-	
-	private MasterNode(Config _conf) {
-		conf=_conf;
-		workerMap=Collections.synchronizedMap(new LinkedHashMap<InetAddress, WorkerCmd>());
-        workersToRegister = Collections.synchronizedSet(Host.getAddrs(Config.getWorkers()));
-        monitorWorkerRegistration();
-	}
-			
-	public void serve() {
-		initWorkerReqListener();
-		initQueryListener();
-	}
+    Config conf; // master node conf
+    Config workerConf; // worker node may have different config (e.g. cpu #)
+    QueryListener queryListener;
+    WorkerReqListener workerListener;
+    ConcurrentMap<InetSocketAddress, WorkerCmd> workerMap;
+    ConcurrentMap<InetSocketAddress, InetSocketAddress> workerDataAddrMap; // {cmd-address: data-address}
+    Set<InetSocketAddress> registeredWorkers;
+    int expectedWorkerNum = ClusterConf.get().getNumWorkers();
 
-    void monitorWorkerRegistration() {
-        class MonitorRegistration implements Runnable {
-            public void run() {
-                long wait = 5*1000;
-                long maxWait = 60*1000;
-                int maxTry=20;
-                for (int _try=0; _try<maxTry; _try++) {
-                    try { Thread.sleep(wait); }
-                    catch (InterruptedException e) { break; }
-                    if (workersToRegister.isEmpty()) { break; }
-                    else {
-                        InetAddress[] workers = workersToRegister.toArray(new InetAddress[]{});
-                        String msg = "Waiting for "+workers.length+" worker(s):";
-                        for (InetAddress a:workers) {
-                            msg += " "+a;
-                        }
-                        L.info(msg);
+    private MasterNode(Config _conf) {
+        conf = _conf;
+        workerMap = new ConcurrentHashMap<InetSocketAddress, WorkerCmd>();
+        workerDataAddrMap = new ConcurrentHashMap<InetSocketAddress, InetSocketAddress>();
+    }
 
-                        if (wait<maxWait) wait=wait*2;
-                    }
-                }
-                if (!workersToRegister.isEmpty()) {
-                    L.warn("Stopped monitoring worker registrations.");
-                }
-            }
+    public void serve() {
+        initWorkerReqListener();
+        initQueryListener();
+    }
+
+    WorkerCmd createWorkerCmd(InetSocketAddress workerCmdAddr) {
+        if (workerMap.containsKey(workerCmdAddr)) {
+            L.warn("createWorkerCmd(): Already existing worker cmd:" + workerCmdAddr);
+            return workerMap.get(workerCmdAddr);
         }
-        Thread monitor = new Thread(new MonitorRegistration());
-        monitor.start();
-    }
-    public synchronized void addRegisteredWorker(InetAddress workerAddr) {
-        workersToRegister.remove(workerAddr);
-        if (!workersToRegister.isEmpty())
-            return;
 
-        // We are in the middle of worker registration.
-        // This is asynchronous, so that the registration can immediately terminate.
-        new Thread(new Runnable() {
-            public void run() {
-                // this needs to be asynchronous
-                queryListener.init();
-                SRuntimeMaster runtime = SRuntimeMaster.getInst();
-                WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
-                try {
-                    Method init = WorkerCmd.class.getMethod("init", new Class[]{WorkerAddrMapW.class});
-                    MasterNode.callWorkers(init, new Object[]{new WorkerAddrMapW(addrMap)});
-                    L.info("All workers registered. Ready to run queries.");
-                } catch (InterruptedException e) {
-                } catch (Exception e) {
-                    L.fatal("Exception while running WorkerCmd.init():" + ExceptionUtils.getStackTrace(e));
-                }
-            }
-        }).start();
-    }
-	void initWorkerReqListener() {
-		workerListener = new WorkerReqListener(conf, this);
-		workerListener.start();
-	}
-	
-	void initQueryListener() {
-		queryListener =new QueryListener(conf, this);
-		queryListener.start();	
-	}
-	public Config getWorkerConf() {
-		return workerConf;
-	}
-	public void setWorkerConf(Config _conf) {
-		assert workerConf == null;
-		workerConf = _conf;
-	}
-	public WorkerCmd getWorkerCmd(String _addr) {
-		InetAddress workerAddr=null;
-		try { workerAddr = InetAddress.getByName(_addr);
-		} catch (UnknownHostException e) {
-			L.fatal("Invalid address["+_addr+"]:"+e);
-			throw new SociaLiteException(e);
-		}
-		return workerMap.get(workerAddr);
-	}
-	public Set<InetAddress> getWorkerAddrs() {
-		return workerMap.keySet();
-	}
-	public boolean addWorkerAddr(String _addr) {
-		InetAddress workerAddr=null;
-		try { workerAddr = InetAddress.getByName(_addr);
-		} catch (UnknownHostException e) {
-			L.fatal("Invalid address["+_addr+"]:"+e);
-			throw new SociaLiteException(e);
-		}
-		
-		if (workerMap.containsKey(workerAddr)) 
-			return false;
-		
-		Configuration hConf=new Configuration();
-		String workerIP=workerAddr.getHostAddress();
-		int workerCmdPort=conf.portMap().workerCmdListen();
-		InetSocketAddress addr=new InetSocketAddress(workerIP, workerCmdPort);
-		WorkerCmd workerCmd;
-		try {
-			workerCmd = (WorkerCmd)RPC.waitForProxy(WorkerCmd.class, WorkerCmd.versionID, addr, hConf);
-			workerMap.put(workerAddr, workerCmd);
-		} catch(IOException e) {
-			L.fatal("Cannot connect to worker:");
-			L.fatal(ExceptionUtils.getStackTrace(e));
-			return false;
-		}
-		return true;		
-	}
+        Configuration conf = new Configuration();
+        String workerIP = workerCmdAddr.getHostName();
+        int cmdPort = workerCmdAddr.getPort();
+        InetSocketAddress sockaddr=new InetSocketAddress(workerIP, cmdPort);
 
-	public Map<InetAddress, WorkerCmd> getWorkerCmdMap() {
-		return workerMap;
-	}
-	public WorkerAddrMap makeWorkerAddrMap() {
-		WorkerAddrMap machineMap=new WorkerAddrMap();
-		Set<InetAddress> workerAddrs=workerMap.keySet();
-		int workerNodeNum = workerAddrs.size();
-		int addedWorker=0;
-		
-		for (InetAddress addr:workerAddrs) {
-			machineMap.add(addr);
-			addedWorker++;
-			if (addedWorker >= workerNodeNum)
-				break;
-		}
-		return machineMap;
-	}
-	
-	static void startMasterNode() {
-		MasterNode master = MasterNode.getInstance();		
-		master.serve();
-		L.info("Master started");
-	}
-	
-	public static void main(String[] args) {
-		startMasterNode();
-	}
+        try {
+            WorkerCmd workerCmd = RPC.waitForProxy(WorkerCmd.class, WorkerCmd.versionID, sockaddr, conf);
+            workerMap.put(workerCmdAddr, workerCmd);
+            return workerCmd;
+        } catch(IOException e) {
+            L.fatal("Cannot connect to worker:");
+            L.fatal(ExceptionUtils.getStackTrace(e));
+            return null;
+        }
+    }
+
+    void makeWorkerConnections() {
+        Collection<InetSocketAddress> otherAddrs = workerDataAddrMap.values();
+        Text[] otherAddrTexts=new Text[otherAddrs.size()];
+        int i=0;
+        for (InetSocketAddress sockaddr:otherAddrs) {
+            otherAddrTexts[i++]=new Text(NetUtils.getHostPortString(sockaddr));
+        }
+        TextArrayWritable restAddrs = new TextArrayWritable(otherAddrTexts);
+        try {
+            Method makeConnections = WorkerCmd.class.getMethod("makeConnections", new Class[]{ArrayWritable.class});
+            MasterNode.callWorkers(makeConnections, new Object[]{restAddrs});
+        } catch (Exception e) {
+            L.fatal("makeWorkerConnections():" + ExceptionUtils.getStackTrace(e));
+        }
+
+    }
+    public synchronized void registerWorker(InetSocketAddress workerAddr, int dataPort) {
+        createWorkerCmd(workerAddr);
+        workerDataAddrMap.put(workerAddr, new InetSocketAddress(workerAddr.getAddress(), dataPort));
+        if (workerMap.size() < expectedWorkerNum) { return; }
+
+        queryListener.init();
+        makeWorkerConnections();
+        SRuntimeMaster runtime = SRuntimeMaster.getInst();
+        WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
+        try {
+            Method init = WorkerCmd.class.getMethod("init", new Class[]{WorkerAddrMapW.class});
+            MasterNode.callWorkers(init, new Object[]{new WorkerAddrMapW(addrMap)});
+        } catch (InterruptedException e) {
+        } catch (Exception e) {
+            L.fatal("Exception while running WorkerCmd.init():" + ExceptionUtils.getStackTrace(e));
+        }
+    }
+
+    void initWorkerReqListener() {
+        workerListener = new WorkerReqListener(conf, this);
+        workerListener.start();
+    }
+
+    void initQueryListener() {
+        queryListener =new QueryListener(conf, this);
+        queryListener.start();
+    }
+
+    public Config getWorkerConf() {
+        return workerConf;
+    }
+    public void setWorkerConf(Config _conf) {
+        assert workerConf == null;
+        workerConf = _conf;
+    }
+
+    public Set<InetSocketAddress> getWorkerAddrs() {
+        return workerMap.keySet();
+    }
+
+    public Map<InetSocketAddress, WorkerCmd> getWorkerCmdMap() {
+        return workerMap;
+    }
+    public WorkerAddrMap makeWorkerAddrMap() {
+        WorkerAddrMap machineMap=new WorkerAddrMap();
+        Set<InetSocketAddress> workerAddrs=workerMap.keySet();
+        int workerNodeNum = workerAddrs.size();
+        int addedWorker=0;
+
+        for (InetSocketAddress addr:workerAddrs) {
+            machineMap.add(addr, workerDataAddrMap.get(addr));
+            addedWorker++;
+            if (addedWorker >= workerNodeNum)
+                break;
+        }
+        return machineMap;
+    }
+
+    public static void startMasterNode() {
+        MasterNode master = MasterNode.create();
+        master.serve();
+        L.info("Master started");
+    }
+
+    public static void main(String[] args) {
+        startMasterNode();
+    }
 }

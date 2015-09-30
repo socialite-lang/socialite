@@ -50,8 +50,8 @@ public class Worker implements Runnable {
 		Worker.emptyQueues();
 		if (Sender.sendQ()!=null) 
 		    Sender.sendQ().empty();
-		if (Receiver.recvQ()!=null) 
-		    Receiver.recvQ().empty();
+		if (Receiver.recvq()!=null)
+		    Receiver.recvq().empty();
 	}
 	static void emptyQueues() {
 		for (TaskQueue q:getWorkerQueues()) {

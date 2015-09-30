@@ -7,21 +7,12 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -29,7 +20,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -38,17 +28,14 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RemoteException;
-import org.apache.hadoop.ipc.Server;
-import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.ipc.VersionedProtocol;
 import org.python.core.PyFunction;
-import org.python.modules.synchronize;
 
 import socialite.codegen.CodeGenMain;
 import socialite.dist.ErrorRecord;
-import socialite.dist.Host;
 import socialite.dist.PathTo;
 import socialite.dist.PortMap;
 import socialite.dist.Status;
@@ -57,34 +44,30 @@ import socialite.dist.worker.WorkerCmd;
 import socialite.engine.Config;
 import socialite.engine.DistEngine;
 import socialite.eval.ClassFilesBlob;
-import socialite.eval.EvalProgress;
 import socialite.functions.PyInterp;
 import socialite.functions.PyInvoke;
 import socialite.parser.GeneratedT;
 import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.parser.Parser;
-import socialite.resource.*;
-import socialite.tables.QueryVisitor;
-import socialite.util.IdFactory;
+import socialite.resource.SRuntime;
+import socialite.resource.SRuntimeMaster;
+import socialite.resource.TableInstRegistry;
+import socialite.resource.WorkerAddrMap;
 import socialite.util.Loader;
-import socialite.util.SociaLiteException;
 import socialite.util.SocialiteInputStream;
 import socialite.util.SocialiteOutputStream;
+import socialite.yarn.ClusterConf;
 
 public class QueryListener implements QueryProtocol {
 	public static final Log L = LogFactory.getLog(QueryListener.class);
 
-	String masterAddr;
-	int queryListenPort;
 	MasterNode master;
 	Config conf;
 	DistEngine distEngine;
 
 	public QueryListener(Config _conf, MasterNode _master) {
 		conf = _conf;
-		masterAddr = conf.portMap().masterAddr();
-		queryListenPort = conf.portMap().queryListen();
 		master = _master;
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -94,9 +77,13 @@ public class QueryListener implements QueryProtocol {
 
 	public void start() {
 		try {
-			int numHandlers = 16;
-			Configuration hConf = new Configuration();
-			Server server = RPC.getServer(this, masterAddr, queryListenPort,numHandlers, false, hConf);
+            RPC.Server server = new RPC.Builder(new Configuration()).
+                    setInstance(this).
+                    setProtocol(QueryProtocol.class).
+                    setBindAddress(PortMap.master().masterAddr()).
+                    setPort(PortMap.master().usePort("query")).
+                    setNumHandlers(16).
+                    build();
 			server.start();
 		} catch (IOException e) {
 			L.fatal("Exception while starting QueryListener:");
@@ -205,11 +192,10 @@ public class QueryListener implements QueryProtocol {
     synchronized void init() {
         WorkerAddrMap workerAddrMap = master.makeWorkerAddrMap();
         SRuntimeMaster runtime = SRuntimeMaster.create(master, workerAddrMap);
-        Config workerConf = runtime.getConf();
         WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
-        Map<InetAddress, WorkerCmd> workerMap = master.getWorkerCmdMap();
+        Map<InetSocketAddress, WorkerCmd> workerMap = master.getWorkerCmdMap();
 
-        distEngine = new DistEngine(workerConf, addrMap, workerMap);
+        distEngine = new DistEngine(addrMap, workerMap);
     }
 
 	synchronized DistEngine getEngine() { return distEngine; }
@@ -220,8 +206,8 @@ public class QueryListener implements QueryProtocol {
 		synchronized(this) {
 			String program = prog.toString();
 			en = getEngine();		
-						
-			try { codeMain = en.compile(program, qv); } 
+
+			try { codeMain = en.compile(program, qv); }
 			catch (Exception e) {			
 			    L.error("Error while compiling:");
 			    L.error(ExceptionUtils.getStackTrace(e));
@@ -265,8 +251,21 @@ public class QueryListener implements QueryProtocol {
 	public long getProtocolVersion(String arg0, long arg1) throws IOException {
 		return QueryProtocol.versionID;
 	}
-	
-	public void addPyFunctions(BytesWritable bytesClassFilesBlob, BytesWritable bytesPyfuncs) throws RemoteException {
+
+    @Override
+    public ProtocolSignature getProtocolSignature(String protocol, long clientVersion, int clientMethodsHash)
+            throws IOException {
+        Class<? extends VersionedProtocol> inter;
+        try {
+            inter = (Class<? extends VersionedProtocol>)getClass().getGenericInterfaces()[0];
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+        return ProtocolSignature.getProtocolSignature(clientMethodsHash,
+                getProtocolVersion(protocol, clientVersion), inter);
+    }
+
+    public void addPyFunctions(BytesWritable bytesClassFilesBlob, BytesWritable bytesPyfuncs) throws RemoteException {
 		ClassFilesBlob classFilesBlob = ClassFilesBlob.fromBytesWritable(bytesClassFilesBlob);
 		Loader.loadFromBytes(classFilesBlob.names(), classFilesBlob.files());
 		for (String pyClassName:classFilesBlob.names()) {			
@@ -370,8 +369,8 @@ public class QueryListener implements QueryProtocol {
 			TableInstRegistry reg = runtime.getTableRegistry();
 			_tableMap = reg.loadTableMap(sis);
 			runtime.getTableMap().putAll(_tableMap);
-			for (Table t : _tableMap.values()) {
-				runtime.getSliceMap().addTable(t);
+			for (Table t: _tableMap.values()) {
+				runtime.getPartitionMap().addTable(t);
 			}
 			fs.close();
 			return true;
@@ -389,8 +388,7 @@ public class QueryListener implements QueryProtocol {
 		Status summary=new Status();
 
 		Object[] _workerStats;
-		summary.putNodeNum(""+Config.getWorkers().size());
-
+		summary.putNodeNum("" + ClusterConf.get().getNumWorkers());
 		try {
 			Method status = WorkerCmd.class.getMethod("status",new Class[]{IntWritable.class});
 			_workerStats=MasterNode.callWorkers(status, new Object[]{_verbose});

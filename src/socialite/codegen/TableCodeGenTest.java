@@ -231,6 +231,13 @@ public class TableCodeGenTest {
 		});
 		en.shutdown();
 	}
+
+	static void ensureExistTable(List<Table> tables) {
+        try { TableCodeGen.ensureExist(tables);	}
+        catch (InternalException e) {
+            System.err.println("Cannot generate table code:"+e);
+        }
+	}
 	
 	static void testDeltaTable() {
 		String query = "Edge(int s:1..35000, (int t)).\n"
@@ -251,7 +258,7 @@ public class TableCodeGenTest {
 		Analysis an = codeGen.an;		
 		
 		Assert.not_null(an.getDeltaTables());
-		TableCodeGen.ensureExistOrDie(an.getDeltaTables());
+		ensureExistTable(an.getDeltaTables());
 		
 		Assert.true_(an.getDeltaTables().size()==1);
 		Table dt=an.getDeltaTables().get(0);

@@ -87,9 +87,8 @@ public class TupleCodeGen {
 	}
 
 	final static int PREGEN_WIDTH = 3; // Max # of columns for pre-generated tuples
-	public static LinkedHashMap<String, byte[]> generate(Config conf, List<Rule> rules,
-			Map<String, Table> tableMap) {
-		Compiler c = new Compiler(conf.isVerbose());
+	public static LinkedHashMap<String, byte[]> generate(List<Rule> rules, Map<String, Table> tableMap) {
+		Compiler c = new Compiler();
 		TupleDecls toGen = new TupleDecls();
 		for (Rule r : rules) {
 			findTuplesToGen(r, tableMap, toGen);

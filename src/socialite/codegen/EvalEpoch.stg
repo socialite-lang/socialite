@@ -61,7 +61,7 @@ simpleStmts(stmts) ::= <<
 {<stmts; separator=";\n">;}
 >>
 
-initClass(name, tableid, tableRegVar, sliceMapVar, stmts, fieldDecls, methodDecls) ::= <<
+initClass(name, tableid, tableRegVar, partitionMapVar, stmts, fieldDecls, methodDecls) ::= <<
 package socialite.eval;
 
 import java.lang.reflect.Constructor;
@@ -83,14 +83,14 @@ public class <name> implements InitRunnable {
 
 	int id;
 	TableInstRegistry <tableRegVar>;
-	TableSliceMap <sliceMapVar>;
+	TableSliceMap <partitionMapVar>;
 		
 	<fieldDecls:{f|private <f>;<\n>}>;
 
-	public <name> (int _id, TableInstRegistry _$reg, TableSliceMap _$sliceMap) { 
+	public <name> (int _id, TableInstRegistry _$reg, TableSliceMap _$partitionMap) { 
 		id=_id; 
 		<tableRegVar> = _$reg;
-		<sliceMapVar> = _$sliceMap;
+		<partitionMapVar> = _$partitionMap;
 	}
 	
 	public void run() {

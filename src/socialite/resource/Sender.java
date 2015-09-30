@@ -1,13 +1,8 @@
 package socialite.resource;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -91,11 +86,12 @@ public class Sender {
 
 	void cacheSendChannelFor(int machineIdx) {
 		if (sendChannel$[machineIdx]==null) {
-			InetAddress inetAddr=workerAddrMap.get(machineIdx);			
-			ChannelMux sendChMux = workerConn.sendChannelMuxFor(inetAddr);
+			InetSocketAddress sockaddr = workerAddrMap.getDataAddr(machineIdx);
+			ChannelMux sendChMux = workerConn.sendChannelMuxFor(sockaddr);
 			sendChannel$[machineIdx] = sendChMux;
+
 			if (sendChMux==null) {
-				throw new SociaLiteException("SendChannel is null for machine:"+machineIdx);
+				throw new SociaLiteException("SendChannel is null for machine:"+machineIdx+", workerAddr:"+sockaddr);
 			}
 		}
 	}
@@ -123,7 +119,7 @@ public class Sender {
 		}
 		
 		cacheSendChannelFor(machineIdx);		
-		workerMsg.setSlaveId(machineIdx);		
+		workerMsg.setWorkerId(machineIdx);
 		int estimated = workerMsg.guessMessageSize();
 		int bufferSize = ByteBufferPool.bufferSize();
 		int smallBufferSize = ByteBufferPool.smallBufferSize();
@@ -144,7 +140,7 @@ public class Sender {
 			if (i!=self) cacheSendChannelFor(i);
 		}
 		
-		workerMsg.setSlaveId(-1);
+		workerMsg.setWorkerId(-1);
 		serializeMsg(workerMsg);
 		return sendQ.add(workerMsg);
 	}
@@ -180,7 +176,7 @@ class SendReally implements Runnable {
 					buffer = m.serialize();
 				}
                 int epochId = m.getEpochId();
-                if (m.getSlaveId()==-1) {
+                if (m.getWorkerId()==-1) {
 					int self = sender.workerAddrMap.myIndex();
 					for (int i=0; i<sender.sendChannel$.length; i++) {
 						if (i==self) continue;
@@ -188,7 +184,7 @@ class SendReally implements Runnable {
 					}						
 					buffer.rewind();
 				} else {
-					sender.workerConn.send(sender.sendChannel$[m.getSlaveId()], epochId, buffer);
+					sender.workerConn.send(sender.sendChannel$[m.getWorkerId()], epochId, buffer);
 				}
 			} catch (InterruptedException ie) {
 				break;

@@ -46,7 +46,7 @@ public class EvalDist extends EvalParallel {
 		if (firstP.first() instanceof Const) {
 			Const c = (Const)firstP.first();
             int tid = runtime.getVisitorBuilder(r.id()).firstTableId(r.id());
-            return sliceMap.isLocal(tid, c.val);
+            return partitionMap.isLocal(tid, c.val);
 		}
 		return true;
 	}

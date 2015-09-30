@@ -21,6 +21,7 @@ import socialite.tables.TableUtil;
 import socialite.tables.Tuple;
 import socialite.util.AnalysisException;
 import socialite.util.Assert;
+import socialite.util.InternalException;
 import socialite.util.SociaLiteException;
 import socialite.visitors.IVisitor;
 
@@ -47,7 +48,13 @@ public class VisitorCodeGenTest {
 		e.run(query);
 		e.shutdown();
 	}
-	
+
+	static void ensureExistTableCode(List<Table> table) {
+		try { TableCodeGen.ensureExist(table); }
+		catch (InternalException e) {
+			System.err.println("Cannot create table code:"+e);
+		}
+	}
 	static void simpleJoin() {
 		String query = "Foo(int a, int b).\n" +					
 		 			"Bar(int a, int b).\n" +
@@ -57,7 +64,7 @@ public class VisitorCodeGenTest {
 		 		"Foo(a, b) :- Bar(a, c), Baz(s, c), Qux(b, s).";
 		 		
 		Analysis an = parseAndAnalysis(query);
-		TableCodeGen.ensureExistOrDie(an.getNewTables());		
+		ensureExistTableCode(an.getNewTables());
 			
 		for (Rule r:an.getRules()) {
 			Epoch s=findEpoch(an, r);
@@ -69,7 +76,7 @@ public class VisitorCodeGenTest {
 		String query = "Edge(int s:0..10, (int t)).\n" +					
 		 			"Edge(s, t) :- s=1, t1=\"2\", t=$toInt(t1).\n";
 		Analysis an = parseAndAnalysis(query);
-		TableCodeGen.ensureExistOrDie(an.getNewTables());		
+		ensureExistTableCode(an.getNewTables());
 			
 		for (Rule r:an.getRules()) {
 			Epoch s=findEpoch(an, r);
@@ -82,7 +89,7 @@ public class VisitorCodeGenTest {
 					"Triangle(int x, int y, int z) sortby x.\n" +
 		 			"Triangle(x, y, z):-Edge(x, y),y>x,Edge(y, z),z>y,Edge(z, x).";		 		
 		Analysis an = parseAndAnalysis(query);
-		TableCodeGen.ensureExistOrDie(an.getNewTables());		
+		ensureExistTableCode(an.getNewTables());
 			
 		for (Rule r:an.getRules()) {
 			Epoch s=findEpoch(an, r);
@@ -95,7 +102,7 @@ public class VisitorCodeGenTest {
 					"Foo(int x, int y) sortby x.\n" +
 		 			"Foo(x, z):-Edge(x, a), b=a+3*2, y=$toInt(\"1\"), Edge(b, z) .";		 		
 		Analysis an = parseAndAnalysis(simpleQuery);
-		TableCodeGen.ensureExistOrDie(an.getNewTables());		
+		ensureExistTableCode(an.getNewTables());
 			
 		for (Rule r:an.getRules()) {
 			Epoch s=findEpoch(an, r);

@@ -11,8 +11,7 @@ import org.apache.hadoop.ipc.VersionedProtocol;
 import socialite.tables.TupleArrayWritable;
 
 public interface TupleReq extends VersionedProtocol {
-	public static final long versionID = 1L;
-	
-	public BooleanWritable consume(LongWritable id, TupleArrayWritable tuples);
-	public void done(LongWritable id);
+    public static final long versionID = 1;
+    BooleanWritable consume(LongWritable id, TupleArrayWritable tuples);
+    void done(LongWritable id);
 }

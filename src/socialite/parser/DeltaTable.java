@@ -98,7 +98,7 @@ public class DeltaTable extends Table implements GeneratedT, FixedSizeTable {
 	public boolean hasOrderBy() { return false; }
 	
 	@Override
-	public boolean isSliced() { return false; }
+	public boolean isPartitioned() { return false; }
 	
 	public static String name(Table origT) {
 		assert !(origT instanceof GeneratedT);

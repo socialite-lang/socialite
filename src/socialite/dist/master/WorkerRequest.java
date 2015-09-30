@@ -8,8 +8,8 @@ import org.apache.hadoop.ipc.VersionedProtocol;
 
 public interface WorkerRequest extends VersionedProtocol {
 	public static final long versionID = 1L;
-	
-	public void register(Text selfIp);
-	public void handleError(IntWritable workerid, IntWritable ruleid, Text errorMsg);
-	public void reportIdle(IntWritable epochId, IntWritable workerId, IntWritable time);
+
+	void register(String workerAddr, int cmdPort, int dataPort);
+	void handleError(IntWritable workerid, IntWritable ruleid, Text errorMsg);
+	void reportIdle(IntWritable epochId, IntWritable workerId, IntWritable time);
 }

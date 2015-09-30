@@ -77,8 +77,8 @@ import socialite.collection.TupleVisitor;
 import socialite.eval.TmpTablePool;
 import socialite.util.concurrent.ConcurrentSoftQueue;
 import socialite.util.concurrent.ConcurrentWeakQueue;
-import socialite.resource.TableSliceMap;
-import socialite.resource.DistTableSliceMap;
+import socialite.resource.TablePartitionMap;
+import socialite.resource.DistTablePartitionMap;
 import socialite.type.*;
 import socialite.util.ByteBufferPool;
 

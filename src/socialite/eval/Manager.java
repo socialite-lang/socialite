@@ -60,7 +60,7 @@ public class Manager extends Thread {
 	public synchronized static Manager getInst() {
 		return theInstance;
 	}
-	public synchronized static Manager getInst(Config conf) {
+	public synchronized static Manager create(Config conf) {
 		assert theInstance==null;
 		theInstance = new Manager(conf);
 		return theInstance;

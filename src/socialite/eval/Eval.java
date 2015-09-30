@@ -5,14 +5,13 @@ import socialite.engine.Config;
 import socialite.resource.RuleMap;
 import socialite.resource.SRuntime;
 import socialite.resource.TableInstRegistry;
-import socialite.resource.TableSliceMap;
-import socialite.resource.VisitorBuilder;
+import socialite.resource.TablePartitionMap;
 
 public abstract class Eval implements Runnable {
 	public SRuntime runtime;
 	public Epoch epoch;
 	public RuleMap ruleMap;
-	public TableSliceMap sliceMap;
+	public TablePartitionMap partitionMap;
 	public TableInstRegistry tableRegistry;
 	public Config conf;	
 	

@@ -10,12 +10,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.apache.hadoop.ipc.RPC;
-import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.ipc.Server;
-import org.apache.hadoop.ipc.VersionedProtocol;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import org.apache.hadoop.ipc.VersionedProtocol;
+import org.apache.hadoop.net.NetUtils;
 import socialite.dist.Host;
 import socialite.dist.PortMap;
 import socialite.engine.Config;
@@ -39,24 +40,18 @@ class QueryVisitorInfo {
 	}
 }
 public class TupleReqListener implements TupleReq {
+	static long versionID = 1L;
 	public static final Log L=LogFactory.getLog(TupleReqListener.class);
 	
 	ConcurrentHashMap<Long, QueryVisitorInfo> visitorMap = new ConcurrentHashMap<Long, QueryVisitorInfo>();
-	Config conf;
+	PortMap portMap;
 	Server server;
-	int port=-1;
+	int port = -1;
 	String name="unnamed";
 	
-	public TupleReqListener(Config _conf, int _port) throws java.net.BindException {
-		conf=_conf;		
-		port = _port;
-		start();
-	}	
-	public TupleReqListener(Config _conf) {
-		conf=_conf;
-		if (conf.isClient())  port = conf.portMap().tupleReqClientListen();
-		else port=conf.portMap().tupleReqListen();
-		try { start(); } 
+	public TupleReqListener(PortMap _portMap) {
+		portMap = _portMap;
+		try { start(); }
 		catch (java.net.BindException e) {
 			L.fatal("Cannot bind to port "+port+": "+e);
 		}
@@ -68,11 +63,16 @@ public class TupleReqListener implements TupleReq {
 	
 	public void start() throws java.net.BindException {
 		try {
-			Configuration hConf = new Configuration();
-			String host=Host.get();
-			int numHandlers = 8;
-			server=RPC.getServer(this, host, port, numHandlers, false, hConf);
-			server.start();
+			String host = NetUtils.getHostname().split("/")[1];
+			int port = portMap.usePort("tupleReq");
+			server = new RPC.Builder(new Configuration()).
+                    setInstance(this).
+                    setProtocol(TupleReq.class).
+                    setBindAddress(host).
+                    setPort(port).
+                    setNumHandlers(8).
+                    build();
+            server.start();
 		} catch (java.net.BindException e) {
 			throw e;
 		} catch (IOException e) {
@@ -85,7 +85,7 @@ public class TupleReqListener implements TupleReq {
 	@Override
 	public BooleanWritable consume(LongWritable id, TupleArrayWritable tuples) {
 		if (!visitorMap.containsKey(id.get())) return new BooleanWritable(false);
-		
+
 		Writable[] tupleW = tuples.get();
 		QueryVisitor qv = visitorMap.get(id.get()).visitor;
 		try {
@@ -125,7 +125,7 @@ public class TupleReqListener implements TupleReq {
 	public void done(long id, boolean force) {
 		QueryVisitorInfo info = visitorMap.get(id);
 		if (info==null) return;
-		
+
 		QueryVisitor qv=info.visitor;
 		boolean reallyFinish = info.reallyFinish;		
 		if (reallyFinish) {
@@ -136,10 +136,10 @@ public class TupleReqListener implements TupleReq {
 	public void done(LongWritable id) {
 		QueryVisitorInfo info = visitorMap.get(id.get());
 		if (info==null) return;
-		
+
 		QueryVisitor qv=info.visitor;
 		boolean reallyFinish = info.reallyFinish;		
-		if (reallyFinish) {			
+		if (reallyFinish) {
 			qv.finish();
 			visitorMap.remove(id.get());
 		}
@@ -153,6 +153,19 @@ public class TupleReqListener implements TupleReq {
 	}
 	@Override
 	public long getProtocolVersion(String arg0, long arg1) throws IOException {
-		return TupleReq.versionID;
+		return versionID;
 	}
+
+    @Override
+    public ProtocolSignature getProtocolSignature(String protocol, long clientVersion, int clientMethodsHash)
+            throws IOException {
+        Class<? extends VersionedProtocol> inter;
+        try {
+            inter = (Class<? extends VersionedProtocol>)getClass().getGenericInterfaces()[0];
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+        return ProtocolSignature.getProtocolSignature(clientMethodsHash,
+                getProtocolVersion(protocol, clientVersion), inter);
+    }
 }

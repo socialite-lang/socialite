@@ -1,6 +1,6 @@
 package socialite.eval;
 
-import socialite.resource.TableSliceMap;
+import socialite.resource.TablePartitionMap;
 import socialite.tables.Tuple;
 import socialite.tables.TupleBlock;
 
@@ -17,8 +17,8 @@ public class ConcurrentLoadCommand implements Command {
         block = _block;
     }
 
-    public Iterator<Tuple> iterator(TableSliceMap sliceMap, int sliceIdx) {
-        return block.iterator(sliceMap, sliceIdx);
+    public Iterator<Tuple> iterator(TablePartitionMap partitionMap, int partitionIdx) {
+        return block.iterator(partitionMap, partitionIdx);
     }
     public int getTableId() { return block.getTableId(); }
 

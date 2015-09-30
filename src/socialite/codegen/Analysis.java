@@ -16,6 +16,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import socialite.dist.master.MasterNode;
 import socialite.engine.Config;
 import socialite.functions.Choice;
 import socialite.functions.FunctionLoader;
@@ -82,7 +83,6 @@ public class Analysis {
 	RuleMap ruleMap;
 	List<RuleComp> ruleComps;
 	List<Epoch> epochs;
-	Config conf;
 	Parser p;
 
 	protected Analysis(List<Rule> _rules, List<Table> _newTables,
@@ -107,14 +107,14 @@ public class Analysis {
 	}
 
 	public Analysis(Parser _p) {
-		this(_p, Config.seq());
+		this(_p.getRules(), _p.getNewTables(), _p.getTableMap(),
+			 _p.getTableStmts(), _p.getQuery());
 		p = _p;
 	}
 
 	public Analysis(Parser _p, Config _conf) {
 		this(_p.getRules(), _p.getNewTables(), _p.getTableMap(),
 				_p.getTableStmts(), _p.getQuery());
-		conf = _conf;
 		p = _p;
 	}
 
@@ -247,7 +247,7 @@ public class Analysis {
 	void checkOrderBy() {
 		for (Table t:newTables) {
 			if (t.hasOrderBy()) {
-				if (conf.isDistributed()) {
+				if (isDistributed()) {
 					String msg="OrderBy is not supported in distributed configuration";
 					throw new AnalysisException(msg, t);
 				}
@@ -344,7 +344,6 @@ public class Analysis {
 	}
 	void prepareRecOpts() {
 		prepareLeftRecAndDijkstraOpt();
-		prepareDeltaStepOpt();
 		mergeLinearRecursionBaseIntoScc();
 	}	
 
@@ -355,9 +354,10 @@ public class Analysis {
 			markIfLeftRec(r);
 			markIfDijkstraOpt(r);
 		}
-	}	
+	}
+	@Deprecated
 	void prepareDeltaStepOpt() {
-		if (!conf.isParallel()) return;
+		//if (!conf.isParallel()) return;
 		
 		for (Rule r:rules) {
 			if (r.isLeftRec()) {
@@ -762,8 +762,11 @@ public class Analysis {
         return requireTransfer(p, h, tableMap);
 	}
 
+	protected boolean isDistributed() {
+		return MasterNode.getInstance() != null;
+	}
 	void processRemoteRules() {
-		if (!conf.isDistributed()) return;
+		if (!isDistributed()) return;
 		
 		List<Rule> toAdd = new ArrayList<Rule>();
 		for (RuleComp rc : ruleComps) {

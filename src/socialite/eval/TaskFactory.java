@@ -8,13 +8,12 @@ import org.apache.commons.logging.LogFactory;
 
 import socialite.resource.SRuntime;
 import socialite.resource.TableInstRegistry;
-import socialite.resource.TableSliceMap;
+import socialite.resource.TablePartitionMap;
 import socialite.resource.VisitorBuilder;
 import socialite.tables.ConcurrentTableInst;
 import socialite.tables.TmpTableInst;
 import socialite.tables.TableInst;
 import socialite.tables.Tuple;
-import socialite.util.SociaLiteException;
 import socialite.util.SocialiteFinishEval;
 import socialite.visitors.IVisitor;
 import socialite.visitors.VisitorImpl;
@@ -143,9 +142,9 @@ public class TaskFactory {
 
     public Task[] make(ConcurrentLoadCommand loadCmd, SRuntime runtime) {
         TableInstRegistry registry = runtime.getTableRegistry();
-        TableSliceMap sliceMap = runtime.getSliceMap();
+        TablePartitionMap partitionMap = runtime.getPartitionMap();
         int tableid = loadCmd.getTableId();
-        ConcurrentLoadTask[] tasks = new ConcurrentLoadTask[sliceMap.virtualSliceNum(tableid)];
+        ConcurrentLoadTask[] tasks = new ConcurrentLoadTask[partitionMap.virtualPartitionNum(tableid)];
 
         TableInst[] tableArray = registry.getTableInstArray(tableid);
         assert tableArray != null && tableArray[0] != null;
@@ -155,7 +154,7 @@ public class TaskFactory {
             return null;
         }
         for (int i=0; i<tasks.length; i++) {
-            Iterator<Tuple> iterator = loadCmd.iterator(sliceMap, i);
+            Iterator<Tuple> iterator = loadCmd.iterator(partitionMap, i);
             TableInst table;
             if (tableArray.length == 1) { table = tableArray[0]; }
             else { table = tableArray[i]; }

@@ -15,18 +15,14 @@ import socialite.codegen.RuleComp;
 import socialite.dist.EvalRefCount;
 import socialite.engine.Config;
 import socialite.parser.Const;
-import socialite.parser.GeneratedT;
 import socialite.parser.Rule;
-import socialite.parser.Table;
 import socialite.parser.antlr.ClearTable;
 import socialite.parser.antlr.DropTable;
 import socialite.parser.antlr.TableStmt;
 import socialite.resource.SRuntime;
 import socialite.resource.TableInstRegistry;
-import socialite.resource.TableSliceMap;
+import socialite.resource.TablePartitionMap;
 import socialite.tables.TableInst;
-import socialite.tables.TableUtil;
-import socialite.util.Loader;
 import socialite.util.SociaLiteException;
 
 class InitThread extends Thread {
@@ -86,7 +82,7 @@ public class EvalParallel extends Eval {
 			Rule r=epoch.getRules().get(0);
 			ruleMap = runtime.getRuleMap(r.id());
 		}
-		sliceMap = runtime.getSliceMap();
+		partitionMap = runtime.getPartitionMap();
 		tableRegistry = runtime.getTableRegistry();
 		manager = Manager.getInst();
 		
@@ -140,14 +136,14 @@ public class EvalParallel extends Eval {
 			ParClear(int _id) { id=_id; }
 			public void run() {
 				if (tableArray.length==1) {
-					int size = sliceMap.localSize(tid);
+					int size = partitionMap.localSize(tid);
 					if (size<threadNum) {
 						if (id==0) { tableArray[0].clear(); }
 						return;
 					}
-					int from = sliceMap.localBeginIndex(tid)+(size+threadNum-1)/threadNum*id;
-					int to = sliceMap.localBeginIndex(tid)+(size+threadNum-1)/threadNum*(id+1);
-					if (to>sliceMap.localEndIndex(tid)+1) to = sliceMap.localEndIndex(tid)+1;					
+					int from = partitionMap.localBeginIndex(tid)+(size+threadNum-1)/threadNum*id;
+					int to = partitionMap.localBeginIndex(tid)+(size+threadNum-1)/threadNum*(id+1);
+					if (to>partitionMap.localEndIndex(tid)+1) to = partitionMap.localEndIndex(tid)+1;
 					
 					tableArray[0].clear(from, to);	
 				} else {
@@ -205,7 +201,7 @@ public class EvalParallel extends Eval {
 		
 		Constructor<?> c;
 		try {
-			c = init.getConstructor(int.class, TableInstRegistry.class, TableSliceMap.class);
+			c = init.getConstructor(int.class, TableInstRegistry.class, TablePartitionMap.class);
 		} catch (Exception e) {
 			throw new SociaLiteException(e);
 		}
@@ -213,11 +209,11 @@ public class EvalParallel extends Eval {
 		int threadNum = conf.getWorkerThreadNum();
 		try {
 			for (int i=0; i<threadNum-1; i++) {
-				InitRunnable r=(InitRunnable)c.newInstance(i, tableRegistry, sliceMap);
+				InitRunnable r=(InitRunnable)c.newInstance(i, tableRegistry, partitionMap);
 				r.setArgs(consts);
 				parallelInit(i, r);
 			}
-			InitRunnable r = (InitRunnable)c.newInstance(threadNum-1, tableRegistry, sliceMap);
+			InitRunnable r = (InitRunnable)c.newInstance(threadNum-1, tableRegistry, partitionMap);
 			r.setArgs(consts);
 			r.run();
 			barrierWait();

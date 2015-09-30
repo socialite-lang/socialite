@@ -47,7 +47,7 @@ public class SendQueue {
 		queue.empty();
 	}
 	long key(WorkerMessage msg) {
-		return ((long)msg.getSlaveId())<<32 | 
+		return ((long)msg.getWorkerId())<<32 |
 			   ((long)msg.getTableId())<<1 | 1L;
 	}	
 	public WorkerMessage reserve() throws InterruptedException {

@@ -52,13 +52,8 @@ public class TableCodeGen {
 	ST tableTmpl;	
 	List<ST> tableTmplList;
 	Table table;
-	Config conf;
 	public TableCodeGen(Table t) {
-		this(t, Config.seq());
-	}
-	public TableCodeGen(Table t, Config _conf) {
 		table = t;
-		conf = _conf;
 	}
 	
 	String tableName() { return TableUtil.getTablePath(table.className());}
@@ -346,32 +341,20 @@ public class TableCodeGen {
 		return tableTmpl.render();
 	}
 
-	public boolean isParallel() { return conf.isParallel(); }
-	
-	/* static methods  */	
-	public static LinkedHashMap<String,byte[]> ensureExist(List<Table> tables) throws InternalException {
-		return ensureExist(Config.seq(), tables);
-	}
-	public static LinkedHashMap<String,byte[]> ensureExistOrDie(List<Table> tables) {
-		try {
-			return ensureExist(Config.seq(), tables);
-		} catch (InternalException e) {
-			throw new SociaLiteException(e);
-		}
-	}
-	
+	/* static methods  */
+
 	/**
 	 *  See {@link Config#setDebugOpt(String opt, boolean val)}, {@link Config#getDebugOpt(String opt)} */
 	//static final boolean GENERATE_NEW_TABLE_JAVA_SOURCES = true;
 
     static final LinkedHashMap<String,byte[]> EMPTY_MAP = new LinkedHashMap<String,byte[]>(0);
-	public static LinkedHashMap<String, byte[]> ensureExist(Config conf, List<Table> tables) throws InternalException {
+	public static LinkedHashMap<String, byte[]> ensureExist(List<Table> tables) throws InternalException {
 		if (tables.isEmpty()) return EMPTY_MAP;
-		Compiler c=new Compiler(conf.isVerbose());
+		Compiler c=new Compiler();
         LinkedHashMap<String,byte[]> generatedClasses = new LinkedHashMap<String,byte[]>();
 		Class<?> tableClass;
 		for (Table t:tables) {
-			TableCodeGen gen = new TableCodeGen(t, conf);
+			TableCodeGen gen = new TableCodeGen(t);
 			if (t.isPredefined()) {
 				if (!TableUtil.exists(t.className())) {
 					String msg="Cannot load class "+TableUtil.getTablePath(t.className());
@@ -381,18 +364,16 @@ public class TableCodeGen {
 				tableClass=TableUtil.load(t.className());
 				t.setCompiled();
 			} else {				
-				if (conf.getDebugOpt("GenerateTable")) {
-					if (!TableUtil.exists(t.className())) { 
-						String src = gen.generate();
-						boolean success=c.compile(gen.tableName(), src);
-						if (!success) {
-							String msg="Compilation error for "+gen.tableName();
-							msg += " "+c.getErrorMsg();
-							throw new InternalException(msg);
-						}
-						generatedClasses.putAll(c.getCompiledClasses());
+				if (!TableUtil.exists(t.className())) {
+					String src = gen.generate();
+					boolean success=c.compile(gen.tableName(), src);
+					if (!success) {
+						String msg="Compilation error for "+gen.tableName();
+						msg += " "+c.getErrorMsg();
+						throw new InternalException(msg);
 					}
-				}				
+					generatedClasses.putAll(c.getCompiledClasses());
+				}
 				tableClass=TableUtil.load(t.className());
 				t.setCompiled();
 			}			

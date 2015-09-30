@@ -101,7 +101,7 @@ public class Table implements Serializable {
 	
 	public boolean isDistributed() { return true; }
 
-	public boolean isSliced() { return isModTable(); }
+	public boolean isPartitioned() { return isModTable(); }
 	public boolean isArrayTable() { return isArrayTable; }
 	public boolean isModTable() { 
 		if (isArrayTable) return false;

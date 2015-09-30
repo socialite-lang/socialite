@@ -83,7 +83,7 @@ public class RemoteBodyTable extends Table implements GeneratedT {
 	public List<Variable> getParamVars() { return vars;	}
 	
 	@Override
-	public boolean isSliced() { return false; }
+	public boolean isPartitioned() { return false; }
 	@Override
 	public boolean isModTable() { return false; }
 	

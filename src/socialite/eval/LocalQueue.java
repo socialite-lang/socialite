@@ -14,7 +14,7 @@ public class LocalQueue {
 	static final int maxLevel=4;
 	static { assert maxLevel>=2: "maxLevel should be larger than 2"; }
 	
-	ArrayQueue<Task> recvQ;
+	ArrayQueue<Task> recvq;
 	List<ArrayQueue<Task>> queues;
 	int capacity;
 	int size;
@@ -26,7 +26,7 @@ public class LocalQueue {
 		capacity = 512;
 		workerid = _workerid;
 		queues = new ArrayList<ArrayQueue<Task>>();
-		recvQ = new ArrayQueue<Task>(256);
+		recvq = new ArrayQueue<Task>(256);
 		reservedTasks = new ArrayList<Task>(4);
 		size = 0;
 		deltaStepWindow = new DeltaStepWindow(workerid);
@@ -46,7 +46,7 @@ public class LocalQueue {
 	
 	public synchronized int size(int level) {
 		assert level < maxLevel;
-		if (level==-1) return recvQ.size();
+		if (level==-1) return recvq.size();
 		return queues.get(level).size();
 	}
 
@@ -81,7 +81,7 @@ public class LocalQueue {
             if (priority >= maxLevel) priority = maxLevel - 1;
 
             ArrayQueue<Task> q;
-            if (priority == -1) q = recvQ;
+            if (priority == -1) q = recvq;
             else q = queues.get(priority);
             task.setPriority(priority);
             q.add(task);
@@ -104,7 +104,7 @@ public class LocalQueue {
         synchronized (this) {
             if (priority >= maxLevel) priority = maxLevel - 1;
             ArrayQueue<Task> q;
-            if (priority == -1) q = recvQ;
+            if (priority == -1) q = recvq;
             else q = queues.get(priority);
 
             for (Task t : tasks) {
@@ -121,7 +121,7 @@ public class LocalQueue {
 	}
 	
 	public synchronized void empty() {
-		recvQ.clear();
+		recvq.clear();
 		for (ArrayQueue<Task> q:queues) {
 			if (q!=null)
 				q.clear();
@@ -156,7 +156,7 @@ public class LocalQueue {
 		}
     }
 	public synchronized void printStat() {
-		System.out.println("    recvQ.size:"+recvQ.size());
+		System.out.println("    recvq.size:"+recvq.size());
 		
 		for (int i=0; i<maxLevel; i++) {
 			System.out.println("    queue["+i+"].size:"+queues.get(i).size());
@@ -177,7 +177,7 @@ public class LocalQueue {
 		if (size==0) return null;		
 		
 		Task t=null;
-		t = recvQ.get();
+		t = recvq.get();
 		if (t!=null) {
 			reservedTasks.add(t);
 			return t;
@@ -203,11 +203,11 @@ public class LocalQueue {
 	
 	public int likelySizeAt(int level) {
 		if (size==0) return 0;
-		return recvQ.size() + queues.get(level).size();
+		return recvq.size() + queues.get(level).size();
 	}
 	public boolean likelyEmptyAt(int level) {
 		if (size==0) return true;
-		if (recvQ.size()==0 && queues.get(level).size()==0) 
+		if (recvq.size()==0 && queues.get(level).size()==0)
 			return true;
 		return false;
 	}
@@ -217,12 +217,12 @@ public class LocalQueue {
         //if (true) return false;
 		
 		Task t;
-		t = recvQ.peek();
+		t = recvq.peek();
 		if (t!=null && t.safeToSteal()) {
-			t = recvQ.get();
+			t = recvq.get();
 			size--;
 			synchronized(thief) {
-				thief.recvQ.add(t);
+				thief.recvq.add(t);
 				thief.size++;
 			}
 			return true;

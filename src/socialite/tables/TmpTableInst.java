@@ -19,7 +19,7 @@ public abstract class TmpTableInst extends AbstractTableInst implements External
 	// if the table slice map returns 0,
 	// VisitorBuilder uses the following method to decide
 	// the # of slices and the # of visitors
-	public int virtualSliceNum() { return 1; }
+	public int virtualPartitionNum() { return 1; }
 
 	// Estimates the size of data in the table to copy to network buffer
 	abstract public int totalDataSize(); // total size of data in this table instance.

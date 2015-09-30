@@ -50,7 +50,7 @@ public class LocalEngine {
 	public LocalEngine(Config _conf) {		
 		conf = _conf;		
 		init();
-		Manager.getInst(conf).setRuntime(runtime);
+		Manager.create(conf).setRuntime(runtime);
 	}
 	void init() {
 		parser=new Parser();
@@ -70,7 +70,7 @@ public class LocalEngine {
 		try {
 			synchronized(parser.monitor()) {
 				parser.parse(program);				
-				Analysis an = new Analysis(parser, conf);				
+				Analysis an = new Analysis(parser);
 				an.run();
 				codeGen = new CodeGenMain(conf, an, runtime);
 				//long start=System.currentTimeMillis();
@@ -243,7 +243,7 @@ public class LocalEngine {
 		Map<String, Table> _tableMap = reg.load(new File(PathTo.cwd("_table_storage")));
 		parser.addExistingTables(_tableMap);
 		for (Table t:_tableMap.values()) {
-			runtime.getSliceMap().addTable(t);
+			runtime.getPartitionMap().addTable(t);
 		}
 	}
 	

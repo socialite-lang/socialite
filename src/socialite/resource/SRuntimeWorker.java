@@ -62,14 +62,11 @@ public class SRuntimeWorker extends SRuntime {
 	public Sender sender() { return sender; }
 	public Config getConf() { return conf; }
 
-	public DistTableSliceMap getSliceMap() {
-		if (sliceMap==null) {
-			int sliceNum = conf.sliceNum();
-			int virtualSliceNum = conf.virtualSliceNum();
-			int minSliceSize = conf.minSliceSize();					
-			sliceMap = new DistTableSliceMap(workerAddrMap, sliceNum, virtualSliceNum, minSliceSize);
+	public DistTablePartitionMap getPartitionMap() {
+		if (partitionMap==null) {
+			partitionMap = new DistTablePartitionMap(workerAddrMap);
 		}
-		return (DistTableSliceMap )sliceMap;
+		return (DistTablePartitionMap)partitionMap;
 	}
 	public TableInstRegistry getTableRegistry() {
 		if (tableReg==null)
@@ -83,7 +80,7 @@ public class SRuntimeWorker extends SRuntime {
 			for (Table t:tableMap.values()) {
 				if (t.id() > maxId) maxId = t.id();
 			}
-			lockMap = new LockMap(maxId, getSliceMap());
+			lockMap = new LockMap(maxId, getPartitionMap());
 		}
 		return lockMap;
 	}
@@ -174,8 +171,8 @@ public class SRuntimeWorker extends SRuntime {
 		Class queryClass = Loader.forName(queryClsName);
 		Class<?> type=tableArg.getClass();
 		try {
-			c=queryClass.getConstructor(type, QueryVisitor.class, TableSliceMap.class);
-			QueryRunnable qr = (QueryRunnable)c.newInstance(tableArg, qv, sliceMap);				
+			c=queryClass.getConstructor(type, QueryVisitor.class, TablePartitionMap.class);
+			QueryRunnable qr = (QueryRunnable)c.newInstance(tableArg, qv, partitionMap);				
 			return qr;
 		} catch (Exception e) {
 			L.fatal("getQueryInst(): Cannot retrieve constructor of "+queryClsName+", "+e);

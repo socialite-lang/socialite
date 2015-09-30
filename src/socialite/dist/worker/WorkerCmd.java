@@ -18,9 +18,6 @@ import socialite.tables.ConstsWritable;
 public interface WorkerCmd extends VersionedProtocol {
 	public static final long versionID = 1L;
 	
-	public IntWritable getWorkerThreadNum();
-	public void setWorkerThreadNum(IntWritable n);
-	
 	public void makeConnections(ArrayWritable otherWorkers);
 
     public void init(WorkerAddrMapW workerAddrMapW) throws RemoteException;

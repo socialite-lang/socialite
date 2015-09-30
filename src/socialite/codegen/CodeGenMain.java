@@ -7,6 +7,7 @@ import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import socialite.dist.master.MasterNode;
 import socialite.engine.Config;
 import socialite.eval.Eval;
 import socialite.eval.EvalDist;
@@ -109,9 +110,9 @@ public class CodeGenMain {
 		
 		generateVisitorBase();
 		
-		addToGeneratedClasses(TupleCodeGen.generate(conf, an.getRules(), tableMap));
+		addToGeneratedClasses(TupleCodeGen.generate(an.getRules(), tableMap));
         try {
-            addToGeneratedClasses(TableCodeGen.ensureExist(conf, newTables));
+            addToGeneratedClasses(TableCodeGen.ensureExist(newTables));
 		} catch (InternalException e) { throw new SociaLiteException(e); }
 		
 		for (Epoch e:epochs) {
@@ -153,8 +154,8 @@ public class CodeGenMain {
 			String sig=r.signature(tableMap);
 			Class<?> klass = arrayInitClass$.get(sig);
 			if (klass==null) {
-				InitCodeGen initGen = new InitCodeGen(r, tableMap, runtime, conf);
-				Compiler c = new Compiler(conf.isVerbose());
+				InitCodeGen initGen = new InitCodeGen(r, tableMap, runtime);
+				Compiler c = new Compiler();
 				boolean success = c.compile(initGen.name(), initGen.generate());
 				if (!success) {
 					String msg = "Error while compiling init code:"+c.getErrorMsg(); 
@@ -178,15 +179,14 @@ public class CodeGenMain {
         }
 
 		if (newTablesToAlloc.isEmpty()) {
-			if (conf.isDistributed()) {
+			if (isDistributed()) {
                 e.setEvalClass(EvalDist.class);
 			} else {
-				assert conf.isParallel() || conf.isSequential();
 				e.setEvalClass(EvalParallel.class);
 			}
 		} else {
             EvalCodeGen evalGen = new EvalCodeGen(e, newTablesToAlloc, tableMap, conf);
-            Compiler c = new Compiler(conf.isVerbose());
+            Compiler c = new Compiler();
             if (conf.getDebugOpt("GenerateEval")) {
                 boolean success = c.compile(evalGen.evalName(), evalGen.generate());
                 if (!success) {
@@ -199,6 +199,9 @@ public class CodeGenMain {
             e.setEvalClass(evalClass);
             addToGeneratedClasses(c.getCompiledClasses());
         }
+	}
+	boolean isDistributed() {
+		return MasterNode.getInstance() != null;
 	}
 	
 	public TableInstRegistry getTableRegistry() {		
@@ -241,8 +244,8 @@ public class CodeGenMain {
 			return;
 		}
 		
-		QueryCodeGen qgen = new QueryCodeGen(query, tableMap, qv, conf.isSequential());
-		Compiler c = new Compiler(conf.isVerbose());
+		QueryCodeGen qgen = new QueryCodeGen(query, tableMap, qv);
+		Compiler c = new Compiler();
 		boolean success=c.compile(qgen.queryName(), qgen.generate());
 		if (!success) {
 			String msg="Error while compiling a query class:"+c.getErrorMsg();
@@ -286,7 +289,7 @@ public class CodeGenMain {
 		if (klass==null) {
 			VisitorCodeGen vgen = new VisitorCodeGen(e, r, tableMap, conf);
 			if (conf.getDebugOpt("GenerateVisitor")) {
-				Compiler c = new Compiler(conf.isVerbose());
+				Compiler c = new Compiler();
 				boolean success=c.compile(vgen.visitorName(), vgen.generate());				
 				if (!success) {
 					String msg="Error while compiling visitor class:"+c.getErrorMsg();

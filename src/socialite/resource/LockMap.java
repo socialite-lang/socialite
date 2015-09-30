@@ -1,28 +1,18 @@
 package socialite.resource;
 
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import socialite.parser.Table;
-import socialite.util.Assert;
 
 // This holds locks for table partitions.
 public class LockMap {
-	TableSliceMap sliceMap;
+	TablePartitionMap sliceMap;
 	ReentrantLock[][] locks;
 	
 	public LockMap() {}	
-	public LockMap(int maxTableId, TableSliceMap _sliceMap) {
+	public LockMap(int maxTableId, TablePartitionMap _sliceMap) {
 		locks = new ReentrantLock[maxTableId+1][];
 		sliceMap = _sliceMap;
 	}
@@ -44,7 +34,7 @@ public class LockMap {
 		
 		if (locks[tableId] != null) return;
 		
-		int virtualSliceNum = sliceMap.maxVirtualSliceNum();
+		int virtualSliceNum = sliceMap.maxVirtualPartitionNum();
 		ReentrantLock[] newLocks = new ReentrantLock[virtualSliceNum];
 		for (int i=0; i<newLocks.length; i++) {
 			newLocks[i] = new ReentrantLock();

@@ -1,20 +1,12 @@
 package socialite.codegen;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.python.antlr.ast.Tuple;
-import org.python.modules.synchronize;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
 
 import socialite.parser.Column;
 import socialite.parser.Const;
@@ -28,8 +20,6 @@ import socialite.parser.Variable;
 import socialite.parser.antlr.ColumnGroup;
 import socialite.tables.QueryVisitor;
 import socialite.tables.TableUtil;
-import socialite.util.InternalException;
-import socialite.util.SociaLiteException;
 
 //import org.antlr.stringtemplate.StringTemplate;
 //import org.antlr.stringtemplate.StringTemplateGroup;
@@ -50,12 +40,9 @@ public class QueryCodeGen {
 	Table table;
 	Predicate queryP;
 	TIntObjectHashMap<Variable> constVars;
-	boolean isSequential;
-	
-	public QueryCodeGen(Query _query, Map<String, Table> _tableMap, QueryVisitor qv,
-						boolean _isSequential) {
+
+	public QueryCodeGen(Query _query, Map<String, Table> _tableMap, QueryVisitor qv) {
 		query = _query;
-	
 		tmplGroup = CodeGen.getVisitorGroup();
 		queryTmpl = tmplGroup.getInstanceOf("class");	
 		table = _tableMap.get(query.getP().name());		
@@ -63,7 +50,6 @@ public class QueryCodeGen {
 		queryP = makeNewPredicate(query.getP(), constVars);	
 				
 		queryVisitorName = "Query"+queryP.name()+"_"+queryCount++;
-		isSequential=_isSequential;
 		assert !queryP.hasFunctionParam();
 	}
 	
@@ -130,7 +116,7 @@ public class QueryCodeGen {
 			queryTmpl.add("interfaces", table.visitorInterface());
 		
 		/* declare fields */
-		if (isTableSliced(table)) queryTmpl.add("fieldDecls", table.className()+"[] "+varName(table));
+		if (isTablePartitioned(table)) queryTmpl.add("fieldDecls", table.className()+"[] "+varName(table));
 		else queryTmpl.add("fieldDecls", table.className()+" "+varName(table));
 		
 		if (paramNum() > 1) {
@@ -144,7 +130,7 @@ public class QueryCodeGen {
 			queryTmpl.add("fieldDecls", tupleDecl);
 		}
 		
-		queryTmpl.add("fieldDecls", "TableSliceMap "+sliceMapVar());
+		queryTmpl.add("fieldDecls", "TablePartitionMap "+ partitionMapVar());
 		queryTmpl.add("fieldDecls", "QueryVisitor "+queryVisitorVar());
 		queryTmpl.add("fieldDecls", "boolean "+isTerminatedVar()+"=false");
 		for (Variable v:queryP.getVariables()) {
@@ -197,15 +183,15 @@ public class QueryCodeGen {
 		
 		ST code=run;
 		String tableVar=varName(table);		
-		if (isTableSliced(table)) {
-			boolean sliceSelected = isFirstParamResolved();
+		if (isTablePartitioned(table)) {
+			boolean partitionSelected = isFirstParamResolved();
 			Variable v=constVars.get(0);
-			if (sliceSelected) {
-				tableVar += "["+sliceMapVar()+".getIndex("+table.id()+","+v+")"+"]";
+			if (partitionSelected) {
+				tableVar += "["+ partitionMapVar()+".getIndex("+table.id()+","+v+")"+"]";
 			} else {
 				ST for_ = tmplGroup.getInstanceOf("for");
 				for_.add("init", "int $i=0");
-				for_.add("cond", "$i<"+sliceMapVar()+".sliceNum("+table.id()+")");
+				for_.add("cond", "$i<"+ partitionMapVar()+".partitionNum("+table.id()+")");
 				for_.add("inc", "$i++");
 				tableVar += "[$i]";
 				run.add("stmts", for_);
@@ -391,24 +377,21 @@ public class QueryCodeGen {
 	}
 	
 	String tupleVar() { return "tuple"; }
-	boolean isParallel() { return !isSequential; }
-	boolean isSequential() { return isSequential; }
-	
-	boolean isTableSliced(Table t) {
-		if (isSequential) return false;
-		return t.isSliced();
+
+	boolean isTablePartitioned(Table t) {
+		return t.isPartitioned();
 	}
 	void generateConstructor() {
 		ST m=getNewMethodTmpl(queryVisitorName, "public", "");
 		queryTmpl.add("methodDecls", m);
 		
-		if (isTableSliced(table)) m.add("args", table.className()+"[] _"+varName(table));
+		if (isTablePartitioned(table)) m.add("args", table.className()+"[] _"+varName(table));
 		else m.add("args", table.className()+" _"+varName(table));
 		m.add("stmts", varName(table)+"=_"+varName(table));
 		m.add("args", "QueryVisitor _queryVisitor");
 		m.add("stmts", queryVisitorVar()+"=_queryVisitor");
-		m.add("args", "TableSliceMap _sliceMap");		
-		m.add("stmts", sliceMapVar()+"=_sliceMap");
+		m.add("args", "TablePartitionMap _partitionMap");
+		m.add("stmts", partitionMapVar()+"=_partitionMap");
 	}
 	
 	void importTable() {		
@@ -417,6 +400,6 @@ public class QueryCodeGen {
 	}
 	
 	String queryVisitorVar() { return "queryVisitor"; }
-	String sliceMapVar() { return "$sliceMap"; }
+	String partitionMapVar() { return "$partitionMap"; }
 	String isTerminatedVar() { return "$isTerminated"; }
 }

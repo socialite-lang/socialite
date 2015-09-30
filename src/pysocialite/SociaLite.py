@@ -277,7 +277,7 @@ class AsyncEngine:
                 try:
                     if visitor: self.engine.run(query, visitor, id)
                     else: self.engine.run(query)
-                except:
+                except Exception, e:
                     type, inst, tb = sys.exc_info()
                     errhead="Error while running:" 
                     print "\n"+errhead+indent(query, width=len(errhead), indentFirst=False)

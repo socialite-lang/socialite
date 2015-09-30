@@ -44,14 +44,13 @@ public 	class TupleSend extends QueryVisitor {
 		name = _name;
 	}
 	public TupleSend(String reqIP, int port, long id) {
-		remoteIp = reqIP; 
+		remoteIp = reqIP;
 		remotePort = port;
 		remoteIterId = id;
 		InetSocketAddress addr = new InetSocketAddress(reqIP, port);
-		
-		Configuration hConf=new Configuration();
+
 		try {
-			tupleReq = (TupleReq)RPC.waitForProxy(TupleReq.class, TupleReq.versionID, addr, hConf);
+			tupleReq = RPC.waitForProxy(TupleReq.class, TupleReq.versionID, addr, new Configuration());
 		} catch (IOException e) {
 			L.fatal("Cannot connect to ["+addr+"] for table iterator:"+e);
 			L.fatal(ExceptionUtils.getStackTrace(e));
@@ -126,6 +125,7 @@ public 	class TupleSend extends QueryVisitor {
 		for (int i=0; i<tupleNum; i++) {
 			tuplesW[i] = new TupleW(tuples[i]);
 		}
+
 		taw.set(tuplesW);
 		boolean cont=tupleReq.consume(new LongWritable(remoteIterId), taw).get();
 		if (!cont) throw new SocialiteFinishEval();

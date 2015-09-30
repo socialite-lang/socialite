@@ -32,28 +32,22 @@ public class Config {
 		Config conf = new Config(EngineType.PARALLEL, n);
 		return conf; 
 	}
-	public static Config client(String master, int port) {
+	public static Config client() {
 		Config conf=new Config(EngineType.CLIENT);
-		conf.portMap = new PortMap(master, port);
-		return conf;
-	}
-	public static Config client() { 
-		Config conf=new Config(EngineType.CLIENT);
-		conf.portMap=PortMap.get();
 		return conf;
 	}	
 	public static Config dist() {
 		Config conf=new Config(EngineType.DIST);
-		conf.portMap=PortMap.get();
 		return conf;
 	}		
 	public static Config dist(int cpuNum) {
 		Config conf=new Config(EngineType.DIST, cpuNum);
-		conf.portMap=PortMap.get();
 		return conf;
 	}
     static Set<String> workerNames = new LinkedHashSet<String>();
     static int workerNodeNum = -1;
+
+    @Deprecated
     public static synchronized Set<String> getWorkers() {
         if (workerNames.size()!=0) { return workerNames; }
 
@@ -77,10 +71,6 @@ public class Config {
             return workerNames;
         }
     }
-    public static int getWorkerNodeNum() {
-        if (workerNodeNum==-1) workerNodeNum = getWorkers().size();
-        return workerNodeNum;
-    }
 
 	public static int systemWorkerNum=-1;
 	static {
@@ -97,10 +87,6 @@ public class Config {
 	boolean cleanup=false;
 	
 	EngineType engineType=null;
-	boolean isClient=false;
-	boolean isDistributed=false;
-	PortMap portMap=null;
-		
 	boolean errorRecovery=false;
 	TObjectIntHashMap<String> debugInfo;
 	
@@ -186,9 +172,4 @@ public class Config {
 	public boolean isParallel() { return workerThreadNum >=2 || isDistributed(); }
 	public boolean isDistributed() { return engineType == EngineType.DIST; }	
 	public int minSliceSize() { return 1; }	
-	
-	public PortMap portMap() {
-		assert(portMap!=null);
-		return portMap;
-	}
 }

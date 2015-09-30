@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.logging.Log;
@@ -14,13 +13,9 @@ import org.apache.commons.logging.LogFactory;
 import socialite.eval.Command;
 import socialite.eval.EvalWithTable;
 import socialite.eval.TmpTablePool;
-import socialite.resource.Sender;
-import socialite.tables.AbstractTableInst;
 import socialite.tables.TmpTableInst;
 import socialite.tables.TableInst;
-import socialite.util.Assert;
 import socialite.util.ByteBufferOutputStream;
-import socialite.util.ByteBufferPool;
 import socialite.util.FastOutputStream;
 
 
@@ -30,7 +25,7 @@ public class WorkerMessage implements Externalizable {
 
     public EvalWithTable evalT;
     transient int epochId;
-	transient int slaveid;
+	transient int workerid;
 	transient ByteBuffer serialized;
 	transient int tableid=-1;
 
@@ -77,9 +72,8 @@ public class WorkerMessage implements Externalizable {
 	}
 	
 	public void emptyTable() { getTable().clear(); }
-	//public void copyAndEmptyTable() { evalT.copyAndEmptyTable(); }
-	public void setSlaveId(int _slaveid) { slaveid = _slaveid; }
-	public int getSlaveId() { return slaveid; }
+	public void setWorkerId(int _workerid) { workerid = _workerid; }
+	public int getWorkerId() { return workerid; }
 	public TableInst getTable() { return evalT.getTable(); }
 	public int getTableId() {
 		if (tableid >= 0) return tableid;

@@ -20,7 +20,7 @@ public class ByteBufferPool {
 	final static int smallBufferSize=132*1024;
 	final static int bufferSize=1280*1024; // see WorkerConnPool:ConnDesc.SOCK_BUFSIZE
 	
-	final static long directBufferAlloc=1024*1024*(512+128+64);
+	final static long directBufferAlloc=1024*1024*(256+32);
 
 	static ByteBufferPool theInst=null;			
 

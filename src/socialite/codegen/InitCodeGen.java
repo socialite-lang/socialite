@@ -6,7 +6,6 @@ import java.util.Map;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
-import socialite.engine.Config;
 import socialite.parser.AssignOp;
 import socialite.parser.Column;
 import socialite.parser.Const;
@@ -18,6 +17,7 @@ import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.parser.Variable;
 import socialite.resource.SRuntime;
+import socialite.yarn.ClusterConf;
 
 public class InitCodeGen {
 	static String initPackage="socialite.eval";
@@ -26,16 +26,14 @@ public class InitCodeGen {
 	ST initTmpl;
 	Rule r;
 	Map<String, Table> tableMap;
-	Config conf;
 	String initName;
 	SRuntime runtime;
 	
-	public InitCodeGen(Rule _r, Map<String, Table> _tableMap, SRuntime _rt, Config _conf) {
+	public InitCodeGen(Rule _r, Map<String, Table> _tableMap, SRuntime _rt) {
 		r = _r;
 		tableMap = _tableMap;
 		runtime = _rt;
-		conf = _conf;
-		
+
 		tmplGroup = CodeGen.getEvalGroup();		
 		initTmpl = tmplGroup.getInstanceOf("initClass");
 		initName = "Init_"+(r.id());
@@ -85,7 +83,7 @@ public class InitCodeGen {
 		
 		initTmpl.add("tableid", t.id());
 		initTmpl.add("tableRegVar", registryVar());
-		initTmpl.add("sliceMapVar", sliceMapVar());
+		initTmpl.add("partitionMapVar", partitionMapVar());
 		
 		for (Const c:r.getConsts()) {
 			String type=MyType.javaTypeName(c);
@@ -111,42 +109,38 @@ public class InitCodeGen {
 		}
 		
 		Object first = headP.first();
-		String sliceIdx=sliceIdxGetter(t, first);
-		Column dontCare= getDontCareColumn(headP, t);
+		String partitionIdx = partitionIdxGetter(t, first);
+		Column dontCare = getDontCareColumn(headP, t);
 		assert dontCare!=null;
-		
 		assert dontCare.isArrayIndex();
 		
-		String beginIdx=null;
-		String endIdx=null;
-
-		
-		String mySliceNum = "(sliceMap.virtualSliceNum("+t.id()+","+dontCare.getAbsPos()+")/"+conf.getWorkerThreadNum()+")";
-		String beginSlice = "(id*"+mySliceNum+")";
-		String endSlice = "((id+1)*"+mySliceNum+"-1)";
+		String myPartitionNum = partitionMapVar()+".virtualPartitionNum("+t.id()+","+dontCare.getAbsPos()+")/" +
+								ClusterConf.get().getNumWorkerThreads();
+		String beginSlice = "(id*"+myPartitionNum+")";
+		String endSlice = "((id+1)*"+myPartitionNum+"-1)";
 		
 		code.add("stmts", "int $from="+beginSlice);
 		code.add("stmts", "int $to="+endSlice);
 		
 		ST if_ = tmplGroup.getInstanceOf("if");
 		code.add("stmts", if_);
-		if_.add("cond", "sliceMap.virtualSliceNum("+t.id()+")==1");
+		if_.add("cond", partitionMapVar()+".virtualPartitionNum("+t.id()+")==1");
 		if_.add("stmts", "if(id!=0) return;");
 		if_.add("stmts", "$from = 0; $to=0;");
 			
-		beginIdx="sliceMap.getRange("+t.id()+","+dontCare.getAbsPos()+",$from)[0]";
-		endIdx="sliceMap.getRange("+t.id()+","+dontCare.getAbsPos()+",$to)[1]";
+		String beginIdx=partitionMapVar()+".getRange("+t.id()+","+dontCare.getAbsPos()+",$from)[0]";
+		String endIdx=partitionMapVar()+".getRange("+t.id()+","+dontCare.getAbsPos()+",$to)[1]";
 		
 		ST for_ = tmplGroup.getInstanceOf("for");
 		for_.add("init", "int $i="+beginIdx);
 		for_.add("cond", "$i<="+endIdx);
 		for_.add("inc", "$i++");	
-		for_.add("stmts", invokeInsert(localVarName(t), headP, sliceIdx));
+		for_.add("stmts", invokeInsert(localVarName(t), headP, partitionIdx));
 		code.add("stmts", for_);
 	}
 	
 	String registryVar() { return "tableReg"; }
-	String sliceMapVar() { return "sliceMap"; }
+	String partitionMapVar() { return "partitionMap"; }
 	String localVarName(Table t) {
 		String firstLetter = t.name().substring(0, 1);
 		String rest = t.name().substring(1);		
@@ -166,12 +160,12 @@ public class InitCodeGen {
 		return null;
 	}
 	
-	String sliceIdxGetter(Table t, Object first) {
-		if (t.isSliced()) {
+	String partitionIdxGetter(Table t, Object first) {
+		if (t.isPartitioned()) {
 			if (first instanceof Variable && ((Variable)first).dontCare)
-				return "sliceMap.getIndex("+t.id()+", $i)";	
+				return partitionMapVar()+".getIndex("+t.id()+", $i)";
 			else
-				return "sliceMap.getIndex("+t.id()+", "+first+")";
+				return partitionMapVar()+".getIndex("+t.id()+", "+first+")";
 		}
 		return "0";
 	}
@@ -180,8 +174,8 @@ public class InitCodeGen {
 			return ((Variable)o).dontCare;
 		return false;
 	}
-	String invokeInsert(String tableVar, Predicate p, String sliceIdx) {
-		String invokeInsert = tableVar+"["+sliceIdx+"].insert(";
+	String invokeInsert(String tableVar, Predicate p, String partitionIdx) {
+		String invokeInsert = tableVar+"["+partitionIdx+"].insert(";
 		boolean first=true;
 		for (int i=0; i<p.inputParams().length; i++, first=false) {
 			if (!first) invokeInsert += ", ";

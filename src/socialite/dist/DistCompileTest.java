@@ -1,6 +1,7 @@
 package socialite.dist;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -18,20 +19,15 @@ public class DistCompileTest {
 
 	static WorkerAddrMap fakeMap() {
 		WorkerAddrMap map = new WorkerAddrMap();
-		InetAddress addr0=null, addr1=null;
-		
-		try {
-			addr0 = InetAddress.getByName("192.168.1.1");
-			addr1 = InetAddress.getByName("192.168.1.2");
-		} catch (UnknownHostException e) { throw new RuntimeException(e); }
-		
-		map.add(addr0); map.add(addr1);
+		InetSocketAddress addr0 = InetSocketAddress.createUnresolved("192.168.1.1", 50011);
+		InetSocketAddress addr1 = InetSocketAddress.createUnresolved("192.168.1.1", 50012);
+		map.add(addr0, null); map.add(addr1, null);
 		return map;
 	}
 	static void triangle1() {
 		SRuntimeMaster.createTest(fakeMap());
 		
-		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		String init="Edge[int s:0..1768197]((int t)) sortby t."+
 				"Edge[s](t) :- id=$MyId(), b=id, e=id, line=$ReadSplitted(\"hdfs:///user/jiwon/data/edges%d.txt\", b, e),"+
 				"      (s1, s2)=$Split(line), s=$ToInt(s1), t=$ToInt(s2).";
@@ -44,7 +40,7 @@ public class DistCompileTest {
 	static void triangle2() {
 		SRuntimeMaster.createTest(fakeMap());
 		
-		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		String query="Edge[int s:0..9]((int t)) sortby t."+		
 		"Edge[s](t) :- id=$MyId(), b=id, e=id, line=$ReadSplitted(\"hdfs:///user/jiwon/data/edges%d.txt\", b, e),"+
 				"      (s1, s2)=$Split(line), s=$ToInt(s1), t=$ToInt(s2)."+
@@ -63,7 +59,7 @@ public class DistCompileTest {
 	static void lastfmTriangle() {
 		SRuntimeMaster.createTest(fakeMap());
 		
-		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		String query="Edge[int s:0..1768197]((int t)) sortby t."+
 			"Edge[s](t) :- line=$Read(\"hdfs:///user/jiwon/data/lastfm.txt\"),"+
 					"      (s1, s2)=$Split(line), s=$ToInt(s1), t=$ToInt(s2).";
@@ -89,7 +85,7 @@ public class DistCompileTest {
 	
 	static void pagerank() {
 		SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		int numVertices=/*4847571*/1768197;
 		String initQuery = String.format(
 				"InEdge[int s:0..%d]((int t)) sortby t.\n"+
@@ -113,7 +109,7 @@ public class DistCompileTest {
 	
 	static void pagerank2() {
 		SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(2), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		int numVertices=/*4847571*/1768197;
 		String initQuery = String.format(
 				"OutEdge[int s:0..%d]((int t)) sortby t.\n"+
@@ -145,13 +141,13 @@ public class DistCompileTest {
 			"Rank1[_](r) :- r= 0.000000000558793544769. \n"+				
 			"Rank1[p]($Sum(r)) :- Rank[n](r1), EdgeCnt[n](cnt), r=0.85*r1/cnt, OutEdge[n](p).\n";
 		SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(16), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		en.justCompile(initQuery);
 		en.justCompile(mainQuery);
 	}
 	static void sssp() {
 		SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		
 		long start=System.currentTimeMillis();
 		String initQuery = "Edge[int s:0..4847571]((int t, double dist)) sortby dist.\n"+
@@ -178,7 +174,7 @@ public class DistCompileTest {
 
 	static void comp() {
 		SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		
 		long start=System.currentTimeMillis();
 		String initQuery = "Edge[int s:0..4847571]((int t:2)).\n"+		
@@ -195,7 +191,7 @@ public class DistCompileTest {
 	
 	static void lcc() {
         SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		
 		long start=System.currentTimeMillis();
 		String initQuery =  "Edge[int s:0..268435456]((int t:1)) sortby t.\n"+
@@ -221,7 +217,7 @@ public class DistCompileTest {
 	
 	static void mutual() {
 		SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		
 		long start=System.currentTimeMillis();
 		String initQuery =  "Edge[int s:0..268435456]((int t:1)) sortby t.\n"+
@@ -236,7 +232,7 @@ public class DistCompileTest {
 	
 	static void pr() {
 		SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		
 		String query = "InEdge[int s:0..100]((int t)) sortby t.\n" +
 		      "EdgeCnt[int s:0..100](int cnt)." +
@@ -259,7 +255,7 @@ public class DistCompileTest {
 	}
 	static void triangle() {
 		SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		
 		String query = "Edge[int s:0..100]((int t)) sortby t.\n" +
 		      "Triangle[int i:0..1](int count).\n" +
@@ -278,7 +274,7 @@ public class DistCompileTest {
 	}
 	static void gd() {
         SRuntimeMaster.createTest(fakeMap());
-		DistEngine en = new DistEngine(Config.dist(6), fakeMap(), null);
+		DistEngine en = new DistEngine(fakeMap(), null);
 		
 		final int M = 480189; // number of users
 	    final int N = 17770; // number of movies

@@ -21,8 +21,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.LineRecordReader;
+//import org.apache.hadoop.mapred.FileSplit;
+//import org.apache.hadoop.mapred.LineRecordReader;
 
 import socialite.resource.SRuntimeWorker;
 import socialite.util.SociaLiteException;
@@ -33,6 +33,7 @@ import socialite.eval.Worker;
 import socialite.eval.EvalProgress;
 
 public class SplitRead {
+/*
 	static final int BUFFER_SIZE = 1024*1024*8;
 
 	public static Iterator<String> invoke(String file) {
@@ -183,4 +184,5 @@ public class SplitRead {
 	
 		public void remove() {}
 	}
+*/
 }

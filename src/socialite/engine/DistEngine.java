@@ -1,11 +1,8 @@
 package socialite.engine;
 
-import gnu.trove.set.hash.TIntHashSet;
-
 import java.io.File;
-import java.io.FileInputStream;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.*;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -23,6 +20,7 @@ import socialite.codegen.Epoch;
 import socialite.codegen.EpochW;
 import socialite.dist.ErrorRecord;
 import socialite.dist.PathTo;
+import socialite.dist.PortMap;
 import socialite.dist.client.TupleReqListener;
 import socialite.dist.client.TupleSend;
 import socialite.dist.master.MasterNode;
@@ -34,14 +32,12 @@ import socialite.parser.Predicate;
 import socialite.parser.Query;
 import socialite.parser.Rule;
 import socialite.parser.Table;
-import socialite.resource.DistTableSliceMap;
-import socialite.resource.SRuntime;
+import socialite.resource.DistTablePartitionMap;
 import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
 import socialite.tables.ConstsWritable;
 import socialite.tables.QueryVisitor;
 import socialite.util.Loader;
-import socialite.util.SociaLiteException;
 
 // compiles a give program from the master, and distributes the class files to workers.
 public class DistEngine {
@@ -51,15 +47,14 @@ public class DistEngine {
 	Config conf;
 	SRuntimeMaster runtime;
 	WorkerAddrMap workerAddrMap;
-	Map<InetAddress, WorkerCmd> workerCmdMap;
+	Map<InetSocketAddress, WorkerCmd> workerCmdMap;
 		
-	public DistEngine(Config _conf, WorkerAddrMap _addrMap, 
-					    Map<InetAddress, WorkerCmd> _workerCmdMap) {
+	public DistEngine(WorkerAddrMap _addrMap, Map<InetSocketAddress, WorkerCmd> _cmdMap) {
 		runtime = SRuntimeMaster.getInst();
-		parser = new Parser(runtime.getTableMap());		
-		conf = _conf;
+		parser = new Parser(runtime.getTableMap());
+		conf = Config.dist();
 		workerAddrMap = _addrMap;
-		workerCmdMap = _workerCmdMap;
+		workerCmdMap = _cmdMap;
 		
 		String dirStr=PathTo.classOutput();
 		File classDir = new File(dirStr);
@@ -82,7 +77,7 @@ public class DistEngine {
 		Analysis an;
 		synchronized(codegenLock) {
 			parser.parse(program);
-			an=new Analysis(parser, conf);
+			an=new Analysis(parser);
 			an.run();
 			codeGen = new DistCodeGenMain(conf, an, runtime);		
 			codeGen.generate();
@@ -169,7 +164,7 @@ public class DistEngine {
 		if (_tupleListen==null) {
 			synchronized (DistEngine.class) {
 				if (_tupleListen==null) {
-					_tupleListen = new TupleReqListener(conf);
+					_tupleListen = new TupleReqListener(PortMap.master());
 				}
 			}
 		}
@@ -191,11 +186,11 @@ public class DistEngine {
 		Table t = tableMap.get(p.name());
 		if (p.first() instanceof Const) {
 			Const c = (Const)p.first();
-			DistTableSliceMap sliceMap=(DistTableSliceMap)runtime.getSliceMap();
-			int workerId = sliceMap.machineIndexFor(t.id(), c.val);
+			DistTablePartitionMap partitionMap=(DistTablePartitionMap)runtime.getPartitionMap();
+			int workerId = partitionMap.machineIndexFor(t.id(), c.val);
 				
-			InetAddress workerInetAddr = workerAddrMap.get(workerId);				
-			WorkerCmd cmd = workerCmdMap.get(workerInetAddr);
+			InetSocketAddress workerAddr = workerAddrMap.get(workerId);
+			WorkerCmd cmd = workerCmdMap.get(workerAddr);
 			requestRunQuery(cmd, new IntWritable(t.id()), new Text(queryClassName), iterId, args);
 		} else {
 			tupleReqListener.setInvokeFinish(iterId.get(), false);

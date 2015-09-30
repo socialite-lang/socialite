@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 
-curDir=`pwd`
 bin=`dirname $0`
 bin=`cd $bin; pwd`
 
-$bin/launcher client org.python.util.socialite "$@"
+. "$bin/socialite-config.sh"
+
+. "$bin/prepare-launch.sh"
+
+JAVA_HEAP_MAX=-Xmx1024m
+JAVA_HEAP_MIN=-Xms16m
+JVM_HEAP_OPTS="$JAVA_HEAP_MAX $JAVA_HEAP_MIN"
+
+exec "$JAVA" $JVM_HEAP_OPTS $JVM_OPTS $SOCIALITE_OPTS -classpath "$CLASSPATH" org.python.util.socialite "$@"

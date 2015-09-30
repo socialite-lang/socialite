@@ -324,7 +324,7 @@ public class <name> extends TmpTableInst {
 	}
 	
 	@Override
-	public int virtualSliceNum() { return 1;}
+	public int virtualPartitionNum() { return 1;}
 	
 	public boolean isEmpty() {
 		return col0.isEmpty();

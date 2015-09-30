@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
@@ -205,7 +204,7 @@ public class VisitorCodeGen {
             String tableClass = t.className();
 
             visitorTmpl.add("imports", TableUtil.getTablePath(tableClass));
-            if (isTableSliced(t)) tableClass += "[]";
+            if (isTablePartitioned(t)) tableClass += "[]";
             visitorTmpl.add("fieldDecls", tableClass + " " + var);
         }
         declareDeltaTableIfAny();
@@ -214,7 +213,7 @@ public class VisitorCodeGen {
         visitorTmpl.add("fieldDecls", "final int " + epochIdVar());
         visitorTmpl.add("fieldDecls", "final int " + ruleIdVar());
         visitorTmpl.add("fieldDecls", "TableInstRegistry " + registryVar());
-        visitorTmpl.add("fieldDecls", "TableSliceMap " + sliceMapVar());
+        visitorTmpl.add("fieldDecls", "TablePartitionMap " + partitionMapVar());
         visitorTmpl.add("fieldDecls", "LockMap " + lockMapVar());
         for (Const c:rule.getConsts()) {
             String type = MyType.javaTypeName(c);
@@ -226,7 +225,6 @@ public class VisitorCodeGen {
         visitorTmpl.add("fieldDecls", "int " + firstTableIdx());
         visitorTmpl.add("fieldDecls", "int " + logCount());
 
-        generateHeapIfAny();
         //declareAggrVarsAndAlloc();
         declareRemoteTablesIfAny();
         maybeDeclareDeltaStepWindowVar();
@@ -261,7 +259,7 @@ public class VisitorCodeGen {
         if (!accumlDelta(rule)) return;
 
         String tableClass = deltaHeadT.className();
-        assert !isTableSliced(deltaHeadT);
+        assert !isTablePartitioned(deltaHeadT);
         if (useDeltaStepOpt()) {
             visitorTmpl.add("fieldDecls", tableClass+"[] "+deltaTableVar());
             visitorTmpl.add("fieldDecls", tableClass+"[] "+deltaTableReturnVar());
@@ -314,8 +312,7 @@ public class VisitorCodeGen {
     }
 
     boolean accumlDelta(Rule r) {
-        if (r.inScc() && !useDijkstraOpt())
-            return true;
+        if (r.inScc()) { return true; }
         if (r.hasPipelinedRules())
             return true;
         return false;
@@ -334,40 +331,8 @@ public class VisitorCodeGen {
         return true;
     }
 
-    void generateHeapIfAny() {
-        if (!useDijkstraOpt()) return;
-
-        AggrFunction f = headP.getAggrF();
-        ST heap = tmplGroup.getInstanceOf("heap");
-        String type = MyType.javaTypeName(f.getReturns().get(0));
-
-        if (f.getReturns().size() > 1) {
-            Object[] params = rule.firstP().inputParams();
-            Object[] paramsButFirst2 = Arrays.copyOfRange(params, 2,
-                    params.length);
-            if (allDontCareOrConst(paramsButFirst2)) {
-                // pass
-            } else {
-                Assert.not_implemented();
-                // type = tupleClass();
-            }
-        }
-        heap.add("type", type);
-        heap.add("fname", f.name().replace('.', '_'));
-        heap.add("f", f.name());
-        heap.add("tableClass", headT.className());
-
-        visitorTmpl.add("classDefs", heap);
-        if (useDijkstraOpt())
-            visitorTmpl.add("fieldDecls", heapClass() + " " + heapVar());
-    }
-
     Table getTable(Predicate p) {
         return tableMap.get(p.name());
-    }
-
-    String tableGetter(int tableId) {
-        return registryVar() + ".getTableInstArray(" + tableId + ")";
     }
 
     void generateConstructor() {
@@ -388,13 +353,13 @@ public class VisitorCodeGen {
             String argVar = "_$"+var;
             String tableClass = t.className();
 
-            if (isTableSliced(t)) tableClass+="[]";
+            if (isTablePartitioned(t)) tableClass+="[]";
             code.add("args", tableClass + " " + argVar);
             code.add("stmts", var + " = " + argVar);
         }
 
         String headVarType = headT.className();
-        if (isTableSliced(headT)) headVarType += "[]";
+        if (isTablePartitioned(headT)) headVarType += "[]";
 
         if (headT instanceof DeltaTable) {
             code.add("stmts", headTableVar()+"=null/*delta head table*/");
@@ -409,17 +374,11 @@ public class VisitorCodeGen {
         code.add("stmts", epochIdVar()+"=_$epochId");
         code.add("stmts", ruleIdVar()+"=_$ruleId");
         code.add("stmts", runtimeVar()+"=_$runtime");
-        code.add("stmts", sliceMapVar() + " = _$runtime.getSliceMap()");
+        code.add("stmts", partitionMapVar() + " = _$runtime.getPartitionMap()");
         code.add("stmts", lockMapVar() + " = _$runtime.getLockMap()");
         code.add("stmts", registryVar() + "= _$runtime.getTableRegistry()");
         code.add("stmts", firstTableIdx() + " = _$firstTableIdx");
         code.add("stmts", currentPredicateVar() + "=0");
-
-        if (useDijkstraOpt()) { // XXX: add baseIndex to heap class
-            int heapSize = headT.arrayBeginIndex() + headT.arrayTableSize();
-            code.add("stmts", heapVar() + "= new " + heapClass() + "("
-                    + heapSize + "," + headTableVar() + ")");
-        }
     }
 
     boolean hasChoiceFunc() {
@@ -493,13 +452,6 @@ public class VisitorCodeGen {
         }
         assert false:"never reaches here";
         return null;
-    }
-
-    boolean useDijkstraOpt() {
-        if (!conf.getDebugOpt("DijkstraOpt")) {
-            return false;
-        }
-        return isSequential() && rule.isDijkstraOpt();
     }
 
     boolean useDeltaStepOpt() {
@@ -717,7 +669,7 @@ public class VisitorCodeGen {
 
             Predicate nextP = (Predicate) rule.getBody().get(pos);
             Table joinT = tableMap.get(nextP.name());
-            String machineIdx = sliceMapVar() + ".machineIndexFor("+joinT.id()+", rangeOrHash)";
+            String machineIdx = partitionMapVar() + ".machineIndexFor("+joinT.id()+", rangeOrHash)";
             method.add("stmts", "int _$machineIdx=" + machineIdx);
             method.add("stmts", tableCls+" _$remoteT="+remoteTableVar(pos)+"[_$machineIdx]");
 
@@ -779,7 +731,7 @@ public class VisitorCodeGen {
 
     void genGetRemoteHeadTableReally(ST method, RemoteHeadTable rt, String tableCls) {
         // generating getRemoteTable_head (int _$rangeOrHash)
-        String machineIdx = sliceMapVar()+".machineIndexFor("+rt.origId()+", _$rangeOrHash)";
+        String machineIdx = partitionMapVar()+".machineIndexFor("+rt.origId()+", _$rangeOrHash)";
         method.add("stmts", "int _$machineIdx="+machineIdx);
         String getter = tableCls+" _$remoteT="+remoteTableVar("head")+"[_$machineIdx]";
         method.add("stmts", getter);
@@ -825,14 +777,6 @@ public class VisitorCodeGen {
          */
     }
 
-    boolean isDeltaFirstT() {
-        return getFirstPifDelta() != null;
-    }
-
-    int origHeadTid() {
-        return headT.id();
-    }
-
     void maybeSendToRemoteHead(ST code, String table,
                                String machineIdx, Object idxParam) {
         ST if_ = tmplGroup.getInstanceOf("if");
@@ -846,20 +790,15 @@ public class VisitorCodeGen {
             send = withoutLock;
         }
 
-        RemoteHeadTable rt = remoteHeadT();
-        String tableCls = rt.className();
-        /*String sliceIdx = sliceMapVar()+".getIndex("+rt.origId()+","+idxParam+")";
-        if (!shardedRemoteHeadT(rt)) sliceIdx = "0";*/
-        String sliceIdx="0";
-
-        sendToRemoteHead(send, table, sliceIdx, machineIdx);
+        String partitionIdx="0";
+        sendToRemoteHead(send, table, partitionIdx, machineIdx);
     }
 
-    void sendToRemoteHead(ST code, String table, String sliceIdx, String machineIdx) {
+    void sendToRemoteHead(ST code, String table, String partitionIdx, String machineIdx) {
         code.add("stmts", "SRuntime _$rt=SRuntimeWorker.getInst()");
         code.add("stmts", "RuleMap _$rm=_$rt.getRuleMap(getRuleId())");
         code.add("stmts", "int _$depRuleId=_$rm.getRemoteHeadDep(getRuleId())");
-        code.add("stmts", "EvalWithTable _$cmd=new EvalWithTable("+epochIdVar()+", _$depRuleId,"+table+","+sliceIdx+")");
+        code.add("stmts", "EvalWithTable _$cmd=new EvalWithTable("+epochIdVar()+", _$depRuleId,"+table+","+partitionIdx+")");
         String send = "boolean _$reuse = _$rt.sender().send("+machineIdx+","+"_$cmd)";
         code.add("stmts", send);
         code.add("stmts", "if(!_$reuse)"+nullifyRemoteTableMethod("head")+"("+machineIdx+")");
@@ -877,7 +816,7 @@ public class VisitorCodeGen {
             if_.add("stmts", withoutLock);
             send = withoutLock;
         }
-        String machineIdx = sliceMapVar()+".machineIndexFor("+t.id()+","+joinP.first()+")";
+        String machineIdx = partitionMapVar()+".machineIndexFor("+t.id()+","+joinP.first()+")";
         sendToRemoteBody(send, table, machineIdx, ""+joinP.getPos());
     }
     void maybeBroadcastToRemoteBody(ST code, String table, Predicate joinP) {
@@ -967,15 +906,15 @@ public class VisitorCodeGen {
                 } else {
                     Table t = getTable(p);
                     String tableVar = getVarName(p);
-                    if (isTableSliced(t)) {
+                    if (isTablePartitioned(t)) {
                         boolean first = rule.getBody().get(0).equals(p);
                         if (first) tableVar += "[" + firstTableIdx() + "]";
                         else if (isResolved(p, p.first())) {
-                            tableVar += "[" + sliceIdxGetter(t, p.first()) + "]";
+                            tableVar += "[" + partitionIdxGetter(t, p.first()) + "]";
                         } else {
                             ST for_ = tmplGroup.getInstanceOf("for");
                             for_.add("init", "int _$i=0");
-                            for_.add("cond", "_$i<"+sliceMapVar()+".sliceNum("+t.id()+")");
+                            for_.add("cond", "_$i<"+partitionMapVar()+".partitionNum("+t.id()+")");
                             for_.add("inc", "_$i++");
                             code.add("stmts", for_);
                             code = for_;
@@ -990,9 +929,7 @@ public class VisitorCodeGen {
         }
         if (iterStartP == null) {
             if (headTableLockAtStart()) {
-                int column = headTableWriteLockColumn();
-                Object param = headP.inputParams()[column];
-                ST withlock = CodeGen.withLock(lockMapVar(), headT.id(), sliceIdxGetter(headT, column, param));
+                ST withlock = CodeGen.withLock(lockMapVar(), headT.id(), partitionIdxGetter(headT, headP.first()));
                 code.add("stmts", withlock);
                 code = withlock;
             }
@@ -1001,37 +938,18 @@ public class VisitorCodeGen {
             return;
         }
 
-        if (useDijkstraOpt()) {
-            addDijkstraSuffixInRun(code);
-        }
-
         if (useShortCircuit()) {
             addShortCircuitSuffixInRun(code);
         }
         genRunMethodFini(run);
     }
 
-    void addDijkstraSuffixInRun(ST code) {
-        Predicate p = iterStartP;
-        code.add("stmts", currentPredicateVar() + "=" + p.getPos());
-
-        ST while_ = tmplGroup.getInstanceOf("while");
-        while_.add("cond", "!" + heapVar() + ".isEmpty()");
-        String type = MyType.javaTypeName(headP.first());
-        while_.add("stmts", type + " _$idx=" + heapVar() + ".popMin()");
-        while_.add("stmts", iterStartP.first() + "=_$idx");
-        // while_.add("stmts", "$headTable.iterate_first($idx, this)");
-        assert (!isTableSliced(headT));
-        while_.add("stmts", headTableVar() + ".iterate_by_0(_$idx, this)");
-        code.add("stmts", while_);
-    }
     boolean useShortCircuit() {
         return isSequential() &&
                 rule.isLeftRec() && !rule.isDijkstraOpt() &&
                 iterStartP instanceof DeltaPredicate;
     }
     void addShortCircuitSuffixInRun(ST code) {
-        assert !useDijkstraOpt();
         assert rule.isLeftRec():"rule is not left rec";
         assert iterStartP instanceof DeltaPredicate:"iterStartP is not DeltaPredicate:"+iterStartP;
 
@@ -1131,8 +1049,6 @@ public class VisitorCodeGen {
     }
 
     boolean bodyTableLockRequired() {
-        if (conf.isSequential()) return false;
-
         if (headT instanceof DeltaTable) {
             DeltaTable deltaHeadT = (DeltaTable)headT;
             Table t = deltaHeadT.origT();
@@ -1270,13 +1186,13 @@ public class VisitorCodeGen {
     }
     String iterateRangeDynamic(String tableVar) {
         ST ifElse = tmplGroup.getInstanceOf("ifElse");
-        ifElse.add("cond", tableVar + ".virtualSliceNum()>1");
+        ifElse.add("cond", tableVar + ".virtualPartitionNum()>1");
 
-        String sliceNum = tableVar + ".virtualSliceNum()";
-        String sliceSize = "((" + tableVar + ".size()+" + sliceNum + "-1)/"
-                + sliceNum + ")";
-        String from = sliceSize + "*" + firstTableIdx();
-        String to = sliceSize + "*" + "(" + firstTableIdx() + "+1)-1";
+        String partitionNum = tableVar + ".virtualPartitionNum()";
+        String partitionSize = "((" + tableVar + ".size()+" + partitionNum + "-1)/"
+                + partitionNum + ")";
+        String from = partitionSize + "*" + firstTableIdx();
+        String to = partitionSize + "*" + "(" + firstTableIdx() + "+1)-1";
         ifElse.add("stmts", tableVar+".iterate_range("+from+","+to+",this)");
         ifElse.add("elseStmts", tableVar + ".iterate(this)");
         return ifElse.render();
@@ -1315,7 +1231,7 @@ public class VisitorCodeGen {
         else assert !(t instanceof GeneratedT);
 
         int rangeCol = Analysis.firstShardedColumnWithVar(iterStartP, t);
-        String range = sliceMapVar()+".getRange("+id+","+rangeCol+","+firstTableIdx()+")";
+        String range = partitionMapVar()+".getRange("+id+","+firstTableIdx()+")";
         String begin = range + "[0]", end = range + "[1]";
         Object[] params = iterStartP.inputParams();
         int nestedArrayIdx = resolvedSingleNestedArrayIndex(iterStartP);
@@ -1329,10 +1245,6 @@ public class VisitorCodeGen {
         return invokeIter;
     }
 
-    String iteratePrefix(Predicate p, String tableVar) {
-        return tableVar + ".iterate("+p.first()+", this)";
-    }
-
     boolean isConstOrResolved(Set<Variable> resolvedVars, Object varOrConst) {
         if (varOrConst instanceof Variable) {
             Variable v = (Variable) varOrConst;
@@ -1341,19 +1253,9 @@ public class VisitorCodeGen {
         return true;
     }
 
-    boolean allVarsResolved(Set<Variable> resolvedVars, Predicate p) {
-        for (Object param : p.inputParams()) {
-            if (!isConstOrResolved(resolvedVars, param))
-                return false;
-        }
-        return true;
-    }
-
     boolean isConstOrDontCare(Object o) {
-        if (o instanceof Variable)
-            return isDontCare(o);
-        else
-            return true;
+        if (o instanceof Variable) { return isDontCare(o); }
+        else { return true; }
     }
 
     boolean isDontCare(Object o) {
@@ -1558,18 +1460,6 @@ public class VisitorCodeGen {
                 Assert.impossible();
         }
         insertUpdateAccumlOrPipelining(code);
-        if (useDijkstraOpt()) {
-            Set<Variable> resolved2 = new HashSet<Variable>();
-            int groupbyNum = headP.functionIdx();
-            for (int i = 0; i < groupbyNum; i++) {
-                Object v = iterStartP.inputParams()[i];
-                if (v instanceof Variable)
-                    resolved2.add((Variable) v);
-            }
-            Table iterStartT = tableMap.get(iterStartP.name());
-            if (!headT.hasSameNestStructure(iterStartT))
-                genVisitMethodFor(iterStartP, resolved2);
-        }
     }
 
     void assertCaseOrIterOrNull(ST code) {
@@ -1588,16 +1478,6 @@ public class VisitorCodeGen {
     boolean hasRemoteRuleHead() {
         if (!conf.isDistributed()) return false;
         return Analysis.hasRemoteRuleHead(rule, tableMap);
-    }
-
-    ST ifLocalHead(ST code) {
-        Table t = headT;
-        ST if_ = tmplGroup.getInstanceOf("if");
-        code.add("stmts", if_);
-        if_.add("cond", sliceMapVar()+".isLocal("+t.id()+","+headP.first()+")");
-        ST ifLocal = tmplGroup.getInstanceOf("simpleStmts");
-        if_.add("stmts", ifLocal);
-        return ifLocal;
     }
 
     void insertUpdateAccumlOrPipelining(ST code) {
@@ -1628,14 +1508,14 @@ public class VisitorCodeGen {
         Table t = headT;
         ST ifLocalElse = tmplGroup.getInstanceOf("ifElse");
         code.add("stmts", ifLocalElse);
-        ifLocalElse.add("cond", sliceMapVar()+".isLocal("+t.id()+","+headP.first()+")");
+        ifLocalElse.add("cond", partitionMapVar()+".isLocal("+t.id()+","+headP.first()+")");
         ST ifLocal = tmplGroup.getInstanceOf("simpleStmts");
         ifLocalElse.add("stmts", ifLocal);
 
         RemoteHeadTable rt = remoteHeadT();
         String tableCls = rt.className();
         ifLocalElse.add("elseStmts", tableCls + " _$remoteT");
-        ifLocalElse.add("elseStmts", "int _$machineIdx=" + sliceMapVar()+
+        ifLocalElse.add("elseStmts", "int _$machineIdx=" + partitionMapVar()+
                             ".machineIndexFor("+rt.origId()+","+headP.first()+")");
         ifLocalElse.add("elseStmts", "_$remoteT="+getRemoteHeadTable(headP.first()));
 
@@ -1664,7 +1544,7 @@ public class VisitorCodeGen {
         Table joinT = tableMap.get(p.name());
         ST ifElse = tmplGroup.getInstanceOf("ifElse");
         code.add("stmts", ifElse);
-        ifElse.add("cond", sliceMapVar()+".isLocal(" + joinT.id()+", "+p.first() + ")");
+        ifElse.add("cond", partitionMapVar()+".isLocal(" + joinT.id()+", "+p.first() + ")");
         ST ifLocal = tmplGroup.getInstanceOf("simpleStmts");
         ifElse.add("stmts", ifLocal);
 
@@ -1701,21 +1581,17 @@ public class VisitorCodeGen {
         return args;
     }
     void genAccumlDeltaIfAny(ST code) {
-        if (useDijkstraOpt()) {
-            code.add("stmts", heapVar() + ".insert(" + headP.first() + ")");
-            return;
-        }
         if (!accumlDelta(rule))
             return;
 
         if (useDeltaStepOpt()) {
             AggrFunction f = headP.getAggrF();
             assert f!=null && f.getReturns().size()==1;
-            String deltaTableSlice = "getDeltaTable("+toArgs(f.getReturns())+")";
-            code.add("stmts", updateHeadParamsTo(deltaTableSlice));
+            String deltaTable = "getDeltaTable("+toArgs(f.getReturns())+")";
+            code.add("stmts", updateHeadParamsTo(deltaTable));
         } else {
-            String deltaTableSlice = "getDeltaTable()";
-            code.add("stmts", updateHeadParamsTo(deltaTableSlice));
+            String deltaTable = "getDeltaTable()";
+            code.add("stmts", updateHeadParamsTo(deltaTable));
         }
     }
 
@@ -1748,30 +1624,28 @@ public class VisitorCodeGen {
             return code;
         }
 
-        String headTableSlice = headTableVar();
-        if (isTableSliced(headT)) {
-            String sliceIdx;
+        String headTablePartition= headTableVar();
+        if (isTablePartitioned(headT)) {
+            String partitionIdx;
             if (updateFromRemoteHeadT()) {
-                sliceIdx = sliceIdxGetter(headT, headP.first());
+                partitionIdx = partitionIdxGetter(headT, headP.first());
             } else if (Analysis.updateParallelShard(rule, tableMap)) {
-                sliceIdx = firstTableIdx();
+                partitionIdx = firstTableIdx();
             } else {
-                sliceIdx = sliceIdxGetter(headT, headP.first());
+                partitionIdx = partitionIdxGetter(headT, headP.first());
             }
-            headTableSlice += "[" + sliceIdx + "]";
+            headTablePartition += "[" + partitionIdx + "]";
         }
         String _headTable = "_$$headTable";
-        code.add("stmts", headT.className()+" "+_headTable+"="+headTableSlice);
+        code.add("stmts", headT.className()+" "+_headTable+"="+headTablePartition);
 
         if (priorTestForMinMax())
             genPriorTestForMinMax(code, _headTable);
 
         ST prevCode=code;
         if (headTableLockAtEnd()) {
-            int column = headTableWriteLockColumn();
-            Param param = headP.inputParams()[column];
             ST withLock;
-            withLock = CodeGen.withLock(lockMapVar(), headT.id(),sliceIdxGetter(headT, column, param));
+            withLock = CodeGen.withLock(lockMapVar(), headT.id(), partitionIdxGetter(headT, headP.first()));
             code.add("stmts", withLock);
             code = withLock;
         }
@@ -1929,14 +1803,14 @@ public class VisitorCodeGen {
         return insert;
     }
 
-    String insertHeadParamsTo(String tableSlice) {
-        String insert = tableSlice + ".insert";
+    String insertHeadParamsTo(String tablePartition) {
+        String insert = tablePartition + ".insert";
         insert += makeHeadParamsArgs();
         return insert;
     }
 
-    String updateHeadParamsTo(String tableSlice) {
-        String update = tableSlice + ".update";
+    String updateHeadParamsTo(String tablePartition) {
+        String update = tablePartition + ".update";
         update += makeHeadParamsArgs();
         return update;
     }
@@ -1988,20 +1862,15 @@ public class VisitorCodeGen {
         code.add("stmts", if_);
     }
 
-    String sliceIdxGetter(Table t, Object firstParam) {
-        return sliceIdxGetter(t, 0, firstParam);
-    }
-
-    String sliceIdxGetter(Table t, int column, Object val) {
+    String partitionIdxGetter(Table t, Object val) {
         if (isSequential()) return "0";
 
         int id = t.id();
-        Column c = t.getColumn(column);
+        Column c = t.getColumn(0);
         if (c.hasRange()) {
-            return sliceMapVar() + ".getRangeIndex("+id+","+column+","+val+")";
+            return partitionMapVar() + ".getRangeIndex("+id+","+val+")";
         } else {
-            assert column == 0;
-            return sliceMapVar() + ".getHashIndex("+id+","+val+")";
+            return partitionMapVar() + ".getHashIndex("+id+","+val+")";
         }
     }
 
@@ -2097,7 +1966,6 @@ public class VisitorCodeGen {
     }
 
     boolean headTableLockNeeded() {
-        if (conf.isSequential()) { return false; }
         if (headT instanceof DeltaTable) { return false; }
 
         return true;
@@ -2165,16 +2033,16 @@ public class VisitorCodeGen {
         String invokeIterate = invokeIterate(p, resolved);
 
         String tableVar = getVarName(p);
-        if (isTableSliced(t)) {
-            boolean sliceSelected = Analysis.isResolved(resolvedVarsArray, p, p.first());
-            if (sliceSelected) {
-                tableVar += "[" + sliceIdxGetter(t, p.first()) + "]";
+        if (isTablePartitioned(t)) {
+            boolean partitionSelected = Analysis.isResolved(resolvedVarsArray, p, p.first());
+            if (partitionSelected) {
+                tableVar += "[" + partitionIdxGetter(t, p.first()) + "]";
             } else {
                 int tid = t.id();
                 ST for_ = CodeGen.getVisitorST("for");
                 code.add("stmts", for_);
                 for_.add("init", "int _$$i=0");
-                for_.add("cond", "_$$i<" + sliceMapVar() + ".sliceNum(" + tid + ")");
+                for_.add("cond", "_$$i<" + partitionMapVar() + ".partitionNum(" + tid + ")");
                 for_.add("inc", "_$$i++");
                 tableVar += "[_$$i]";
                 code = for_;
@@ -2309,14 +2177,14 @@ public class VisitorCodeGen {
 
         String condition;
         String var = getVarName(p);
-        if (isTableSliced(t)) {
+        if (isTablePartitioned(t)) {
             if (dontcares.length>0 && dontcares[0]) {
                 String fallthrou=CodeGen.uniqueVar("_$fallthrou");
                 code.add("stmts", "boolean "+fallthrou+"=true");
 
                 ST for_ = tmplGroup.getInstanceOf("for");
                 for_.add("init", "int _$$i=0");
-                for_.add("cond", "_$$i<"+sliceMapVar()+".sliceNum("+t.id()+")");
+                for_.add("cond", "_$$i<"+partitionMapVar()+".partitionNum("+t.id()+")");
                 for_.add("inc", "_$$i++");
                 code.add("stmts", for_);
                 ST if2_ = CodeGen.getVisitorST("if");
@@ -2329,7 +2197,7 @@ public class VisitorCodeGen {
                 if (p.isNegated()) condition = "!"+fallthrou;
                 else condition = fallthrou;
             } else {
-                var += "["+sliceIdxGetter(t, p.first())+"]";
+                var += "["+ partitionIdxGetter(t, p.first())+"]";
                 if (p.isNegated()) condition = var+contains;
                 else condition = "!" + var+contains;
             }
@@ -2391,9 +2259,8 @@ public class VisitorCodeGen {
         return true;
     }
 
-    boolean isTableSliced(Table t) {
-        if (isSequential()) return false;
-        return t.isSliced();
+    boolean isTablePartitioned(Table t) {
+        return t.isPartitioned();
     }
 
     public static String getVarName(String table) {
@@ -2417,11 +2284,6 @@ public class VisitorCodeGen {
         return name;
     }
 
-    String heapClass() {
-        Function f = headP.getAggrF();
-        return "Heap_" + f.name().replace('.', '_');
-    }
-
     int machineNum() {
         return SRuntimeMaster.getInst().getWorkerAddrMap().size();
     }
@@ -2440,7 +2302,7 @@ public class VisitorCodeGen {
     String firstTableIdx() { return "$firstTableIdx"; }
     String registryVar() { return "$registry"; }
     String lockMapVar() { return "$lockMap"; }
-    String sliceMapVar() { return "$sliceMap"; }
+    String partitionMapVar() { return "$partitionMap"; }
     String runtimeVar() { return "$runtime"; }
     String ruleIdVar() { return "$ruleId"; }
     String epochIdVar() { return "$epochId"; }
@@ -2448,7 +2310,6 @@ public class VisitorCodeGen {
     String remoteBodyTableMapVar() { return "$remoteBodyTableMap"; }
     String remoteHeadTableMapVar() { return "$remoteHeadTableMap"; }
     String isUpdatedVar() { return "$isUpdated"; }
-    String heapVar() { return "$heapQueue"; }
     String aggrVar() { return "$aggrVar"; }
 
     String deltaStepWindowVar() {

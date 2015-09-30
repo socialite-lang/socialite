@@ -4,6 +4,8 @@ package socialite.dist.master;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.Set;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -13,39 +15,42 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.Server;
+import org.apache.hadoop.ipc.VersionedProtocol;
 
+import org.apache.hadoop.net.NetUtils;
 import socialite.dist.ErrorRecord;
 import socialite.dist.Host;
 import socialite.dist.IdleStat;
+import socialite.dist.PortMap;
 import socialite.dist.worker.WorkerCmd;
 import socialite.engine.Config;
 import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
-import socialite.resource.SRuntime;
 import socialite.util.TextArrayWritable;
 
 public class WorkerReqListener implements WorkerRequest {
 	public static final Log L=LogFactory.getLog(WorkerReqListener.class);
 	
-	String masterAddr;
-	int reqListenPort;
 	MasterNode master;
 	Config conf;
 	public WorkerReqListener(Config _conf, MasterNode _master) {
 		conf = _conf;
-		masterAddr=conf.portMap().masterAddr();
-		reqListenPort=conf.portMap().workerReqListen();
-		master=_master;		
+		master=_master;
 	}
 	
 	public void start() {
 		try {			
-			Configuration hConf = new Configuration();
-			int numHandlers = 16;// mostly to handle idle request and halt request
-			Server server = RPC.getServer(this, masterAddr, reqListenPort, numHandlers, false, hConf);
-			server.start();
+			Server server = new RPC.Builder(new Configuration()).
+                    setInstance(this).
+                    setProtocol(WorkerRequest.class).
+                    setBindAddress(PortMap.master().masterAddr()).
+                    setPort(PortMap.master().usePort("workerReq")).
+                    setNumHandlers(12).
+                    build();
+            server.start();
 		} catch (IOException e) {
 			L.fatal("Exception while starting WorkerReqListener:");
 			L.fatal(ExceptionUtils.getStackTrace(e));
@@ -53,33 +58,11 @@ public class WorkerReqListener implements WorkerRequest {
 	}
 	
 	@Override
-	public synchronized void register(Text workerIp) {
-		Set<InetAddress> otherAddrSet = master.getWorkerAddrs();		
-		Text[] otherAddrTexts=new Text[otherAddrSet.size()];
-		int i=0;
-		for (InetAddress inet:otherAddrSet) {
-			otherAddrTexts[i++]=new Text(inet.getHostAddress());
-		}
-		boolean firstWorker = (i==0);
-		TextArrayWritable restAddrs=new TextArrayWritable(otherAddrTexts);
-		
-		String addr=workerIp.toString();
-		master.addWorkerAddr(addr);
-		WorkerCmd cmd = master.getWorkerCmd(addr);		
-		if (firstWorker) {
-			int workerNum;
-			if (Config.systemWorkerNum>0) {
-				workerNum = Config.systemWorkerNum;
-			} else {
-				workerNum = cmd.getWorkerThreadNum().get();
-			}
-			master.setWorkerConf(Config.dist(workerNum));
-		}
-		Config workerConf = master.getWorkerConf();
-		cmd.setWorkerThreadNum(new IntWritable(workerConf.getWorkerThreadNum()));
-		cmd.makeConnections(restAddrs);
-        master.addRegisteredWorker(Host.getAddr(addr));
+	public synchronized void register(String addr, int cmdPort, int dataPort) {
+		InetSocketAddress workerAddr = new InetSocketAddress(addr, cmdPort);
+		master.registerWorker(workerAddr, dataPort);
 	}
+
 
 	public synchronized void reportIdle(IntWritable _epochId, IntWritable _workerId, IntWritable _time) {
         SRuntimeMaster runtime = SRuntimeMaster.getInst();
@@ -122,8 +105,21 @@ public class WorkerReqListener implements WorkerRequest {
 	public long getProtocolVersion(String arg0, long arg1) throws IOException {
 		return WorkerRequest.versionID;
 	}
-	
-	public void handleError(IntWritable _workerid, IntWritable _ruleid, Text _errorMsg) {
+
+    @Override
+    public ProtocolSignature getProtocolSignature(String protocol, long clientVersion, int clientMethodsHash)
+            throws IOException {
+        Class<? extends VersionedProtocol> inter;
+        try {
+            inter = (Class<? extends VersionedProtocol>)getClass().getGenericInterfaces()[0];
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+        return ProtocolSignature.getProtocolSignature(clientMethodsHash,
+                    getProtocolVersion(protocol, clientVersion), inter);
+    }
+
+    public void handleError(IntWritable _workerid, IntWritable _ruleid, Text _errorMsg) {
         L.warn("WorkerReqListener: handleError is called with error message:"+_errorMsg);
 
 		try {
@@ -137,7 +133,7 @@ public class WorkerReqListener implements WorkerRequest {
 		int ruleid = _ruleid.get();
 		String errorMsg = _errorMsg.toString();
 		WorkerAddrMap workerAddrMap = SRuntimeMaster.getInst().getWorkerAddrMap();
-		InetAddress workerAddr = workerAddrMap.get(_workerid.get());
+		InetSocketAddress workerAddr = workerAddrMap.get(_workerid.get());
 		errorMsg = workerAddr + ":"+errorMsg;
 		ErrorRecord.getInst().addErrorMsg(ruleid, errorMsg);
 	}

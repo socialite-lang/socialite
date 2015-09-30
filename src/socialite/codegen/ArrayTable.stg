@@ -76,11 +76,6 @@ package socialite.tables;
 		isEmpty = true;
 	}
 	
-	public int virtualSliceNum() {
-		Assert.not_supported();
-		return 0; // this should not be called!	
-	}
-	
 	public int totalAllocSize() {
 		int totalAlloc = 8+filled.length();
 		<columns:{c|totalAlloc += 12+<c.typeSize>*filled.length();<\n>}>

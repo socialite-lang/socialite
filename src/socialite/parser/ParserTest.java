@@ -19,6 +19,17 @@ import socialite.util.SociaLiteException;
 
 public class ParserTest {
 
+	static class TestAnalysis extends Analysis {
+		boolean isDist = false;
+		public TestAnalysis(Parser _p) {
+			super(_p);
+		}
+		void setDistributed() { isDist = true; }
+
+		@Override
+		protected boolean isDistributed() { return isDist; }
+
+	}
 	static void test1() {
 		// not really a PageRank algorithm
 		String prQuery2 = "Edge(int s,int t).\n"
@@ -32,7 +43,6 @@ public class ParserTest {
 		}
 
 		Assert.true_(p.getRules().size() == 1, "rules:"+p.getRules());
-		//Analysis analysis = new Analysis(p.getRules(), p.getTables(), null, p.getQuery());
 		Analysis analysis = new Analysis(p);
 		analysis.run();
 
@@ -57,7 +67,6 @@ public class ParserTest {
 		p.parse();
 
 		Assert.true_(p.getRules().size() == 1);
-		//Analysis analysis = new Analysis(p.getRules(), p.getTables(), null, p.getQuery());
 		Analysis analysis = new Analysis(p);
 		analysis.run();
 
@@ -139,7 +148,6 @@ public class ParserTest {
 		p.parse();
 
 		Analysis analysis = new Analysis(p);
-				//new Analysis(p.getRules(), p.getTables(), null, p.getQuery());
 		analysis.run();
 		Rule r = p.getRules().get(1);
 		Expr expr = (Expr)r.getBody().get(1);		
@@ -186,7 +194,6 @@ public class ParserTest {
 		Parser p = new Parser(prQuery);
 		p.parse();
 
-		//Analysis an = new Analysis(p.getRules(), p.getTables(), null, p.getQuery());
 		Analysis an = new Analysis(p);
 		an.run();
 		List<Epoch> strata=an.getEpochs();
@@ -234,7 +241,6 @@ public class ParserTest {
 		Parser p = new Parser();
 		p.parse(query);
 
-		//Analysis an = new Analysis(p.getRules(), p.getTables(), null, p.getQuery());
 		Analysis an = new Analysis(p);
 		an.run();
 
@@ -272,7 +278,6 @@ public class ParserTest {
 		Parser p = new Parser();
 		p.parse(query);
 		
-		//Analysis an = new Analysis(p.getRules(), p.getTables(), null, p.getQuery());
 		Analysis an = new Analysis(p);
 		an.run();
 		
@@ -459,7 +464,7 @@ public class ParserTest {
 		
 		Parser p=new Parser();
 		p.parse(query);
-		Analysis an=new Analysis(p, Config.par(2));
+		Analysis an=new Analysis(p);
 		an.run();
 		List<Epoch> epochs=an.getEpochs();
 		Epoch e=epochs.get(0);
@@ -483,7 +488,8 @@ public class ParserTest {
 		"?-InEdge(s,t).\n";
 		Parser p=new Parser();
 		p.parse(query);
-		Analysis an=new Analysis(p, Config.dist(4));
+		TestAnalysis an=new TestAnalysis(p);
+		an.setDistributed();
 		an.run();	
 		
 		for (Table t:an.getRemoteTables()) {
@@ -498,10 +504,11 @@ public class ParserTest {
 		"Attr(int a,int b).\n" +
 		"Attr(a,b) :- Edge(a,b).\n";
 		Parser p=new Parser();		
-		Analysis an;
+		TestAnalysis an;
 		try {
 			p.parse(query);
-			an=new Analysis(p, Config.dist());
+			an=new TestAnalysis(p);
+			an.setDistributed();
 			an.run();
 			Assert.die("should not reach here");
 		} catch (ParseException e) {/* expected */}
@@ -512,7 +519,8 @@ public class ParserTest {
 		p=new Parser();		
 		try {
 			p.parse(query);
-			an=new Analysis(p, Config.dist());
+			an=new TestAnalysis(p);
+			an.setDistributed();
 			an.run();
 			Assert.die("should not reach here");
 		} catch (ParseException e) { /* expected */ }
@@ -523,13 +531,13 @@ public class ParserTest {
 				"Foo(a, $min(b)) :- a=1, b=20.\n";
 		Parser p=new Parser();
 		p.parse(query);
-		Analysis an=new Analysis(p, Config.par(4));
+		Analysis an=new Analysis(p);
 		an.run();
 		
 		query ="Bar(int a:0..100, (int i, double d)). \n" +
 				"Bar(a, $min(b), c) :- a=1, b=20, c=1.1.\n";
 		p.parse(query);
-		an=new Analysis(p, Config.par(4));
+		an=new Analysis(p);
 		try { 
 			an.run();
 			assert false:"Expecting an exception";
@@ -543,7 +551,7 @@ public class ParserTest {
 				
 		Parser p=new Parser();
 		p.parse(query);
-		Analysis an=new Analysis(p, Config.par(4));
+		Analysis an=new Analysis(p);
 		an.run();
 		
 		query ="Foo(int a:iter, int b). \n" +
@@ -552,7 +560,7 @@ public class ParserTest {
 				"Foo(1,b) :- Foo(0, c), b=c+1.\n";
 		p = new Parser();
 		p.parse(query);
-		an=new Analysis(p, Config.par(4));
+		an=new Analysis(p);
 		an.run();
 		
 		query = "Baz(int a, String b, (int i:iterator)).\n";
@@ -567,17 +575,17 @@ public class ParserTest {
 				"Foo(1,b) :- Foo(0, c), b=c+1.\n";
 		p = new Parser();
 		p.parse(query);
-		an=new Analysis(p, Config.par(4));
+		an=new Analysis(p);
 		an.run();
 		query = "Foo(2,b) :- Foo(1, c), b=c+1.\n";
 		p.parse(query);
-		an = new Analysis(p, Config.par(4));
+		an = new Analysis(p);
 		an.run();
 		List<Rule> rules = an.getRules();
 		
 		query = "Foo(3,b) :- Foo(2, c), b=c+1.\n";
 		p.parse(query);
-		an = new Analysis(p, Config.par(4));
+		an = new Analysis(p);
 		an.run();
 		rules = an.getRules();
 	}

@@ -1,7 +1,7 @@
 package socialite.tables;
 
 
-import socialite.resource.TableSliceMap;
+import socialite.resource.TablePartitionMap;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -37,10 +37,10 @@ public class TupleBlock {
     }
     public int getTableId() { return tableid; }
 
-    public Iterator<Tuple> iterator(final TableSliceMap sliceMap) {
+    public Iterator<Tuple> iterator(final TablePartitionMap sliceMap) {
         return iterator(sliceMap, -1);
     }
-    public Iterator<Tuple> iterator(final TableSliceMap sliceMap, final int sliceIdx) {
+    public Iterator<Tuple> iterator(final TablePartitionMap sliceMap, final int sliceIdx) {
         return new Iterator<Tuple>() {
             Tuple t = tuple.clone();
             int pos = 0;

@@ -115,7 +115,7 @@ public class VisitorBaseGen {
 			}		
 			if (decls.isEmpty()) continue;
 			
-			Compiler c = new Compiler(conf.isVerbose());
+			Compiler c = new Compiler();
 			VisitorBaseGen baseGen = new VisitorBaseGen(false);
 			String fullname = VisitorCodeGen.visitorPackage+"."+baseGen.name();
 			t.setVisitorInterface(fullname);

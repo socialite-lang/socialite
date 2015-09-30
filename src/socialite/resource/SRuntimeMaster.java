@@ -6,17 +6,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import socialite.codegen.Epoch;
 import socialite.dist.IdleStat;
 import socialite.dist.master.MasterNode;
 import socialite.dist.worker.WorkerConnPool;
 import socialite.engine.Config;
-import socialite.parser.Rule;
 import socialite.parser.Table;
 
 
 public class SRuntimeMaster extends SRuntime {
-	public static final Log L=LogFactory.getLog(SRuntimeMaster.class);
+    public static final Log L=LogFactory.getLog(SRuntimeMaster.class);
     static SRuntimeMaster inst=null;
     public static SRuntimeMaster createTest(WorkerAddrMap addrMap) {
         inst =new SRuntimeMaster(addrMap, Config.dist(1));
@@ -28,18 +26,18 @@ public class SRuntimeMaster extends SRuntime {
     }
     public static SRuntimeMaster getInst() { return inst; }
 
-	WorkerAddrMap workerAddrMap;
-	WorkerConnPool workerConn;
-	Sender sender;
+    WorkerAddrMap workerAddrMap;
+    WorkerConnPool workerConn;
+    Sender sender;
     ConcurrentHashMap<Integer, IdleStat> idleStatMap;
 
-	public SRuntimeMaster(WorkerAddrMap _addrMap, Config _conf) {
-		// used by master-node
-		workerAddrMap = _addrMap;		
-		conf=_conf;
+    public SRuntimeMaster(WorkerAddrMap _addrMap, Config _conf) {
+        // used by master-node
+        workerAddrMap = _addrMap;
+        conf=_conf;
         workerConn = null;
         sender = null;
-		tableMap = new HashMap<String, Table>();
+        tableMap = new HashMap<String, Table>();
         idleStatMap = new ConcurrentHashMap<Integer, IdleStat>(512, 0.75f, 64);
     }
 
@@ -82,19 +80,16 @@ public class SRuntimeMaster extends SRuntime {
     }
 
     public WorkerAddrMap getWorkerAddrMap() {
-		return workerAddrMap;
-	}
-	public Sender sender() { return sender; }
-	public Config getConf() { return conf; }
+        return workerAddrMap;
+    }
+    public Sender sender() { return sender; }
+    public Config getConf() { return conf; }
 
-    public TableSliceMap getSliceMap() {
-		if (sliceMap==null) {
-			int sliceNum = conf.sliceNum();
-			int virtualSliceNum = conf.virtualSliceNum();
-			int minSliceSize = conf.minSliceSize();					
-			sliceMap = new DistTableSliceMap(workerAddrMap, sliceNum, virtualSliceNum, minSliceSize);
-		}
-		return sliceMap;
-	}
+    public TablePartitionMap getPartitionMap() {
+        if (partitionMap==null) {
+            partitionMap = new DistTablePartitionMap(workerAddrMap);
+        }
+        return partitionMap;
+    }
 
 }

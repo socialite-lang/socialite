@@ -11,8 +11,7 @@ if [ -f "${SOCIALITE_CONF_DIR}/socialite-env.sh" ]; then
 fi
 
 SOCIALITE_MASTER=`cat "${SOCIALITE_CONF_DIR}/master"|sed "s/#.*$//;/^$/d"|head -1`
-HADOOP_CONF_DIR="${HADOOP_HOME}/conf"
-HADOOP2_CONF_DIR="${HADOOP_HOME}/etc/hadoop"
+HADOOP_CONF_DIR="${HADOOP_HOME}/etc/hadoop/"
 export HADOOP_PREFIX="${HADOOP_HOME}"
 
 if [ "x$SOCIALITE_OUTPUT_DIR" = "x" ]; then
@@ -21,13 +20,7 @@ fi
 
 EXT="${SOCIALITE_PREFIX}/ext"
 #PREV_CP="${CLASSPATH}"
-CLASSPATH="${CLASSPATH}:${SOCIALITE_CONF_DIR}"
-if [ -f "${HADOOP_HOME}/bin/yarn" ]; then
-    HADOOP2_CLASSPATH=`${HADOOP_HOME}/bin/yarn classpath`
-    CLASSPATH=${CLASSPATH}:${HADOOP2_CONF_DIR}:${HADOOP2_CLASSPATH}
-else
-    CLASSPATH=${CLASSPATH}:${HADOOP_CONF_DIR}:${EXT}/hadoop-core-1.2.1.jar
-fi
+CLASSPATH="${CLASSPATH}:${SOCIALITE_CONF_DIR}:${HADOOP_CONF_DIR}"
 
 CLASSPATH=${CLASSPATH}:${EXT}/commons-lang3-3.1.jar
 CLASSPATH=${CLASSPATH}:${EXT}/commons-lang-2.6.jar
@@ -37,8 +30,11 @@ CLASSPATH=${CLASSPATH}:${EXT}/log4j-1.2.16.jar
 CLASSPATH=${CLASSPATH}:${EXT}/jython.jar
 CLASSPATH=${CLASSPATH}:${EXT}/ST-4.0.7.jar:${EXT}/antlr-3.5.2-complete-no-st3.jar:${EXT}/trove-3.0.3.jar 
 CLASSPATH=${CLASSPATH}:${EXT}/concurrent-prim-map-1.0.0.jar
-
-#CLASSPATH=${CLASSPATH}:${EXT}/jfreechart-1.0.14-all.jar
+CLASSPATH=${CLASSPATH}:${EXT}/commons-collections-3.2.1.jar
+CLASSPATH=${CLASSPATH}:${EXT}/hadoop/*
+if [ -e "${HADOOP_PREFIX}/bin/yarn" ] ; then
+  CLASSPATH=${CLASSPATH}:`${HADOOP_PREFIX}/bin/yarn classpath`
+fi
 
 CLASSPATH=${CLASSPATH}:${SOCIALITE_PREFIX}/classes
 CLASSPATH=${CLASSPATH}:${SOCIALITE_PREFIX}/classes/socialite.jar
