@@ -38,6 +38,7 @@ import socialite.resource.WorkerAddrMap;
 import socialite.tables.ConstsWritable;
 import socialite.tables.QueryVisitor;
 import socialite.util.Loader;
+import socialite.util.UnresolvedSocketAddr;
 
 // compiles a give program from the master, and distributes the class files to workers.
 public class DistEngine {
@@ -47,9 +48,9 @@ public class DistEngine {
 	Config conf;
 	SRuntimeMaster runtime;
 	WorkerAddrMap workerAddrMap;
-	Map<InetSocketAddress, WorkerCmd> workerCmdMap;
+	Map<UnresolvedSocketAddr, WorkerCmd> workerCmdMap;
 		
-	public DistEngine(WorkerAddrMap _addrMap, Map<InetSocketAddress, WorkerCmd> _cmdMap) {
+	public DistEngine(WorkerAddrMap _addrMap, Map<UnresolvedSocketAddr, WorkerCmd> _cmdMap) {
 		runtime = SRuntimeMaster.getInst();
 		parser = new Parser(runtime.getTableMap());
 		conf = Config.dist();
@@ -189,7 +190,7 @@ public class DistEngine {
 			DistTablePartitionMap partitionMap=(DistTablePartitionMap)runtime.getPartitionMap();
 			int workerId = partitionMap.machineIndexFor(t.id(), c.val);
 				
-			InetSocketAddress workerAddr = workerAddrMap.get(workerId);
+			InetSocketAddress workerAddr = workerAddrMap.get(workerId).getInetSocketAddr();
 			WorkerCmd cmd = workerCmdMap.get(workerAddr);
 			requestRunQuery(cmd, new IntWritable(t.id()), new Text(queryClassName), iterId, args);
 		} else {

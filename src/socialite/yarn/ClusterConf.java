@@ -14,12 +14,9 @@ public class ClusterConf {
     ClusterConf() {
         numWorkers = Integer.parseInt(System.getProperty("socialite.worker.num", "2"));
         numWorkerThreads = Integer.parseInt(System.getProperty("socialite.worker.num_threads", "8"));
-        workerHeapSize = Integer.parseInt(System.getProperty("socialite.worker.heap_size", "4096"));
+        workerHeapSize = Integer.parseInt(System.getProperty("socialite.worker.heap_size", "8192"));
     }
 
-    public void incWorkers(int num) {
-        numWorkers += num;
-    }
     public int getNumWorkers() { return numWorkers; }
     public int getNumWorkerThreads() { return numWorkerThreads; }
     public int getWorkerHeapSize() { return workerHeapSize; }

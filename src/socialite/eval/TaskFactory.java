@@ -140,29 +140,6 @@ public class TaskFactory {
 		return tasks;
 	}
 
-    public Task[] make(ConcurrentLoadCommand loadCmd, SRuntime runtime) {
-        TableInstRegistry registry = runtime.getTableRegistry();
-        TablePartitionMap partitionMap = runtime.getPartitionMap();
-        int tableid = loadCmd.getTableId();
-        ConcurrentLoadTask[] tasks = new ConcurrentLoadTask[partitionMap.virtualPartitionNum(tableid)];
-
-        TableInst[] tableArray = registry.getTableInstArray(tableid);
-        assert tableArray != null && tableArray[0] != null;
-        if (!(tableArray[0] instanceof ConcurrentTableInst)) {
-            L.error("Concurrent tuple insertion is not supported for table "+tableArray[0].name());
-            L.error("The table ("+tableArray[0].name()+") is not declared as concurrent.");
-            return null;
-        }
-        for (int i=0; i<tasks.length; i++) {
-            Iterator<Tuple> iterator = loadCmd.iterator(partitionMap, i);
-            TableInst table;
-            if (tableArray.length == 1) { table = tableArray[0]; }
-            else { table = tableArray[i]; }
-            tasks[i] = new ConcurrentLoadTask(table, iterator);
-        }
-        return tasks;
-    }
-
     public Task[] make(EvalCommand eval, VisitorBuilder builder, SRuntime runtime) {
 		IVisitor[] visitors = eval.newInst(builder);
 		if (visitors==null) return null;

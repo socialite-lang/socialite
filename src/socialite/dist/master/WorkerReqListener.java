@@ -12,6 +12,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -30,6 +31,7 @@ import socialite.engine.Config;
 import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
 import socialite.util.TextArrayWritable;
+import socialite.util.UnresolvedSocketAddr;
 
 public class WorkerReqListener implements WorkerRequest {
 	public static final Log L=LogFactory.getLog(WorkerReqListener.class);
@@ -59,8 +61,7 @@ public class WorkerReqListener implements WorkerRequest {
 	
 	@Override
 	public synchronized void register(String addr, int cmdPort, int dataPort) {
-		InetSocketAddress workerAddr = new InetSocketAddress(addr, cmdPort);
-		master.registerWorker(workerAddr, dataPort);
+		master.registerWorker(addr, cmdPort, dataPort);
 	}
 
 
@@ -133,7 +134,7 @@ public class WorkerReqListener implements WorkerRequest {
 		int ruleid = _ruleid.get();
 		String errorMsg = _errorMsg.toString();
 		WorkerAddrMap workerAddrMap = SRuntimeMaster.getInst().getWorkerAddrMap();
-		InetSocketAddress workerAddr = workerAddrMap.get(_workerid.get());
+		UnresolvedSocketAddr workerAddr = workerAddrMap.get(_workerid.get());
 		errorMsg = workerAddr + ":"+errorMsg;
 		ErrorRecord.getInst().addErrorMsg(ruleid, errorMsg);
 	}

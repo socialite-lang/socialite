@@ -210,18 +210,10 @@ public class Manager extends Thread {
         else dispatch(Priority.Normal, tasks);
         EvalRefCount.getInst().decBy(evalCmd.getEpochId(), taskCount);
     }
-    public void addLoadCmd(ConcurrentLoadCommand loadCmd) throws InterruptedException {
-        SRuntime _runtime = runtime;
-        Task[] tasks=null;
-        tasks = taskFactory.make(loadCmd, _runtime);
-        if (loadCmd.isReceived()) dispatch(Priority.Top, tasks);
-        else dispatch(Priority.Normal, tasks);
-    }
+
     public void addCmd(Command cmd) throws InterruptedException {
         if (cmd instanceof EvalCommand) {
             addEvalCmd((EvalCommand) cmd);
-        } else if (cmd instanceof ConcurrentLoadCommand) {
-            addLoadCmd((ConcurrentLoadCommand) cmd);
         }
     }
 

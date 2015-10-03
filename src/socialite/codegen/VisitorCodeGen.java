@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
+import socialite.dist.master.MasterNode;
 import socialite.engine.Config;
 import socialite.parser.AggrFunction;
 import socialite.parser.AssignOp;
@@ -88,10 +89,13 @@ public class VisitorCodeGen {
 
         resolvedVarsArray = Analysis.getResolvedVars(rule);
     }
+    boolean isDistributed() {
+        return MasterNode.getInstance() != null;
+    }
     boolean isParallelRule() {
         if (isParRule<0) {
             isParRule = Analysis.isParallelRule(rule, tableMap)?1:0;
-            if (conf.isDistributed()) isParRule = 1;
+            if (isDistributed()) isParRule = 1;
         }
         return isParRule==1;
     }
@@ -275,7 +279,7 @@ public class VisitorCodeGen {
     }
 
     void declareRemoteBodyTablesIfAny() {
-        if (!conf.isDistributed()) return;
+        if (!isDistributed()) return;
         for (int pos : tableSendPos()) {
             String tableCls = tableMap.get(RemoteBodyTable.name(rule, pos))
                     .className();
@@ -286,7 +290,7 @@ public class VisitorCodeGen {
     }
 
     void declareRemoteHeadTableIfAny() {
-        if (!conf.isDistributed()) return;
+        if (!isDistributed()) return;
         if (!hasRemoteRuleHead()) return;
 
         Table t = headT;
@@ -1085,10 +1089,8 @@ public class VisitorCodeGen {
             invokeIter = tableVar+".iterate(this)";
             code.add("stmts", invokeIter);
         } else if (iterStartWithFirstP && doIterateRange()) {
-            invokeIter = iterateRange(iterStartT, tableVar);
-            code.add("stmts", invokeIter);
-        } else if (iterStartWithFirstP && doDynamicIterateRange()) {
-            invokeIter = iterateRangeDynamic(tableVar);
+            //invokeIter = iterateRange(iterStartT, tableVar);
+            invokeIter = tableVar+invokeIterate(iterStartP, resolvedVars);
             code.add("stmts", invokeIter);
         } else {
             invokeIter = tableVar+invokeIterate(iterStartP, resolvedVars);
@@ -1177,25 +1179,6 @@ public class VisitorCodeGen {
         }
         iteratebySuffix += "this"+trailingArgs+")";
         return iteratebySuffix;
-    }
-
-    boolean doDynamicIterateRange() {
-        if (iterStartP instanceof DeltaPredicate) return true;
-
-        return false;
-    }
-    String iterateRangeDynamic(String tableVar) {
-        ST ifElse = tmplGroup.getInstanceOf("ifElse");
-        ifElse.add("cond", tableVar + ".virtualPartitionNum()>1");
-
-        String partitionNum = tableVar + ".virtualPartitionNum()";
-        String partitionSize = "((" + tableVar + ".size()+" + partitionNum + "-1)/"
-                + partitionNum + ")";
-        String from = partitionSize + "*" + firstTableIdx();
-        String to = partitionSize + "*" + "(" + firstTableIdx() + "+1)-1";
-        ifElse.add("stmts", tableVar+".iterate_range("+from+","+to+",this)");
-        ifElse.add("elseStmts", tableVar + ".iterate(this)");
-        return ifElse.render();
     }
 
     int resolvedSingleNestedArrayIndex(Predicate p) {
@@ -1471,12 +1454,12 @@ public class VisitorCodeGen {
     }
 
     boolean hasRemoteRuleBody() {
-        if (!conf.isDistributed()) return false;
+        if (!isDistributed()) return false;
         return Analysis.hasRemoteRuleBody(rule, tableMap);
     }
 
     boolean hasRemoteRuleHead() {
-        if (!conf.isDistributed()) return false;
+        if (!isDistributed()) return false;
         return Analysis.hasRemoteRuleHead(rule, tableMap);
     }
 
@@ -1973,9 +1956,9 @@ public class VisitorCodeGen {
 
     boolean headTableLockAtStart() {
         if (!headTableLockNeeded())	{ return false; }
-        if (!conf.isDistributed() && Analysis.updateParallelShard(rule, tableMap)) { return true; }
+        if (!isDistributed() && Analysis.updateParallelShard(rule, tableMap)) { return true; }
         // !rule.inScc(): HACK!
-        if (!conf.isDistributed() && Analysis.isSequentialRule(rule, tableMap) &&
+        if (!isDistributed() && Analysis.isSequentialRule(rule, tableMap) &&
                 !rule.inScc()) { return true; }
         return false;
     }
@@ -2260,7 +2243,7 @@ public class VisitorCodeGen {
     }
 
     boolean isTablePartitioned(Table t) {
-        return t.isPartitioned();
+        return !(t instanceof GeneratedT);
     }
 
     public static String getVarName(String table) {

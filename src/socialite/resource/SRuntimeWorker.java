@@ -44,7 +44,7 @@ public class SRuntimeWorker extends SRuntime {
 		workerAddrMap = _addrMap;
 		workerConn = _workerConn;		
 		conf=_conf;
-		sender = Sender.get(conf, workerAddrMap, workerConn);
+		sender = Sender.get(workerAddrMap, workerConn);
 		tableMap = new HashMap<String, Table>();
         idleMap = new ConcurrentHashMap<Integer, Object>(128, 0.75f, 32);
         EvalRefCount.getInst(new WorkerNodeIdleCallback());

@@ -57,6 +57,7 @@ import socialite.resource.WorkerAddrMap;
 import socialite.util.Loader;
 import socialite.util.SocialiteInputStream;
 import socialite.util.SocialiteOutputStream;
+import socialite.util.UnresolvedSocketAddr;
 import socialite.yarn.ClusterConf;
 
 public class QueryListener implements QueryProtocol {
@@ -193,7 +194,7 @@ public class QueryListener implements QueryProtocol {
         WorkerAddrMap workerAddrMap = master.makeWorkerAddrMap();
         SRuntimeMaster runtime = SRuntimeMaster.create(master, workerAddrMap);
         WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
-        Map<InetSocketAddress, WorkerCmd> workerMap = master.getWorkerCmdMap();
+        Map<UnresolvedSocketAddr, WorkerCmd> workerMap = master.getWorkerCmdMap();
 
         distEngine = new DistEngine(addrMap, workerMap);
     }

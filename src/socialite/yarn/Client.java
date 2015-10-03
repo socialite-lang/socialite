@@ -75,11 +75,11 @@ public class Client {
         return true;
     }
 
-    public boolean startAppMaster(final Path localJarPath) throws Exception {
+    public void startAppMaster(final Path localJarPath) throws Exception {
         YarnClient yarnClient = createYarnClient();
         if (isAppMasterRunning(yarnClient)) {
             System.out.println("Socialite AppMaster is already up and running!");
-            return false;
+            return;
         }
 
         YarnClientApplication app = yarnClient.createApplication();
@@ -120,13 +120,15 @@ public class Client {
         ApplicationId appId = appContext.getApplicationId();
         yarnClient.submitApplication(appContext);
 
+        ApplicationReport appReport;
+        YarnApplicationState appState;
         while (true) {
-            ApplicationReport appReport = yarnClient.getApplicationReport(appId);
-            YarnApplicationState appState = appReport.getYarnApplicationState();
+            appReport = yarnClient.getApplicationReport(appId);
+            appState = appReport.getYarnApplicationState();
             if (appState == YarnApplicationState.RUNNING) {
                 System.out.println("Successfully launched Socialite AppMaster!");
                 System.out.println("See its status at "+appReport.getTrackingUrl());
-                return true;
+                break;
             } else if (appState == YarnApplicationState.SUBMITTED ||
                        appState == YarnApplicationState.ACCEPTED) {
                 Thread.sleep(1000);
@@ -136,17 +138,21 @@ public class Client {
         }
     }
 
-    void setupAppMasterJar(Path localJarPath, LocalResource appMasterJar) throws IOException {
-        FileSystem fs = FileSystem.get(new Configuration());
-        Path jarPath = getHdfsJarPath(String.format("socialite-all-%d.jar", System.currentTimeMillis()/1000));
-        fs.copyFromLocalFile(localJarPath, jarPath);
+    void setupAppMasterJar(Path localJarPath, LocalResource appMasterJar) {
+        try {
+            FileSystem fs = FileSystem.get(new Configuration());
+            Path jarPath = getHdfsJarPath(String.format("socialite-all-%d.jar", System.currentTimeMillis()/1000));
+            fs.copyFromLocalFile(localJarPath, jarPath);
 
-        FileStatus jarStat = FileSystem.get(yarnConf).getFileStatus(jarPath);
-        appMasterJar.setResource(ConverterUtils.getYarnUrlFromPath(jarPath));
-        appMasterJar.setSize(jarStat.getLen());
-        appMasterJar.setTimestamp(jarStat.getModificationTime());
-        appMasterJar.setType(LocalResourceType.FILE);
-        appMasterJar.setVisibility(LocalResourceVisibility.PUBLIC);
+            FileStatus jarStat = FileSystem.get(yarnConf).getFileStatus(jarPath);
+            appMasterJar.setResource(ConverterUtils.getYarnUrlFromPath(jarPath));
+            appMasterJar.setSize(jarStat.getLen());
+            appMasterJar.setTimestamp(jarStat.getModificationTime());
+            appMasterJar.setType(LocalResourceType.FILE);
+            appMasterJar.setVisibility(LocalResourceVisibility.PUBLIC);
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot copy jar file to HDFS:"+ e.getMessage());
+        }
     }
 
     void addToEnv(Map<String, String> env, String variable, String value) {

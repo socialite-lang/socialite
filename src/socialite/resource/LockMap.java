@@ -34,8 +34,8 @@ public class LockMap {
 		
 		if (locks[tableId] != null) return;
 		
-		int virtualSliceNum = sliceMap.maxVirtualPartitionNum();
-		ReentrantLock[] newLocks = new ReentrantLock[virtualSliceNum];
+		int partitionNum = sliceMap.partitionNum(tableId);
+		ReentrantLock[] newLocks = new ReentrantLock[partitionNum];
 		for (int i=0; i<newLocks.length; i++) {
 			newLocks[i] = new ReentrantLock();
 		}

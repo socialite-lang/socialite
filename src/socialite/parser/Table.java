@@ -101,8 +101,12 @@ public class Table implements Serializable {
 	
 	public boolean isDistributed() { return true; }
 
+	@Deprecated
 	public boolean isPartitioned() { return isModTable(); }
+
 	public boolean isArrayTable() { return isArrayTable; }
+
+	@Deprecated
 	public boolean isModTable() { 
 		if (isArrayTable) return false;
 		if (hasOrderBy()) return false;

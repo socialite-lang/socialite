@@ -114,7 +114,7 @@ public class InitCodeGen {
 		assert dontCare!=null;
 		assert dontCare.isArrayIndex();
 		
-		String myPartitionNum = partitionMapVar()+".virtualPartitionNum("+t.id()+","+dontCare.getAbsPos()+")/" +
+		String myPartitionNum = partitionMapVar()+".partitionNum("+t.id()+","+dontCare.getAbsPos()+")/" +
 								ClusterConf.get().getNumWorkerThreads();
 		String beginSlice = "(id*"+myPartitionNum+")";
 		String endSlice = "((id+1)*"+myPartitionNum+"-1)";
@@ -124,7 +124,7 @@ public class InitCodeGen {
 		
 		ST if_ = tmplGroup.getInstanceOf("if");
 		code.add("stmts", if_);
-		if_.add("cond", partitionMapVar()+".virtualPartitionNum("+t.id()+")==1");
+		if_.add("cond", partitionMapVar()+".partitionNum("+t.id()+")==1");
 		if_.add("stmts", "if(id!=0) return;");
 		if_.add("stmts", "$from = 0; $to=0;");
 			

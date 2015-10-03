@@ -23,6 +23,7 @@ import socialite.resource.SRuntime;
 import socialite.resource.SRuntimeWorker;
 import socialite.util.ByteBufferPool;
 import socialite.util.FastQueue;
+import socialite.util.UnresolvedSocketAddr;
 import socialite.yarn.ClusterConf;
 
 public class WorkerNode extends Thread {
@@ -179,11 +180,11 @@ public class WorkerNode extends Thread {
     }
 
     public boolean connect(String[] workerAddrs) {
-        InetSocketAddress[] addrs = new InetSocketAddress[workerAddrs.length];
+        UnresolvedSocketAddr[] addrs = new UnresolvedSocketAddr[workerAddrs.length];
         for (int i=0; i<workerAddrs.length; i++) {
             String host = workerAddrs[i].split(":")[0];
             int port = Integer.parseInt(workerAddrs[i].split(":")[1]);
-            addrs[i] = new InetSocketAddress(host, port);
+            addrs[i] = new UnresolvedSocketAddr(host, port);
         }
         connPool.connect(addrs);
         return true;

@@ -57,7 +57,8 @@ public class TableInstRegistry {
 	Map<String, Table> tableMap() {
 		return runtime.getTableMap();
 	}
-	
+
+	@Deprecated
 	public void storeTableMap(ObjectOutputStream oos) {
 		try {
 			ByteArrayOutputStream bout = new ByteArrayOutputStream(64*1024);
@@ -81,7 +82,8 @@ public class TableInstRegistry {
 		}
 		throw new RuntimeException("Cannot find table id:"+tableid+" in tableMap");
 	}
-	
+
+	@Deprecated
 	public void store(File path) {
 		if (!path.exists()) path.mkdirs();
 		assert path.isDirectory();
@@ -102,6 +104,7 @@ public class TableInstRegistry {
 			L.error(ExceptionUtils.getStackTrace(e));
 		} 
 	}
+	@Deprecated
 	public void storeTableInsts(ObjectOutputStream oos) {
 		try {
 			oos.writeInt(tableInstArrayMap.length);
@@ -135,6 +138,7 @@ public class TableInstRegistry {
 			L.error(ExceptionUtils.getStackTrace(e));
 		}
 	}
+	@Deprecated
 	public void loadTableInsts(ObjectInputStream ois) {
 		TableInst[][] prevTableInstArray=null;		
 		try {
@@ -203,6 +207,7 @@ public class TableInstRegistry {
 		}
 		IdFactory.tableIdAdvanceTo(maxTid+1);
 	}
+	@Deprecated
 	public Map<String, Table> load(File path) {
 		assert path.isDirectory():path+" is not a directory";
 		try {

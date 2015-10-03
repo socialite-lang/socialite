@@ -241,8 +241,6 @@ public class VisitorBuilder {
         assert t.length==1;
         assert t[0]!=null;
         return 1;
-		/*TmpTableInst tmp = (TmpTableInst)t[0];
-		return tmp.virtualPartitionNum();*/
     }
 
     public IVisitor[] getNewVisitorInst(int ruleId, TableInst[] tmpTable) {
@@ -366,7 +364,7 @@ class RuleInfo {
         }
 
         int id = bodyTableIds.get(0);
-        return partitionMap.virtualPartitionNum(id);
+        return partitionMap.partitionNum(id);
     }
 
     public String toString() {

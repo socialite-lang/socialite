@@ -10,13 +10,10 @@ import org.stringtemplate.v4.STGroup;
 
 import socialite.dist.master.MasterNode;
 import socialite.engine.Config;
-import socialite.parser.Column;
 import socialite.parser.GeneratedT;
-import socialite.parser.Param;
 import socialite.parser.Predicate;
 import socialite.parser.Rule;
 import socialite.parser.Table;
-import socialite.parser.Variable;
 
 //import org.antlr.stringtemplate.StringTemplate;
 //import org.antlr.stringtemplate.StringTemplateGroup;
@@ -75,22 +72,22 @@ public class EvalCodeGen {
         for (Table t:newTables) {
             assert !(t instanceof GeneratedT):"newTables should not contain instances of GeneratedT";
             // table array decl            
-            String sliceNum = "partitionMap.partitionNum("+t.id()+")";
-            String decl=t.className()+"[] "+varName(t)+"= new "+t.className()+"["+sliceNum+"]";
+            String partitionNum = "partitionMap.partitionNum("+t.id()+")";
+            String decl=t.className()+"[] "+varName(t)+"= new "+t.className()+"["+partitionNum+"]";
             evalTmpl.add("tableVars", varName(t));
             evalTmpl.add("tableDecls", decl);
 
             // create table
             ST for_=tmplGroup.getInstanceOf("for");
             for_.add("init", "int $i=0");
-            for_.add("cond", "$i<"+sliceNum);
+            for_.add("cond", "$i<"+partitionNum);
             for_.add("inc", "$i++");
             String tableInstStmt;
 
             if (t.isArrayTable()) {
-                String base = "partitionMap.localBeginIndex("+t.id()+")";
-                String size = "partitionMap.localSize("+t.id()+")";
-                tableInstStmt = varName(t)+"[$i]="+t.className()+".create("+base+", "+size+")";
+                String base = "partitionMap.partitionBegin("+t.id()+",$i)";
+                String size = "partitionMap.partitionSize("+t.id()+",$i)";
+                tableInstStmt = varName(t)+"[$i]="+t.className()+".create("+base+","+size+")";
             } else {
                 tableInstStmt = varName(t)+"[$i]="+t.className()+".create()";
             }

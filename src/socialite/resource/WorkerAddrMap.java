@@ -20,31 +20,32 @@ import socialite.dist.Host;
 import socialite.dist.PortMap;
 import socialite.parser.Table;
 import socialite.util.Assert;
+import socialite.util.UnresolvedSocketAddr;
 
 public class WorkerAddrMap implements Serializable {
     static final Log L=LogFactory.getLog(WorkerAddrMap.class);
 
     int lastUnusedIndex;
-    ArrayList<InetSocketAddress> workerAddrs;
-    ArrayList<InetSocketAddress> workerDataAddrs;
+    ArrayList<UnresolvedSocketAddr> workerAddrs;
+    ArrayList<UnresolvedSocketAddr> workerDataAddrs;
     transient int myIdx=-1;
 
     public WorkerAddrMap() {
         lastUnusedIndex=0;
-        workerAddrs = new ArrayList<InetSocketAddress>();
-        workerDataAddrs = new ArrayList<InetSocketAddress>();
+        workerAddrs = new ArrayList<UnresolvedSocketAddr>();
+        workerDataAddrs = new ArrayList<UnresolvedSocketAddr>();
         myIdx=-1;
     }
 
-    public void add(InetSocketAddress addr, InetSocketAddress dataAddr) {
+    public void add(UnresolvedSocketAddr addr, UnresolvedSocketAddr dataAddr) {
         workerAddrs.add(addr);
         workerDataAddrs.add(dataAddr);
     }
 
-    public InetSocketAddress getDataAddr(int workerIdx) {
+    public UnresolvedSocketAddr getDataAddr(int workerIdx) {
         return workerDataAddrs.get(workerIdx);
     }
-    public InetSocketAddress get(int workerIdx) {
+    public UnresolvedSocketAddr get(int workerIdx) {
         return workerAddrs.get(workerIdx);
     }
 
@@ -54,12 +55,13 @@ public class WorkerAddrMap implements Serializable {
         assert myIdx == -1;
         String host = NetUtils.getHostname().split("/")[1];
         int port = PortMap.worker().getPort("workerCmd");
-        InetSocketAddress myaddr = new InetSocketAddress(host, port);
+        UnresolvedSocketAddr myaddr = new UnresolvedSocketAddr(host, port);
         myIdx = 0;
-        for (InetSocketAddress addr:workerAddrs) {
+        for (UnresolvedSocketAddr addr:workerAddrs) {
             if (myaddr.equals(addr)) { return; }
             myIdx++;
         }
+
         throw new AssertionError("Cannot find worker index (host="+host+", port="+port+")");
     }
     public int myIndex() {
@@ -70,7 +72,7 @@ public class WorkerAddrMap implements Serializable {
 
     public String toString() {
         String str="";
-        for (InetSocketAddress addr:workerAddrs) {
+        for (UnresolvedSocketAddr addr:workerAddrs) {
             str += addr + ", ";
         }
         return str;

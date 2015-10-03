@@ -35,6 +35,7 @@ import socialite.util.ByteBufferPool;
 import socialite.util.FastInputStream;
 import socialite.util.SociaLiteException;
 import socialite.util.SocialiteFinishEval;
+import socialite.util.UnresolvedSocketAddr;
 
 class ConnDesc {
     public static final Log L=LogFactory.getLog(WorkerConnPool.class);
@@ -42,11 +43,9 @@ class ConnDesc {
     static final int SOCK_BUFSIZE=(512)*1024;
 
     ChannelMux sendChannels;
-    ChannelMux recvChannels;
 
     ConnDesc() {
         sendChannels = new ChannelMux();
-        recvChannels = new ChannelMux();
     }
 
     void setChannelOption(SocketChannel ch, boolean send) {
@@ -62,10 +61,6 @@ class ConnDesc {
         sendChannels.add(sendCh);
         setChannelOption(sendCh, true);
     }
-    void addRecvChannel(SocketChannel recvCh) {
-        recvChannels.add(recvCh);
-        setChannelOption(recvCh, false);
-    }
 
     public String toString() {
         String str="ConnDesc(";
@@ -74,15 +69,9 @@ class ConnDesc {
             SocketChannel ch=sendChannels.next();
             str += ch.socket() +"/"+ch.socket().getInetAddress()+", ";
         }
-        str += "\nrecvCh["+recvChannels.size()+"]:";
-        for (int i=0; i<recvChannels.size(); i++) {
-            SocketChannel ch=recvChannels.next();
-            str += ch.socket() +"/"+ch.socket().getInetAddress()+", ";
-        }
         return str;
     }
     public ChannelMux getSendChannels() { return sendChannels; }
-    public ChannelMux getRecvChannels() { return recvChannels; }
 }
 
 public class WorkerConnPool {
@@ -90,7 +79,7 @@ public class WorkerConnPool {
 
     final static boolean tcpNoDelay=true; // true turns off Nagle's algorithm
 
-    ConcurrentMap<InetSocketAddress, ConnDesc> connMap;
+    ConcurrentMap<UnresolvedSocketAddr, ConnDesc> connMap;
     Selector connSelector;
     ServerSocketChannel workerAcceptChannel;
 
@@ -98,7 +87,7 @@ public class WorkerConnPool {
     List<SocketChannel> canceledList;
 
     public WorkerConnPool() {
-        connMap = new ConcurrentHashMap<InetSocketAddress, ConnDesc>();
+        connMap = new ConcurrentHashMap<UnresolvedSocketAddr, ConnDesc>();
         canceledList = Collections.synchronizedList(new ArrayList<SocketChannel>(64));
         makeReady();
         //registerLock = "lock";
@@ -113,7 +102,7 @@ public class WorkerConnPool {
             workerAcceptChannel.socket().setReuseAddress(true);
 
             InetAddress inet = InetAddress.getByName(NetUtils.getHostname().split("/")[1]);
-            InetSocketAddress bindAddr=new InetSocketAddress(inet, PortMap.worker().usePort("data"));
+            InetSocketAddress bindAddr = new InetSocketAddress(inet, PortMap.worker().usePort("data"));
             workerAcceptChannel.socket().bind(bindAddr);
             workerAcceptChannel.configureBlocking(false);
             workerAcceptChannel.register(connSelector, SelectionKey.OP_ACCEPT);
@@ -145,20 +134,20 @@ public class WorkerConnPool {
         }
     }
 
-    boolean isMyAddress(InetSocketAddress addr) {
-        boolean isMyAddr = addr.getAddress().getHostAddress().equals(NetUtils.getHostname().split("/")[1]) &&
+    boolean isMyAddress(UnresolvedSocketAddr addr) {
+        boolean isMyAddr = addr.getHostName().equals(NetUtils.getHostname().split("/")[1]) &&
                 addr.getPort() == PortMap.worker().getPort("data");
         return isMyAddr;
     }
-    public void connect(InetSocketAddress[] workerAddrs) {
-        for (InetSocketAddress workerAddr:workerAddrs) {
+    public void connect(UnresolvedSocketAddr[] workerAddrs) {
+        for (UnresolvedSocketAddr workerAddr:workerAddrs) {
             if (isMyAddress(workerAddr)) { continue; }
             ConnDesc connDesc = new ConnDesc();
             for (int i=0; i<ChannelMux.channelNum; i++) {
                 try {
                     SocketChannel sendChannel = SocketChannel.open();
                     assert sendChannel.isBlocking();
-                    sendChannel.connect(workerAddr);
+                    sendChannel.connect(workerAddr.getInetSocketAddr());
                     boolean success=sendChannel.finishConnect();
                     if (!success) L.fatal("Fail to connect to:"+workerAddr);
 
@@ -177,62 +166,6 @@ public class WorkerConnPool {
         }
     }
 
-    void finishConnect(Map<InetSocketAddress, ConnDesc> halfConnected) {
-        int accepted=0;
-        while (accepted < halfConnected.size()) {
-            try { connSelector.select(); }
-            catch (IOException e) {
-                L.fatal("finishConnect():" + ExceptionUtils.getStackTrace(e));
-            }
-
-            Iterator<SelectionKey> iter = (connSelector.selectedKeys()).iterator();
-            while (iter.hasNext()) {
-                SelectionKey key = iter.next();
-                iter.remove();
-
-                if (!(key.isValid() && key.isAcceptable())) {
-                    L.error("Unexpected key operation:"+key);
-                    continue;
-                }
-                try {
-                    SocketChannel recvChannel = ((ServerSocketChannel)key.channel()).accept();
-                    InetSocketAddress workerAddr =
-                            (InetSocketAddress)recvChannel.socket().getRemoteSocketAddress();
-                    ConnDesc connDesc = halfConnected.get(workerAddr);
-                    if (connDesc==null) L.error("Unexpected worker:"+workerAddr);
-
-                    connDesc.addRecvChannel(recvChannel);
-                    if (connDesc.recvChannels.isFull()) {
-                        accepted++;
-                        connMap.put(workerAddr, connDesc);
-                    }
-                } catch (IOException e) {
-                    L.fatal("Exception while waiting for workers to connect:"+e);
-                    L.fatal(ExceptionUtils.getStackTrace(e));
-                }
-            }
-        }
-    }
-    void registerRecvChannel(Collection<ConnDesc> connDescs) {
-        for (ConnDesc cd : connDescs) {
-            ChannelMux recvChannels = cd.recvChannels;
-            assert recvChannels.size() == ChannelMux.channelNum;
-            for (int i=0; i<ChannelMux.channelNum; i++) {
-                SocketChannel recvChannel = recvChannels.next();
-                try {
-                    recvChannel.configureBlocking(false);
-                    recvChannel.register(connSelector, SelectionKey.OP_READ);
-                } catch (ClosedChannelException e) {
-                    L.fatal("Error while setting non-blocking option:"+e);
-                    L.fatal(ExceptionUtils.getStackTrace(e));
-                } catch (IOException e) {
-                    L.fatal("Error while setting non-blocking option:"+e);
-                    L.fatal(ExceptionUtils.getStackTrace(e));
-                }
-            }
-        }
-    }
-
     public void acceptConn(SelectionKey key) {
         assert key.channel().equals(workerAcceptChannel);
 
@@ -245,17 +178,9 @@ public class WorkerConnPool {
             L.fatal("acceptConn():" + ExceptionUtils.getStackTrace(e));
             return;
         }
-
-        InetSocketAddress workerAddr = (InetSocketAddress)recvChannel.socket().getRemoteSocketAddress();
-        ConnDesc connDesc = new ConnDesc();
-        connDesc.addRecvChannel(recvChannel);
-        ConnDesc prev = connMap.putIfAbsent(workerAddr, connDesc);
-        if (prev != null) {
-            prev.addRecvChannel(recvChannel);
-        }
     }
 
-    public ChannelMux sendChannelMuxFor(InetSocketAddress workerAddr) {
+    public ChannelMux sendChannelMuxFor(UnresolvedSocketAddr workerAddr) {
         ConnDesc connDesc = connMap.get(workerAddr);
         if (connDesc == null) { return null; }
 

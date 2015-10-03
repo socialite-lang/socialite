@@ -13,14 +13,15 @@ import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
 import socialite.resource.SRuntime;
 import socialite.resource.Sender;
+import socialite.util.UnresolvedSocketAddr;
 
 
 public class DistCompileTest {
 
 	static WorkerAddrMap fakeMap() {
 		WorkerAddrMap map = new WorkerAddrMap();
-		InetSocketAddress addr0 = InetSocketAddress.createUnresolved("192.168.1.1", 50011);
-		InetSocketAddress addr1 = InetSocketAddress.createUnresolved("192.168.1.1", 50012);
+		UnresolvedSocketAddr addr0 = new UnresolvedSocketAddr("192.168.1.1", 50011);
+		UnresolvedSocketAddr addr1 = new UnresolvedSocketAddr("192.168.1.1", 50012);
 		map.add(addr0, null); map.add(addr1, null);
 		return map;
 	}

@@ -16,10 +16,11 @@ public abstract class TmpTableInst extends AbstractTableInst implements External
 	boolean _reuse=true;
 	public void setReuse(boolean reuse) { _reuse = reuse; }
 	public boolean reuse() { return _reuse; }
-	// if the table slice map returns 0,
+
+	// if the table partition map returns 0,
 	// VisitorBuilder uses the following method to decide
 	// the # of slices and the # of visitors
-	public int virtualPartitionNum() { return 1; }
+	public int partitionNum() { return 1; }
 
 	// Estimates the size of data in the table to copy to network buffer
 	abstract public int totalDataSize(); // total size of data in this table instance.

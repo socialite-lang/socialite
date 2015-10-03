@@ -21,6 +21,7 @@ import socialite.resource.WorkerAddrMap;
 import socialite.resource.WorkerAddrMapW;
 import socialite.util.SociaLiteException;
 import socialite.util.TextArrayWritable;
+import socialite.util.UnresolvedSocketAddr;
 import socialite.yarn.ClusterConf;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -164,15 +165,14 @@ public class MasterNode {
     Config workerConf; // worker node may have different config (e.g. cpu #)
     QueryListener queryListener;
     WorkerReqListener workerListener;
-    ConcurrentMap<InetSocketAddress, WorkerCmd> workerMap;
-    ConcurrentMap<InetSocketAddress, InetSocketAddress> workerDataAddrMap; // {cmd-address: data-address}
-    Set<InetSocketAddress> registeredWorkers;
+    ConcurrentMap<UnresolvedSocketAddr, WorkerCmd> workerMap;
+    ConcurrentMap<UnresolvedSocketAddr, UnresolvedSocketAddr> workerDataAddrMap; // {cmd-address: data-address}
     int expectedWorkerNum = ClusterConf.get().getNumWorkers();
 
     private MasterNode(Config _conf) {
         conf = _conf;
-        workerMap = new ConcurrentHashMap<InetSocketAddress, WorkerCmd>();
-        workerDataAddrMap = new ConcurrentHashMap<InetSocketAddress, InetSocketAddress>();
+        workerMap = new ConcurrentHashMap<UnresolvedSocketAddr, WorkerCmd>();
+        workerDataAddrMap = new ConcurrentHashMap<UnresolvedSocketAddr, UnresolvedSocketAddr>();
     }
 
     public void serve() {
@@ -180,7 +180,7 @@ public class MasterNode {
         initQueryListener();
     }
 
-    WorkerCmd createWorkerCmd(InetSocketAddress workerCmdAddr) {
+    WorkerCmd createWorkerCmd(UnresolvedSocketAddr workerCmdAddr) {
         if (workerMap.containsKey(workerCmdAddr)) {
             L.warn("createWorkerCmd(): Already existing worker cmd:" + workerCmdAddr);
             return workerMap.get(workerCmdAddr);
@@ -189,8 +189,7 @@ public class MasterNode {
         Configuration conf = new Configuration();
         String workerIP = workerCmdAddr.getHostName();
         int cmdPort = workerCmdAddr.getPort();
-        InetSocketAddress sockaddr=new InetSocketAddress(workerIP, cmdPort);
-
+        InetSocketAddress sockaddr = new InetSocketAddress(workerIP, cmdPort);
         try {
             WorkerCmd workerCmd = RPC.waitForProxy(WorkerCmd.class, WorkerCmd.versionID, sockaddr, conf);
             workerMap.put(workerCmdAddr, workerCmd);
@@ -203,11 +202,11 @@ public class MasterNode {
     }
 
     void makeWorkerConnections() {
-        Collection<InetSocketAddress> otherAddrs = workerDataAddrMap.values();
+        Collection<UnresolvedSocketAddr> otherAddrs = workerDataAddrMap.values();
         Text[] otherAddrTexts=new Text[otherAddrs.size()];
         int i=0;
-        for (InetSocketAddress sockaddr:otherAddrs) {
-            otherAddrTexts[i++]=new Text(NetUtils.getHostPortString(sockaddr));
+        for (UnresolvedSocketAddr sockaddr:otherAddrs) {
+            otherAddrTexts[i++]=new Text(sockaddr.getHostName()+":"+sockaddr.getPort());
         }
         TextArrayWritable restAddrs = new TextArrayWritable(otherAddrTexts);
         try {
@@ -218,9 +217,10 @@ public class MasterNode {
         }
 
     }
-    public synchronized void registerWorker(InetSocketAddress workerAddr, int dataPort) {
+    public synchronized void registerWorker(String addr, int cmdPort, int dataPort) {
+        UnresolvedSocketAddr workerAddr = new UnresolvedSocketAddr(addr, cmdPort);
         createWorkerCmd(workerAddr);
-        workerDataAddrMap.put(workerAddr, new InetSocketAddress(workerAddr.getAddress(), dataPort));
+        workerDataAddrMap.put(workerAddr, new UnresolvedSocketAddr(addr, dataPort));
         if (workerMap.size() < expectedWorkerNum) { return; }
 
         queryListener.init();
@@ -254,20 +254,16 @@ public class MasterNode {
         workerConf = _conf;
     }
 
-    public Set<InetSocketAddress> getWorkerAddrs() {
-        return workerMap.keySet();
-    }
-
-    public Map<InetSocketAddress, WorkerCmd> getWorkerCmdMap() {
+    public Map<UnresolvedSocketAddr, WorkerCmd> getWorkerCmdMap() {
         return workerMap;
     }
     public WorkerAddrMap makeWorkerAddrMap() {
         WorkerAddrMap machineMap=new WorkerAddrMap();
-        Set<InetSocketAddress> workerAddrs=workerMap.keySet();
+        Set<UnresolvedSocketAddr> workerAddrs=workerMap.keySet();
         int workerNodeNum = workerAddrs.size();
         int addedWorker=0;
 
-        for (InetSocketAddress addr:workerAddrs) {
+        for (UnresolvedSocketAddr addr:workerAddrs) {
             machineMap.add(addr, workerDataAddrMap.get(addr));
             addedWorker++;
             if (addedWorker >= workerNodeNum)

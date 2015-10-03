@@ -8,15 +8,8 @@ import java.util.Map;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
-import socialite.parser.Column;
-import socialite.parser.Const;
-import socialite.parser.IterTable;
-import socialite.parser.MyType;
-import socialite.parser.Param;
-import socialite.parser.Predicate;
-import socialite.parser.Query;
-import socialite.parser.Table;
-import socialite.parser.Variable;
+import socialite.parser.*;
+
 import socialite.parser.antlr.ColumnGroup;
 import socialite.tables.QueryVisitor;
 import socialite.tables.TableUtil;
@@ -379,7 +372,7 @@ public class QueryCodeGen {
 	String tupleVar() { return "tuple"; }
 
 	boolean isTablePartitioned(Table t) {
-		return t.isPartitioned();
+		return !(t instanceof GeneratedT);
 	}
 	void generateConstructor() {
 		ST m=getNewMethodTmpl(queryVisitorName, "public", "");
