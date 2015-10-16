@@ -7,8 +7,8 @@ bin=`cd $bin; pwd`
 
 . "$bin/prepare-launch.sh"
 
-JAVA_HEAP_MAX=-Xmx1024m
-JAVA_HEAP_MIN=-Xms16m
+JAVA_HEAP_MAX=-Xmx2048m
+JAVA_HEAP_MIN=-Xms32m
 JVM_HEAP_OPTS="$JAVA_HEAP_MAX $JAVA_HEAP_MIN"
 
 exec "$JAVA" $JVM_HEAP_OPTS $JVM_OPTS $SOCIALITE_OPTS -classpath "$CLASSPATH" org.python.util.socialite "$@"
