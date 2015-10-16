@@ -1065,7 +1065,6 @@ public class Analysis {
         deltaRule.setInScc();
         addToRulesByHeadName(deltaRule);
         boolean isFirstP = dependingRule.firstP().name().equals(DeltaTable.name(t));
-System.out.println("Adding delta-rule mapping:"+deltaRule+"#"+deltaRule.id()+" dep:"+dependingRule+"#"+dependingRule.id()+", isFirstP:"+isFirstP);
         ruleMap.addDeltaRuleMapping(deltaRule.id(), dependingRule.id(), isFirstP);
 
         deltaRules.add(deltaRule);
