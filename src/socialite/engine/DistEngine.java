@@ -45,7 +45,6 @@ public class DistEngine {
 	public static final Log L=LogFactory.getLog(DistEngine.class);
 	
 	Parser parser;
-	Config conf;
 	SRuntimeMaster runtime;
 	WorkerAddrMap workerAddrMap;
 	Map<UnresolvedSocketAddr, WorkerCmd> workerCmdMap;
@@ -53,7 +52,6 @@ public class DistEngine {
 	public DistEngine(WorkerAddrMap _addrMap, Map<UnresolvedSocketAddr, WorkerCmd> _cmdMap) {
 		runtime = SRuntimeMaster.getInst();
 		parser = new Parser(runtime.getTableMap());
-		conf = Config.dist();
 		workerAddrMap = _addrMap;
 		workerCmdMap = _cmdMap;
 		
@@ -80,7 +78,7 @@ public class DistEngine {
 			parser.parse(program);
 			an=new Analysis(parser);
 			an.run();
-			codeGen = new DistCodeGenMain(conf, an, runtime);		
+			codeGen = new DistCodeGenMain(an, runtime);
 			codeGen.generate();
 		}
 		
@@ -154,14 +152,14 @@ public class DistEngine {
 	}
 	
 	public void cleanupTableIter(long id) {
-		TupleReqListener listener=getTupleReqListener(conf);
+		TupleReqListener listener=getTupleReqListener();
 		if (listener.exists(id)) {
 			listener.setInvokeFinish(id, true);
 			listener.done(id, true);
 		}
 	}
 	volatile static TupleReqListener _tupleListen=null;
-	static TupleReqListener getTupleReqListener(Config conf) {
+	static TupleReqListener getTupleReqListener() {
 		if (_tupleListen==null) {
 			synchronized (DistEngine.class) {
 				if (_tupleListen==null) {
@@ -176,7 +174,7 @@ public class DistEngine {
 		Class queryClass=codeGen.getQueryClass();
 		String queryClassName=queryClass.getName();
 		
-		TupleReqListener tupleReqListener = getTupleReqListener(conf);
+		TupleReqListener tupleReqListener = getTupleReqListener();
 		tupleReqListener.registerQueryVisitor(qv.remoteIterId(), qv);
 			
 		LongWritable iterId = new LongWritable(qv.remoteIterId());

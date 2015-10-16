@@ -14,7 +14,6 @@ import socialite.codegen.Epoch;
 import socialite.dist.EvalRefCount;
 import socialite.dist.worker.WorkerConnPool;
 import socialite.dist.worker.WorkerNode;
-import socialite.engine.Config;
 import socialite.eval.Eval;
 import socialite.eval.EvalProgress;
 import socialite.parser.Rule;
@@ -28,8 +27,8 @@ import socialite.util.SociaLiteException;
 public class SRuntimeWorker extends SRuntime {
 	public static final Log L=LogFactory.getLog(SRuntimeWorker.class);
     static SRuntimeWorker inst=null;
-    public static SRuntimeWorker create(Config conf, WorkerAddrMap addrMap, WorkerConnPool conn) {
-        inst = new SRuntimeWorker(addrMap, conn, conf);
+    public static SRuntimeWorker create(WorkerAddrMap addrMap, WorkerConnPool conn) {
+        inst = new SRuntimeWorker(addrMap, conn);
         return inst;
     }
     public static SRuntimeWorker getInst() {
@@ -40,13 +39,12 @@ public class SRuntimeWorker extends SRuntime {
 	WorkerConnPool workerConn;
 	Sender sender;
 
-	public SRuntimeWorker(WorkerAddrMap _addrMap, WorkerConnPool _workerConn, Config _conf) {
+	public SRuntimeWorker(WorkerAddrMap _addrMap, WorkerConnPool _workerConn) {
 		workerAddrMap = _addrMap;
 		workerConn = _workerConn;		
-		conf=_conf;
 		sender = Sender.get(workerAddrMap, workerConn);
-		tableMap = new HashMap<String, Table>();
-        idleMap = new ConcurrentHashMap<Integer, Object>(128, 0.75f, 32);
+		tableMap = new HashMap<>();
+        idleMap = new ConcurrentHashMap<>(128, 0.75f, 32);
         EvalRefCount.getInst(new WorkerNodeIdleCallback());
 	}
 
@@ -60,7 +58,6 @@ public class SRuntimeWorker extends SRuntime {
 		return workerAddrMap;
 	}
 	public Sender sender() { return sender; }
-	public Config getConf() { return conf; }
 
 	public DistTablePartitionMap getPartitionMap() {
 		if (partitionMap==null) {
@@ -151,8 +148,8 @@ public class SRuntimeWorker extends SRuntime {
 		Eval inst=null;
 		try {
 		    @SuppressWarnings("unchecked")
-			Constructor<? extends Runnable> c = evalClass.getConstructor(SRuntime.class, Epoch.class, Config.class);
-		    inst = (Eval)c.newInstance(this, epoch, conf);
+			Constructor<? extends Runnable> c = evalClass.getConstructor(SRuntime.class, Epoch.class);
+		    inst = (Eval)c.newInstance(this, epoch);
 		} catch (Exception e) {		        
 			L.fatal("Cannot get/call constructor of "+evalClass+":"+e);
 			L.fatal(ExceptionUtils.getStackTrace(e));

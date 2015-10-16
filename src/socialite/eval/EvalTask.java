@@ -6,7 +6,7 @@ import socialite.visitors.IVisitor;
 
 public class EvalTask implements Task {
 	IVisitor visitor;
-	TableInst deltaT;
+	//TableInst deltaT;
 	int priority;
 	public EvalTask(IVisitor _v) {
 		visitor = _v;

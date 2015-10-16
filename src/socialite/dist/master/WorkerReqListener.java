@@ -21,25 +21,20 @@ import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
-import org.apache.hadoop.net.NetUtils;
 import socialite.dist.ErrorRecord;
 import socialite.dist.Host;
 import socialite.dist.IdleStat;
 import socialite.dist.PortMap;
 import socialite.dist.worker.WorkerCmd;
-import socialite.engine.Config;
 import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
-import socialite.util.TextArrayWritable;
 import socialite.util.UnresolvedSocketAddr;
 
 public class WorkerReqListener implements WorkerRequest {
 	public static final Log L=LogFactory.getLog(WorkerReqListener.class);
 	
 	MasterNode master;
-	Config conf;
-	public WorkerReqListener(Config _conf, MasterNode _master) {
-		conf = _conf;
+	public WorkerReqListener(MasterNode _master) {
 		master=_master;
 	}
 	

@@ -65,8 +65,6 @@ public class WorkerAddrMap implements Serializable {
         throw new AssertionError("Cannot find worker index (host="+host+", port="+port+")");
     }
     public int myIndex() {
-        assert myIdx >= 0;
-
         return myIdx;
     }
 

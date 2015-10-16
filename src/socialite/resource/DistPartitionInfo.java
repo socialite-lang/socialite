@@ -7,139 +7,218 @@ import socialite.util.BitUtils;
 import socialite.util.HashCode;
 import socialite.yarn.ClusterConf;
 
-class DistArrayTablePartitionInfo extends ArrayTablePartitionInfo {
-	final int arrayBeginIndex;
-	final int arrayEndIndex;
-	final int shiftForNodeIdx;
-	final int arraySizePerNode;
-	DistArrayTablePartitionInfo(DistTablePartitionMap _map, Table _t) {
-		super(_map, _t);
+public interface DistPartitionInfo extends PartitionInfo {
+    public static PartitionInfo create(DistTablePartitionMap map, Table t) {
+        if (t.isArrayTable()) {
+            return new DistArrayTablePartitionInfo(map, t);
+        } else {
+            return new DistHashPartitionInfo(map, t);
+        }
+    }
+}
+class DistArrayTablePartitionInfo implements PartitionInfo {
+    Table t;
+    DistTablePartitionMap map;
+    final int arrayBegin, arrayEnd;
+    final int shiftForPartitionIdx;
+    final int partitionSize;
+    final PartitionNodeMap partitionNodeMap;
+    final int myIndex;
+    int[] localPartitions;
+    DistArrayTablePartitionInfo(DistTablePartitionMap _map, Table _t) {
+        map = _map;
+        t = _t;
+        myIndex = map.addrMap.myIndex();
+        arrayBegin = t.arrayBeginIndex();
+        arrayEnd = t.arrayEndIndex();
 
-		arraySizePerNode = computeArraySizePerNode(t);
-		shiftForNodeIdx = BitUtils.highestBitPos(arraySizePerNode) - 1;
-		arrayBeginIndex = t.arrayBeginIndex();
-		arrayEndIndex = t.arrayEndIndex();
-	}
+        int size = BitUtils.nextHighestPowerOf2(arrayEnd - arrayBegin + 1);
+        int totalPartitionNum = computeTotalPartitionNum(t);
+        partitionSize = Math.max(size/totalPartitionNum, 1);
+        shiftForPartitionIdx = BitUtils.highestBitPos(partitionSize) - 1;
 
-	DistTablePartitionMap map() {
-		return (DistTablePartitionMap)map;
-	}
+        int nodeNum = ClusterConf.get().getNumWorkers();
+        partitionNodeMap = PartitionNodeMap.create(nodeNum, totalPartitionNum);
+        initLocalInfo();
+    }
 
-	int workerNodeNum() {
-		return ClusterConf.get().getNumWorkers();
-	}
+    int computeTotalPartitionNum(Table t) {
+        if (t.arrayTableSize() < map.defaultPartitionNum*ClusterConf.get().getMaxNumWorkers()) {
+            return t.arrayTableSize();
+        }
+        int totalPartitionNum = map.defaultPartitionNum*ClusterConf.get().getMaxNumWorkers();
+        assert BitUtils.isPowerOf2(totalPartitionNum);
+        return totalPartitionNum;
+    }
 
-	boolean isMasterNode() {
-		return MasterNode.getInstance() != null;
-	}
-	int computeArraySizePerNode(Table t) {
-		int size = BitUtils.nextHighestPowerOf2(t.arrayTableSize());
-		int sizePerNode = size / workerNodeNum();
-		if (sizePerNode < 1) { sizePerNode = 1; }
-		return sizePerNode;
-	}
-	int[] computeLocalRange(Table t) {
-		if (isMasterNode()) return new int[]{-1, -1};
+    void initLocalInfo() {
+        localPartitions = partitionNodeMap.partitions(myIndex);
+    }
 
-		int selfIdx=map().addrMap.myIndex();
-		int arraySizePerNode = computeArraySizePerNode(t);
-		int begin = t.arrayBeginIndex() + arraySizePerNode*selfIdx;
-		int end = begin + arraySizePerNode - 1;
-		if (end > t.arrayEndIndex()) {
-			end = t.arrayEndIndex();
-		}
-		return new int[] {begin, end};
-	}
+    public int partitionNum() { return localPartitions.length; }
 
-	int computePartitionNum(Table t) {
-		int arraySizePerNode = computeArraySizePerNode(t);
-		if (arraySizePerNode < map.defaultPartitionNum) {
-			return arraySizePerNode;
-		}
-		return map.defaultPartitionNum;
-	}
+    public boolean isLocal(int range) {
+        return partitionNodeMap.node((range - arrayBegin) >> shiftForPartitionIdx) == myIndex;
+    }
 
-	public boolean isLocal(int range) {
-		return range >= localRangeBeginIdx && range <= localRangeEndIdx;
-	}
+    public int partitionBegin(int partitionIdx) {
+        int begin = Math.min(arrayBegin + partitionSize * partitionIdx, arrayEnd);
+        return begin;
+    }
 
-	public int machineIndexFor(Object o) {
-		int rangeVal = (Integer)o;
-		return (rangeVal - arrayBeginIndex) >> shiftForNodeIdx;
-	}
+    public int partitionSize(int partitionIdx) {
+        int begin = arrayBegin + partitionSize*partitionIdx;
+        int end = arrayBegin + partitionSize*(partitionIdx + 1) - 1;
+        if (begin > arrayEnd) {
+            return 0;
+        } else if (end > arrayEnd) {
+            return arrayEnd - begin + 1;
+        } else {
+            return end - begin + 1;
+        }
+    }
 
-	public int machineIndexFor(int i) {
-		int rangeVal = i;
-		return (rangeVal - arrayBeginIndex) >> shiftForNodeIdx;
-	}
+    @Override
+    public int[] getRange(int partitionIdx) {
+        int[] range = new int[2];
+        range[0] = arrayBegin + partitionSize * partitionIdx;
+        range[1] = arrayBegin + partitionSize * (partitionIdx + 1) - 1;
+        if (range[0] > arrayEnd) {
+            range[0] = arrayEnd + 1;
+            range[1] = arrayEnd;
+        } else if (range[1] > arrayEnd) {
+            range[1] = arrayEnd;
+        }
+        return range;
+    }
 
-	public int machineIndexFor(long l) {
-		int rangeVal = (int)l;
-		return (rangeVal - arrayBeginIndex) >> shiftForNodeIdx;
-	}
+    public int getHashIndex(int hash) {
+        throw new UnsupportedOperationException();
+    }
+
+    public int getIndex(Object o) {
+        Integer rangeVal = (Integer)o;
+        return getRangeIndex(rangeVal);
+    }
+    public int getIndex(int range) {
+        return getRangeIndex(range);
+    }
+    public int getRangeIndex(int range) {
+        return (range - arrayBegin) >> shiftForPartitionIdx;
+    }
+
+    public int machineIndexFor(Object o) {
+        int rangeVal = (Integer)o;
+        return partitionNodeMap.node(getRangeIndex(rangeVal));
+    }
+
+    public int machineIndexFor(int i) {
+        int rangeVal = i;
+        return partitionNodeMap.node(getRangeIndex(rangeVal));
+    }
+
+    public int machineIndexFor(long l) {
+        int rangeVal = (int)l;
+        return partitionNodeMap.node(getRangeIndex(rangeVal));
+    }
+
+    public int machineIndexFor(float f) {
+        throw new UnsupportedOperationException();
+    }
+
+    public int machineIndexFor(double d) {
+        throw new UnsupportedOperationException();
+    }
 }
 
-public class DistPartitionInfo extends PartitionInfo {
-	public static PartitionInfo create(DistTablePartitionMap map, Table t) {
-		if (t.isArrayTable()) {
-			return new DistArrayTablePartitionInfo(map, t);
-		} else {
-			return new DistPartitionInfo(map, t);
-		}
-	}
-	final int myIndex;
-	final int maskForNodeIndex;
-	final int shiftNodeIdxBits;
-	DistPartitionInfo(TablePartitionMap _map, Table _t) {
-		super(_map, _t);
-		myIndex = map().addrMap.myIndex();
-		maskForNodeIndex = workerNodeNum() - 1;
-		shiftNodeIdxBits = BitUtils.highestBitPos(workerNodeNum()) - 1;
-	}
-	int workerNodeNum() {
-		return ClusterConf.get().getNumWorkers();
-	}
-	DistTablePartitionMap map() {
-		return (DistTablePartitionMap)map;
-	}
-	public boolean isLocal(int hash) {
-		assert !(t instanceof GeneratedT);
-		return machineIndexForHash(hash) == myIndex;
-	}
+class DistHashPartitionInfo implements PartitionInfo {
+    Table t;
+    DistTablePartitionMap map;
+    final int partitionNum;
+    final int maskForHashIndex;
+    final PartitionNodeMap partitionNodeMap;
 
-	public int machineIndexFor(Object o) {
-		int hashVal = HashCode.get(o);
-		return machineIndexForHash(hashVal);
-	}
-	public int machineIndexFor(int i) {
-		int hashVal = HashCode.get(i);
-		return machineIndexForHash(hashVal);
-	}
-	public int machineIndexFor(long l) {
-		int hashVal = HashCode.get(l);
-		return machineIndexForHash(hashVal);
-	}
-	public int machineIndexFor(float f) {
-		int hashVal = HashCode.get(f);
-		return machineIndexForHash(hashVal);
-	}
-	public int machineIndexFor(double d) {
-		int hashVal = HashCode.get(d);
-		return machineIndexForHash(hashVal);
-	}
-	public int machineIndexForHash(int hash) {
-		hash = hash>>12;
-		if (hash < 0) {
-			hash = -hash;
-			if (hash == Integer.MIN_VALUE) { hash = 0; }
-		}
-		return hash & maskForNodeIndex;
-	}
-	public int getHashIndex(int hash) {
+    final int myIndex;
+    DistHashPartitionInfo(DistTablePartitionMap _map, Table _t) {
+        map = _map;
+        t = _t;
+
+        myIndex = map.addrMap.myIndex();
+
+        int totalPartitionNum = ClusterConf.get().getMaxNumWorkers()*map.defaultPartitionNum;
+        assert BitUtils.isPowerOf2(totalPartitionNum);
+        maskForHashIndex = totalPartitionNum - 1;
+
+        partitionNum = computePartitionNum(t);
+        int nodeNum = ClusterConf.get().getNumWorkers();
+        partitionNodeMap = PartitionNodeMap.create(nodeNum, totalPartitionNum);
+    }
+
+    int computePartitionNum(Table t) {
+        if (t instanceof GeneratedT) {
+            return 1;
+        } else {
+            assert BitUtils.isPowerOf2(map.defaultPartitionNum);
+            return map.defaultPartitionNum;
+        }
+    }
+
+    public boolean isLocal(int hash) {
+        assert !(t instanceof GeneratedT);
+        return machineIndexForHash(hash) == myIndex;
+    }
+
+    public int partitionNum() { return partitionNum; }
+
+    public int getHashIndex(int hash) {
         if (hash < 0) {
             hash = -hash;
             if (hash == Integer.MIN_VALUE) { hash = 0; }
         }
-		return (hash >> shiftNodeIdxBits) & maskForHashIndex;
+        return hash & maskForHashIndex;
     }
+    public int getIndex(Object o) {
+        return getHashIndex(o.hashCode());
+    }
+
+    public int getIndex(int val) {
+        return getHashIndex(val);
+    }
+
+    public int machineIndexFor(Object o) {
+        int hashVal = HashCode.get(o);
+        return machineIndexForHash(hashVal);
+    }
+    public int machineIndexFor(int i) {
+        int hashVal = HashCode.get(i);
+        return machineIndexForHash(hashVal);
+    }
+    public int machineIndexFor(long l) {
+        int hashVal = HashCode.get(l);
+        return machineIndexForHash(hashVal);
+    }
+    public int machineIndexFor(float f) {
+        int hashVal = HashCode.get(f);
+        return machineIndexForHash(hashVal);
+    }
+    public int machineIndexFor(double d) {
+        int hashVal = HashCode.get(d);
+        return machineIndexForHash(hashVal);
+    }
+
+    public int machineIndexForHash(int hash) {
+        hash = hash>>12;
+        if (hash < 0) {
+            hash = -hash;
+            if (hash == Integer.MIN_VALUE) { hash = 0; }
+        }
+        int partitionIdx = hash & maskForHashIndex;
+        return partitionNodeMap.node(partitionIdx);
+    }
+
+    public int partitionBegin(int partitionIdx) { throw new UnsupportedOperationException(); }
+    public int partitionSize(int partitionSize) { throw new UnsupportedOperationException(); }
+    public int[] getRange(int partitionIdx) { throw new UnsupportedOperationException(); }
+    public int getRangeIndex(int range) { throw new UnsupportedOperationException(); }
+
 }

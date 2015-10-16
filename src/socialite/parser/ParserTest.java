@@ -9,7 +9,6 @@ import java.util.SortedSet;
 import socialite.codegen.Analysis;
 import socialite.codegen.Epoch;
 import socialite.codegen.RuleComp;
-import socialite.engine.Config;
 import socialite.functions.FunctionLoader;
 import socialite.parser.antlr.ColumnGroup;
 import socialite.util.AnalysisException;

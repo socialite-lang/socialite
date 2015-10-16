@@ -3,10 +3,8 @@ package socialite.resource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import socialite.dist.master.MasterNode;
 import socialite.parser.GeneratedT;
 import socialite.parser.Table;
-import socialite.util.HashCode;
 
 public class DistTablePartitionMap extends TablePartitionMap {
 	public static final Log L=LogFactory.getLog(DistTablePartitionMap.class);

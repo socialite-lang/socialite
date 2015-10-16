@@ -7,21 +7,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import socialite.dist.IdleStat;
-import socialite.dist.master.MasterNode;
 import socialite.dist.worker.WorkerConnPool;
-import socialite.engine.Config;
-import socialite.parser.Table;
 
 
 public class SRuntimeMaster extends SRuntime {
     public static final Log L=LogFactory.getLog(SRuntimeMaster.class);
     static SRuntimeMaster inst=null;
-    public static SRuntimeMaster createTest(WorkerAddrMap addrMap) {
-        inst =new SRuntimeMaster(addrMap, Config.dist(1));
-        return inst;
-    }
-    public static SRuntimeMaster create(MasterNode master, WorkerAddrMap addrMap) {
-        inst =new SRuntimeMaster(addrMap, master.getWorkerConf());
+    public static SRuntimeMaster create(WorkerAddrMap addrMap) {
+        inst =new SRuntimeMaster(addrMap);
         return inst;
     }
     public static SRuntimeMaster getInst() { return inst; }
@@ -31,14 +24,13 @@ public class SRuntimeMaster extends SRuntime {
     Sender sender;
     ConcurrentHashMap<Integer, IdleStat> idleStatMap;
 
-    public SRuntimeMaster(WorkerAddrMap _addrMap, Config _conf) {
+    public SRuntimeMaster(WorkerAddrMap _addrMap) {
         // used by master-node
         workerAddrMap = _addrMap;
-        conf=_conf;
         workerConn = null;
         sender = null;
-        tableMap = new HashMap<String, Table>();
-        idleStatMap = new ConcurrentHashMap<Integer, IdleStat>(512, 0.75f, 64);
+        tableMap = new HashMap<>();
+        idleStatMap = new ConcurrentHashMap<>(512, 0.75f, 64);
     }
 
     public IdleStat getIdleStat(int epochId) {
@@ -83,7 +75,6 @@ public class SRuntimeMaster extends SRuntime {
         return workerAddrMap;
     }
     public Sender sender() { return sender; }
-    public Config getConf() { return conf; }
 
     public TablePartitionMap getPartitionMap() {
         if (partitionMap==null) {

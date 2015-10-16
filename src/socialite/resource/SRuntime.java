@@ -17,7 +17,6 @@ import org.apache.commons.logging.LogFactory;
 
 import socialite.codegen.Epoch;
 import socialite.dist.EvalRefCount;
-import socialite.engine.Config;
 import socialite.eval.*;
 import socialite.parser.GeneratedT;
 import socialite.parser.Rule;
@@ -40,13 +39,12 @@ public class SRuntime {
 	public static long maxMemory() { return Runtime.getRuntime().maxMemory(); }
 
 	static SRuntime inst=null;
-	public static SRuntime create(Config conf) {
-		inst = new SRuntime(conf);
+	public static SRuntime create() {
+		inst = new SRuntime();
 		return inst;
 	}
 	public static SRuntime getInst() { return inst; }
 
-	Config conf;
 	Map<String, Table> tableMap;
 	TablePartitionMap partitionMap;
 	TableInstRegistry tableReg;
@@ -68,12 +66,8 @@ public class SRuntime {
 		}
 	}
 	public SRuntime() {
-		tableMap = new HashMap<String, Table>();
-	}
-	SRuntime(Config _conf) {
-		conf=_conf;
-		tableMap = new HashMap<String, Table>();
-		idleMap = new ConcurrentHashMap<Integer, Object>(128, 0.75f, 32);
+		tableMap = new HashMap<>();
+		idleMap = new ConcurrentHashMap<>(128, 0.75f, 32);
 		EvalRefCount.getInst(new LocalIdleCallback());
 	}
 	public void waitForIdle(int epochId) throws InterruptedException {
@@ -89,8 +83,6 @@ public class SRuntime {
 	}
 	public WorkerAddrMap getWorkerAddrMap() { throw new SociaLiteException("Not supported"); }
 	public Sender sender() { throw new SociaLiteException("Not supported"); }
-
-	public Config getConf() { return conf; }
 
 	public TablePartitionMap getPartitionMap() {
 		if (partitionMap==null) {
@@ -211,8 +203,8 @@ public class SRuntime {
 		Eval inst=null;
 		try {
 			@SuppressWarnings("unchecked")
-			Constructor<? extends Runnable> c = evalClass.getConstructor(SRuntime.class, Epoch.class, Config.class);
-			inst = (Eval)c.newInstance(this, epoch, conf);
+			Constructor<? extends Runnable> c = evalClass.getConstructor(SRuntime.class, Epoch.class);
+			inst = (Eval)c.newInstance(this, epoch);
 		} catch (Exception e) {
 			L.fatal("Cannot get/call constructor of "+evalClass+":"+e);
 			L.fatal(ExceptionUtils.getStackTrace(e));

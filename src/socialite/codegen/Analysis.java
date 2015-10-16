@@ -17,40 +17,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import socialite.dist.master.MasterNode;
-import socialite.engine.Config;
-import socialite.functions.Choice;
 import socialite.functions.FunctionLoader;
 import socialite.functions.Max;
 import socialite.functions.MeetOp;
 import socialite.functions.Min;
-import socialite.parser.Param;
-import socialite.parser.Literal;
-import socialite.parser.AggrFunction;
-import socialite.parser.AssignOp;
-import socialite.parser.BinOp;
-import socialite.parser.CmpOp;
-import socialite.parser.Column;
-import socialite.parser.Const;
-import socialite.parser.DeltaPredicate;
-import socialite.parser.DeltaRule;
-import socialite.parser.DeltaTable;
-import socialite.parser.Expr;
-import socialite.parser.Function;
-import socialite.parser.IterTable;
-import socialite.parser.PrivPredicate;
-import socialite.parser.MyType;
-import socialite.parser.NoType;
-import socialite.parser.Op;
-import socialite.parser.OpVisitor;
-import socialite.parser.Parser;
-import socialite.parser.Predicate;
-import socialite.parser.PrivateTable;
-import socialite.parser.Query;
-import socialite.parser.RemoteBodyTable;
-import socialite.parser.RemoteHeadTable;
-import socialite.parser.Rule;
-import socialite.parser.Table;
-import socialite.parser.Variable;
+import socialite.parser.*;
 import socialite.parser.antlr.ClearTable;
 import socialite.parser.antlr.ColumnGroup;
 import socialite.parser.antlr.DropTable;
@@ -58,8 +29,6 @@ import socialite.parser.antlr.RuleDecl;
 import socialite.parser.antlr.TableDecl;
 import socialite.parser.antlr.TableStmt;
 import socialite.resource.RuleMap;
-import socialite.resource.SRuntime;
-import socialite.resource.SRuntimeMaster;
 import socialite.util.AnalysisException;
 import socialite.util.Assert;
 import socialite.util.InternalException;
@@ -107,12 +76,6 @@ public class Analysis {
     }
 
     public Analysis(Parser _p) {
-        this(_p.getRules(), _p.getNewTables(), _p.getTableMap(),
-                _p.getTableStmts(), _p.getQuery());
-        p = _p;
-    }
-
-    public Analysis(Parser _p, Config _conf) {
         this(_p.getRules(), _p.getNewTables(), _p.getTableMap(),
                 _p.getTableStmts(), _p.getQuery());
         p = _p;
@@ -287,7 +250,6 @@ public class Analysis {
         processRemoteRules();
 
         prepareEpochs();
-
         processDropTableStmt();
     }
 
@@ -541,27 +503,6 @@ public class Analysis {
         }
         return false;
     }
-    boolean canMatchAnyButNegated(Predicate p1, List<Predicate> plist) {
-        for (Predicate p2 : plist) {
-            if (p2.isNegated()) continue;
-            if (canMatch(p1, p2))
-                return true;
-        }
-        return false;
-    }
-
-    int getDependingRuleDepth(Rule r) {
-        List<Rule> rulesUsingThis = r.getRulesUsingThis();
-        if (rulesUsingThis.size() == 0)
-            return 0;
-        int maxSubDepth = 0;
-        for (Rule r2 : rulesUsingThis) {
-            int tmp = getDependingRuleDepth(r2);
-            if (tmp > maxSubDepth)
-                maxSubDepth = tmp;
-        }
-        return maxSubDepth + 1;
-    }
 
     /**
      * returns true if the updating shard at the head table is same as the block
@@ -570,10 +511,10 @@ public class Analysis {
     public static boolean updateParallelShard(Rule r, Map<String, Table> tableMap) {
         if (isSequentialRule(r, tableMap)) return false;
 
-        return updateSameShard(r.getHead(), r.firstP(), tableMap);
+        return pointingSamePartition(r.getHead(), r.firstP(), tableMap);
     }
 
-    static boolean updateSameShard(Predicate h, Predicate f, Map<String, Table> tableMap) {
+    static boolean pointingSamePartition(Predicate h, Predicate f, Map<String, Table> tableMap) {
          if (f.first() instanceof Const || h.first() instanceof Const) {
             return false;
         }
@@ -582,8 +523,13 @@ public class Analysis {
         if (!v1.equals(v2)) {
             return false;
         }
-        Column c1 = tableMap.get(f.name()).getColumn(0);
-        Column c2 = tableMap.get(h.name()).getColumn(0);
+        Table ht = tableMap.get(h.name());
+        Table ft = tableMap.get(f.name());
+        if (ht instanceof GeneratedT || ft instanceof GeneratedT) {
+            return false;
+        }
+        Column c1 = ht.getColumn(0);
+        Column c2 = ft.getColumn(0);
         return isSameArrayColumn(c1, c2) || isHashShardedColumn(c1, c2);
     }
 
@@ -692,14 +638,14 @@ public class Analysis {
     }
 
     static boolean hasSamePartition(Table t1, Table t2) {
-        if (t1.isModTable() && t2.isModTable()) {
-            return t1.getColumn(0).type().equals(t2.getColumn(0).type());
-        }
         if (t1.isArrayTable() && t2.isArrayTable()) {
             return t1.arrayBeginIndex() == t2.arrayBeginIndex() &&
                     t1.arrayEndIndex() == t2.arrayEndIndex();
+        } else if (!t1.isArrayTable() && !t2.isArrayTable()) {
+            return t1.getColumn(0).type().equals(t2.getColumn(0).type());
+        } else {
+            return false;
         }
-        return false;
     }
     static boolean requireTransfer(Predicate prev, Predicate p, Map<String, Table> tableMap) {
         if (!prev.first().equals(p.first())) {
@@ -1102,7 +1048,7 @@ public class Analysis {
     }
 
     DeltaRule createStartingDeltaRule(Table t, DeltaRule dependingRule) {
-        SArrayList<Param> vars = new SArrayList<Param>();
+        SArrayList<Param> vars = new SArrayList<>();
         for (int i=0; i<t.numColumns(); i++) {
             Variable v = new Variable("v"+i, t.types()[i]);
             vars.add(v);
@@ -1119,6 +1065,7 @@ public class Analysis {
         deltaRule.setInScc();
         addToRulesByHeadName(deltaRule);
         boolean isFirstP = dependingRule.firstP().name().equals(DeltaTable.name(t));
+System.out.println("Adding delta-rule mapping:"+deltaRule+"#"+deltaRule.id()+" dep:"+dependingRule+"#"+dependingRule.id()+", isFirstP:"+isFirstP);
         ruleMap.addDeltaRuleMapping(deltaRule.id(), dependingRule.id(), isFirstP);
 
         deltaRules.add(deltaRule);
@@ -1231,7 +1178,7 @@ public class Analysis {
                         base.getHead().name().equals(r.firstP().name())) {
                     rc.removeAllStartingRule();
 
-                    dep.removeAllStartingRule();
+                    //dep.removeAllStartingRule();
                     dep.addStartingRule(base);
                     dep.setPipeliningFrom(base);
                     dep.add(base);
@@ -1245,22 +1192,19 @@ public class Analysis {
         ruleComps.removeAll(toRemove);
     }
     List<DeltaRule> createStartingDeltaRules() {
-        List<DeltaRule> startingDeltaRules = new ArrayList<DeltaRule>();
+        List<DeltaRule> startingDeltaRules = new ArrayList<>();
         for (RuleComp rc: ruleComps) {
             if (!rc.scc()) continue;
             if (rc.get(0).isLeftRec()) continue;
 
             List<DeltaRule> addedRules = new ArrayList<DeltaRule>();
             rc.removeAllStartingRule();
+
             for (Rule r:rc.getRules()) {
                 if (!(r instanceof DeltaRule)) continue;
                 DeltaRule dr = (DeltaRule)r;
 
                 Table t = tableMap.get(dr.getTheP().origName());
-                if (t.isArrayTable() && t.numColumns()<=2) {
-                    rc.addStartingRule(dr.origRule());
-                    continue;
-                }
                 DeltaRule startRule = createStartingDeltaRule(t, dr);
                 startingDeltaRules.add(startRule);
                 rc.addStartingRule(startRule);
@@ -1490,7 +1434,6 @@ public class Analysis {
     // where x,y,.. a,b are non-functions
     boolean isTrivialRecursion(Rule r) {
         if (r.getBody().size() != 1) return false;
-        if (r.getBodyP().size() != 1) return false;
 
         Predicate h = r.getHead();
         if (h.hasFunctionParam())
@@ -1513,10 +1456,10 @@ public class Analysis {
         // find SCC (strongly-connectec-component) and other rule compoments
         // see {@link RuleComp}
 
-        Set<Rule> addedRules = new LinkedHashSet<Rule>();
-        List<RuleComp> comps = new ArrayList<RuleComp>();
-        Set<Rule> marked = new LinkedHashSet<Rule>();
-        for (Rule r : rules) {
+        Set<Rule> addedRules = new LinkedHashSet<>();
+        List<RuleComp> comps = new ArrayList<>();
+        Set<Rule> marked = new LinkedHashSet<>();
+        for (Rule r: rules) {
             if (r.isSimpleUpdate()) continue;
             if (r.isSimpleArrayInit()) continue;
             if (isTrivialRecursion(r)) continue;
@@ -1526,26 +1469,26 @@ public class Analysis {
 
             marked.clear();
             List<Rule> result = findSCCfrom(r, marked, r);
+            RuleComp scc;
             if (result != null) {
-                assert !addedRules.contains(result.get(0));
                 for (Rule _r:result) _r.setInScc();
+                scc = new RuleComp(result, true/*scc*/);
+                comps.add(scc);
                 addedRules.addAll(result);
-                RuleComp rc = new RuleComp(result, true/*scc*/);
-                comps.add(rc);
             }
-
+            /*
             result = findPipelinedCompFrom(r);
             if (result != null) {
                 addedRules.addAll(result);
-                RuleComp rc = new RuleComp(result, false/*not scc*/);
+                RuleComp rc = new RuleComp(result, false);
                 rc.addStartingRule(r);
                 rc.setPipeliningFrom(r);
                 comps.add(rc);
-            }
+            }*/
         }
 
-        // (single rule itself becomes a trivial scc)
-        for (Rule r : rules) {
+        // (each single rule is a SCC by itself)
+        for (Rule r: rules) {
             if (!addedRules.contains(r))
                 comps.add(new RuleComp(r, false/*not scc*/));
         }
@@ -1556,7 +1499,7 @@ public class Analysis {
         Table headT = tableMap.get(from.getHead().name());
         if (!headT.isApprox()) return null;
 
-        List<Rule> rules = new ArrayList<Rule>();
+        List<Rule> rules = new ArrayList<>();
         for (Rule to:from.getRulesUsingThis()) {
             rules.add(to);
         }

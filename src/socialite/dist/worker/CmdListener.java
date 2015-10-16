@@ -220,7 +220,7 @@ public class CmdListener implements WorkerCmd {
     public synchronized void init(WorkerAddrMapW workerAddrMapW) throws RemoteException {
         WorkerAddrMap workerMap = workerAddrMapW.get();
         workerMap.initMyIndex();
-        SRuntimeWorker runtime = SRuntimeWorker.create(worker.getConf(), workerMap, worker.getConnPool());
+        SRuntimeWorker runtime = SRuntimeWorker.create(workerMap, worker.getConnPool());
         Manager.getInst().setRuntime(runtime);
         if (!worker.isReady()) {
             int tryCnt;
@@ -235,39 +235,6 @@ public class CmdListener implements WorkerCmd {
             }
         }
     }
-
-    /*
-	@Override
-	public BooleanWritable beginSession(Text _path, WorkerAddrMapW workerAddrMapW, boolean loadSession) {
-		String path=_path.toString();
-		WorkerAddrMap workerMap = workerAddrMapW.get();
-		
-		SRuntime.newWorkerRt(worker.getConf(), workerMap, worker.getConnPool());
-		
-		PathTo.setcwd(path);
-		prepareWorkSpace();
-		if (loadSession) {
-			loadTables();
-		}
-		return new BooleanWritable(true);
-	}
-	@Override	
-	public BooleanWritable storeSession(Text _path) {
-		String path=_path.toString();
-		PathTo.setcwd(path);
-		storeTables();
-		return new BooleanWritable(true);
-	}
-	@Override	
-	public BooleanWritable endSession() {
-		Worker.haltEpoch();
-		
-		SRuntime.voidWorkerRt();
-		Loader.cleanup();
-		EvalProgress.getInst().clear();
-		CodeGenMain.clearCache();		
-		return new BooleanWritable(true);
-	}*/
 
     void cleanupLocalWorkSpace(String path) {
         File ws = new File(path);

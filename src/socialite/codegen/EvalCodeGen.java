@@ -9,14 +9,11 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
 import socialite.dist.master.MasterNode;
-import socialite.engine.Config;
 import socialite.parser.GeneratedT;
 import socialite.parser.Predicate;
 import socialite.parser.Rule;
 import socialite.parser.Table;
 
-//import org.antlr.stringtemplate.StringTemplate;
-//import org.antlr.stringtemplate.StringTemplateGroup;
 
 public class EvalCodeGen {
     static int id=0;
@@ -31,15 +28,12 @@ public class EvalCodeGen {
     Map<String, Table> tableMap;
     List<Rule> simpleInitRule;
     String evalName;
-    Config conf;
 
-    public EvalCodeGen(Epoch _epoch, List<Table> _tables,
-                       Map<String, Table> _tableMap, Config _conf) {
+    public EvalCodeGen(Epoch _epoch, List<Table> _tables, Map<String, Table> _tableMap) {
         epoch = _epoch;
         rules = epoch.getRules();
         newTables = _tables;
         tableMap = _tableMap;
-        conf = _conf;
 
         tmplGroup = CodeGen.getEvalGroup();
         evalTmpl = tmplGroup.getInstanceOf("evalClass");

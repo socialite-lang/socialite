@@ -13,9 +13,7 @@ import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.RPC;
 
-import org.apache.hadoop.net.NetUtils;
 import socialite.dist.worker.WorkerCmd;
-import socialite.engine.Config;
 import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
 import socialite.resource.WorkerAddrMapW;
@@ -106,7 +104,7 @@ public class MasterNode {
         if (theInstance != null) {
             throw new AssertionError("MasterNode is already created");
         }
-        theInstance = new MasterNode(Config.dist());
+        theInstance = new MasterNode();
         return theInstance;
     }
     public static MasterNode getInstance() { return theInstance; }
@@ -161,16 +159,13 @@ public class MasterNode {
         return callWorkers(m, param, false);
     }
 
-    Config conf; // master node conf
-    Config workerConf; // worker node may have different config (e.g. cpu #)
     QueryListener queryListener;
     WorkerReqListener workerListener;
     ConcurrentMap<UnresolvedSocketAddr, WorkerCmd> workerMap;
     ConcurrentMap<UnresolvedSocketAddr, UnresolvedSocketAddr> workerDataAddrMap; // {cmd-address: data-address}
     int expectedWorkerNum = ClusterConf.get().getNumWorkers();
 
-    private MasterNode(Config _conf) {
-        conf = _conf;
+    private MasterNode() {
         workerMap = new ConcurrentHashMap<UnresolvedSocketAddr, WorkerCmd>();
         workerDataAddrMap = new ConcurrentHashMap<UnresolvedSocketAddr, UnresolvedSocketAddr>();
     }
@@ -237,21 +232,13 @@ public class MasterNode {
     }
 
     void initWorkerReqListener() {
-        workerListener = new WorkerReqListener(conf, this);
+        workerListener = new WorkerReqListener(this);
         workerListener.start();
     }
 
     void initQueryListener() {
-        queryListener =new QueryListener(conf, this);
+        queryListener =new QueryListener(this);
         queryListener.start();
-    }
-
-    public Config getWorkerConf() {
-        return workerConf;
-    }
-    public void setWorkerConf(Config _conf) {
-        assert workerConf == null;
-        workerConf = _conf;
     }
 
     public Map<UnresolvedSocketAddr, WorkerCmd> getWorkerCmdMap() {

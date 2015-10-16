@@ -43,18 +43,15 @@ public class LocalEngine {
 	public static final Log L=LogFactory.getLog(LocalEngine.class);
 	
 	Parser parser;
-	Config conf;
 	SRuntime runtime;
 
-    public LocalEngine() { this(Config.par()); }
-	public LocalEngine(Config _conf) {		
-		conf = _conf;		
+	public LocalEngine() {
 		init();
-		Manager.create(conf).setRuntime(runtime);
+		Manager.create().setRuntime(runtime);
 	}
 	void init() {
 		parser=new Parser();
-		runtime = SRuntime.create(conf);
+		runtime = SRuntime.create();
 	}
 
     public TableRefLocal getTableRef(String name) {
@@ -63,8 +60,6 @@ public class LocalEngine {
             return null;
         return new TableRefLocal(t);
     }
-	public Config getConf() { return conf; }
-	
 	public CodeGenMain compile(String program) {
 		CodeGenMain codeGen;
 		try {
@@ -72,7 +67,7 @@ public class LocalEngine {
 				parser.parse(program);				
 				Analysis an = new Analysis(parser);
 				an.run();
-				codeGen = new CodeGenMain(conf, an, runtime);
+				codeGen = new CodeGenMain(an, runtime);
 				//long start=System.currentTimeMillis();
 				codeGen.generate();
 				//System.out.println("generate time:"+(System.currentTimeMillis()-start)+" ms");
@@ -121,10 +116,6 @@ public class LocalEngine {
 			    }*/
 			}
 		} catch (Exception e) {
-			if (conf.isVerbose()) {
-				L.error("Exception while running "+program);
-				L.error(ExceptionUtils.getStackTrace(e));
-			}
 			throw new SociaLiteException(e);
 		}
 	}
@@ -175,10 +166,8 @@ public class LocalEngine {
 			//System.out.println("Query running:"+(System.currentTimeMillis()-start)+"ms");
 			//L.debug("All exec time:"+(System.currentTimeMillis()-start)+"ms");
 		} catch (Exception e) {
-			if (conf.isVerbose()) {
-				L.error("Exception while running "+program);
-				L.error(ExceptionUtils.getStackTrace(e));
-			}
+			L.error("Exception while running "+program);
+			L.error(ExceptionUtils.getStackTrace(e));
 			if (Thread.currentThread().isInterrupted()) {
 				return;
 			} 

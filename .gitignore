@@ -7,3 +7,6 @@ jython/cachedir/
 gen_master/
 logs/
 socialite-all.jar
+.idea/workspaces.xml
+.idea/tasks.xml
+.idea/dictionaries

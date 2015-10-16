@@ -2,27 +2,21 @@ package socialite.eval;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryNotificationInfo;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.util.List;
 import java.util.Random;
 
-import javax.management.Notification;
-import javax.management.NotificationEmitter;
-import javax.management.NotificationListener;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import socialite.dist.EvalRefCount;
+import socialite.dist.master.MasterNode;
 import socialite.dist.worker.WorkerNode;
-import socialite.engine.Config;
 import socialite.resource.SRuntime;
 import socialite.resource.VisitorBuilder;
 import socialite.util.Assert;
-import socialite.util.ByteBufferPool;
+import socialite.yarn.ClusterConf;
 
 class LowMemoryDetector {
 	static MemoryPoolMXBean findTenuredGenPool() {
@@ -60,9 +54,9 @@ public class Manager extends Thread {
 	public synchronized static Manager getInst() {
 		return theInstance;
 	}
-	public synchronized static Manager create(Config conf) {
+	public synchronized static Manager create() {
 		assert theInstance==null;
-		theInstance = new Manager(conf);
+		theInstance = new Manager();
 		return theInstance;
 	}
 	
@@ -77,7 +71,6 @@ public class Manager extends Thread {
 		}
 	}
 
-	Config conf;
 	volatile SRuntime runtime;
 	TaskFactory taskFactory;
 	Random rand = new Random();
@@ -86,10 +79,9 @@ public class Manager extends Thread {
 	Thread[] workerThreads;
 	final boolean verbose = false;
 
-	public Manager(Config _conf) {
+	public Manager() {
 		super("Manager");
-		conf = _conf;
-		initWorkers(conf.getWorkerThreadNum());
+		initWorkers(ClusterConf.get().getNumWorkerThreads());
 		taskFactory = new TaskFactory();
 		LowMemoryDetector.install();
 	}
@@ -235,8 +227,11 @@ public class Manager extends Thread {
 		interrupt();
 	}
 
+	boolean isDistributed() {
+		return MasterNode.getInstance() != null;
+    }
 	public void handleError(Task t, Throwable e) {
-		if (conf.isDistributed())
+		if (isDistributed())
 			handleErrorDist(t, e);
 		else handleErrorLocal(t, e);
 	}

@@ -97,7 +97,7 @@ fi
 JVM_OPTS="$JVM_OPTS -da"
 JVM_OPTS="$JVM_OPTS -server -Xss256k"
 JVM_OPTS="$JVM_OPTS -XX:MaxInlineSize=128"
-JVM_OPTS="$JVM_OPTS -XX:+UseParallelGC -XX:+UseTLAB -XX:TLABSize=8M -XX:+ResizeTLAB"
+JVM_OPTS="$JVM_OPTS -XX:+UseG1GC -XX:+UseTLAB -XX:TLABSize=8M -XX:+ResizeTLAB"
 
 # Use conditional card marking for Java 1.7.0_40 and up
 if [ "$JVM_VERSION" -ge 17 ] && [ "$JVM_ARCH" = "64-Bit" ] ; then

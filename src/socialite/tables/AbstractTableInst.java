@@ -5,14 +5,15 @@ import org.apache.commons.logging.LogFactory;
 
 import socialite.util.Assert;
 
+import java.util.List;
+
 public abstract class AbstractTableInst implements TableInst {
-	public static final Log L=LogFactory.getLog(AbstractTableInst.class);
-	
-	public void clear(int from, int to) {
-		Assert.not_supported();
-	}
-	public int totalAllocSize() {
-		Assert.not_implemented();
-		return -1;
-	}
+    public static final Log L=LogFactory.getLog(AbstractTableInst.class);
+
+    public void init(List<Object> args) {
+        throw new UnsupportedOperationException();
+    }
+    public int totalAllocSize() {
+        throw new UnsupportedOperationException();
+    }
 }

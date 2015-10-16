@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
-import socialite.engine.Config;
 import socialite.parser.Column;
 import socialite.parser.DeltaTable;
 import socialite.parser.FixedSizeTable;
@@ -24,9 +23,6 @@ import socialite.util.SociaLiteException;
 import socialite.util.concurrent.AtomicByteArray;
 import socialite.util.concurrent.NonAtomicByteArray;
 import socialite.util.concurrent.NonAtomicReferenceArray;
-
-//import org.antlr.stringtemplate.StringTemplate;
-//import org.antlr.stringtemplate.StringTemplateGroup;
 
 public class TableCodeGen {
 	static String tableGroupFile = "Table.stg";		
@@ -122,13 +118,7 @@ public class TableCodeGen {
 		tableTmpl.add("name", table.className());		
 		tableTmpl.add("id", table.id());
 		tableTmpl.add("multiSet", table.isMultiSet());
-        if (table.isConcurrent()) {
-            tableTmpl.add("byteArrayClass", AtomicByteArray.class.getName());
-            tableTmpl.add("concurrent", true);
-        } else {
-            tableTmpl.add("byteArrayClass", NonAtomicByteArray.class.getName());
-        }
-		
+
 		List<ColumnGroup> colGroups = table.getColumnGroups();
 		ColumnGroup group = colGroups.get(0);
 				
@@ -222,22 +212,6 @@ public class TableCodeGen {
             TableType tableType = getTableType(table.getColumnGroups().get(i), hasNested);
 			ST tmpl = getTableTemplate(tableType);
 			if (hasNested) tmpl.add("nestedTable", nestedTableName(i+1));
-            if (tableType == TableType.ArrayTable) {
-                String byteArrayClass = NonAtomicByteArray.class.getName();
-                if (table.isConcurrent())
-                    byteArrayClass = AtomicByteArray.class.getName();
-                tmpl.add("byteArrayClass", byteArrayClass);
-            }
-            if (tableType == TableType.ArrayNestedTable) {
-                String refArrayClass = NonAtomicReferenceArray.class.getName();
-                if (table.isConcurrent())
-                    refArrayClass = AtomicReferenceArray.class.getName();
-                tmpl.add("refArrayClass", refArrayClass);
-            }
-            
-            if (table.isConcurrent()) {
-                tmpl.add("concurrent", true);
-            }
 
 			tmpl.add("tableName", table.name());
 			tmpl.add("name", nestedTableName(i));
@@ -342,10 +316,6 @@ public class TableCodeGen {
 	}
 
 	/* static methods  */
-
-	/**
-	 *  See {@link Config#setDebugOpt(String opt, boolean val)}, {@link Config#getDebugOpt(String opt)} */
-	//static final boolean GENERATE_NEW_TABLE_JAVA_SOURCES = true;
 
     static final LinkedHashMap<String,byte[]> EMPTY_MAP = new LinkedHashMap<String,byte[]>(0);
 	public static LinkedHashMap<String, byte[]> ensureExist(List<Table> tables) throws InternalException {

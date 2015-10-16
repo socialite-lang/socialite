@@ -13,12 +13,10 @@ import java.util.Set;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
-import socialite.engine.Config;
 import socialite.parser.Column;
 import socialite.parser.Table;
 import socialite.parser.antlr.ColumnGroup;
 import socialite.parser.antlr.ColumnDecl;
-import socialite.util.Loader;
 import socialite.util.SociaLiteException;
 
 
@@ -97,7 +95,7 @@ public class VisitorBaseGen {
 		}
 	}
 	
-	public static LinkedHashMap<String,byte[]> generate(Config conf, List<Table> tables) {
+	public static LinkedHashMap<String,byte[]> generate(List<Table> tables) {
 		LinkedHashMap<String,byte[]> generatedClasses = new LinkedHashMap<String,byte[]>();
 		for (Table t:tables) {
 			if (t.numColumns()<=3) continue;

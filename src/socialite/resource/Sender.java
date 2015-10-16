@@ -11,7 +11,6 @@ import org.apache.commons.logging.LogFactory;
 import socialite.dist.msg.WorkerMessage;
 import socialite.dist.worker.ChannelMux;
 import socialite.dist.worker.WorkerConnPool;
-import socialite.engine.Config;
 import socialite.eval.EvalWithTable;
 import socialite.tables.TableInst;
 import socialite.util.ByteBufferPool;

@@ -20,14 +20,14 @@ import socialite.yarn.ClusterConf;
 public class TablePartitionMap {
     public static final Log L=LogFactory.getLog(TablePartitionMap.class);
 
-    final int defaultPartitionNum, minPartitionSize;
+    final int defaultPartitionNum;
     CopyOnWriteArrayList<PartitionInfo> partitionInfo;
 
     public TablePartitionMap() {
         int threadNum = ClusterConf.get().getNumWorkerThreads();
-        defaultPartitionNum = BitUtils.nextHighestPowerOf2(threadNum * 16);
-        minPartitionSize = 1;
-        partitionInfo = new CopyOnWriteArrayList<PartitionInfo>();
+        int partitionNum = threadNum*16;
+        defaultPartitionNum = BitUtils.nextHighestPowerOf2(partitionNum);
+        partitionInfo = new CopyOnWriteArrayList<>();
     }
 
     void addNullPartitionInfo(int maxIdx) {
@@ -60,22 +60,10 @@ public class TablePartitionMap {
     }
 
     public int getIndex(int tableId, Object o) {
-        Table t=partitionInfo.get(tableId).t;
-        if (t.isArrayTable()) {
-            int range = (Integer)o;
-            return partitionInfo.get(tableId).getRangeIndex(range);
-        } else {
-            int hash = HashCode.get(o);
-            return partitionInfo.get(tableId).getHashIndex(hash);
-        }
+        return partitionInfo.get(tableId).getIndex(o);
     }
     public int getIndex(int tableId, int rangeOrHash) {
-        Table t=partitionInfo.get(tableId).t;
-        if (t.isArrayTable()) {
-            return partitionInfo.get(tableId).getRangeIndex(rangeOrHash);
-        } else {
-            return partitionInfo.get(tableId).getHashIndex(rangeOrHash);
-        }
+        return partitionInfo.get(tableId).getIndex(rangeOrHash);
     }
     public int getIndex(int tableId, long rangeOrHash) { return getHashIndex(tableId, rangeOrHash); }
     public int getIndex(int tableId, float rangeOrHash) { return getHashIndex(tableId, rangeOrHash); }
@@ -97,16 +85,6 @@ public class TablePartitionMap {
         return partitionInfo.get(tableId).getHashIndex(HashCode.get(val));
     }
 
-    public int localBeginIndex(int tableId) {
-        return partitionInfo.get(tableId).getLocalTableRange()[0];
-    }
-    public int localEndIndex(int tableId) {
-        return partitionInfo.get(tableId).getLocalTableRange()[1];
-    }
-    public int localSize(int tableId) {
-        int[] range = partitionInfo.get(tableId).getLocalTableRange();
-        return range[1]-range[0]+1;
-    }
     public boolean isLocal(int tableId, Object o) {
         if (o instanceof Integer) {
             int i=(Integer)o;

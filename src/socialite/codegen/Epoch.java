@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import socialite.collection.SArrayList;
@@ -47,10 +49,6 @@ public class Epoch implements Externalizable {
 	
 	transient Class evalClass;
 	String evalClassName;
-	
-	transient List<Class> initClasses = new SArrayList<Class>(4);
-	List<String> initClassNames = new SArrayList<String>(4);
-	List<List<Const>> initClassConsts = new SArrayList<List<Const>>(4);
 	
 	TIntObjectHashMap<String> visitorClassMap=new TIntObjectHashMap<String>(); // rule-id to visitor class
 	
@@ -93,12 +91,6 @@ public class Epoch implements Externalizable {
 		for (int i=0; i<_name.length; i++)
 			_name[i] = in.readChar();
 		evalClassName = new String(_name);
-		if (in.readByte()==1) {
-			initClassNames = (List<String>) in.readObject();
-		}
-		if (in.readByte()==1) {
-			initClassConsts = (List<List<Const>>) in.readObject();
-		}
 
     	visitorClassMap = new TIntObjectHashMap<String>(0);
         visitorClassMap.readExternal(in);
@@ -119,11 +111,6 @@ public class Epoch implements Externalizable {
 
 		out.writeInt(evalClassName.length());
 		out.writeChars(evalClassName);
-		if (initClassNames.isEmpty()) { out.writeByte(0); } 
-		else { out.writeByte(1); out.writeObject(initClassNames); }
-		
-		if (initClassConsts.isEmpty()) { out.writeByte(0); } 
-		else { out.writeByte(1); out.writeObject(initClassConsts); }
 
         visitorClassMap.writeExternal(out);
         ruleMap.writeExternal(out);
@@ -149,7 +136,6 @@ public class Epoch implements Externalizable {
 		return ruleMap;
 	}
 	
-	public int getRuleNum() { return getRules().size(); }
 	public int getRuleCompNum() { return ruleComps.size(); }
 	
 	// should be used after RuleAnalysis.run() (not while RuleAnalysis.run())
@@ -177,31 +163,18 @@ public class Epoch implements Externalizable {
 		return topologicalOrder.iterator();
 	}
 	
-	public void addInitClass(@SuppressWarnings("rawtypes") Class _initClass, List<Const> consts) {
-		assert initClasses.size()==initClassNames.size() && initClasses.size()==initClassConsts.size();
+    public List<Pair<Table, List<Const>>> getInitRuleInfo() {
+        List<Pair<Table, List<Const>>> initRuleInfo = new ArrayList<>();
+        for (Rule r: getRules()) {
+            if (r.isSimpleArrayInit()) {
+                Table t = tableMap.get(r.getHead().name());
+                Pair<Table, List<Const>> info = new ImmutablePair<>(t, r.getConstsAssigns());
+                initRuleInfo.add(info);
+            }
+        }
+        return initRuleInfo;
+    }
 
-		initClasses.add(_initClass);
-		initClassNames.add(_initClass.getName());
-		initClassConsts.add(new SArrayList(consts));
-	}
-	public List<List<Const>> getInitConsts() {
-		return initClassConsts;
-	}
-
-	@SuppressWarnings("rawtypes")
-	public List<Class> getInitClasses() {
-		if (initClasses==null || initClasses.isEmpty()) {
-			if (initClasses==null)
-				initClasses = new SArrayList<Class>(4); 
-			for (String n:initClassNames) {
-				Class c=Loader.forName(n);
-				assert c!=null;				
-				initClasses.add(c);
-			}
-		}
-		return initClasses;
-	}
-	
 	public void setEvalClass(@SuppressWarnings("rawtypes") Class _evalClass) {
 		evalClass=_evalClass;
 		evalClassName = evalClass.getName();

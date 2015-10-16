@@ -1,6 +1,5 @@
 import socialite.engine.LocalEngine as LocalEngine
 import socialite.engine.ClientEngine as ClientEngine
-import socialite.engine.Config as Config
 import socialite.tables.QueryVisitor as QueryVisitor
 import socialite.tables.Tuple as Tuple
 import socialite.util.SociaLiteException as SociaLiteException
@@ -132,12 +131,7 @@ def init(cpu=None, dist=False, interactive=False, verbose=None):
             engine = ClientEngine()
             isClusterEngine = True
         else:
-            conf = None
-            if cpu == None: conf = Config.par()
-            else: conf = Config.par(cpu)
-
-            if verbose: conf.setVerbose()
-            engine = LocalEngine(conf)
+            engine = LocalEngine()
     if interactive:
         isInteractive = True
         engine = AsyncEngine(engine)

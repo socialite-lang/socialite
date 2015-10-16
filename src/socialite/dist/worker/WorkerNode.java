@@ -17,7 +17,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.net.NetUtils;
 import socialite.dist.PortMap;
 import socialite.dist.master.WorkerRequest;
-import socialite.engine.Config;
 import socialite.eval.Manager;
 import socialite.resource.SRuntime;
 import socialite.resource.SRuntimeWorker;
@@ -29,7 +28,6 @@ import socialite.yarn.ClusterConf;
 public class WorkerNode extends Thread {
     public static final Log L=LogFactory.getLog(WorkerNode.class);
 
-    volatile Config conf;
     AtomicBoolean isReady = new AtomicBoolean(false);
     WorkerConnPool connPool;
     CmdListener cmdListener;
@@ -41,8 +39,6 @@ public class WorkerNode extends Thread {
         //super("WorkerNode Thread");
         connPool = new WorkerConnPool();
     }
-
-    public Config getConf() { return conf; }
 
     public void serve() {
         initManagerAndWorkers();
@@ -65,8 +61,7 @@ public class WorkerNode extends Thread {
         cmdListener.start();
     }
     public void initManagerAndWorkers() {
-        conf = Config.dist(ClusterConf.get().getNumWorkerThreads());
-        manager = Manager.create(conf);
+        manager = Manager.create();
     }
     void initRecvThread() {
         recvQ = Receiver.recvq();
@@ -154,8 +149,6 @@ public class WorkerNode extends Thread {
         int cmdPort = PortMap.worker().getPort("workerCmd");
         int dataPort = PortMap.worker().getPort("data");
         request.register(host, cmdPort, dataPort);
-        synchronized(this) { /* make conf visible */}
-        assert conf!=null;
     }
 
     public void reportError(int ruleid, Throwable t) {

@@ -1,6 +1,5 @@
 package socialite.dist;
 
-import socialite.engine.Config;
 import socialite.yarn.ClusterConf;
 
 import java.util.Arrays;

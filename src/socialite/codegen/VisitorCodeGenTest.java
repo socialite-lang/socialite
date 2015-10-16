@@ -1,25 +1,16 @@
 package socialite.codegen;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import socialite.engine.Config;
 import socialite.engine.LocalEngine;
 import socialite.eval.Eval;
-import socialite.functions.FunctionLoader;
 import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.resource.SRuntime;
-import socialite.resource.TableInstRegistry;
 import socialite.tables.QueryVisitor;
-import socialite.tables.TableInst;
-import socialite.tables.TableUtil;
 import socialite.tables.Tuple;
-import socialite.util.AnalysisException;
 import socialite.util.Assert;
 import socialite.util.InternalException;
 import socialite.util.SociaLiteException;
@@ -41,10 +32,9 @@ public class VisitorCodeGenTest {
 		 		"Bar(int a, int b).\n" +
 				"Bar(a,b) :- a=10, b=11. \n" +
 		 		"Foo(n1, n3) :- Bar(n3, n1).";
-		Config conf=Config.par();
 		//conf.setDebugOpt("GenerateTable", false);
 		//conf.setDebugOpt("GenerateVisitor", false);
-		LocalEngine e=new LocalEngine(conf);
+		LocalEngine e=new LocalEngine();
 		e.run(query);
 		e.shutdown();
 	}
@@ -114,7 +104,7 @@ public class VisitorCodeGenTest {
 		String query = "Edge1(int s:0..10, (int t)).\n"
 			+ "Triangle1(int x, int y, int z) sortby x.\n"
 			+ "Triangle1(x, y, z):-Edge1(x, y),y>x,Edge1(y, z),z>y,Edge1(z, x).";
-		LocalEngine en=new LocalEngine(Config.seq());
+		LocalEngine en=new LocalEngine();
 		CodeGenMain c=en.compile(query);
 		Analysis an=c.an;
 		
@@ -135,8 +125,7 @@ public class VisitorCodeGenTest {
 					"Clique(int x, int y, int z) sortby x.\n" +
 					"Clique(x, y, z) :- Edge(x, y), x<y, Edge(y, z), y<z, Edge(x, z).";
 		Analysis an=parseAndAnalysis(query);
-		Config conf=Config.seq();
-		CodeGenMain c=new CodeGenMain(conf, an, SRuntime.create(conf));
+		CodeGenMain c=new CodeGenMain(an, SRuntime.create());
 		c.generate();
 	}
 	static void iterateRange2() {
@@ -144,8 +133,7 @@ public class VisitorCodeGenTest {
 					"Clique2(int x, int y, int z) sortby x.\n" +
 					"Clique2(x, y, z) :- Edge(1, u, 9, y), Edge(y, 2, z, _), y<z, Edge(x, z, _, _).";
 		Analysis an=parseAndAnalysis(query);
-		Config conf=Config.seq();
-		CodeGenMain c=new CodeGenMain(conf, an, SRuntime.create(conf));
+		CodeGenMain c=new CodeGenMain(an, SRuntime.create());
 		c.generate();
 	}
 	static void iterateWithIndex() {
@@ -154,7 +142,7 @@ public class VisitorCodeGenTest {
 				"RDF(s,p,o) :- s=u\"s1\", p=u\"p2\", o=u\"o2\". \n"+
 				"RDF(s,p,o) :- s=u\"s2\", p=u\"p3\", o=u\"o3\". \n"+
 				"RDF(s,p,o) :- s=u\"s2\", p=u\"p4\", o=u\"s1\". \n";
-		LocalEngine en = new LocalEngine(Config.par(4));
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 
 		query = "Tmp(int a:0..10, Utf8 x1, Utf8 x2).\n" +
@@ -177,7 +165,7 @@ public class VisitorCodeGenTest {
 			"Foo(a,b,c) :- a=1, b=2, c=3.3. \n"+ 
 			"Bar(int a, int b, double c). \n"+
 			"Bar(a,b,c) :- a=10, b=20, Foo(1,2,c).";
-		LocalEngine en = new LocalEngine(Config.par(4));
+		LocalEngine en = new LocalEngine();
 		en.compile(query);
 		en.shutdown();
 	}
@@ -190,7 +178,7 @@ public class VisitorCodeGenTest {
 			"Edge(s, t) :- s=1, t=3.\n" +
 			"Foo(a, $sum(b)) :- Edge(a, b).\n"+
 			"Bar(a, $sum(c)) :- Edge(a, b), c=$toStr(b).";
-		LocalEngine en = new LocalEngine(Config.par(4));
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 		final String s[]=new String[]{""}; 
 		en.run("?-Bar(a,b).", new QueryVisitor() {
@@ -211,10 +199,9 @@ public class VisitorCodeGenTest {
 					"Foo(a,b) :- Bar(a,b).\n" +
 					"Baz(a,b) :- Foo(a,b).\n" +
 					"Bar(a,b) :- Baz(a,b).\n";
-		Config conf = Config.par(4);
 		//conf.setDebugOpt("GenerateTable", false);
 		//conf.setDebugOpt("GenerateVisitor", false);		
-		LocalEngine en = new LocalEngine(conf);
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 		final String[] x = new String[]{""};
 		en.run("?-Bar(a,b).", new QueryVisitor() {
@@ -233,8 +220,7 @@ public class VisitorCodeGenTest {
 				"Rank(int i:iterator, int s:0..100, double rank) groupby(2).\n" +
 				"InEdge(t, s) :- t=$range(0, 99), s=t+1. \n"+
 				"EdgeCnt(s, $inc(1)) :- InEdge(t, s).\n";				
-		Config conf = Config.par(4);
-		LocalEngine en = new LocalEngine(conf);
+		LocalEngine en = new LocalEngine();
 		en.run(query);		
 
 		query = "Rank(0,_,r) :- r=100.0/100.0 . \n"+
@@ -257,7 +243,7 @@ public class VisitorCodeGenTest {
 				"Arr1(1, b) :- b=1 . \n"+
 				"Test(a,b) :- Base(a,b), !Arr1(b, _). \n"+
 				"?-Test(a,b).";
-		LocalEngine en = new LocalEngine(Config.par(4));
+		LocalEngine en = new LocalEngine();
 		final String[] s=new String[]{""};		
 		en.run(query, new QueryVisitor() {
 			public boolean visit(Tuple t) {
@@ -318,8 +304,7 @@ public class VisitorCodeGenTest {
 					"Gradient(a,b,c) :- a=1,b=1,c=2.\n"+
 					"Diff(0, $choice(d)) :- Gradient(x,y,z), tmp=x+y+z, tmp>1, d=z.\n";
 		
-		Config c=Config.par(4);
-		LocalEngine en = new LocalEngine(c);
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 		final int[] count=new int[]{0};
 		en.run("?-Diff(a,b).", new QueryVisitor() {
@@ -357,8 +342,7 @@ public class VisitorCodeGenTest {
 				 "Edge(s, t) :- s=11, t=12. \n"+
 				 "Edge(s, t) :- s=12, t=15. \n";
 			
-		Config c=Config.par(4);
-		LocalEngine en = new LocalEngine(c);
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 		
 		System.err.println("Starting eulerian path..");
@@ -400,8 +384,7 @@ public class VisitorCodeGenTest {
 			     "EdgeCnt(s, $inc(1)) :- InEdge(t, s).\n" +
 			     "EdgeCntInv(s, i) :- EdgeCnt(s, c), i=0.7f/c.\n" +
 			     "Rank(_, 0, v) :- v=1.0f .";
-		Config c=Config.par(2);
-		LocalEngine en = new LocalEngine(c);
+		LocalEngine en = new LocalEngine();
 		en.run(q);
 		en.shutdown();
 	}
@@ -411,8 +394,7 @@ public class VisitorCodeGenTest {
 				"Bar(a,b) :- a=10, b=20. \n"+
 				"Bar(a,b) :- a=20, b=10. \n"+
 				"Foo(a,b) :- Bar(a, b), ! Bar(b, a).\n";
-		Config c=Config.seq();
-		LocalEngine en = new LocalEngine(c);
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 		en.shutdown();
 	}
@@ -420,16 +402,14 @@ public class VisitorCodeGenTest {
 		String query = "Foo(int a, double b).\n"+				
 				"Foo(a,b) :- a=100, c=20, d=3.3, b= -(double)d, b=(double)d+d.\n"+
 				"Foo(a,b) :- a=100, c=20, b=(double)c.\n";
-		Config c=Config.seq();
-		LocalEngine en = new LocalEngine(c);
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 		en.shutdown();
 	}
 	static void testDottedVar() {
 		String query = "Foo(int a, String s).\n"+				
 				"Foo(a,b) :- b=\"100\", a=$toInt(b).\n";
-		Config c=Config.par(4);
-		LocalEngine en = new LocalEngine(c);
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 		en.shutdown();
 	}
@@ -437,8 +417,7 @@ public class VisitorCodeGenTest {
 		String query = "Foo(int a, Avg x).\n"+   
 					"Foo(0, $avg(x)) :- x=42.42. ";
 
-		Config c=Config.par(4);
-		LocalEngine en = new LocalEngine(c);
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 		
 		query="Bar(String a, Count b).\n"+
@@ -450,8 +429,7 @@ public class VisitorCodeGenTest {
 		String query ="Data(int n:0..40000, double x, double y).\n"+
 				"Data(id, lat, lng) :- id=$range(0, 40000), lat=1.2, lng=5.2.\n"+
 				"Center(int k:0..100, Avg[] avg) groupby(1).\n";
-		Config c=Config.par(2);
-		LocalEngine en = new LocalEngine(c);		
+		LocalEngine en = new LocalEngine();
 		en.run(query);
 		
 		double x=-10.5, y=-10.5;
@@ -508,7 +486,7 @@ public class VisitorCodeGenTest {
 		return an;		
 	}
 	static void compileRule(Epoch e, Rule r, Map<String, Table> tableMap) {
-		VisitorCodeGen gen = new VisitorCodeGen(e, r, tableMap, Config.par(2));
+		VisitorCodeGen gen = new VisitorCodeGen(e, r, tableMap);
 		String src = gen.generate();
 		Compiler c= new Compiler();
 		boolean success=c.compile(gen.visitorName(), src);

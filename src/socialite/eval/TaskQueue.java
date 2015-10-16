@@ -20,7 +20,7 @@ enum Priority {
 	public static int numLevels() { return numLevels; }
 	
 	private int value;
-	private Priority(int val) { value = val; }
+	Priority(int val) { value = val; }
 	public int value() { return value; }
 }
 public class TaskQueue {
@@ -31,14 +31,13 @@ public class TaskQueue {
     final Condition notFull = lock.newCondition();
     final Condition notEmpty = lock.newCondition();
 
-    ArrayQueue<Task> recvQ;
     List<ArrayQueue<Task>> queues;
     List<Task> reservedTasks;
 
     public TaskQueue() {
-        queues = new ArrayList<ArrayQueue<Task>>(Priority.numLevels());
+        queues = new ArrayList<>(Priority.numLevels());
         for (int i=0; i<Priority.numLevels(); i++) {
-            queues.add(new ArrayQueue<Task>(DEFAULT_CAPACITY));
+            queues.add(new ArrayQueue<>(DEFAULT_CAPACITY));
         }
         reservedTasks = Collections.synchronizedList(new ArrayList<Task>());
     }
@@ -136,8 +135,7 @@ public class TaskQueue {
     	return reserveReally(Priority.numLevels());
     }
     Task reserveReally(int threshold) throws InterruptedException {
-        Task t=null;
-    	
+        Task t;
         lock.lock();
         try {
             while (true) {
@@ -153,14 +151,11 @@ public class TaskQueue {
                     reservedTasks.add(t);
                     return t;
                 }                
-                notEmpty.await(400, TimeUnit.MICROSECONDS);                
+                notEmpty.await(2, TimeUnit.MILLISECONDS);
             }
         } finally {
             lock.unlock();
         }
-    }
-    public boolean isWaitingForTasks() {
-    	return lock.hasWaiters(notEmpty);
     }
     public Task reserve() throws InterruptedException {
         return reserveReally();

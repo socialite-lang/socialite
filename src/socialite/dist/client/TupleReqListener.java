@@ -19,7 +19,6 @@ import org.apache.hadoop.ipc.VersionedProtocol;
 import org.apache.hadoop.net.NetUtils;
 import socialite.dist.Host;
 import socialite.dist.PortMap;
-import socialite.engine.Config;
 import socialite.tables.QueryVisitor;
 import socialite.tables.Tuple;
 import socialite.tables.TupleArrayWritable;

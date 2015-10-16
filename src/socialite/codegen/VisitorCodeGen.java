@@ -15,7 +15,6 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
 import socialite.dist.master.MasterNode;
-import socialite.engine.Config;
 import socialite.parser.AggrFunction;
 import socialite.parser.AssignOp;
 import socialite.parser.CmpOp;
@@ -43,16 +42,11 @@ import socialite.tables.TableUtil;
 import socialite.util.Assert;
 import socialite.functions.Choice;
 import socialite.functions.Max;
-
-//import org.antlr.stringtemplate.StringTemplate;
-//import org.antlr.stringtemplate.StringTemplateGroup;
+import socialite.yarn.ClusterConf;
 
 public class VisitorCodeGen {
-    static boolean disableDeltaStepOpt = false;
-
     static String visitorPackage = "socialite.visitors";
 
-    Config conf;
     Rule rule;
     STGroup tmplGroup;
     ST visitorTmpl;
@@ -67,11 +61,10 @@ public class VisitorCodeGen {
     int isParRule=-1;
     Set<Variable>[] resolvedVarsArray;
 
-    public VisitorCodeGen(Epoch e, Rule r, Map<String, Table> _tableMap, Config _conf) {
+    public VisitorCodeGen(Epoch e, Rule r, Map<String, Table> _tableMap) {
         epoch = e;
         rule = r;
         tableMap = _tableMap;
-        conf = _conf;
 
         visitorName = visitorClassName(rule, tableMap);
 
@@ -311,10 +304,6 @@ public class VisitorCodeGen {
         return "delta$" + headT.name();
     }
 
-    String deltaTableVar0() {
-        return "delta$" + headT.name() + "0";
-    }
-
     boolean accumlDelta(Rule r) {
         if (r.inScc()) { return true; }
         if (r.hasPipelinedRules())
@@ -459,8 +448,6 @@ public class VisitorCodeGen {
     }
 
     boolean useDeltaStepOpt() {
-        if (!conf.getDebugOpt("DeltaStepOpt"))
-            return false;
         return isParallel() && rule.isDeltaStepOpt() && singlePrimAggrParam();
     }
 
@@ -1838,11 +1825,6 @@ public class VisitorCodeGen {
     void genInsertCode(ST code, String headTableVar, ST ifUpdated) {
         String inserter = insertHeadParamsTo(headTableVar);
         code.add("stmts", isUpdatedVar()+"=" + inserter);
-
-        ST if_ = tmplGroup.getInstanceOf("if");
-        if_.add("cond", isUpdatedVar());
-        if_.add("stmts", ifUpdated);
-        code.add("stmts", if_);
     }
 
     String partitionIdxGetter(Table t, Object val) {
@@ -1887,7 +1869,7 @@ public class VisitorCodeGen {
         msg += "+\"), \""+"+_$e";
         msg += "+\"\"";
         tryCatch.add("catchStmts", "VisitorImpl.L.error(ExceptionUtils.getStackTrace(_$e))");
-        if (conf.errorRecovery()) {
+        if (false) { /* XXX error discovery == true */
             ST if_ = tmplGroup.getInstanceOf("if");
             tryCatch.add("catchStmts", if_);
             if_.add("cond", logCount()+"<10");
@@ -1923,20 +1905,11 @@ public class VisitorCodeGen {
     }
 
     boolean isSequential() {
-        return conf.isSequential();
+        return ClusterConf.get().getNumWorkerThreads() == 1;
     }
 
     boolean isParallel() {
         return !isSequential();
-    }
-
-    int headTableWriteLockColumn() {
-        int column = 0;
-        if (isParallelRule()) {
-            column = Analysis.firstShardedColumnWithVar(headP, headT);
-            if (column < 0) column = 0;
-        }
-        return column;
     }
 
     boolean updateFromRemoteHeadT() {

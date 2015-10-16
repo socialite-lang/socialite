@@ -5,7 +5,6 @@ import org.apache.commons.logging.LogFactory;
 
 import socialite.codegen.Epoch;
 import socialite.codegen.RuleComp;
-import socialite.engine.Config;
 import socialite.parser.Const;
 import socialite.parser.Predicate;
 import socialite.parser.Rule;
@@ -15,8 +14,8 @@ import socialite.resource.SRuntime;
 public class EvalDist extends EvalParallel {
 	public static final Log L=LogFactory.getLog(EvalDist.class);
 	
-	public EvalDist(SRuntime _runtime, Epoch _epoch, Config _conf) {
-		super(_runtime, _epoch, _conf);
+	public EvalDist(SRuntime _runtime, Epoch _epoch) {
+		super(_runtime, _epoch);
 	}
 
 	@Override

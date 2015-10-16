@@ -5,7 +5,6 @@ import java.util.*;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
-import socialite.engine.Config;
 import socialite.engine.LocalEngine;
 import socialite.parser.AssignOp;
 import socialite.parser.DeltaPredicate;
@@ -66,7 +65,7 @@ public class TupleCodeGen {
 				+ "Foo(s, $Debug(a,b,c)) :- s=0, a=\"str\", b=10, c=3.3 .\n"
 				+ "Bar(s, s2) :- Foo(s, s2, a,b). \n" + "?-Foo(a,b,c,d).";
 
-		LocalEngine e = new LocalEngine(Config.seq());
+		LocalEngine e = new LocalEngine();
 		e.run(query, new QueryVisitor() {
 			public boolean visit(Tuple t) {
 				System.out.println(t.get(0) + "," + t.get(1) + "," + t.get(2)

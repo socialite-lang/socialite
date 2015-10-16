@@ -21,3 +21,8 @@ for a,b in `Zoo2(a,b)`:
     count+=1
 assert count == 20000
 print "count:", count
+
+`Rank(int i:0..100, int s:iter, double rank).
+ Rank(_, 0, r) :- r=42.1.`
+
+`Rank(a, 1, r) :- Rank(a, 0, r1), r=r1+1.1.`

@@ -41,7 +41,6 @@ import socialite.dist.PortMap;
 import socialite.dist.Status;
 import socialite.dist.client.TupleSend;
 import socialite.dist.worker.WorkerCmd;
-import socialite.engine.Config;
 import socialite.engine.DistEngine;
 import socialite.eval.ClassFilesBlob;
 import socialite.functions.PyInterp;
@@ -64,11 +63,9 @@ public class QueryListener implements QueryProtocol {
 	public static final Log L = LogFactory.getLog(QueryListener.class);
 
 	MasterNode master;
-	Config conf;
 	DistEngine distEngine;
 
-	public QueryListener(Config _conf, MasterNode _master) {
-		conf = _conf;
+	public QueryListener(MasterNode _master) {
 		master = _master;
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -192,7 +189,7 @@ public class QueryListener implements QueryProtocol {
 
     synchronized void init() {
         WorkerAddrMap workerAddrMap = master.makeWorkerAddrMap();
-        SRuntimeMaster runtime = SRuntimeMaster.create(master, workerAddrMap);
+        SRuntimeMaster runtime = SRuntimeMaster.create(workerAddrMap);
         WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
         Map<UnresolvedSocketAddr, WorkerCmd> workerMap = master.getWorkerCmdMap();
 

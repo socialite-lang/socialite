@@ -26,7 +26,6 @@ public class RuleComp implements Externalizable {
 	
 	static Map<Rule, RuleComp> ruleToRuleComp = null;
 	public static void init() { ruleToRuleComp = new HashMap<Rule, RuleComp>(); }
-	public static RuleComp findRuleComp(Rule r) { return ruleToRuleComp.get(r); }
 	public static List<RuleComp> findRuleComps(List<Rule> rules) {
 		List<RuleComp> result=new ArrayList<RuleComp>();
 		for (Rule r:rules) {
@@ -51,11 +50,11 @@ public class RuleComp implements Externalizable {
 	boolean disabled=false;
 
 	public RuleComp() {
-		rules = new SArrayList<Rule>(0);
-		startingRules = new SArrayList<Rule>(0);
+		rules = new SArrayList<>(0);
+		startingRules = new SArrayList<>(0);
 	}
 	public RuleComp(List<Rule> _rules, boolean _scc) {
-		rules = new SArrayList<Rule>(_rules);
+		rules = new SArrayList<>(_rules);
 		for (Rule r:rules) {
 			assert !ruleToRuleComp.containsKey(r);
 			ruleToRuleComp.put(r, this);
@@ -64,7 +63,7 @@ public class RuleComp implements Externalizable {
 		if (rules.size()==1) addStartingRule(rules.get(0));
 	}
 	public RuleComp(Rule r, boolean _scc) {
-		rules = new SArrayList<Rule>();
+		rules = new SArrayList<>();
 		rules.add(r);
 		scc = _scc;
 		if (!scc) addStartingRule(rules.get(0));
@@ -78,7 +77,6 @@ public class RuleComp implements Externalizable {
 		pipeliningFrom = r;
 		r.setHasPipelinedRule();
 	}
-	public Rule pipeliningFrom() { return pipeliningFrom; }
 	public boolean hasPipeliningFrom() { return pipeliningFrom!=null; }
 	
 	public List<Rule> getRules() { return rules; }
@@ -111,7 +109,7 @@ public class RuleComp implements Externalizable {
 	
 	public List<RuleComp> getDependingRuleComps() {
 		if (deps==null) {
-			deps = new ArrayList<RuleComp>();
+			deps = new ArrayList<>();
 			for (Rule r:rules) {
 				List<RuleComp> rcs=findRuleComps(r.getDependingRules());
 				for (RuleComp rc:rcs) {
@@ -125,7 +123,7 @@ public class RuleComp implements Externalizable {
 	
 	public List<RuleComp> getRuleCompsUsingThis() {
 		if (usedBy==null) {
-			usedBy = new ArrayList<RuleComp>();
+			usedBy = new ArrayList<>();
 			for (Rule r:rules) {
 				addToUsedByFrom(r);
 			}
@@ -161,8 +159,7 @@ public class RuleComp implements Externalizable {
 		}
 	}	
 	public void addAll(List<? extends Rule> rlist) { rules.addAll(rlist); }
-	public void removeAll(List<? extends Rule> rlist) { rules.removeAll(rlist); }
-	
+
 	public Rule get(int i) { return rules.get(i); }	
 	public int size() { return rules.size(); }
 	

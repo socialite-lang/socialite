@@ -5,6 +5,9 @@ package socialite.util;
  * See http://graphics.stanford.edu/~seander/bithacks.html
  */
 public class BitUtils {
+    public static boolean isPowerOf2(int v) {
+        return (v != 0) && ((v & (v - 1)) == 0);
+    }
     public static int nextHighestPowerOf2(int v) {
         v--;
         v |= v >> 1; v |= v >> 2;
