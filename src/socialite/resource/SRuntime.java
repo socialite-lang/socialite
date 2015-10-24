@@ -50,8 +50,8 @@ public class SRuntime {
 	TableInstRegistry tableReg;
 	LockMap lockMap;
 
-	TIntObjectMap<VisitorBuilder> builderMap = new TSynchronizedIntObjectMap<VisitorBuilder>(new TIntObjectHashMap<VisitorBuilder>(128));
-	TIntObjectMap<RuleMap> rulemapMap = new TSynchronizedIntObjectMap<RuleMap>(new TIntObjectHashMap<RuleMap>(128));
+	TIntObjectMap<VisitorBuilder> builderMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>(128));
+	TIntObjectMap<RuleMap> rulemapMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>(128));
 
 	EvalProgress evalProgress=EvalProgress.getInst();
 

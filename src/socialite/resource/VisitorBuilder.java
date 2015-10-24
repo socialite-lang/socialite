@@ -68,33 +68,6 @@ public class VisitorBuilder {
             ruleInfoMap.put(r.id(), info);
         }
     }
-    int findSlicingColumn(Rule r) {
-        if (!Analysis.isParallelRule(r, tableMap)) return -1;
-
-        Predicate firstP=(Predicate)r.getBody().get(0);
-        Object f = firstP.inputParams()[0];
-        Table firstT=tableMap.get(firstP.name());
-        if (firstT.getColumn(0).isIndexed() && f instanceof Const) return -1;
-
-        int column=Analysis.firstShardedColumnWithVar(firstP, firstT);
-        if (column >= 0) {
-            return column;
-        } else {
-            return 0;
-        }
-    }
-
-    public void addRules(List<? extends Rule> rules) {
-        generateRuleInfo(rules);
-    }
-
-    int maxId(List<? extends Rule> rules) {
-        int maxId = 0;
-        for (Rule r : rules) {
-            if (r.id() > maxId) maxId = r.id();
-        }
-        return maxId;
-    }
 
     void makeRestArgs(Class[] argTypes, Object[] args, int restArgStartIdx) {
         int i=restArgStartIdx;

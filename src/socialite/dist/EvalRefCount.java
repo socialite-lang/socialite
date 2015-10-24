@@ -32,9 +32,9 @@ public class EvalRefCount {
 
     public EvalRefCount(IdleCallback _callback) { this(_callback, 32); }
     public EvalRefCount(IdleCallback _callback, int concurrencyLevel) {
-        ready = new ConcurrentHashMap<Integer, AtomicInteger>(256, 0.75f, concurrencyLevel);
-        counterMap = new ConcurrentHashMap<Integer, AtomicInteger>(256, 0.75f, concurrencyLevel);
-        idleTimestampMap = new ConcurrentHashMap<Integer, AtomicInteger>(256, 0.75f, concurrencyLevel);
+        ready = new ConcurrentHashMap<>(256, 0.75f, concurrencyLevel);
+        counterMap = new ConcurrentHashMap<>(256, 0.75f, concurrencyLevel);
+        idleTimestampMap = new ConcurrentHashMap<>(256, 0.75f, concurrencyLevel);
         callback = _callback;
 	}
 

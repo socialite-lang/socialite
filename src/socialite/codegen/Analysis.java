@@ -241,7 +241,6 @@ public class Analysis {
 
         computeRuleDeps();
         prepareRecOpts();
-        optimize();
         makeEpochs();
 
         createDeltaRules();
@@ -251,9 +250,6 @@ public class Analysis {
 
         prepareEpochs();
         processDropTableStmt();
-    }
-
-    void optimize() {
     }
 
     void processDropTableStmt() {
@@ -305,82 +301,17 @@ public class Analysis {
         }
     }
     void prepareRecOpts() {
-        prepareLeftRecAndDijkstraOpt();
-        mergeLinearRecursionBaseIntoScc();
+        prepareLeftRecur();
     }
 
-    void prepareLeftRecAndDijkstraOpt() {
+    void prepareLeftRecur() {
         for (Rule r : rules) {
-            if (r.isSimpleUpdate()) continue;
-            if (isTrivialRecursion(r)) continue;
-            markIfLeftRec(r);
-            markIfDijkstraOpt(r);
-        }
-    }
-    @Deprecated
-    void prepareDeltaStepOpt() {
-        //if (!conf.isParallel()) return;
-
-        for (Rule r:rules) {
-            if (r.isLeftRec()) {
-                if (!r.getHead().hasFunctionParam())
-                    continue;
-                markIfDeltaStepOpt(r);
+            if (r.isSimpleUpdate()) { continue; }
+            if (isTrivialRecursion(r)) { continue; }
+            if (isLeftRec(r)) {
+                r.setLeftRec();
             }
         }
-    }
-    Set<Variable> originVars(Rule r, Variable targetVar) {
-        Set<Variable> vars=new LinkedHashSet<Variable>();
-        for (Expr e:r.getExprs()) {
-            if (e.root instanceof AssignOp) {
-                AssignOp op=(AssignOp)e.root;
-                if (op.getLhsVars().contains(targetVar)) {
-                    vars.addAll(op.getRhsVars());
-                }
-            }
-        }
-        return vars;
-    }
-    void markIfDeltaStepOpt(Rule r) {
-        assert r.isLeftRec();
-        AggrFunction f=r.getHead().getAggrF();
-        assert f!=null;
-
-        if (!(f.klass().equals(Min.class) || f.klass().equals(Max.class))) return;
-        if (f.getArgs().size()>=2) return;
-
-        r.setDeltaStepOpt();
-
-        Set<Variable> args=new LinkedHashSet<Variable>(f.getInputVariables());
-        Set<Variable> varsInDeltaP = r.firstP().getVariables();
-
-        if (varsInDeltaP.containsAll(args)) return;
-
-        if (!MeetOp.class.isAssignableFrom(f.klass())) return;
-
-        Set<Variable> varsInRestP = new LinkedHashSet<Variable>();
-        for (int i=1; i<r.getBodyP().size(); i++) {
-            Predicate p = r.getBodyP().get(i);
-            varsInRestP.addAll(p.getVariables());
-        }
-        varsInRestP.removeAll(varsInDeltaP);
-
-        for (Variable v:args) {
-            Set<Variable> originVars=originVars(r, v);
-            originVars.removeAll(varsInDeltaP);
-            if (!originVars.isEmpty()) {
-                Variable theVar=originVars.iterator().next();
-                r.setDeltaStepOpt(theVar);
-                return;
-            }
-        }
-    }
-
-    public void showAllRules() {
-        for (Rule r : rules)
-            System.out.println(r);
-        for (Rule r : deltaRules)
-            System.out.println(r);
     }
 
     void setGroupby() {
@@ -426,11 +357,6 @@ public class Analysis {
         }
     }
 
-    void markIfLeftRec(Rule r) {
-        if (isLeftRec(r)) {
-            r.setLeftRec();
-        }
-    }
     boolean isLeftRec(Rule r) {
         List<Rule> rulesUsingThis = r.getRulesUsingThis();
         if (!rulesUsingThis.contains(r)) return false;
@@ -447,25 +373,6 @@ public class Analysis {
         if (count == 1 && canMatch(h, f))
             return true;
         return false;
-    }
-    void markIfDijkstraOpt(Rule r) {
-        if (!isLeftRec(r)) return;
-
-        Predicate h = r.getHead();
-        if (!h.hasFunctionParam()) return;
-
-        // We apply dijkstra opt only if the head table is array table
-        Table hT = tableMap.get(h.name());
-        if (!hT.isArrayTable()) return;
-
-        if (hT.hasNestedT()) {
-            // if head table has nesting, the function should not be applied to nested columns
-            // for dijkstra optimization (see Heap.stg for why)
-            if (hT.nestPos()[0] < h.functionIdx()) {
-                return;
-            }
-        }
-        r.setDijkstraOpt();
     }
 
     public static boolean canMatch(Predicate p1, Predicate p2,
@@ -560,17 +467,6 @@ public class Analysis {
         return -1;
     }
 
-    public static int firstShardedColumnWithVar(Predicate p, Table t) {
-        t = getOrigT(t);
-        int idx=firstColumnWithVar(p, t);
-        if (idx<0) return idx;
-        Column c=t.getColumn(idx);
-        if (c.hasRange()) return idx;
-        if (idx==0 && t.isModTable()) return idx;
-        return -1;
-    }
-
-
     public static boolean isParallelRule(Rule r, Map<String, Table> tableMap) {
         if (isSequentialRule(r, tableMap)) return false;
         return true;
@@ -593,13 +489,13 @@ public class Analysis {
 
         Predicate firstP = (Predicate)first;
         Table firstT = tableMap.get(firstP.name());
-        if (firstT.hasOrderBy()) return true;
         if (firstT instanceof PrivateTable) return false;
 
-        int column=firstShardedColumnWithVar(firstP, firstT);
-        if (column<0) return true; // no sharded column with variables
-
-        return false;
+        if (firstP.first() instanceof Const) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     // XXX: re-implement privatization as rule rewriting, so that VisitorCodeGen does not need to know the details.
@@ -1118,37 +1014,36 @@ public class Analysis {
 
     void createDeltaRules() {
         assert (deltaRules == null);
-        deltaRules = new ArrayList<DeltaRule>();
+        deltaRules = new ArrayList<>();
         assert ruleMap != null;
 
         List<DeltaRule> toAdd = new ArrayList<DeltaRule>();
         Set<String> deltaRuleSigs = new LinkedHashSet<String>();
         for (RuleComp rc : ruleComps) {
+            if (!rc.scc()) { continue; }
             deltaRuleSigs.clear();
-            if (rc.scc() || rc.hasPipeliningFrom()) {
-                for (Rule r: rc.getRules()) {
-                    List<Rule> depRules = new ArrayList<Rule>(r.getDependingRules());
-                    for (Rule r2 : depRules) {
-                        String name = r2.getHead().name();
-                        for (Predicate p : getMatchingPs(r, name)) {
-                            if (p.isNegated()) continue;
+            for (Rule r: rc.getRules()) {
+                List<Rule> depRules = new ArrayList<>(r.getDependingRules());
+                for (Rule r2 : depRules) {
+                    String name = r2.getHead().name();
+                    for (Predicate p : getMatchingPs(r, name)) {
+                        if (p.isNegated()) { continue; }
 
-                            DeltaPredicate deltaP = new DeltaPredicate(p);
-                            DeltaRule deltaRule = new DeltaRule(r, deltaP);
-                            boolean existingRule = tableMap.containsKey(DeltaTable.name(p)) &&
+                        DeltaPredicate deltaP = new DeltaPredicate(p);
+                        DeltaRule deltaRule = new DeltaRule(r, deltaP);
+                        boolean existingRule = tableMap.containsKey(DeltaTable.name(p)) &&
                                     deltaRuleSigs.contains(deltaRule.signature(tableMap));
-                            if (!existingRule) {
-                                registerDeltaRule(deltaRule);
-                                toAdd.add(deltaRule);
-                                deltaRuleSigs.add(deltaRule.signature(tableMap));
-                            }
+                        if (!existingRule) {
+                            registerDeltaRule(deltaRule);
+                            toAdd.add(deltaRule);
+                            deltaRuleSigs.add(deltaRule.signature(tableMap));
                         }
                     }
                 }
-                addDependencyBetweenDeltaRules(toAdd);
-                rc.addAll(toAdd);
-                toAdd.clear();
             }
+            addDependencyBetweenDeltaRules(toAdd);
+            rc.addAll(toAdd);
+            toAdd.clear();
         }
 
         for (DeltaRule dr : deltaRules) {
@@ -1159,45 +1054,13 @@ public class Analysis {
         rules.addAll(deltaRules);
         rules.addAll(startingDeltaRules);
     }
-    void mergeLinearRecursionBaseIntoScc() {
-        List<RuleComp> toRemove = new ArrayList<RuleComp>();
-        for (RuleComp rc : ruleComps) {
-            if (rc.scc()) continue;
-            if (rc.size() > 1) continue;
-            assert rc.size()==1;
 
-            Rule base = rc.get(0);
-            List<RuleComp> depComps = rc.getRuleCompsUsingThis();
-            for (RuleComp dep:depComps) {
-                if (!dep.scc()) continue;
-                if (dep.size()>1) continue;
-
-                Rule r = dep.getRules().get(0);
-                if (r.isLeftRec() &&
-                        base.getHead().name().equals(r.firstP().name())) {
-                    rc.removeAllStartingRule();
-
-                    //dep.removeAllStartingRule();
-                    dep.addStartingRule(base);
-                    dep.setPipeliningFrom(base);
-                    dep.add(base);
-
-                    base.setInScc();
-
-                    toRemove.add(rc);
-                }
-            }
-        }
-        ruleComps.removeAll(toRemove);
-    }
     List<DeltaRule> createStartingDeltaRules() {
         List<DeltaRule> startingDeltaRules = new ArrayList<>();
         for (RuleComp rc: ruleComps) {
             if (!rc.scc()) continue;
-            if (rc.get(0).isLeftRec()) continue;
 
             List<DeltaRule> addedRules = new ArrayList<DeltaRule>();
-            rc.removeAllStartingRule();
 
             for (Rule r:rc.getRules()) {
                 if (!(r instanceof DeltaRule)) continue;
@@ -1443,15 +1306,8 @@ public class Analysis {
             return true;
         return false;
     }
-    boolean isFirstTableOrderBy(Rule r) {
-        if (r.getBodyP().size()==0) return false;
-        if (!(r.getBody().get(0) instanceof Predicate)) return false;
-        Predicate p=(Predicate)r.getBody().get(0);
-        Table t=tableMap.get(p.name());
-        return t.hasOrderBy();
-    }
 
-    List<RuleComp> findRuleComp() {
+    List<RuleComp> OLD_findRuleComp() {
         // find SCC (strongly-connectec-component) and other rule compoments
         // see {@link RuleComp}
 
@@ -1462,7 +1318,6 @@ public class Analysis {
             if (r.isSimpleUpdate()) continue;
             if (r.isSimpleArrayInit()) continue;
             if (isTrivialRecursion(r)) continue;
-            if (isFirstTableOrderBy(r)) continue;
 
             if (addedRules.contains(r)) continue;
 
@@ -1471,7 +1326,7 @@ public class Analysis {
             RuleComp scc;
             if (result != null) {
                 for (Rule _r:result) _r.setInScc();
-                scc = new RuleComp(result, true/*scc*/);
+                scc = new SCC(result);
                 comps.add(scc);
                 addedRules.addAll(result);
             }
@@ -1489,7 +1344,80 @@ public class Analysis {
         // (each single rule is a SCC by itself)
         for (Rule r: rules) {
             if (!addedRules.contains(r))
-                comps.add(new RuleComp(r, false/*not scc*/));
+                comps.add(new RuleComp(r));
+        }
+        return comps;
+    }
+
+    boolean findScc(Table root, Map<Table, List<Table>> deps, Table cur, Set<Table> path, Set<Table> visited) {
+        if (!deps.containsKey(cur)) { return false; }
+        if (visited.contains(cur)) { return false; }
+
+        visited.add(cur);
+        boolean scc = false;
+        for (Table v: deps.get(cur)) {
+            if (root.equals(v)) {
+                scc = true;
+                path.add(v);
+            } else if (findScc(root, deps, v, path, new HashSet<>(visited))) {
+                scc = true;
+                path.add(v);
+            }
+        }
+        return scc;
+    }
+
+    List<RuleComp> findRuleComp() {
+        // find rules that form strongly-connected components in dependency graph.
+
+        Set<Rule> addedRules = new LinkedHashSet<>();
+        List<RuleComp> comps = new ArrayList<>();
+        Map<Table, List<Table>> deps = new HashMap<>();
+
+        for (Rule r: rules) {
+            if (r.isSimpleArrayInit()) continue;
+            if (isTrivialRecursion(r)) continue;
+
+            Table vertice = tableMap.get(r.getHead().name());
+            if (!deps.containsKey(vertice)) {
+                deps.put(vertice, new ArrayList<>());
+            }
+            for (Predicate p: r.getBodyP()) {
+                Table t = tableMap.get(p.name());
+                deps.get(vertice).add(t);
+            }
+        }
+
+        List<Set<Table>> sccList = new ArrayList<>();
+        HashSet<Table> visited = new HashSet<>();
+        for (Table v: deps.keySet()) {
+            Set<Table> scc = new HashSet<>();
+            if (findScc(v, deps, v, scc, visited)) {
+                sccList.add(scc);
+            }
+            visited.addAll(scc);
+        }
+
+        for (Set<Table> scc: sccList) {
+            List<Rule> sccRules = new ArrayList<>();
+            for (Rule r: rules) {
+                if (r.isSimpleArrayInit()) continue;
+                if (isTrivialRecursion(r)) continue;
+
+                Table h = tableMap.get(r.getHead().name());
+                if (scc.contains(h)) {
+                    sccRules.add(r);
+                }
+            }
+            RuleComp comp = new SCC(sccRules);
+            comps.add(comp);
+            addedRules.addAll(sccRules);
+        }
+
+        // RuleComp for single rule (not in scc)
+        for (Rule r: rules) {
+            if (!addedRules.contains(r))
+                comps.add(new RuleComp(r));
         }
         return comps;
     }
@@ -1583,7 +1511,7 @@ public class Analysis {
             levelMap.put(rc, 0);
 
         int highest = 0;
-        boolean change = false;
+        boolean change;
         do {
             change = false;
             for (RuleComp rc : ruleComps) {
@@ -1593,7 +1521,6 @@ public class Analysis {
                 List<RuleComp> usedBy = new ArrayList<RuleComp>(
                         rc.getRuleCompsUsingThis());
                 usedBy.remove(rc);
-                //removeNegatedDepRule(usedBy);
 
                 change = change | updateEpochLevel(usedBy, levelMap, l);
                 int newHighest = getHighestLevel(usedBy, levelMap);
@@ -1602,7 +1529,7 @@ public class Analysis {
         } while (change);
 
         for (int i = 0; i <= highest; i++) {
-            List<RuleComp> ruleCompsInLevel = new ArrayList<RuleComp>();
+            List<RuleComp> ruleCompsInLevel = new ArrayList<>();
             for (RuleComp rc : ruleComps) {
                 int l = levelMap.get(rc);
                 if (l == i)
@@ -1613,26 +1540,6 @@ public class Analysis {
                 epochs.add(s);
             }
         }
-    }
-
-    void removeNegatedDepRule(List<RuleComp> usedBy) {
-        /**
-         * Path(s, depth, $Choice(to)) :- s=0, depth=1, Edge(s, to), !Path(s, _, to);   .... (1)
-         *			  				   :- Path(_, prevDepth, s), depth=prevDepth+1, Edge(s, to), !Path(s, _, to).  ... (2)
-         *
-         * remove rule (1) from usedBy list of rule (2) so that the negation has the natural semantics.
-         */
-        List<RuleComp> toRemove = new ArrayList<RuleComp>();
-        for (RuleComp _rc:usedBy) {
-            if (_rc.size()==0) toRemove.add(_rc); // merged-rule (base-case for linear recursion)
-            if (!_rc.scc() && _rc.size()==1) {
-                List<String> negatedPnames = getNegatedPnames(_rc.get(0));
-                if (negatedPnames.contains(_rc.get(0).getHead().name())) {
-                    toRemove.add(_rc);
-                }
-            }
-        }
-        usedBy.removeAll(toRemove);
     }
 
     void computeParamTypes() {

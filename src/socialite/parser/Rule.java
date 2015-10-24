@@ -38,12 +38,9 @@ public class Rule implements Externalizable {
     RuleDecl ruleDecl;
     boolean isLeftRec=false; // indicates that this rule is (linearly) left-recursive
     boolean isLeftRecOpt=false; // above plus array table is used for the rule-head
-    boolean deltaStepOpt=false; // use delta-step algorithm
-    transient Variable deltaStepVar=null;
     boolean inScc=false;
     boolean simpleArrayInit=false;
     boolean hasPipelined = false;
-    boolean useArrayTableLock = false;
 
     public Rule() { }
 
@@ -73,20 +70,9 @@ public class Rule implements Externalizable {
     public int getEpochId() { return epochId; }
     public void setInScc() { inScc=true; }
     public boolean inScc() { return inScc; }
-    public void setDijkstraOpt() {
-        isLeftRecOpt=true;
-        setLeftRec();
-    }
-    public boolean isDijkstraOpt() { return isLeftRecOpt; }
+
     public void setLeftRec() { isLeftRec=true; }
     public boolean isLeftRec() { return isLeftRec; }
-    public void setDeltaStepOpt() { deltaStepOpt = true; }
-    public void setDeltaStepOpt(Variable v) {
-        assert getBodyVariables().contains(v);
-        deltaStepVar = v;
-        deltaStepOpt=true;
-    }
-    public boolean isDeltaStepOpt() { return deltaStepOpt; }
 
     public boolean isSimpleUpdate() { return ruleDecl.isSimpleUpdate(); }
 
@@ -96,11 +82,7 @@ public class Rule implements Externalizable {
         simpleArrayInit = r.simpleArrayInit;
         isLeftRecOpt = r.isLeftRecOpt;
         isLeftRec = r.isLeftRec;
-        deltaStepOpt = r.deltaStepOpt;
-        deltaStepVar = r.deltaStepVar;
         hasPipelined = r.hasPipelined;
-        useArrayTableLock = r.useArrayTableLock;
-        // deps and usedBy fields should be updated later
     }
 
     public void setEpoch(Epoch _e) {
@@ -395,11 +377,9 @@ public class Rule implements Externalizable {
         epochId = in.readInt();
         isLeftRec = in.readBoolean();
         isLeftRecOpt = in.readBoolean();
-        deltaStepOpt = in.readBoolean();
         inScc = in.readBoolean();
         simpleArrayInit = in.readBoolean();
         hasPipelined = in.readBoolean();
-        useArrayTableLock = in.readBoolean();
     }
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -408,10 +388,8 @@ public class Rule implements Externalizable {
         out.writeInt(epochId);
         out.writeBoolean(isLeftRec);
         out.writeBoolean(isLeftRecOpt);
-        out.writeBoolean(deltaStepOpt);
         out.writeBoolean(inScc);
         out.writeBoolean(simpleArrayInit);
         out.writeBoolean(hasPipelined);
-        out.writeBoolean(useArrayTableLock);
     }
 }

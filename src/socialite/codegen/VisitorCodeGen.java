@@ -41,7 +41,6 @@ import socialite.resource.SRuntimeMaster;
 import socialite.tables.TableUtil;
 import socialite.util.Assert;
 import socialite.functions.Choice;
-import socialite.functions.Max;
 import socialite.yarn.ClusterConf;
 
 public class VisitorCodeGen {
@@ -204,7 +203,7 @@ public class VisitorCodeGen {
             if (isTablePartitioned(t)) tableClass += "[]";
             visitorTmpl.add("fieldDecls", tableClass + " " + var);
         }
-        declareDeltaTableIfAny();
+        maybeDeclareDeltaTable();
 
         visitorTmpl.add("fieldDecls", "SRuntime " + runtimeVar());
         visitorTmpl.add("fieldDecls", "final int " + epochIdVar());
@@ -224,15 +223,9 @@ public class VisitorCodeGen {
 
         //declareAggrVarsAndAlloc();
         declareRemoteTablesIfAny();
-        maybeDeclareDeltaStepWindowVar();
         if (useChoice()) {
             visitorTmpl.add("fieldDecls", "boolean " + choiceMadeVar()+"=false");
         }
-    }
-    void maybeDeclareDeltaStepWindowVar() {
-        if (!useDeltaStepOpt()) return;
-
-        visitorTmpl.add("fieldDecls", "DeltaStepWindow "+ deltaStepWindowVar());
     }
 
     void declareParamVariables() {
@@ -252,18 +245,12 @@ public class VisitorCodeGen {
         }
     }
 
-    void declareDeltaTableIfAny() {
-        if (!accumlDelta(rule)) return;
+    void maybeDeclareDeltaTable() {
+        if (!accumlDelta(rule)) { return; }
 
         String tableClass = deltaHeadT.className();
-        assert !isTablePartitioned(deltaHeadT);
-        if (useDeltaStepOpt()) {
-            visitorTmpl.add("fieldDecls", tableClass+"[] "+deltaTableVar());
-            visitorTmpl.add("fieldDecls", tableClass+"[] "+deltaTableReturnVar());
-        } else {
-            visitorTmpl.add("fieldDecls", tableClass + " " + deltaTableVar());
-            visitorTmpl.add("fieldDecls", tableClass+" "+deltaTableReturnVar());
-        }
+        visitorTmpl.add("fieldDecls", tableClass + " " + deltaTableVar());
+        visitorTmpl.add("fieldDecls", tableClass+" "+deltaTableReturnVar());
     }
 
     void declareRemoteTablesIfAny() {
@@ -296,7 +283,6 @@ public class VisitorCodeGen {
     }
 
     String deltaTableReturnVar() {
-        //assert useDeltaStepOpt(rule);
         return "ret$delta$" + headT.name();
     }
 
@@ -447,10 +433,6 @@ public class VisitorCodeGen {
         return null;
     }
 
-    boolean useDeltaStepOpt() {
-        return isParallel() && rule.isDeltaStepOpt() && singlePrimAggrParam();
-    }
-
     void generateMethods() {
         generateIdGetters();
         generateRunMethod();
@@ -502,14 +484,12 @@ public class VisitorCodeGen {
     void genGetDeltaTableArray() {
         ST method = getNewMethodTmpl("getDeltaTables", "TableInst[]");
         visitorTmpl.add("methodDecls", method);
-        genGetDeltaTableArrayReally(method, deltaTableVar());
+        genGetDeltaTableArrayReally(method);
     }
 
-    void genGetDeltaTableArrayReally(ST method, String deltaVar) {
+    void genGetDeltaTableArrayReally(ST method) {
         if (accumlDelta(rule)) {
-            if (useDeltaStepOpt())
-                method.add("stmts", "return "+deltaTableReturnVar());
-            else method.add("stmts", "return new TableInst[]{"+deltaTableReturnVar()+"}");
+            method.add("stmts", "return new TableInst[]{"+deltaTableReturnVar()+"}");
         } else {
             method.add("stmts", "return null");
         }
@@ -525,28 +505,7 @@ public class VisitorCodeGen {
     }
 
     void genGetDeltaTableReally(ST method, String deltaVar) {
-        if (useDeltaStepOpt()) {
-            String deltaCls = deltaHeadT.className();
-            ST if_=tmplGroup.getInstanceOf("if");
-            method.add("stmts", if_);
-            if_.add("cond", deltaVar+"==null");
-            if_.add("stmts", deltaVar+"=new "+deltaCls+"["+deltaStepWindowVar()+".maxLevel()]");
-            if_.add("stmts", deltaTableReturnVar()+"=new "+deltaCls+"["+deltaStepWindowVar()+".maxLevel()]");
-
-            String aggrParamType = aggrParamType().getSimpleName();
-            method.add("args", aggrParamType+" _$aggrParam");
-
-            String priorityVar="$priority";
-            method.add("stmts", "int "+priorityVar);
-            String isMin="true";
-            if (rule.getHead().getAggrF().klass().equals(Max.class)) isMin = "false";
-            method.add("stmts", priorityVar+"="+deltaStepWindowVar()+".selectLevel(_$aggrParam,"+isMin+")");
-
-            genGetDeltaTableReallyWithPriority(method, deltaVar+"["+priorityVar+"]",
-                                               deltaTableReturnVar()+"["+priorityVar+"]",priorityVar);
-        } else {
-            genGetDeltaTableReallyWithPriority(method, deltaVar, deltaTableReturnVar(), "0");
-        }
+        genGetDeltaTableReallyWithPriority(method, deltaVar, deltaTableReturnVar(), "0");
     }
 
     void genGetDeltaTableReallyWithPriority(ST method, String deltaVar, String deltaRetVar, String priority) {
@@ -569,9 +528,7 @@ public class VisitorCodeGen {
         if_.add("stmts", deltaRetVar+"="+deltaVar+".isEmpty()?"+deltaVar+":null");
 
         if_ = tmplGroup.getInstanceOf("if");
-        if (useShortCircuit()) {
-            // do nothing
-        } else method.add("stmts", if_);
+        method.add("stmts", if_);
 
         if_.add("cond", deltaVar+".vacancy()==0");
         if (hasPipelinedRules()) {
@@ -860,29 +817,10 @@ public class VisitorCodeGen {
         Object param=headP.getAggrF().getArgs().get(0);
         return MyType.isPrimitive(param);
     }
-    Class aggrParamType() {
-        assert useDeltaStepOpt();
-        assert singlePrimAggrParam();
-        return MyType.javaType(headP.getAggrF().getArgs().get(0));
-    }
-
-    void maybeInitDeltaStepWindow(ST run) {
-        if (!useDeltaStepOpt()) return;
-        if (!singlePrimAggrParam()) return;
-
-        run.add("stmts", deltaStepWindowVar()+"=getWorker().getQueue().deltaStepWindow()");
-    }
-    void maybeUpdateDeltaStepWindow(ST run) {
-        if (!useDeltaStepOpt()) return;
-        if (!singlePrimAggrParam()) return;
-
-        run.add("stmts", deltaStepWindowVar()+".updateShared()");
-    }
 
     void generateRunMethod() {
         ST run = getNewMethodTmpl("run", "void");
         visitorTmpl.add("methodDecls", run);
-        maybeInitDeltaStepWindow(run);
 
         ST doWhile0 = tmplGroup.getInstanceOf("doWhile0");
         run.add("stmts", doWhile0);
@@ -929,42 +867,12 @@ public class VisitorCodeGen {
             return;
         }
 
-        if (useShortCircuit()) {
-            addShortCircuitSuffixInRun(code);
-        }
         genRunMethodFini(run);
-    }
-
-    boolean useShortCircuit() {
-        return isSequential() &&
-                rule.isLeftRec() && !rule.isDijkstraOpt() &&
-                iterStartP instanceof DeltaPredicate;
-    }
-    void addShortCircuitSuffixInRun(ST code) {
-        assert rule.isLeftRec():"rule is not left rec";
-        assert iterStartP instanceof DeltaPredicate:"iterStartP is not DeltaPredicate:"+iterStartP;
-
-        ST while_ = tmplGroup.getInstanceOf("while");
-        code.add("stmts", while_);
-        String cond="("+deltaTableVar()+"!=null) && (!"+deltaTableVar()+".isEmpty())";
-        while_.add("cond", cond);
-
-        Table t = tableMap.get(iterStartP.name());
-        String tableClass = t.className();
-
-        String tmpDelta = CodeGen.uniqueVar("tmpDelta");
-        while_.add("stmts", tableClass+" "+tmpDelta+"="+getVarName(iterStartP));
-        while_.add("stmts", getVarName(iterStartP)+"="+deltaTableVar());
-        while_.add("stmts", deltaTableVar()+"="+tmpDelta);
-        while_.add("stmts", deltaTableVar()+".clear()");
-        while_.add("stmts", getVarName(iterStartP)+".iterate(this)");
-        code.add("stmts", deltaTableReturnVar()+"=null");
     }
 
     void genRunMethodFini(ST code) {
         finishSendRemoteTablesIfAny(code);
         freeRemoteTables(code);
-        maybeUpdateDeltaStepWindow(code);
     }
 
     void freeRemoteTables(ST code) {
@@ -1075,10 +983,6 @@ public class VisitorCodeGen {
         if (updateFromRemoteHeadT()) {
             invokeIter = tableVar+".iterate(this)";
             code.add("stmts", invokeIter);
-        } else if (iterStartWithFirstP && doIterateRange()) {
-            //invokeIter = iterateRange(iterStartT, tableVar);
-            invokeIter = tableVar+invokeIterate(iterStartP, resolvedVars);
-            code.add("stmts", invokeIter);
         } else {
             invokeIter = tableVar+invokeIterate(iterStartP, resolvedVars);
             code.add("stmts", invokeIter);
@@ -1166,53 +1070,6 @@ public class VisitorCodeGen {
         }
         iteratebySuffix += "this"+trailingArgs+")";
         return iteratebySuffix;
-    }
-
-    int resolvedSingleNestedArrayIndex(Predicate p) {
-        assert !p.hasFunctionParam();
-        Table t = getTable(p);
-        if (!t.hasNestedT()) return -1;
-
-        assert t.getColumn(0).hasRange();
-        Object[] params = p.inputParams();
-        for (int i = 1; i < t.numColumns(); i++) {
-            Column c = t.getColumn(i);
-            if (!c.hasRange()) continue;
-
-            if (isResolved(p, params[i])) return i;
-            else return -1;
-        }
-        return -1;
-    }
-
-    boolean doIterateRange() {
-        if (!isParallelRule()) return false;
-
-        Table t = tableMap.get(iterStartP.name());
-        int column = Analysis.firstShardedColumnWithVar(iterStartP, t);
-        if (column < 0) return false;
-        Column c = t.getColumn(column);
-        if (c.hasRange()) return true;
-        else return false;
-    }
-    String iterateRange(Table t, String tableVar) {
-        int id = t.id();
-        if (t instanceof RemoteHeadTable) id = ((RemoteHeadTable) t).origId();
-        else assert !(t instanceof GeneratedT);
-
-        int rangeCol = Analysis.firstShardedColumnWithVar(iterStartP, t);
-        String range = partitionMapVar()+".getRange("+id+","+firstTableIdx()+")";
-        String begin = range + "[0]", end = range + "[1]";
-        Object[] params = iterStartP.inputParams();
-        int nestedArrayIdx = resolvedSingleNestedArrayIndex(iterStartP);
-        Object nestedArrayIdxVal = nestedArrayIdx>rangeCol ? params[nestedArrayIdx]:null;
-        String invokeIter = tableVar+".iterate_range_"+rangeCol;
-        if (nestedArrayIdx > rangeCol) {
-            invokeIter += "_by_"+nestedArrayIdx+"("+nestedArrayIdxVal+",";
-        } else invokeIter += "(";
-
-        invokeIter += begin + "," + end + ",this)";
-        return invokeIter;
     }
 
     boolean isConstOrResolved(Set<Variable> resolvedVars, Object varOrConst) {
@@ -1551,18 +1408,10 @@ public class VisitorCodeGen {
         return args;
     }
     void genAccumlDeltaIfAny(ST code) {
-        if (!accumlDelta(rule))
-            return;
+        if (!accumlDelta(rule)) { return; }
 
-        if (useDeltaStepOpt()) {
-            AggrFunction f = headP.getAggrF();
-            assert f!=null && f.getReturns().size()==1;
-            String deltaTable = "getDeltaTable("+toArgs(f.getReturns())+")";
-            code.add("stmts", updateHeadParamsTo(deltaTable));
-        } else {
-            String deltaTable = "getDeltaTable()";
-            code.add("stmts", updateHeadParamsTo(deltaTable));
-        }
+        String deltaTable = "getDeltaTable()";
+        code.add("stmts", updateHeadParamsTo(deltaTable));
     }
 
     boolean isNextId(AggrFunction f) {
@@ -1831,11 +1680,10 @@ public class VisitorCodeGen {
         if (isSequential()) return "0";
 
         int id = t.id();
-        Column c = t.getColumn(0);
-        if (c.hasRange()) {
-            return partitionMapVar() + ".getRangeIndex("+id+","+val+")";
+        if (t.isArrayTable()) {
+            return partitionMapVar() + ".getRangeIndex("+t.id()+","+val+")";
         } else {
-            return partitionMapVar() + ".getHashIndex("+id+","+val+")";
+            return partitionMapVar() + ".getHashIndex("+t.id()+","+val+")";
         }
     }
 
@@ -2263,13 +2111,7 @@ public class VisitorCodeGen {
     String ruleIdVar() { return "$ruleId"; }
     String epochIdVar() { return "$epochId"; }
     String choiceMadeVar() { return "$choiceMade"; }
-    String remoteBodyTableMapVar() { return "$remoteBodyTableMap"; }
-    String remoteHeadTableMapVar() { return "$remoteHeadTableMap"; }
     String isUpdatedVar() { return "$isUpdated"; }
     String aggrVar() { return "$aggrVar"; }
 
-    String deltaStepWindowVar() {
-        assert useDeltaStepOpt();
-        return "$deltaStepWindow";
-    }
 }

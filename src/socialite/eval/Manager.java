@@ -61,7 +61,6 @@ public class Manager extends Thread {
 	}
 	
 	public static void cleanupEpoch() {		
-		//DeltaStepWindow.reset();
 	}
 
 	public static void shutdownAll() {
@@ -182,11 +181,11 @@ public class Manager extends Thread {
     public void addEvalCmd(EvalCommand evalCmd) throws InterruptedException {
         SRuntime _runtime = runtime;
         EvalRefCount.getInst().waitUntilReady(evalCmd.getEpochId());
-        Task[] tasks=null;
+        Task[] tasks;
         VisitorBuilder builder = builder(evalCmd.getRuleId());
         if (builder == null) {
             do {
-                L.error("Builder for rule["+evalCmd.getRuleId()+"] is null, epochId:"+evalCmd.getEpochId()+", try waiting once more");
+                L.error("Builder for rule#"+evalCmd.getRuleId()+" is null, epochId:"+evalCmd.getEpochId()+", try waiting once more");
                 EvalRefCount.getInst().waitUntilReady(evalCmd.getEpochId());
                 builder = builder(evalCmd.getRuleId());
             } while (builder == null);

@@ -52,13 +52,7 @@ public class RuleDecl implements Externalizable {
 	public boolean isSimpleUpdate() {
 		return simpleUpdate;
 	}
-	public void setAnnotation(String ann) {
-		if ("SimpleUpdate".equalsIgnoreCase(ann)) {
-			simpleUpdate=true;
-		} else {
-			Assert.die("Unsupported annotation:"+ann);
-		}
-	}
+
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {

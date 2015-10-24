@@ -41,9 +41,9 @@ public class DeltaRule extends Rule {
 	
 	public void updateRuleDeps() {
 		Rule r=origRule;
-		deps = new ArrayList<Rule>(r.deps);
+		deps = new ArrayList<>(r.deps);
 		for (Rule r1:deps) { r1.usedBy(this); }
-		usedBy = new ArrayList<Rule>(r.usedBy);
+		usedBy = new ArrayList<>(r.usedBy);
 		for (Rule r2:usedBy) { r2.dependOn(this); }
 	}
 	public DeltaPredicate getTheP() { return theP; }

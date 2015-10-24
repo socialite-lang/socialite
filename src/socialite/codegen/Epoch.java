@@ -77,7 +77,7 @@ public class Epoch implements Externalizable {
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
         id = in.readInt();
-        tableMap = new HashMap<String, Table>();
+        tableMap = new HashMap<>();
         if (in.readByte()==1) {
 			newTables = (SArrayList<Table>) in.readObject();
             for (Table t:newTables) {
@@ -142,7 +142,7 @@ public class Epoch implements Externalizable {
 	// since delta-rules and pipelined-rules can be added later
 	public List<Rule> getRules() {
 		if (rules==null) {
-			rules = new SArrayList<Rule>();
+			rules = new SArrayList<>();
 			for (RuleComp rc:ruleComps) {
 				for (Rule r:rc.getRules()) {
 					if (!rules.contains(r))

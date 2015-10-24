@@ -39,7 +39,7 @@ public class TaskQueue {
         for (int i=0; i<Priority.numLevels(); i++) {
             queues.add(new ArrayQueue<>(DEFAULT_CAPACITY));
         }
-        reservedTasks = Collections.synchronizedList(new ArrayList<Task>());
+        reservedTasks = Collections.synchronizedList(new ArrayList<>());
     }
 
     public void add(Priority priority, Task task) {

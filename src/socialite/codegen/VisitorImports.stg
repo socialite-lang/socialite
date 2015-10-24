@@ -31,7 +31,6 @@ import socialite.dist.msg.WorkerMessage;
 
 import socialite.eval.TmpTablePool;
 import socialite.eval.Worker;
-import socialite.eval.DeltaStepWindow;
 
 import socialite.type.*;
 import socialite.util.HashCode;

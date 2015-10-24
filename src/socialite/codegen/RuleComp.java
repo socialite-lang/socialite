@@ -17,15 +17,14 @@ import socialite.parser.Rule;
 import socialite.util.Assert;
 
 // Rule Component:
-//   represents 1. recursive rules in a strongly-connected component or
-//              2. a single rule or
-//              3. rules that are pipelined from a rule (that is also included)
+//   represents rules that write to a strongly-connected component in the table dependency graph.
+//   Subclass SCC represents rules writing to non-trivial strongly-connected component (having recursive dependency).
 
 public class RuleComp implements Externalizable {
 	private static final long serialVersionUID = 1;
 	
 	static Map<Rule, RuleComp> ruleToRuleComp = null;
-	public static void init() { ruleToRuleComp = new HashMap<Rule, RuleComp>(); }
+	public static void init() { ruleToRuleComp = new HashMap<>(); }
 	public static List<RuleComp> findRuleComps(List<Rule> rules) {
 		List<RuleComp> result=new ArrayList<RuleComp>();
 		for (Rule r:rules) {
@@ -40,45 +39,26 @@ public class RuleComp implements Externalizable {
 	}
 
     transient List<RuleComp> deps, usedBy;
-    transient Rule pipeliningFrom = null;
 
 	Epoch epoch;
     int epochId;
 	SArrayList<Rule> rules;
-	SArrayList<Rule> startingRules = new SArrayList<Rule>();
-	boolean scc;
+	SArrayList<Rule> startingRules = new SArrayList<>();
 	boolean disabled=false;
 
 	public RuleComp() {
 		rules = new SArrayList<>(0);
 		startingRules = new SArrayList<>(0);
 	}
-	public RuleComp(List<Rule> _rules, boolean _scc) {
-		rules = new SArrayList<>(_rules);
-		for (Rule r:rules) {
-			assert !ruleToRuleComp.containsKey(r);
-			ruleToRuleComp.put(r, this);
-		}
-		scc = _scc;
-		if (rules.size()==1) addStartingRule(rules.get(0));
-	}
-	public RuleComp(Rule r, boolean _scc) {
-		rules = new SArrayList<>();
+	public RuleComp(Rule r) {
+		rules = new SArrayList<>(1);
 		rules.add(r);
-		scc = _scc;
-		if (!scc) addStartingRule(rules.get(0));
-		
+
+		addStartingRule(r);
 		ruleToRuleComp.put(r, this);
 	}
-	public boolean scc() { return scc; }
+	public boolean scc() { return false; }
 
-	public void setPipeliningFrom(Rule r) {
-		assert pipeliningFrom == null:"pipeliningFrom is not null:"+pipeliningFrom;
-		pipeliningFrom = r;
-		r.setHasPipelinedRule();
-	}
-	public boolean hasPipeliningFrom() { return pipeliningFrom!=null; }
-	
 	public List<Rule> getRules() { return rules; }
 	
 	public void setEpoch(Epoch _e) {
@@ -98,7 +78,6 @@ public class RuleComp implements Externalizable {
 	}
 	
 	void filterByEpoch(List<RuleComp> ruleComps) {// ruleComps: deps or UsedBy
-		Assert.not_null(epoch());
 		Iterator<RuleComp> it = ruleComps.iterator();
 		while(it.hasNext()) {
 			RuleComp rc=it.next();
@@ -182,11 +161,10 @@ public class RuleComp implements Externalizable {
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
         epochId = in.readInt();
-		rules = new SArrayList<Rule>(0);
+		rules = new SArrayList<>(0);
 		rules.readExternal(in);
-		startingRules = new SArrayList<Rule>(0);
+		startingRules = new SArrayList<>(0);
 		startingRules.readExternal(in);
-		scc = in.readBoolean();
 		disabled = in.readBoolean();
 	}
 	@Override
@@ -194,7 +172,6 @@ public class RuleComp implements Externalizable {
 		out.writeInt(epochId);
 		rules.writeExternal(out);
         startingRules.writeExternal(out);
-		out.writeBoolean(scc);
 		out.writeBoolean(disabled);
 	}
 }
