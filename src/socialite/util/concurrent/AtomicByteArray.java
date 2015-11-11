@@ -1,7 +1,5 @@
 package socialite.util.concurrent;
 
-import socialite.util.SociaLiteException;
-
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public final class AtomicByteArray {
@@ -12,16 +10,7 @@ public final class AtomicByteArray {
         length = _length;
         array = new AtomicIntegerArray((length + 3) / 4);
     }
-    // this assumes synchronized call (using lazySet)
-    public void fill(int from, int to, byte val) {
-        from = from >>> 2;
-        to = to >>> 2;
-        if (to > array.length()) to = array.length();
-        int ival = val | val<<8 | val<<16 | val<<24;
-        for (int i=from; i<to; i++) {
-            array.lazySet(i, ival);
-        }
-    }
+
     // this assumes synchronized call (using lazySet)
     public void fill(byte val) {
         int ival = val | val<<8 | val<<16 | val<<24;
@@ -47,7 +36,7 @@ public final class AtomicByteArray {
         int alignedVal = (val & 0xff) << shift;
 
         while (true) {
-            int old = array.get(idx);
+            final int old = array.get(idx);
             int newVal = (old & ~mask) | alignedVal;
             if ((old == newVal) || array.compareAndSet(idx, old, newVal)) {
                 return;
@@ -62,7 +51,7 @@ public final class AtomicByteArray {
         int alignedVal = (val & 0xff) << shift;
 
         while (true) {
-            int old = array.get(idx);
+            final int old = array.get(idx);
             if ((old & mask) != alignedExpected) return false;
 
             int newVal = (old & ~mask) | alignedVal;
@@ -110,7 +99,56 @@ public final class AtomicByteArray {
 
     public int length() { return length; }
 
+
+    static void setit(byte[] a, int i, int[] base) {
+        a[i] = (byte) ((42-i)>>3 + base[i]);
+    }
+    static void setit2(AtomicByteArray b, int i, int[] base) {
+        b.compareAndSet(i, (byte)0, (byte) ((42-i)>>3+base[i]));
+    }
+    static void func1(boolean verbose) {
+        byte[] a = new byte[1024];
+        AtomicByteArray b = new AtomicByteArray(1024);
+        int[] base = new int[1024];
+
+        for (int i=0; i<base.length; i++) {
+            base[i] = i+3*2;
+        }
+
+        long s= System.currentTimeMillis();
+        for (int j=0; j<100000; j++) {
+            for (int i = 0; i < a.length; i++) {
+                //a[i] = (byte) (42+i*37.0f);
+                setit(a, i, base);
+                //a[i] = (byte) ((42-i)>>3);
+            }
+        }
+        long e= System.currentTimeMillis();
+        if (verbose) System.out.println("Byte[]: "+(e-s)/1000.0+"sec");
+
+        s= System.currentTimeMillis();
+        for (int j=0; j<100000; j++) {
+            for (int i = 0; i < b.length; i++) {
+                setit2(b, i, base);
+                //b.compareAndSet(i, (byte)0, (byte) ((42-i)>>3));
+            }
+        }
+        e= System.currentTimeMillis();
+        if (verbose) System.out.println("AtomicByteArray: "+(e-s)/1000.0+"sec");
+        if (verbose) System.out.println("");
+    }
+    static void test() {
+        func1(false);
+        func1(false);
+        func1(false);
+        func1(true);
+        func1(true);
+        func1(true);
+    }
     public static void main(String[] args) {
+        if (true) {
+            test();
+        }
         final AtomicByteArray barray = new AtomicByteArray(16);
 
         assert barray.get(1) == 0;
@@ -149,18 +187,5 @@ public final class AtomicByteArray {
         for (int i=0; i<barray.length(); i++) {
             assert barray.get(i) == i+1;
         }
-        barray.fill(1-1, 3+3, (byte)0);
-        assert barray.get(0) == 0:barray.get(0)+"";
-        assert barray.get(1) == 0;
-        assert barray.get(2) == 0;
-        assert barray.get(3) == 0;
-        assert barray.get(4) != 0;
-        barray.fill(4, barray.length()+4, (byte)2);
-        assert barray.get(4) == 2;
-        assert barray.get(5) == 2;
-        assert barray.get(6) == 2;
-        assert barray.get(7) == 2;
-        assert barray.get(8) == 2;
-        assert barray.get(barray.length()-1) == 2;
     }
 }

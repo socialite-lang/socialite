@@ -315,9 +315,10 @@ public class Analysis {
     }
 
     void setGroupby() {
-        for (Rule r : rules)
+        for (Rule r : rules) {
             setGroupby(r);
-        for (Table t:newTables) {
+        }
+        /*for (Table t:newTables) {
             if (!t.hasGroupby()) {
                 if (t.getColumn(t.numColumns()-1).isIndexed()) {
                     continue;
@@ -329,7 +330,7 @@ public class Analysis {
                     Assert.impossible();
                 }
             }
-        }
+        }*/
     }
 
     void setGroupby(Rule r) {
@@ -1295,7 +1296,7 @@ public class Analysis {
     // returns true iff P(x, y, ..) :- P(a, b, ..).
     // where x,y,.. a,b are non-functions
     boolean isTrivialRecursion(Rule r) {
-        if (r.getBody().size() != 1) return false;
+        if (r.getBodyP().size() != 1) return false;
 
         Predicate h = r.getHead();
         if (h.hasFunctionParam())

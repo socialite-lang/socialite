@@ -179,9 +179,9 @@ public class VisitorCodeGen {
         for (Predicate p:rule.getBodyP()) {
             Table t = getTable(p);
             if (t.visitorInterface()==null) continue;
-      if (addedInterfaces.contains(t.visitorInterface())) continue;
+            if (addedInterfaces.contains(t.visitorInterface())) continue;
             visitorTmpl.add("interfaces", t.visitorInterface());
-      addedInterfaces.add(t.visitorInterface());
+            addedInterfaces.add(t.visitorInterface());
         }
 
         importTablesDeclareFields();
@@ -518,12 +518,6 @@ public class VisitorCodeGen {
             alloc="("+deltaCls+")"+TmpTablePool_get()+"Small("+deltaCls+".class)";
         else alloc="("+deltaCls+")"+TmpTablePool_get()+"(getWorkerId(),"+deltaCls+".class,"+priority+")";
 
-        if (headTableLockAtStart()) {
-            ST withoutLock = CodeGen.withoutLock(lockMapVar(), headT.id(), firstTableIdx());
-            if_.add("stmts", withoutLock);
-            if_ = withoutLock;
-        }
-
         if_.add("stmts", deltaVar+"="+alloc);
         if_.add("stmts", deltaRetVar+"="+deltaVar+".isEmpty()?"+deltaVar+":null");
 
@@ -546,11 +540,6 @@ public class VisitorCodeGen {
         method.add("ret", "return " + deltaVar);
     }
     void addPipeliningCode(ST code, String deltaVar) {
-        if (headTableLockAtStart()) {
-            ST withoutLock = CodeGen.withoutLock(lockMapVar(), headT.id(), firstTableIdx());
-            code.add("stmts", withoutLock);
-            code = withoutLock;
-        }
         String deltaRulesArray=runtimeVar()+".getRuleMap(getRuleId()).getDeltaRules(getRuleId()).toArray()";
         ST forEachDepRule = tmplGroup.getInstanceOf("forEach");
         code.add("stmts", deltaVar+".setReuse(false)");
@@ -732,12 +721,6 @@ public class VisitorCodeGen {
         if_.add("cond", table+".vacancy()==0");
 
         ST send = if_;
-        if (headTableLockAtStart()) {
-            ST withoutLock = CodeGen.withoutLock(lockMapVar(), headT.id(),	firstTableIdx());
-            if_.add("stmts", withoutLock);
-            send = withoutLock;
-        }
-
         String partitionIdx="0";
         sendToRemoteHead(send, table, partitionIdx, machineIdx);
     }
@@ -759,11 +742,6 @@ public class VisitorCodeGen {
         if_.add("cond", table+".size()=="+table+".capacity()");
 
         ST send = if_;
-        if (headTableLockAtStart()) {
-            ST withoutLock = CodeGen.withoutLock(lockMapVar(), headT.id(), firstTableIdx());
-            if_.add("stmts", withoutLock);
-            send = withoutLock;
-        }
         String machineIdx = partitionMapVar()+".machineIndexFor("+t.id()+","+joinP.first()+")";
         sendToRemoteBody(send, table, machineIdx, ""+joinP.getPos());
     }
@@ -774,11 +752,6 @@ public class VisitorCodeGen {
         if_.add("cond", table+".vacancy()==0");
 
         ST send = if_;
-        if (headTableLockAtStart()) {
-            ST withoutLock = CodeGen.withoutLock(lockMapVar(), headT.id(), firstTableIdx());
-            if_.add("stmts", withoutLock);
-            send = withoutLock;
-        }
         broadcastToRemoteBody(send, table, ""+joinP.getPos());
     }
 
@@ -858,7 +831,8 @@ public class VisitorCodeGen {
         }
         if (iterStartP == null) {
             if (headTableLockAtStart()) {
-                ST withlock = CodeGen.withLock(lockMapVar(), headT.id(), partitionIdxGetter(headT, headP.first()));
+                String _headTable = headTableVar()+headTablePartition();
+                ST withlock = CodeGen.withLock(_headTable);
                 code.add("stmts", withlock);
                 code = withlock;
             }
@@ -947,6 +921,8 @@ public class VisitorCodeGen {
         }
     }
 
+    //XXX: should check the tables in the SCC, and see if
+    //     any of them has group-by with 2+ args or non-primitive arg.
     boolean bodyTableLockRequired() {
         if (headT instanceof DeltaTable) {
             DeltaTable deltaHeadT = (DeltaTable)headT;
@@ -961,18 +937,11 @@ public class VisitorCodeGen {
         ST code = run;
         Table iterStartT = getTable(iterStartP);
         assert rule.firstP().equals(iterStartP);
-        boolean iterStartWithFirstP = rule.firstP().equals(iterStartP);
+
         if (headTableLockAtStart()) {
             assert iterStartP == rule.firstP();
-            ST withlock = CodeGen.withLock(lockMapVar(), headT.id(), firstTableIdx());
-            code.add("stmts", withlock);
-            code = withlock;
-        }
-        if (bodyTableLockRequired()) {
-            assert rule.getBodyP().size()==1;
-            DeltaTable deltaHeadT = (DeltaTable)headT;
-            assert iterStartT.equals(deltaHeadT.origT());
-            ST withlock = CodeGen.withLock(lockMapVar(), iterStartT.id(), firstTableIdx());
+            String _headTable = headTableVar()+headTablePartition();
+            ST withlock = CodeGen.withLock(_headTable);
             code.add("stmts", withlock);
             code = withlock;
         }
@@ -1423,14 +1392,18 @@ public class VisitorCodeGen {
         return n.equals("Builtin.min") || n.equals("Builtin.max") ||
                 n.equals("Min.invoke") || n.equals("Max.invoke") ;
     }
-    boolean priorTestForMinMax() {
-        if (!headTableLockAtEnd()) return false;
-        boolean test = headP.hasFunctionParam() &&
-                    isMinOrMax(headP.getAggrF()) &&
-                    headT.isArrayTable() &&
-                    headP.getAggrF().getIdx()==1 &&
-                    headT.getColumn(1).type().isPrimitive();
-        return test;
+    @Deprecated
+
+    String headTablePartition() {
+        if (!isTablePartitioned(headT)) { return ""; }
+
+        if (updateFromRemoteHeadT()) {
+                return "["+partitionIdxGetter(headT, headP.first())+"]";
+        } else if (Analysis.updateParallelShard(rule, tableMap)) {
+                return "["+firstTableIdx()+"]";
+        } else {
+                return "["+partitionIdxGetter(headT, headP.first())+"]";
+        }
     }
 
     // returns place-holder for if-updated code
@@ -1443,35 +1416,21 @@ public class VisitorCodeGen {
             return code;
         }
 
-        String headTablePartition= headTableVar();
-        if (isTablePartitioned(headT)) {
-            String partitionIdx;
-            if (updateFromRemoteHeadT()) {
-                partitionIdx = partitionIdxGetter(headT, headP.first());
-            } else if (Analysis.updateParallelShard(rule, tableMap)) {
-                partitionIdx = firstTableIdx();
-            } else {
-                partitionIdx = partitionIdxGetter(headT, headP.first());
-            }
-            headTablePartition += "[" + partitionIdx + "]";
-        }
-        String _headTable = "_$$headTable";
-        code.add("stmts", headT.className()+" "+_headTable+"="+headTablePartition);
-
-        if (priorTestForMinMax())
-            genPriorTestForMinMax(code, _headTable);
+        String _headTable = "_$"+headTableVar();
+        code.add("stmts", headT.className()+" "+_headTable+"="+headTableVar() + headTablePartition());
 
         ST prevCode=code;
         if (headTableLockAtEnd()) {
-            ST withLock;
-            withLock = CodeGen.withLock(lockMapVar(), headT.id(), partitionIdxGetter(headT, headP.first()));
+            ST withLock = CodeGen.withLock(_headTable, headP.first());
             code.add("stmts", withLock);
             code = withLock;
         }
 
         if (headP.hasFunctionParam()) {
             genAggrCode(code, _headTable, ifUpdated);
-        } else genInsertCode(code, _headTable, ifUpdated);
+        } else {
+            genInsertCode(code, _headTable, ifUpdated);
+        }
 
         ST if_ = tmplGroup.getInstanceOf("if");
         if_.add("cond", isUpdatedVar());
@@ -1480,38 +1439,41 @@ public class VisitorCodeGen {
         return ifUpdated;
     }
 
-    String containsGroupbyPrefix(String headTable, AggrFunction f) {
-        String contains = headTable + ".contains(";
+    String groupbyGetPos(String headTable, AggrFunction f) {
+        String groupbyGetPos = headTable + ".groupby_getpos(";
         for (int i = 0; i < f.getIdx(); i++) {
             Object p = headP.inputParams()[i];
-            contains += p;
+            groupbyGetPos += p;
             if (i != f.getIdx() - 1)
-                contains += ", ";
+                groupbyGetPos += ", ";
         }
-        contains += ")";
-        return contains;
-    }
-
-    void genPriorTestForMinMax(ST code, String headTable) {
-        AggrFunction f=headP.getAggrF();
-        ST if_ = tmplGroup.getInstanceOf("if");
-        code.add("stmts", if_);
-        String contains = containsGroupbyPrefix(headTable, f);
-        if_.add("cond", contains);
-        Variable newAnsVar = f.getReturns().get(0);
-        assert newAnsVar.type.isPrimitive();
-        String groupbyRetType = MyType.javaTypeName(newAnsVar);
-        if_.add("stmts",groupbyRetType + " _$oldAns");
-        String groupby = invokeGroupby(headTable, headP);
-        if_.add("stmts", "_$oldAns="+groupby);
-        if_.add("stmts", newAnsVar+"="+f.codegen("_$oldAns").render());
-        if_.add("stmts", "if (_$oldAns!=0 && _$oldAns=="+newAnsVar+") continue");
+        groupbyGetPos += ")";
+        return groupbyGetPos;
     }
 
     void genAggrCode(ST code, String headTable, ST ifUpdated) {
         AggrFunction f = headP.getAggrF();
 
-        String contains = containsGroupbyPrefix(headTable, f);
+        String groupbyGetPos = groupbyGetPos(headTable, f);
+        code.add("stmts", "int _$groupbyPos = "+groupbyGetPos);
+        ST ifElse = tmplGroup.getInstanceOf("ifElse");
+        code.add("stmts", ifElse);
+        ifElse.add("cond", "_$groupbyPos < 0");
+        ifElse.add("stmts", assignVars(Arrays.asList(new Object[]{aggrVar()}), f.getArgs()));
+        ifElse.add("stmts", insertHeadParamsTo(headTable, "groupby_"));
+        ifElse.add("stmts", isUpdatedVar()+"=true");
+
+        String groupbyRetType = MyType.javaTypeName(f.getAggrColumnType());
+        ifElse.add("elseStmts", groupbyRetType+" _$oldAns="+headTable+".groupby_groupby(_$groupbyPos)");
+
+        ifElse.add("elseStmts", aggrVar()+"="+f.codegen("_$oldAns").render());
+
+        ifElse.add("elseStmts", isUpdatedVar()+"="+updateHeadParamsTo(headTable, "groupby_", "_$groupbyPos"));
+    }
+    void OLD_genAggrCode(ST code, String headTable, ST ifUpdated) {
+        AggrFunction f = headP.getAggrF();
+
+        String contains = "";//containsGroupbyPrefix(headTable, f);
         ST ifElse = tmplGroup.getInstanceOf("ifElse");
         if (f.isSimpleAggr()) {
             // if the groupby prefix params don't exist in the table, we insert the params.
@@ -1623,20 +1585,33 @@ public class VisitorCodeGen {
     }
 
     String insertHeadParamsTo(String tablePartition) {
-        String insert = tablePartition + ".insert";
+        return insertHeadParamsTo(tablePartition, "");
+    }
+    String insertHeadParamsTo(String tablePartition, String prefix) {
+        String insert = tablePartition + "."+prefix+"insert";
         insert += makeHeadParamsArgs();
         return insert;
     }
 
     String updateHeadParamsTo(String tablePartition) {
-        String update = tablePartition + ".update";
-        update += makeHeadParamsArgs();
+        return updateHeadParamsTo(tablePartition, "", null);
+    }
+    String updateHeadParamsTo(String tablePartition, String prefix, String arg0) {
+        String update = tablePartition + "."+prefix+"update";
+        update += makeHeadParamsArgs(arg0);
         return update;
     }
 
     String makeHeadParamsArgs() {
+        return makeHeadParamsArgs(null);
+    }
+    String makeHeadParamsArgs(String arg0) {
         String args = "(";
         boolean first=true;
+        if (arg0 != null) {
+            args += arg0;
+            first=false;
+        }
         Object[] params = headP.params.toArray();
         for (Object o:params) {
             if (!first) args += ", ";

@@ -69,15 +69,6 @@ if (<cond>) {
 }
 >>
 
-synchronized(monitor, stmts, endstmt, finally) ::= <<
-synchronized(<monitor>) {
-   <stmts; separator=";\n">;
-   <endstmt>;
-}
-<finally; separator=";\n">;
->>
-
-
 while(cond, stmts, endstmt) ::= <<
 while(<cond>) {
    <stmts; separator=";\n">;
@@ -115,6 +106,12 @@ try {
     <stmts; separator=";\n">;
 } finally {
     <finally; separator=";\n">;
+}
+>>
+
+synchronized(var, stmts) ::= <<
+synchronized(<var>) {
+    <stmts; separator=";\n">;
 }
 >>
 
