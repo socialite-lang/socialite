@@ -29,9 +29,11 @@ CLASSPATH=${CLASSPATH}:${EXT}/commons-logging-1.1.1.jar:${EXT}/commons-logging-a
 CLASSPATH=${CLASSPATH}:${EXT}/log4j-1.2.16.jar
 CLASSPATH=${CLASSPATH}:${EXT}/jython.jar
 CLASSPATH=${CLASSPATH}:${EXT}/ST-4.0.7.jar:${EXT}/antlr-3.5.2-complete-no-st3.jar:${EXT}/trove-3.0.3.jar 
-CLASSPATH=${CLASSPATH}:${EXT}/concurrent-prim-map-1.0.0.jar
 CLASSPATH=${CLASSPATH}:${EXT}/commons-collections-3.2.1.jar
+CLASSPATH=${CLASSPATH}:${EXT}/guava-18.0.jar
+CLASSPATH=${CLASSPATH}:${EXT}/python/jython-standalone-2.7.1b2.jar
 CLASSPATH=${CLASSPATH}:${EXT}/hadoop/*
+CLASSPATH=${CLASSPATH}:${EXT}/serialize/*
 if [ -e "${HADOOP_PREFIX}/bin/yarn" ] ; then
   CLASSPATH=${CLASSPATH}:`${HADOOP_PREFIX}/bin/yarn classpath`
 fi

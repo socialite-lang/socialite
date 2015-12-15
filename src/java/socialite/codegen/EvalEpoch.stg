@@ -1,0 +1,71 @@
+evalClass(name, tableVars, tableDecls, tableInsts, tableRegs, tableInit, tableStmts, tableUnregs, evalBaseClass) ::= <<
+package socialite.eval;
+
+import java.lang.reflect.Constructor;
+import java.util.List;
+
+import socialite.codegen.RuleComp;
+import socialite.codegen.Epoch;
+
+import socialite.parser.Rule;
+import socialite.tables.*;
+import socialite.resource.*;
+import socialite.util.Assert;
+import socialite.util.SociaLiteException;
+
+import socialite.eval.Manager;
+
+public class <name> extends <evalBaseClass> {
+	<tableDecls; separator=";\n">;
+
+	public <name>(SRuntime _runtime, Epoch _epoch) {
+		super(_runtime, _epoch);
+		try {
+			<tableInsts; separator=";\n">;
+			<tableRegs; separator=";\n">;
+			<tableStmts; separator=";\n">;
+		} catch (Throwable t) {
+			EvalParallel.L.fatal("Exception while table instantiation:"+t.getMessage());
+			throw new SociaLiteException(t.getMessage());
+		}
+	}
+
+	public void init() {
+		super.init();
+		
+		<tableInit; separator=";\n">;		
+	}
+	
+	//public void run() { super.run(); }	
+	public void finish() { 
+		super.finish();
+		<tableVars: {v|<v> = null;<\n>}>
+	}
+}
+>>
+
+for(init, cond, inc, stmts) ::= <<
+for(<init>; <cond>; <inc>) {
+    <stmts; separator=";\n">;
+}
+>>
+
+if(cond, stmts) ::= <<
+if (<cond>) {
+	<stmts; separator=";\n">;
+}
+>>
+
+simpleStmts(stmts) ::= <<
+{<stmts; separator=";\n">;}
+>>
+
+method(comment, modifier, type, name, args, stmts, ret) ::= <<
+<if(comment)>/* <comment> */<endif>
+<modifier> <type> <name>(<args; separator=", ">) {
+    <stmts; separator=";\n">;
+    <if(ret)><ret; separator=";\n">;<endif>
+}
+>>
+
+

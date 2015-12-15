@@ -1,30 +1,3 @@
-# setup 'java.library.path' for native-hadoop code. Copied from the hadoop launch script
-#JAVA_LIBRARY_PATH=''
-#if [ -d "${HADOOP_HOME}/build/native" -o -d "${HADOOP_HOME}/lib/native" -o -e "${HADOOP_PREFIX}/lib/libhadoop.a" ]; then
-#  JAVA_PLATFORM=`CLASSPATH=${CLASSPATH} ${JAVA} -Xmx32m org.apache.hadoop.util.PlatformName | sed -e "s/ /_/g"`
-#
-#  if [ "$JAVA_PLATFORM" = "Linux-amd64-64" ]; then
-#    JSVC_ARCH="amd64"
-#  else
-#    JSVC_ARCH="i386"
-#  fi
-#
-#  if [ -d "$HADOOP_HOME/build/native" ]; then
-#    JAVA_LIBRARY_PATH=${HADOOP_HOME}/build/native/${JAVA_PLATFORM}/lib
-#  fi
-#
-#  if [ -d "${HADOOP_HOME}/lib/native" ]; then
-#    if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
-#      JAVA_LIBRARY_PATH=${JAVA_LIBRARY_PATH}:${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}
-#    else
-#      JAVA_LIBRARY_PATH=${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}
-#    fi
-#  fi
-#
-#  if [ -e "${HADOOP_PREFIX}/lib/libhadoop.a" ]; then
-#    JAVA_LIBRARY_PATH=${HADOOP_PREFIX}/lib
-#  fi
-#fi
 
 if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then 
   SOCIALITE_OPTS="$SOCIALITE_OPTS -Djava.library.path=$JAVA_LIBRARY_PATH"

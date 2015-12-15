@@ -1,1 +1,0 @@
-../src/pysocialite/console.py

@@ -1,0 +1,12 @@
+group table;
+
+import "ArrayTable.stg"
+import "ArrayNestedTable.stg"
+import "DynamicTable.stg"
+import "DynamicNestedTable.stg"
+import "FixedSizeTable.stg"
+import "RemoteTable.stg"
+
+dummy() ::= <<
+  // this is dummy
+>>

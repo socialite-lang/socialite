@@ -20,7 +20,7 @@
     <output url="file://$MODULE_DIR$/classes" />
     <exclude-output />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/java" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
@@ -79,24 +79,6 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="hadoop-core-1.2.1.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/ext/hadoop-core-1.2.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="jython.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/ext/jython.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
       <library name="log4j-1.2.16.jar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/ext/log4j-1.2.16.jar!/" />
@@ -139,5 +121,7 @@
     <orderEntry type="library" name="hadoop-yarn-registry-2.7.1" level="project" />
     <orderEntry type="library" name="commons-collections-3.2.1" level="project" />
     <orderEntry type="library" name="annotations-5.1" level="project" />
+    <orderEntry type="library" name="serialize" level="project" />
+    <orderEntry type="library" name="jython-standalone-2.7.1b2" level="project" />
   </component>
 </module>

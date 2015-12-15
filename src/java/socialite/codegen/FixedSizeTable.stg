@@ -1,0 +1,146 @@
+group fixed-size-table;
+
+import "TableCommon.stg"
+
+fixedSizeTable(tableName, name, visitorClass, methods,
+           size, id,
+           columns) ::= <<
+package socialite.tables;
+<importForTable()>
+
+// fixedSizeTable
+public final class <name> extends TmpTableInst {
+	private static final long serialVersionUID = 1;
+	
+	public static int tableid() { return <id>; }		
+	
+	public static <name> create() { return new <name>(<size>); }	
+	public static <name> create(int size) { return new <name>(size); }	
+	public static <name> createSmall() {
+		int capacity=<size>/10;
+		if (capacity \< 1) capacity = 1; 
+		return new <name>(capacity); 
+	}
+
+	<columns:{c|<if(c.const)> <ConstContainer.(c.type)> col<i0>;<\n>
+				<else><getContainer(c.type)> col<i0>;<\n><endif>}>
+		
+	public <name>() { this(0); }
+	public <name>(int size) {
+		size = (int)(size/sizeEstimFactor());
+		<columns:{c|<if(c.const)> col<i0>=new <ConstContainer.(c.type)>(size);<\n>
+					<else> col<i0>=new <ContainerMap.(c.type)>(size);<\n><endif>}>
+	}
+
+	public String name() { return "<tableName>"; }
+
+	public int ordinaryCapacity() { return <size>; }
+	public int capacity() { return col0.capacity(); } 	
+	public int size() { return col0.size(); }	
+	public int vacancy() {
+	    int vacancy = capacity() - size();
+	    if (vacancy >= 8) { vacancy -= 8; }
+	    else { vacancy = 0; }
+	    return vacancy;
+	}
+	public boolean isSmall() { return col0.size() \< <size>/10; }
+
+	public boolean isEmpty() { return col0.size()==0; }
+	
+	public int totalAllocSize() {
+		int capacity = col0.capacity();
+		int totalAlloc = 0;
+		<columns:{c|totalAlloc += 32+capacity*<c.typeSize>;<\n>}>
+		return totalAlloc;
+	}	
+	public int totalDataSize() {
+		int size = col0.size();
+		int totalData = 128;
+		<columns:{c|totalData += 32+size*<c.typeSize>;<\n>}>
+		return (int)(totalData*sizeEstimFactor());
+	}
+	static float estim = 1.0f;
+	public void setSharedSizeEstimFactor(float v) {
+		if (v > estim) { estim = v; }
+	}
+	public float sharedSizeEstimFactor() {
+		return estim;
+	}
+		
+	public int id() { return <id>; }	
+		
+	public String toString() {
+		String str="Table #<id>:";
+		int limit=col0.size();
+		str += "size="+limit+" ";
+		if (limit > 4) limit=4;
+		for (int i=0; i\<limit; i++) {
+			str += ""<columns:{c| +col<i0>.get(i)+", "}>;
+			str += "\n";
+		}
+		return str;
+	}
+	
+	public void clearQuick() { clear(); }
+	public void clear() {
+		<columns:{c|col<i0>.resetQuick();<\n>}>
+		assert isEmpty();
+	}
+	
+	public void addAll(TmpTableInst inst) {
+		// should be only used by Sender.java
+		if (inst==null) return;
+		<name> other = (<name>)inst;
+		<columns:{c|col<i0>.addAllFast(other.col<i0>);<\n>}>		
+	}
+	
+	public boolean contains(<columns:{c|<c.type> a<i0>};separator=", ">) {
+		for (int i=0; i\< col0.size(); i++) {
+		    if (true<columns:{c|&&(col<i0>.get(i)<EqOpMap.(c.type)>(a<i0>))}>)
+				return true;
+		}		
+		return false;
+	}
+	public boolean contains(<columns:{c|<c.type> a<i0>};separator=", ">, boolean[] dontcare) {
+		for (int i=0; i\< col0.size(); i++) {
+		    if (true<columns:{c|&&(dontcare[<i0>] || col<i0>.get(i)<EqOpMap.(c.type)>(a<i0>))}>)
+				return true;
+		}		
+		return false;
+	}
+	
+	public boolean insert(<columns:{c|<c.type> a<i0>};separator=", ">) {
+        <columns:{c|col<i0>.add(a<i0>);<\n>}>
+		return true;
+	}
+	public boolean update(<columns:{c|<c.type> a<i0>};separator=", ">) {
+		return insert(<columns:{c|a<i0>};separator=", ">);
+	}
+
+	public void iterate(<visitorClass> v) {
+		for (int i=0; i\< col0.size(); i++) {
+			boolean cont=v.visit(<columns:{c|col<i0>.getQuick(i)}; separator=",">);
+			if (!cont) return;
+		}
+	}	
+	public void iterate_range(int from, int to, <visitorClass> v) {
+		if (to >= size()) to = size()-1;
+		for (int i=from; i\<= to; i++) {
+			boolean cont=v.visit(<columns:{c|col<i0>.getQuick(i)}; separator=", ">);
+			if (!cont) return;
+		}
+	}
+
+	<methods;separator="\n">
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		<columns:{c|col<i0>.writeExternal(out);<\n>}>
+	}
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		<columns:{c|col<i0>.readExternal(in);<\n>}>
+	}
+}
+>>
+ 

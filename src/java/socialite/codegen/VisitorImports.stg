@@ -1,0 +1,45 @@
+commonImports() ::= <<
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.map.hash.TDoubleObjectHashMap;
+import gnu.trove.TIntCollection;
+import gnu.trove.TDoubleCollection;
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.iterator.TDoubleIterator;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.iterator.TLongObjectIterator;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import socialite.collection.*;
+
+import socialite.resource.*;
+import socialite.tables.*;
+import socialite.functions.Math;
+import socialite.functions.*;
+import socialite.visitors.*;
+import java.util.Iterator;
+import java.util.Collection;
+import java.util.List;
+
+import socialite.resource.RuleMap;
+import socialite.eval.EvalWithTable;
+import socialite.dist.msg.WorkerMessage;
+
+import socialite.eval.TmpTablePool;
+import socialite.eval.Worker;
+
+import socialite.type.*;
+import socialite.util.HashCode;
+import socialite.util.Assert;
+import socialite.util.SociaLiteException;
+import socialite.util.SocialiteFinishEval;
+import socialite.util.UserLog;
+
+import org.python.core.PyTuple;
+import org.python.core.PyList;
+import org.python.core.PySequenceList;
+>>

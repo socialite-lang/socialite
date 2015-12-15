@@ -1,0 +1,680 @@
+group dynamic-table;
+
+import "TableCommon.stg"
+
+dynamicTable(tableName, name, visitorClass, methods,
+            size, id,
+            columns, gbColumns, gbAggrColumn,
+            sortedCol, idxCols,
+            multiSet=false, isNested=false) ::= <<
+<if(!isNested)>
+package socialite.tables;
+
+<importForTable()>
+<endif>
+
+// dynamicTable
+<if(!isNested)>public<endif> final class <name> extends AbstractTableInst {
+    private static final long serialVersionUID = 1;
+
+    public static int tableid() { return <id>; }
+    public static <name> create() { return new <name>(); }    
+    
+    static int makePos(int nodePos, int offset) { return (nodePos \<\< 8) | offset; }
+    static int getPos(int val) { return (val >\>> 8); }
+    static int getOffset(int val) { return (val & 0xff); }
+    
+    static final class Node$Init extends Node {
+        static final int INIT_CHUNK_SIZE=2;
+        Node$Init() { super(INIT_CHUNK_SIZE); }
+
+        int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+            if (len() == col0().length) {
+                expand();
+            }
+            return super.insert(<columns:{c|a<i0>}; separator=", ">);
+        }
+        void expand() {
+            int size = len()*3/2;
+            if (size > CHUNK_SIZE) { size=CHUNK_SIZE; }
+            <columns:{c|<c.type>[] _col<i0> = <if(c.arrayType)>new <c.componentType>[size][];<else>new <c.type>[size];<endif><\n>}>
+            <columns:{c|System.arraycopy(col<i0>, 0, _col<i0>, 0, len());<\n>}>
+            <columns:{c|col<i0> = _col<i0>;<\n>}>
+        }
+    } // Node$Init class
+    static class Node {
+        static final int CHUNK_SIZE=128; // must be smaller than 256
+        
+        volatile <columns:{c|Object col<i0>;<\n>}>
+        volatile int len;
+
+        Node() { this(CHUNK_SIZE); }
+        Node(int capacity) {
+            <columns:{c|col<i0> = <if(c.arrayType)>new <c.componentType>[capacity][];<else>new <c.type>[capacity];<endif><\n>}>
+        }
+
+        Node copyOfRange(int from, int to) {
+            Node n = new Node();
+            <columns:{c|System.arraycopy(col<i0>(), from, n.col<i0>(), 0, to-from);<\n>}>
+            n.len = to-from;
+            return n;
+        }
+        boolean isEmpty() { return len() == 0; }
+        boolean isFull() { return len() == CHUNK_SIZE; }
+        int len() {
+            int l = len;
+            if (l \< 0) { l = -l-1; }
+            return l;
+        }
+
+        static long lenOffset;
+        static {
+            if (CHUNK_SIZE > 256) { throw new AssertionError("CHUNK_SIZE too big!"); }
+            try {
+                lenOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("len"));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        void wlock() {
+            do {
+                int l = len;
+                if (l >= 0 && unsafe.compareAndSwapInt(this, lenOffset, l, -l-1)) {
+                    break;
+                }
+            } while (true);
+        }
+        void wunlock() {
+            int l = len;
+            unsafe.compareAndSwapInt(this, lenOffset, l, -l-1);
+        }
+
+        <columns:{c|<c.type>[] col<i0>() { return (<c.type>[])col<i0>; \}<\n>}>
+
+        public String toString() {
+            String s="{";
+            for (int i=0; i\<len(); i++) {
+                s+="(";
+                <columns:{c|s+= col<i0>()[i]+" ";<\n>}>
+                s+="),";
+            }
+            s+="}";
+            return s;
+        }
+    <if(sortedCol)>
+        int binarySearch1(<sortedCol.type> val) {
+            int pos = Arrays.binarySearch(col<sortedCol.relPos>(), 0, len(), val);
+            if (pos \< 0) { return pos; }
+            while (pos > 0) {
+                pos--;
+                if (!(col<sortedCol.relPos>()[pos]<EqOpMap.(sortedCol.type)>(val))) {
+                    return pos+1;
+                }
+            }
+            return pos;
+        }
+        boolean contains_sorted(<columns:{c|<c.type> a<i0>}; separator=", ">, boolean[] dontcare) {
+            int pos = binarySearch1(a<sortedCol.relPos>);
+            if (pos \< 0) { return false; }
+            for (int i=pos; i\<len(); i++) {
+                if (!(col<sortedCol.relPos>()[i]<EqOpMap.(sortedCol.type)>(a<sortedCol.relPos>))) {return false;}
+                if (contains_at(<columns:{c|a<i0>}; separator=", ">,i,dontcare)) {return true;}
+            }
+            return false;
+        }
+    <endif>
+        boolean contains(<columns:{c|<c.type> a<i0>}; separator=", ">, boolean[] dontcare) {
+            <withConsistentLen(ret="ret",
+                               code={boolean ret=_contains(<columns:{c|a<i0>};separator=",">, dontcare);})>
+        }
+        boolean _contains(<columns:{c|<c.type> a<i0>}; separator=", ">, boolean[] dontcare) {
+        <if(sortedCol)>
+            if (dontcare==null || !dontcare[<sortedCol.relPos>]) {
+                return contains_sorted(<columns:{c|a<i0>}; separator=", ">,dontcare);
+            }
+        <endif>
+            if (dontcare==null) {return contains(<columns:{c|a<i0>};separator=",">);}
+            for (int i=0; i\<len(); i++) {
+                if (true<columns:{c|&& (dontcare[<i0>]||col<i0>()[i]<EqOpMap.(c.type)>(a<i0>))}>) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        boolean contains(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+            <withConsistentLen(ret="ret",
+                               code={boolean ret=_contains(<columns:{c|a<i0>};separator=",">);})>
+        }
+
+        boolean _contains(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+        <if(sortedCol)>
+            return contains_sorted(<columns:{c|a<i0>}; separator=", ">,null);
+        <else>
+            for (int i=0; i\<len(); i++) {
+                if (true<columns:{c|&& col<i0>()[i]<EqOpMap.(c.type)>(a<i0>)}>) {
+                    return true;
+                }
+            }
+            return false;
+        <endif>
+        }
+        boolean contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at, boolean[] dontcare) {
+            <withConsistentLen(ret="ret",
+              code={boolean ret=_contains_at(<columns:{c|a<i0>}; separator=", ">, at, dontcare);})>
+        }
+        boolean contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at) {
+            <withConsistentLen(ret="ret",
+               code={boolean ret=_contains_at(<columns:{c|a<i0>}; separator=", ">, at);})>
+        }
+        boolean _contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at, boolean[] dontcare) {
+            if (dontcare==null) {return _contains_at(<columns:{c|a<i0>}; separator=", ">,at);}
+            int i = at;
+            return true<columns:{c|&& (dontcare[<i0>]||a<i0><EqOpMap.(c.type)>(col<i0>()[i]))}>;
+        }
+        boolean _contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at) {
+            int i = at;
+            return true<columns:{c|&& a<i0><EqOpMap.(c.type)>(col<i0>()[i])}>;
+        }
+        int inc_len() {
+            if (len \< 0) { return -(len--)-1; }
+            else { return len++; }
+        }
+    <if(sortedCol)>
+        int insert_sorted(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+            int pos = -1;
+            if (len() == 0) { pos = 0; }
+            else { pos = Arrays.binarySearch(col<sortedCol.relPos>(), 0, len(), a<sortedCol.relPos>); }
+            if (pos \< 0) { pos = -pos-1; }
+            if (pos != len()) {
+                <columns:{c|System.arraycopy(col<i0>(), pos, col<i0>(), pos+1, len()-pos);<\n>}>
+            }
+            <columns:{c|col<i0>()[pos] = a<i0>;<\n>}>
+            return inc_len();
+        }
+        boolean iterate_sorted_by_<sortedCol.absPos>(<sortedCol.type> a, <visitorClass> v) {
+            <withConsistentLenCopy(
+              init={int _len = len();
+                    <columns:{c|<c.type>[] _col<i0> = col<i0>();}>},
+              code={_len = len();<\n>
+                    <columns:{c|_col<i0> = <if(c.arrayType)>new <c.componentType>[_len][];<else>new <c.type>[_len];<endif><\n>}>
+                    <columns:{c|System.arraycopy(col<i0>, 0, _col<i0>, 0, _len);<\n>}>})>
+
+            int pos = Arrays.binarySearch(_col<sortedCol.relPos>, 0, _len, a);
+            if (pos \< 0) { return false; }
+
+            for (int i=pos; i\<_len; i++) {
+                if (!(_col<sortedCol.relPos>[i]<EqOpMap.(sortedCol.type)>(a))) {
+                    return false;
+                }
+                v.visit(<columns:{c|_col<i0>[i]}; separator=", ">);
+            }
+            return true;
+        }
+    <endif>
+        void update(int offset, <columns:{c|<c.type> a<i0>}; separator=", ">) {
+            <columns:{c|col<i0>()[offset] = a<i0>;<\n>}>
+        }
+        int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+            <if(sortedCol)>if (true) {return insert_sorted(<columns:{c|a<i0>}; separator=", ">);}<endif>
+            <columns:{c|col<i0>()[len()] = a<i0>;<\n>}>
+            return inc_len();
+        }
+        boolean iterate(<visitorClass> v) {
+            <withConsistentLenCopy(
+              init={int _len = len();
+                    <columns:{c|<c.type>[] _col<i0> = col<i0>();}>},
+              code={_len = len();<\n>
+                    <columns:{c|_col<i0> = <if(c.arrayType)>new <c.componentType>[_len][];<else>new <c.type>[_len];<endif><\n>}>
+                    <columns:{c|System.arraycopy(col<i0>, 0, _col<i0>, 0, _len);<\n>}>})>
+
+            for (int i=0; i\<_len; i++) {
+                boolean cont = v.visit(<columns:{c|_col<i0>[i]}; separator=", ">);
+                if (!cont) { return false; }
+            }
+            return true;
+        }
+        boolean iterate_at(<visitorClass> v, int pos) {
+            <withConsistentLenCopy(
+              init={<columns:{c|<c.type> _col<i0> = col<i0>()[pos];<\n>}>},
+              code={<columns:{c|_col<i0> = col<i0>()[pos];<\n>}>})>
+
+            return v.visit(<columns:{c|_col<i0>}; separator=", ">);
+        }
+    } // Node class
+
+    ConcurrentReadArrayList\<Node> nodeList;
+    <if(first(idxCols))>
+    <if(gbColumns && !rest(gbColumns) && first(gbColumns).indexed)>
+        SPosIndexPacked index<first(idxCols).relPos> = new SPosIndexPacked();
+    <else>
+        SPosIndex index<first(idxCols).relPos> = new SPosIndex();
+    <endif>
+    <endif>
+    <rest(idxCols):{ic|SPosIndex index<ic.relPos> = new SPosIndex();<\n>}>
+    <if(gbColumns)>
+    <if(!rest(gbColumns) && first(gbColumns).indexed)>
+        SPosIndexPacked groupbyMap = index<first(gbColumns).relPos>;
+    <else>
+        SPosIndexPacked groupbyMap = new SPosIndexPacked();
+    <endif>
+    <endif>
+
+    public <name>() {
+        nodeList = new ConcurrentReadArrayList\<Node>(2);
+    }
+
+    /** synchronization fields and methods */
+    static volatile boolean readConsistencyCheckRequired = false;
+    AtomicInteger lockCount = new AtomicInteger(0);
+    ReentrantLock lock = new ReentrantLock();
+    public void wlock(<first(columns).type> unused) { lockCount.incrementAndGet(); }
+    public void wunlock(<first(columns).type> unused) { lockCount.decrementAndGet(); }
+    boolean requireLock() { return lockCount.get() > 0; }
+    void lock() { if (requireLock()) { lock.lock(); } }
+    void unlock() { if (requireLock()) { lock.unlock(); } }
+    void lock(Node n) { if (requireLock()) { n.wlock(); } }
+    void unlock(Node n) { if (requireLock()) { n.wunlock(); } }
+
+    private static final sun.misc.Unsafe unsafe;
+    static {
+        try { unsafe = getUnsafe(); }
+        catch (Exception e) { throw new Error(e); }
+    }
+    public static Unsafe getUnsafe() {
+        try {
+            Field singleoneInstanceField = Unsafe.class.getDeclaredField("theUnsafe");
+            singleoneInstanceField.setAccessible(true);
+            return (Unsafe) singleoneInstanceField.get(null);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not find 'theUnsafe' field in the " + Unsafe.class);
+        }
+    }
+
+    public int id() { return <id>; }
+    public int size() { assert false; return -1; }
+    public String name() { return "<tableName>"; }
+
+    public boolean isEmpty() { return nodeList.size() == 0; }
+    public String toString() {
+        String str="Table <tableName>(id=<id>):";
+        return str + nodeList.getQuick(0).toString();
+    }
+    public void clearQuick() { clear(); }
+    public void clear() {
+        nodeList.clear();
+        <idxCols:{ic|index<ic.relPos>.clear();<\n>}>
+        <if(gbColumns)>groupbyMap.clear();<endif>
+    }
+    public boolean contains(<columns:{c|final <c.type> a<i0>};separator=", ">) {
+    <if(sortedCol)>if (true) {return contains_sorted(<columns:{c|a<i0>};separator=",">,null);}<endif>
+    <if(idxCols)>
+    <if(rest(columns))>
+        ConcurrentReadIntArrayList indices = index<first(idxCols).relPos>.get(a<first(idxCols).relPos>);
+        if (indices == null) { return false; }
+        for (int i=0; i\<indices.size(); i++) {
+            int val = indices.getQuick(i);
+            int pos = getPos(val);
+            int offset = getOffset(val);
+            Node n = nodeList.getQuick(pos);
+            if (n.contains_at(<columns:{c|a<i0>};separator=", ">, offset)) {
+                return true;
+            }
+        }
+        return false;
+    <else>
+        return index<first(idxCols).relPos>.contains(a0);
+    <endif>
+    <else>
+        for (int i=0; i\<nodeList.size(); i++) {
+            Node n = nodeList.getQuick(i);
+            if (n.contains(<columns:{c|a<i0>};separator=", ">)) {
+                return true;
+            }
+        }
+        return false;
+    <endif>
+    }
+    public boolean contains(<columns:{c|final <c.type> a<i0>};separator=", ">, final boolean[] dontcare) {
+    <if(sortedCol)> if(dontcare==null || !dontcare[<sortedCol.relPos>]) {return contains_sorted(<columns:{c|a<i0>};separator=",">,dontcare);} <endif>
+        if (dontcare==null) {return contains(<columns:{c|a<i0>};separator=", ">);} 
+    <if(idxCols)>
+        if (!dontcare[<first(idxCols).relPos>]) {
+        <if(rest(columns))>
+            ConcurrentReadIntArrayList indices = index<first(idxCols).relPos>.get(a<first(idxCols).relPos>);
+            if (indices == null) { return false; }
+            for (int i=0; i\<indices.size(); i++) {
+                int val = indices.getQuick(i);
+                int pos = getPos(val);
+                int offset = getOffset(val);
+                Node n = nodeList.getQuick(pos);
+                if (n.contains_at(<columns:{c|a<i0>};separator=", ">, offset, dontcare)) {
+                    return true;
+                }
+            }
+            return false;
+        <else>
+            return index<first(idxCols).relPos>.contains(a<first(idxCols).relPos>);
+        <endif>
+        }
+    <endif>
+        for (int i=0; i\<nodeList.size(); i++) {
+            Node n = nodeList.getQuick(i); 
+            if (n.contains(<columns:{c|a<i0>};separator=", ">, dontcare)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    void addToIndex(<idxCols:{ic|<ic.type> a<ic.relPos> ,}>int pos) {
+        <idxCols:{ic|index<ic.relPos>.add(a<ic.relPos>, pos);<\n>}>
+    }
+    void addToGroupbyMap(<gbColumns:{g|<g.type> a<g.relPos>,}>int pos) {
+    <if(gbColumns)>
+        <if(rest(gbColumns))>
+            Tuple<gbColumns:{g|_<TupleMap.(g.type)>}> groupbyTup = new Tuple<gbColumns:{g|_<TupleMap.(g.type)>}>();
+            <gbColumns:{g|groupbyTup._<i0> = a<i0>;}; separator="\n">
+            groupbyMap.add(groupbyTup, pos);
+        <elseif(first(gbColumns).indexed)>
+            assert groupbyMap == index<first(gbColumns).relPos>;
+        <else>
+            groupbyMap.add(a0, pos);
+        <endif>
+    <endif>
+    }
+<if(sortedCol)>
+    int binarySearch(<sortedCol.type> v, ConcurrentReadArrayList\<Node> _nodeList) {
+        if (_nodeList.size()==0) {return -1;}
+        int lo=0, hi=_nodeList.size()-1;
+        <sortedCol.type> midVal1, midVal2;
+        while (lo \<= hi) {
+            int mid = (lo+hi)/2;
+            Node n = _nodeList.getQuick(mid);
+            int _len = n.len();
+            midVal1 = n.col<sortedCol.relPos>()[0];
+            midVal2 = n.col<sortedCol.relPos>()[_len-1];
+        <if(sortedCol.primitive)>
+            if (midVal2 \< v) {lo = mid+1;} 
+            else if (midVal1 > v) {hi = mid-1;}
+            else {return mid;}
+        <else>
+            if (midVal2.compareTo(v) \< 0) {lo = mid+1;}
+            else if (midVal1.compareTo(v) > 0) {hi = mid-1;} 
+            else {return mid;}
+        <endif> 
+        }
+        if (lo == _nodeList.size()) {
+            if (!_nodeList.get(lo-1).isFull()) { lo--; }
+        }
+        return -(lo+1);
+    }
+    int binarySearch1(<sortedCol.type> v, ConcurrentReadArrayList\<Node> _nodeList) {
+        int pos = binarySearch(v, _nodeList);
+        if (pos \< 0) return pos;
+        while (pos > 0) {
+            pos--;
+            Node n = _nodeList.getQuick(pos);
+            int _len = n.len();
+            if (!(n.col<sortedCol.relPos>()[_len-1]<EqOpMap.(sortedCol.type)>(v))) {return pos+1;}
+        }
+        return pos;
+    }
+    int binarySearch2(<sortedCol.type> v, ConcurrentReadArrayList\<Node> _nodeList) {
+        int pos = binarySearch(v, _nodeList);
+        if (pos \< 0) return pos;
+        while (pos \< _nodeList.size()-1) {
+            pos++;
+            Node n = _nodeList.getQuick(pos);
+            if (!(n.col<sortedCol.relPos>()[0]<EqOpMap.(sortedCol.type)>(v))) {return pos-1;}
+        }
+        return pos;
+    }
+    boolean contains_sorted(<columns:{c|final <c.type> a<i0>};separator=", ">,boolean[] dontcare) {
+        <withConsistentNodeList(nodeList="myNodeList",
+            code={int pos = binarySearch1(a<sortedCol.relPos>, myNodeList);
+                  if (pos \< 0) {return false;\}
+                  for (int i=pos; i\<myNodeList.size(); i++) {
+                  <if(sortedCol.primitive)>
+                      if (myNodeList.getQuick(i).col<sortedCol.relPos>()[0] > a<sortedCol.relPos>) {return false;\}
+                  <else>
+                      if (myNodeList.getQuick(i).col<sortedCol.relPos>()[0].compareTo(a<sortedCol.relPos>) > 0) {return false;\}
+                  <endif>
+                      if (myNodeList.getQuick(i).contains(<columns:{c|a<i0>};separator=", ">,dontcare)) {
+                          return true;
+                      \}
+                  \}
+                  return false;})>
+    }
+    boolean insert_sorted(<columns:{c|<c.type> a<i0>};separator=", ">) {
+        lock();
+    <if(!isNested && !multiSet)>
+        if (contains(<columns:{c|a<i0>};separator=",">)) {
+            unlock();
+            return false;
+        }
+    <endif>
+        int pos = binarySearch1(a<sortedCol.relPos>, nodeList);
+        if (pos \< 0) { pos = -pos-1; }
+        if (nodeList.size() == 0) {
+            Node n = new Node$Init();
+            n.insert(<columns:{c|a<i0>};separator=", ">);
+            nodeList.add(n);
+            unlock();
+        } else {
+            if (pos >= nodeList.size()) { pos = nodeList.size()-1; }
+            Node n = nodeList.getQuick(pos);
+            lock(n);
+            if (n.isFull()) {
+                Node n1 = n.copyOfRange(0, n.len()/2);
+                Node n2 = n.copyOfRange(n.len()/2, n.len());
+            <if(sortedCol.primitive)>
+                boolean smaller = a<sortedCol.relPos> \< n2.col<sortedCol.relPos>()[0];
+            <else>
+                boolean smaller = a<sortedCol.relPos>.compareTo(n2.col<sortedCol.relPos>()[0]) \< 0;
+            <endif>
+                if (smaller) {
+                    n1.insert(<columns:{c|a<i0>};separator=", ">);
+                } else {
+                    n2.insert(<columns:{c|a<i0>};separator=", ">);
+                }
+                nodeList.replaceWith(pos, n1, n2);
+                unlock();
+                unlock(n);
+            } else {
+                unlock();
+                n.insert(<columns:{c|a<i0>};separator=", ">);
+                unlock(n);
+            }
+        }
+        return true;
+    }
+<endif> <! if(sortedCol) !>
+    public boolean insert(<columns:{c|<c.type> a<i0>};separator=", ">) {
+    <if(sortedCol)> if (true) { return insert_sorted(<columns:{c|a<i0>};separator=", ">); } <endif>
+        lock();
+    <if(!isNested && !multiSet && !gbColumns)>
+        if (contains(<columns:{c|a<i0>};separator=",">)) {
+            unlock();
+            return false;
+        }
+    <endif>
+        int offset;
+        if (nodeList.size() == 0) {
+            Node n = new Node$Init();
+            offset = n.insert(<columns:{c|a<i0>};separator=", ">);
+            nodeList.add(n);
+        } else {
+            Node last = nodeList.getQuick(nodeList.size()-1);
+            lock(last);
+            if (last.isFull()) {
+                unlock(last);
+                last = new Node();
+                offset = last.insert(<columns:{c|a<i0>};separator=", ">);
+                nodeList.add(last);
+            } else {
+                offset = last.insert(<columns:{c|a<i0>};separator=", ">);
+                unlock(last);
+            }
+        }
+    <if(isNested || multiSet)>unlock(); <endif>
+        int nodePos = nodeList.size()-1;
+        int pos = makePos(nodePos, offset);
+        addToIndex(<idxCols:{ic|a<ic.relPos> ,}>pos);
+        addToGroupbyMap(<gbColumns:{g|a<g.relPos>, }>pos);
+    <if(!isNested && !multiSet)>unlock(); <endif>
+        return true;
+    }
+
+<if(gbColumns)> //  if (gbColumns) [
+    <groupbyDyn()>
+<endif> // ] if(gbColumns)
+    
+    public void iterate(<visitorClass> v) {
+    <withConsistentNodeList(nodeList="myNodeList",
+        code={for (int i=0; i\<myNodeList.size(); i++) {
+                  Node n = myNodeList.getQuick(i);
+                  boolean cont = n.iterate(v);
+                  if (!cont) { return; \}
+              \}})>
+    }
+<idxCols:{c|
+    public void iterate_by_<c.absPos>(<c.type> a, final <visitorClass> v) {
+        ConcurrentReadIntArrayList indices = index<c.relPos>.get(a);
+        if (indices == null) { return; \}
+        for (int i=0; i\<indices.size(); i++) {
+            int val = indices.getQuick(i);
+            int pos = getPos(val);
+            int offset = getOffset(val);
+            Node n = nodeList.getQuick(pos);
+            n.iterate_at(v, offset);
+        \}
+    \}
+}>
+<if(sortedCol)>
+public void iterate_by_<sortedCol.absPos>(<sortedCol.type> a, final <visitorClass> v) {
+    <withConsistentNodeList(nodeList="myNodeList",
+        code={int nodePos = binarySearch1(a, myNodeList);
+              if (nodePos \< 0) { nodePos = -nodePos-1; \}
+              for (int i=nodePos; i\<myNodeList.size(); i++) {
+                  Node n = myNodeList.getQuick(i);
+                  boolean cont = n.iterate_sorted_by_<sortedCol.absPos>(a, v);
+                  if (!cont) { break; \}
+              \}
+              return;})>
+}
+public void iterate_part_from_<sortedCol.absPos>(<sortedCol.type> from, boolean inclusive, final <visitorClass> v) {
+    <withConsistentNodeList(nodeList="myNodeList",
+        code={int nodePos = binarySearch1(from, myNodeList);
+              if (nodePos \< 0) { nodePos = -nodePos-1; \}
+              for (int i=nodePos; i\<nodeList.size(); i++) {
+                  Node n = nodeList.getQuick(i);
+                  n.iterate(v);
+              \}})>
+}
+public void iterate_part_to_<sortedCol.absPos>(<sortedCol.type> to, boolean inclusive, final <visitorClass> v) {
+    <withConsistentNodeList(nodeList="myNodeList",
+        code={int nodePos = binarySearch2(to, myNodeList);
+              if (nodePos \< 0) { nodePos = -nodePos-1; \}
+              for (int i=0; i\<=nodePos; i++) {
+                  Node n = nodeList.getQuick(i);
+                  n.iterate(v);
+              \}})>
+}
+<endif> <! if(sortedCol) !>
+
+    <methods;separator="\n">
+}
+>>
+
+
+groupbyGet() ::= <<
+<if(rest(gbColumns))>
+    Tuple<gbColumns:{g|_<TupleMap.(g.type)>}> groupbyTup = new Tuple<gbColumns:{g|_<TupleMap.(g.type)>}>();
+    <gbColumns:{g|groupbyTup._<i0> = a<i0>;}; separator="\n">
+    int pos = groupbyMap.get1(groupbyTup);
+<else>
+    int pos = groupbyMap.get1(a0);
+<endif>
+>>
+getNodeAndOffset() ::= <<
+    int nodePos = getPos(pos);
+    Node n = nodeList.getQuick(nodePos);
+    int offset = getOffset(pos);
+>>
+
+groupbyDyn() ::= <<
+    public long groupby_getpos(<gbColumns:{g|<g.type> a<i0>};separator=", ">) {
+        lock();
+        <groupbyGet()>
+        return pos;
+    }
+    public <gbAggrColumn.type> groupby_groupby(long _pos) {
+        int pos = (int)_pos;
+        unlock();
+        <getNodeAndOffset()>
+        lock(n);
+        return n.col<gbAggrColumn.relPos>()[offset];
+    }
+    public boolean groupby_insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+        insert(<columns:{c|a<i0>}; separator=", ">);
+        unlock();
+        return true;
+    }
+    public boolean groupby_update(long _pos, <columns:{c|<c.type> a<i0>}; separator=", ">) {
+        int pos = (int)_pos;
+        <getNodeAndOffset()>
+        n.update(offset, <columns:{c|a<i0>}; separator=", ">);
+        unlock(n);
+        return true;
+    }
+    public void groupby_done(long _pos) {
+        int pos = (int)_pos;
+        <getNodeAndOffset()>
+        unlock(n);
+    }
+>>
+
+withConsistentLen(ret, code) ::= <<
+if (!readConsistencyCheckRequired) {
+    <code>
+    return <ret>;
+}
+int count = 0, maxTry = 10;
+while (true) {
+    int l = len;
+    if (l \< 0) {
+        if (count++ > maxTry) { Thread.yield();}
+        continue;
+    }
+    <code>
+    count = 0;
+    if (len == l) { return <ret>; }
+}
+>>
+
+withConsistentLenCopy(init, code) ::= <<
+<init>
+if (readConsistencyCheckRequired) {
+    int count = 0, maxTry = 10;
+    while (true) {
+        int l = len;
+        if (l \< 0) {
+            if (count++ > maxTry) { Thread.yield();}
+            continue;
+        }
+        <code>
+        count = 0;
+        if (len == l) { break; }
+    }
+}
+>>
+
+withConsistentNodeList(nodeList, code) ::= <<
+    ConcurrentReadArrayList\<Node> <nodeList>=nodeList;
+<if(sortedCol)>
+    if (readConsistencyCheckRequired) {
+        <nodeList> = nodeList.snapshot();
+    }
+<endif>
+    <code>
+>>

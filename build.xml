@@ -9,6 +9,7 @@
       <pathelement location="${classes}"/>
       <fileset dir="${lib}">
         <include name="**/*.jar"/>
+        <include name="**/**/*.jar"/>
       </fileset>
     </path>
 
@@ -28,13 +29,13 @@
     </target>
 
     <target name="compile" depends="init">
-        <javac includeantruntime="false" srcdir="${src}" destdir="${classes}" debug="${debug}"
+        <javac includeantruntime="false" srcdir="${src}/java" destdir="${classes}" debug="${debug}"
             excludes="**/socialite/programs/*.java">
           <compilerarg value="-XDignore.symbol.file"/>
           <classpath refid="classpath"/>
         </javac>
         <copy todir="${classes}">
-            <fileset dir="${src}" excludes="**/*.java"/>
+            <fileset dir="${src}/java" excludes="**/*.java"/>
         </copy>
         <jar jarfile="${classes}/socialite.jar">
             <fileset dir="${classes}">
@@ -43,6 +44,17 @@
                 <exclude name="**/*.jar"/>
             </fileset>
         </jar>
+    </target>
+
+    <target name="build-thrift" depends="init">
+        <apply executable="thrift">
+            <arg line="-r --gen java -I ${src}/thrift/ -out ${src}/java/"/>
+            <fileset dir="${src}/thrift/" includes="**/*.thrift"/>
+        </apply>
+        <apply executable="thrift">
+            <arg line="-r --gen py -I ${src}/thrift/ -out ${src}/python/"/>
+            <fileset dir="${src}/thrift/" includes="**/*.thrift"/>
+        </apply>
     </target>
 
     <target name="alljar" depends="compile">

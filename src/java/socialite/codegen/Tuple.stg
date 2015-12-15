@@ -1,0 +1,112 @@
+import "ColumnUtils.stg"
+
+name(types) ::= <<
+Tuple<types:{t|_<TupleMap.(t)>}>
+>>
+tuple(types) ::= <<
+package socialite.tables;
+import socialite.util.HashCode;
+import java.io.Externalizable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.IOException;
+import socialite.util.SociaLiteException;
+
+public class Tuple<types:{t|_<TupleMap.(t)>}> extends Tuple implements Externalizable {
+	private static final long serialVersionUID = 1;
+
+	<types:{t|public <t> _<i0>;<\n>}>
+	 
+	public Tuple<types:{t|_<TupleMap.(t)>}>() {}
+	
+	public Tuple<types:{t|_<TupleMap.(t)>}>(<types:{t|<TupleMap.(t)> __<i0>};separator=", ">) {
+		<types:{t|_<i0> = __<i0>;<\n>}>
+	}
+	
+	public Tuple<types:{t|_<TupleMap.(t)>}> clone() {
+		return new Tuple<types:{t|_<TupleMap.(t)>}>(<types:{t|_<i0>};separator=", ">);
+	}
+	
+	public int size() { return <length(types)>; }
+	
+	public void update(Tuple _t) {
+		if (!(_t instanceof Tuple<types:{t|_<TupleMap.(t)>}>))
+			throw new SociaLiteException("Not supported operation");
+		
+		Tuple<types:{t|_<TupleMap.(t)>}> t = (Tuple<types:{t|_<TupleMap.(t)>}>)_t;
+		<types:{t|_<i0> = t._<i0>;<\n>}>
+	}
+
+	public int hashCode() {
+		return <types:{t|HashCode.get(_<i0>)};separator="^">;
+	}	
+	public boolean equals(Object o) {
+		if (!(o instanceof Tuple)) return false;
+		
+		Tuple _t = (Tuple)o;
+		if (_t.getClass().equals(Tuple<types:{t|_<TupleMap.(t)>}>.class)) {
+			Tuple<types:{t|_<TupleMap.(t)>}> t=(Tuple<types:{t|_<TupleMap.(t)>}>)_t;
+			return <types:{t|(_<i0><EqOpMap.(t)>(t._<i0>))}; separator="&& ">;
+		}
+		return false;
+	}
+	
+	public Object get(int column) {
+		<types:{t|if (column==<i0>) return _<i0>;<\n>}>	
+		return null;
+	}
+	public int getInt(int column) {
+		<types:{t|<if (IsInt.(t))>if (column==<i0>) return _<i0>;<\n><endif>}>		
+		throw new UnsupportedOperationException();
+	}
+	public long getLong(int column) {
+		<types:{t|<if (IsLong.(t))>if (column==<i0>) return _<i0>;<\n><endif>}>		
+		throw new UnsupportedOperationException();
+	}
+	public float getFloat(int column) {
+		<types:{t|<if (IsFloat.(t))>if (column==<i0>) return _<i0>;<\n><endif>}>		
+		throw new UnsupportedOperationException();
+	}
+	public double getDouble(int column) {
+		<types:{t|<if (IsDouble.(t))>if (column==<i0>) return _<i0>;<\n><endif>}>		
+		throw new UnsupportedOperationException();
+	}
+	public Object getObject(int column) {
+		<types:{t|<if (IsObject.(t))>if (column==<i0>) return _<i0>;<\n><endif>}>
+		throw new UnsupportedOperationException();
+	}
+
+	public void setInt(int column, int v) {
+		<types:{t|<if (IsInt.(t))>if (column==<i0>) { _<i0>=v; return; \}<\n><endif>}>
+		throw new UnsupportedOperationException();
+	}
+	public void setLong(int column, long v) {
+		<types:{t|<if (IsLong.(t))>if (column==<i0>) { _<i0>=v; return; \}<\n><endif>}>
+		throw new UnsupportedOperationException();
+	}
+	public void setFloat(int column, float v) {
+		<types:{t|<if (IsFloat.(t))>if (column==<i0>) { _<i0>=v; return; \}<\n><endif>}>
+		throw new UnsupportedOperationException();
+	}
+	public void setDouble(int column, double  v) {
+		<types:{t|<if (IsDouble.(t))>if (column==<i0>) { _<i0>=v; return; \}<\n><endif>}>
+		throw new UnsupportedOperationException();
+	}
+	public void setObject(int column, Object v) {
+		<types:{t|<if (IsObject.(t))>if (column==<i0>) { _<i0>=v; return; \}<\n><endif>}>
+		throw new UnsupportedOperationException();
+	}
+	public String toString() {
+		return ""+<types:{t|_<i0>}; separator="+\", \"+">; 
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		<types:{t|_<i0>=in.<ReadF.(t)>();<\n>}>
+	}	
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		<types:{t|out.<WriteF.(t)>(_<i0>);<\n>}>
+	}
+} 
+>>

@@ -1,0 +1,4 @@
+Make field access atomic (long, double)
+-XX:+AlwaysAtomicAccesses
+http://hg.openjdk.java.net/jdk9/jdk9/hotspot/rev/3c3953fb3f2a
+JVM 9 or higher

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+bin=`dirname $0`
+bin=`cd $bin; pwd`
+
+. "$bin/socialite-config.sh"
+
+. "$bin/prepare-launch.sh"
+
+getPort() {
+    for _port in $(seq 51001 51100); do
+        exec 3<>/dev/tcp/127.0.0.1/${_port} || Port=${_port} && break
+        exec 3>&-; exec 3<&-
+    done
+}
+getPort > /dev/null 2>&1
+
+"$JAVA" $JAVA_HEAP_MAX $JAVA_HEAP_MIN $JVM_OPTS $SOCIALITE_OPTS -classpath "$CLASSPATH" socialite.standalone.SingleNodeServer -Dsocialite.standalone.port=${Port} &
+
+export PYTHONPATH="${SOCIALITE_HOME}/src/python/:$PYTHONPATH"
+export PYTHONPATH="${SOCIALITE_HOME}/src/python/pysocialite:$PYTHONPATH"
+export PYTHONPATH="${SOCIALITE_HOME}/ext/python/py4j-0.9-src.zip:$PYTHONPATH"
+export PYTHONPATH="${SOCIALITE_HOME}/ext/python/thrift-0.9.3-py.egg:$PYTHONPATH"
+
+export SocialiteStandalonePort=$Port
+#exec python -i src/python/pysocialite/socialite.py "$@"
+exec python "$@"
