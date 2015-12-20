@@ -22,26 +22,13 @@ public class SenderVisitor extends QueryVisitor {
     public static final Log L= LogFactory.getLog(SenderVisitor.class);
 
     final int numRowsThreshold = 512;
-    final String remoteAddr;
-    final int remotePort;
     List<TTuple> tupleList = new ArrayList<>(numRowsThreshold);
     long queryid;
 
-    TTransport transport;
     QueryCallbackService.Client client;
-
-    public SenderVisitor(String addr, int port, long qid) {
-        remoteAddr = addr;
-        remotePort = port;
-        queryid = qid;
-        try {
-            transport = new TSocket(remoteAddr, remotePort);
-            transport.open();
-            TProtocol protocol = new TCompactProtocol(transport);
-            client = new QueryCallbackService.Client(protocol);
-        } catch (TException x) {
-            L.error("Cannot connect to client:"+x);
-        }
+    public SenderVisitor(QueryCallbackService.Client _client, long _queryid) {
+        client = _client;
+        queryid = _queryid;
     }
 
     void returnTuples() {
@@ -59,6 +46,7 @@ public class SenderVisitor extends QueryVisitor {
     public void finish() {
         returnTuples(true);
     }
+
     public boolean visit(int i) {
         tupleList.add(Bridge.translate(new Tuple_int(i)));
         if (tupleList.size() == numRowsThreshold) {

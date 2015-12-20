@@ -22,7 +22,7 @@ public class Bridge {
         } else if (o instanceof String) {
             scalarVal.setStr((String)o);
         } else {
-            // throw error?
+            scalarVal.setStr(o.toString());
         }
         return scalarVal;
     }

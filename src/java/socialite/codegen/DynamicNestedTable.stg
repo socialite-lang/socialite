@@ -629,6 +629,7 @@ package socialite.tables;
                 return true;
             }
         }
+        return false;
     <else>
         for (int j=0; j\<nodeList.size(); j++) {
             Node n = nodeList.getQuick(j);

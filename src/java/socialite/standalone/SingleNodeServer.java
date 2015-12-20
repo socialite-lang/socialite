@@ -4,6 +4,7 @@ package socialite.standalone;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
+import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 import org.apache.thrift.TMultiplexedProcessor;
 import org.apache.thrift.server.TServer;
@@ -22,6 +23,8 @@ import socialite.rpc.SenderVisitor;
 import socialite.rpc.query.QueryMessage;
 import socialite.rpc.query.QueryService;
 import socialite.rpc.TTuple;
+import socialite.rpc.query.TQueryError;
+import socialite.rpc.queryCallback.QueryCallbackService;
 import socialite.rpc.standalone.StandaloneService;
 import socialite.tables.Tuple;
 
@@ -39,6 +42,7 @@ public class SingleNodeServer {
     TMultiplexedProcessor processor;
     TServer server;
     int port;
+
     public SingleNodeServer() {
         engine = new LocalEngine();
         processor = new TMultiplexedProcessor();
@@ -49,6 +53,7 @@ public class SingleNodeServer {
         String _port = System.getProperty("socialite.standalone.port", DEFAULT_PORT);
         port = Integer.parseInt(_port);
     }
+
 
     public void serve() throws TTransportException {
         TNonblockingServerTransport trans = new TNonblockingServerSocket(port);
@@ -88,38 +93,61 @@ class StandaloneServerHandler implements StandaloneService.Iface {
 }
 class QueryHandler implements QueryService.Iface {
     LocalEngine engine;
-    HashMap<String, SenderVisitor> senderMap = new HashMap<>();
-    final ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream(128);
+    QueryCallbackService.Client client;
 
     QueryHandler(LocalEngine _engine) {
         engine = _engine;
     }
     @Override
     public void runSimple(QueryMessage query) throws TException {
-        engine.run(query.getQuery());
+        try {
+            engine.run(query.getQuery());
+        } catch (Exception e) {
+            throw new TQueryError(e.getMessage());
+        }
+    }
+    QueryCallbackService.Client getClient(String addr, int port) throws TException {
+        if (client == null) {
+            client = makeClientConnection(addr, port);
+        }
+        return client;
+    }
+    QueryCallbackService.Client makeClientConnection(String addr, int port) throws TException {
+        TTransport transport;
+        transport = new TSocket(addr, port);
+        try {
+            transport.open();
+        } catch (Exception e) {
+            throw new TQueryError(e.getMessage());
+        }
+        TProtocol protocol = new TCompactProtocol(transport);
+        client = new QueryCallbackService.Client(protocol);
+        return client;
     }
 
     @Override
     public void run(QueryMessage query, String addr, int port, long queryid) throws TException {
-        String addrPort = addr + ":" + port;
-        SenderVisitor sender;
-        if (senderMap.containsKey(addrPort)) {
-            sender = senderMap.get(addrPort);
-        } else {
-            sender = new SenderVisitor(addr, port, queryid);
-            senderMap.put(addrPort, sender);
+        QueryCallbackService.Client _client = getClient(addr, port);
+        SenderVisitor sender = new SenderVisitor(_client, queryid);
+        try {
+            engine.run(query.getQuery(), sender);
+        } catch (Exception e) {
+            throw new TQueryError(e.getMessage());
         }
-        engine.run(query.getQuery(), sender);
     }
-
 
     @Override
     public TTuple getFirstTuple(QueryMessage query) throws TException {
         FirstEntryVisitor firstGetter = new FirstEntryVisitor();
-        engine.run(query.getQuery(), firstGetter);
-        Tuple tuple = firstGetter.firstTuple();
-        TTuple ttuple = Bridge.translate(tuple);
-        return ttuple;
+        try {
+            engine.run(query.getQuery(), firstGetter);
+            Tuple tuple = firstGetter.firstTuple();
+            TTuple ttuple = Bridge.translate(tuple);
+            return ttuple;
+        } catch (Exception e) {
+            throw new TQueryError(e.getMessage());
+        }
+
     }
 
 }

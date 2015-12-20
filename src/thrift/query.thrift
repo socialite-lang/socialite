@@ -7,9 +7,12 @@ struct QueryMessage {
   1: string query
 }
 
-service QueryService {
-  void runSimple(1: QueryMessage query),
-  void run(1: QueryMessage query, 2: string addr, 3: i32 port, 4: i64 queryid),
+exception TQueryError {
+  1: string message
+}
 
-  lang.TTuple getFirstTuple(1: QueryMessage query),
+service QueryService {
+  void runSimple(1: QueryMessage query) throws (1:TQueryError err),
+  void run(1: QueryMessage query, 2: string addr, 3: i32 port, 4: i64 queryid) throws (1:TQueryError err),
+  lang.TTuple getFirstTuple(1: QueryMessage query) throws (1:TQueryError err),
 }

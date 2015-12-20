@@ -1,76 +1,75 @@
-import sys
-
 
 __doc__ = """
 """
 
-examples="""
+__all__ = ["decl", "run", "query"]
 
-"""
+def _init():
+    from callbackServer import getCallbackPort
 
-__all__ = ["run", "query"]
+    from pysocialite.rpc.query import QueryService
+    from pysocialite.rpc.query.ttypes import QueryMessage, TQueryError
+    from pysocialite.rpc.standalone import StandaloneService
+    from pysocialite.thriftUtil import translate
 
-from callbackServer import getCallbackPort, registerQueryQueue
-from Queue import Queue
+    from thrift import Thrift
+    from thrift.transport import TSocket
+    from thrift.transport import TTransport
+    from thrift.protocol import TCompactProtocol
+    from thrift.protocol import TMultiplexedProtocol
 
-from pysocialite.rpc.query import QueryService
-from pysocialite.rpc.query.ttypes import *
-from pysocialite.rpc.standalone import StandaloneService
-from pysocialite.thriftUtil import translate
+    import os
 
-from thrift import Thrift
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TCompactProtocol
-from thrift.protocol import TMultiplexedProtocol
+    def connect():
+        try:
+            port = int(os.environ["SocialiteStandalonePort"])
+            transport = TSocket.TSocket('localhost', port)
+            transport = TTransport.TFramedTransport(transport)
+            transport.open()
+            protocol = TCompactProtocol.TCompactProtocol(transport)
+            muxproto = TMultiplexedProtocol.TMultiplexedProtocol(protocol, "QueryService")
+            queryClient = QueryService.Client(muxproto)
 
-import atexit
-import inspect
-import os
+            return queryClient
 
-def connect():
-    try:
-        port = int(os.environ["SocialiteStandalonePort"])
-        transport = TSocket.TSocket('localhost', port)
-        transport = TTransport.TFramedTransport(transport)
-        transport.open()
-        protocol = TCompactProtocol.TCompactProtocol(transport)
-        muxproto = TMultiplexedProtocol.TMultiplexedProtocol(protocol, "QueryService")
-        queryClient = QueryService.Client(muxproto)
+        except Thrift.TException as tx:
+            print "Exception while connecting to SociaLite SingleNodeServer"
+            print(('%s' % (tx.message)))
 
-        muxproto = TMultiplexedProtocol.TMultiplexedProtocol(protocol, "StandaloneService")
-        client = StandaloneService.Client(muxproto)
+    class Socialite:
+        def __init__(self, queryCli):
+            self.queryClient = queryCli
 
-        @atexit.register
-        def shutdown():
-            client.terminate()
-            transport.close()
+        def run(self, query):
+            qm = QueryMessage()
+            qm.query = query
+            try:
+                self.queryClient.runSimple(qm)
+            except TQueryError as qe:
+                raise Exception(qe.message)
 
-        return queryClient
+        def runQuery(self, query, qid):
+            qm = QueryMessage()
+            qm.query = query
+            try:
+                self.queryClient.run(qm, "localhost", getCallbackPort(), qid)
+            except TQueryError as qe:
+                raise Exception(qe.message)
 
-    except Thrift.TException as tx:
-        print "Exception while connecting to SociaLite SingleNodeServer"
-        print(('%s' % (tx.message)))
+        def getFirstTuple(self, query):
+            qm = QueryMessage()
+            qm.query = query
+            try:
+                ttuple = self.queryClient.getFirstTuple(qm)
+            except TQueryError as qe:
+                raise Exception(qe.message)
+            return translate(ttuple)
 
-class Socialite:
-    def __init__(self, queryCli):
-        self.queryClient = queryCli
+    queryClient = connect()
+    socialite = Socialite(queryClient)
+    return socialite
 
-    def run(self, query):
-        qm = QueryMessage()
-        qm.query = query
-        self.queryClient.runSimple(qm)
-
-    def runQuery(self, query, qid):
-        qm = QueryMessage()
-        qm.query = query
-        self.queryClient.run(qm, "localhost", getCallbackPort(), qid)
-
-    def getFirstTuple(self, query):
-        qm = QueryMessage()
-        qm.query = query
-        ttuple = self.queryClient.getFirstTuple(qm)
-        return translate(ttuple)
+socialite = _init()
 
 class DelayedQuery:
     def __init__(self, query, filename, line):
@@ -82,9 +81,11 @@ class DelayedQuery:
         return socialite.getFirstTuple(self.query)
 
     def __iter__(self):
+        from Queue import Queue
+        from callbackServer import registerQueryQueue
+
         self.queue = Queue(maxsize=1024)
         registerQueryQueue(self.queryid, self.queue)
-
         socialite.runQuery(self.query, self.queryid)
         return self
 
@@ -94,14 +95,26 @@ class DelayedQuery:
             raise StopIteration
         return tup
 
-queryClient = connect()
-socialite = Socialite(queryClient)
-
+def decl(query):
+    """Declares SociaLite tables.
+       e.g. decl("Student(int id, String name) indexby id.")
+            decl("Friend(String name, (String friendName)) indexby name.")
+    """
+    run(query)
 
 def run(query):
+    """Runs SociaLite rules.
+       e.g. run("FriendOfFriend(f1, ff) :- Friend(f1, f2), Friend(f2, ff).")
+    """
     socialite.run(query)
 
 def query(query):
+    """Queries SociaLite tables.
+       e.g. query("Friend(n1, n2)").first()
+            for i, name in query("Student(i, name)"):
+                print i, name
+    """
+    import inspect
     callerframerecord = inspect.stack()[1]
     frame = callerframerecord[0]
     info = inspect.getframeinfo(frame)

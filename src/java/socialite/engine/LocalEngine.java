@@ -94,18 +94,13 @@ public class LocalEngine {
 
     public void run(String program, final QueryVisitor qv) {
         try {
-            long start=System.currentTimeMillis();
-
             CodeGenMain codeGen = compile(program);
             //System.out.println("Code generation:"+(System.currentTimeMillis()-start)+"ms");
             List<Eval> evals = codeGen.getEvalInsts();
-            start=System.currentTimeMillis();
-            for (Eval e:evals) e.run();
-            //System.out.println("Evaluation:"+(System.currentTimeMillis()-start)+"ms");
-            start=System.currentTimeMillis();
+            for (Eval e:evals) {
+                e.run();
+            }
             codeGen.generateQuery(qv);
-            //System.out.println("Query generation:"+(System.currentTimeMillis()-start)+"ms");
-            start=System.currentTimeMillis();
             Runnable query = codeGen.getQueryInst();
             if (query==null) qv.finish();
             else {
@@ -117,8 +112,6 @@ public class LocalEngine {
                 });
                 query.run();
             }
-            //System.out.println("Query running:"+(System.currentTimeMillis()-start)+"ms");
-            //L.debug("All exec time:"+(System.currentTimeMillis()-start)+"ms");
         } catch (Exception e) {
             L.error("Exception while running "+program);
             L.error(ExceptionUtils.getStackTrace(e));

@@ -23,7 +23,6 @@ export PYTHONPATH="${SOCIALITE_HOME}/ext/python/py4j-0.9-src.zip:$PYTHONPATH"
 export PYTHONPATH="${SOCIALITE_HOME}/ext/python/thrift-0.9.3-py.egg:$PYTHONPATH"
 
 export SocialiteStandalonePort=$Port
-#exec python -i src/python/pysocialite/socialite.py "$@"
-python "$@"
+jupyter notebook "$@"
 
 python $bin/../src/python/pysocialite/terminateSingleNode.py

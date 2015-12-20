@@ -180,7 +180,7 @@ table_decl returns [TableDecl result]
         if (tableDeclMap.containsKey($ID.text)) {
             if (!$result.equals(tableDeclMap.get($ID.text))) {
                 throw new ParseException(getParser(), $ID.line-1, $ID.pos, 
-                            $ID.text+" was previously declared with different signature.");     
+                            $ID.text+" was previously declared with a different signature.");     
             }
             $result=null;
         } else { tableDeclMap.put($ID.text, $result); }

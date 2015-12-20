@@ -907,7 +907,7 @@ public TreeAdaptor getTreeAdaptor() {
                     if (tableDeclMap.containsKey((ID14!=null?ID14.getText():null))) {
                         if (!retval.result.equals(tableDeclMap.get((ID14!=null?ID14.getText():null)))) {
                             throw new ParseException(getParser(), (ID14!=null?ID14.getLine():0)-1, (ID14!=null?ID14.getCharPositionInLine():0), 
-                                        (ID14!=null?ID14.getText():null)+" was previously declared with different signature.");     
+                                        (ID14!=null?ID14.getText():null)+" was previously declared with a different signature.");     
                         }
                         retval.result =null;
                     } else { tableDeclMap.put((ID14!=null?ID14.getText():null), retval.result); }
