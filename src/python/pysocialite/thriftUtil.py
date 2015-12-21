@@ -1,8 +1,8 @@
 
 def toPyObj(scalarVal):
-    if scalarVal.num:
+    if scalarVal.num != None:
         return scalarVal.num
-    elif scalarVal.real:
+    elif scalarVal.real != None:
         return scalarVal.real
     else:
         return scalarVal.str

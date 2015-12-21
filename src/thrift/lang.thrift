@@ -2,16 +2,16 @@ namespace java socialite.rpc
 namespace py pysocialite.rpc
 
 struct ScalarVal {
-  1: i64 num,
-  2: double real,
-  3: string str,
+  1: optional i64 num,
+  2: optional double real,
+  3: optional string str,
 }
 
 struct TTuple {
-  1: ScalarVal col0,
-  2: ScalarVal col1,
-  3: ScalarVal col2,
-  5: map<i16, ScalarVal> colValMap,
+  1: optional ScalarVal col0,
+  2: optional ScalarVal col1,
+  3: optional ScalarVal col2,
+  5: optional map<i16, ScalarVal> colValMap,
 }
 
 

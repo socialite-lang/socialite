@@ -224,6 +224,9 @@ col_opt returns [ColOpt result]
 	| ITER {
 	 $result = new ColIter();
 	}
+	| ^(BIT i1=INT) {
+	    $result = new ColBitNum(Integer.parseInt($i1.text));
+	}
 	;
 type returns [Class result]
 	:'int' {$result = int.class;} ('[' ']' {$result = int[].class;} )?  

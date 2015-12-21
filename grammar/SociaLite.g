@@ -32,6 +32,7 @@ tokens {
     INDEX_BY;
     GROUP_BY;
     RANGE;
+    BIT;
     ITER;
     PREDEFINED;
     CONCURRENT;
@@ -149,8 +150,9 @@ col_decls: col_decl (','! col_decl)*
 	;
 col_decl: type ID (':' col_opt)?-> ^(COL_DECL type ID col_opt?)
 	;
-col_opt	:  i1=INT '..' i2=INT -> ^(RANGE $i1 $i2)
+col_opt	: i1=INT '..' i2=INT -> ^(RANGE $i1 $i2)
 	| ITER_DECL -> ITER
+	| i1=INT 'bit' -> ^(BIT $i1)
 	;
 
 type:	'int' ('[' ']')?
