@@ -15,4 +15,4 @@ export SOCIALITE_HEAPSIZE=8000
 export SOCIALITE_WORKER_NUM=2
 
 # The number of threads on a single worker.
-export SOCIALITE_WORKER_THREAD_NUM=2
+export SOCIALITE_WORKER_THREAD_NUM=4

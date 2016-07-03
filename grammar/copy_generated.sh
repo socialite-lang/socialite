@@ -5,5 +5,5 @@ if [ $0 != "./copy_generated.sh" ]; then
     exit;
 fi
 echo "Copying antlr output files..."
-cp output/SociaLite* ../src/socialite/parser/antlr/
+cp output/SociaLite* ../src/java/socialite/parser/antlr/
 echo "Done"

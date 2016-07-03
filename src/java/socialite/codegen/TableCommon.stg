@@ -61,6 +61,7 @@ import gnu.trove.TDoubleCollection;
 import socialite.eval.Manager;
 import socialite.visitors.IntVisitor;
 import socialite.visitors.ObjectVisitor;
+import socialite.visitors.IVisitor;
 import socialite.visitors.VisitorImpl;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
@@ -80,6 +81,7 @@ import socialite.resource.TablePartitionMap;
 import socialite.resource.DistTablePartitionMap;
 import socialite.type.*;
 import socialite.util.ByteBufferPool;
+import socialite.functions.AbstractAggregation;
 
 import socialite.util.concurrent.AtomicByteArray;
 import socialite.util.concurrent.ConcurrentReadArrayList;
@@ -94,10 +96,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+
+import org.roaringbitmap.RoaringBitmap;
+import org.roaringbitmap.IntIterator;
 >>

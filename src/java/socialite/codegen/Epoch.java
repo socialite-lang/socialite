@@ -1,6 +1,5 @@
 package socialite.codegen;
 
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.Externalizable;
@@ -8,15 +7,12 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,19 +20,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import socialite.collection.SArrayList;
 import socialite.parser.Const;
-import socialite.parser.DeltaRule;
-import socialite.parser.DeltaTable;
 import socialite.parser.Rule;
 import socialite.parser.Table;
-import socialite.parser.antlr.ClearTable;
-import socialite.parser.antlr.DropTable;
 import socialite.parser.antlr.TableStmt;
 import socialite.resource.RuleMap;
-import socialite.resource.VisitorBuilder;
-import socialite.util.Assert;
 import socialite.util.IdFactory;
 import socialite.util.Loader;
-import socialite.util.SociaLiteException;
 
 public class Epoch implements Externalizable {
 	private static final long serialVersionUID = 42;

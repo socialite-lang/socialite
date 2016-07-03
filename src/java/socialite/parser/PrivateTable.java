@@ -3,7 +3,6 @@ package socialite.parser;
 import java.util.ArrayList;
 import java.util.List;
 
-import socialite.parser.antlr.ColumnGroup;
 import socialite.parser.antlr.IndexBy;
 import socialite.parser.antlr.TableDecl;
 import socialite.parser.antlr.TableOpt;
@@ -12,8 +11,8 @@ import socialite.parser.antlr.ColOpt;
 import socialite.parser.antlr.ColRange;
 import socialite.util.AnalysisException;
 import socialite.util.InternalException;
-import gnu.trove.list.array.TIntArrayList;
 
+@Deprecated
 public class PrivateTable extends Table implements GeneratedT {
 	int origId;
 	Table origT;
@@ -27,8 +26,6 @@ public class PrivateTable extends Table implements GeneratedT {
 		rule = _r;
 		
 		className = signature();
-		
-		maybeSetArrayBaseAndSize();
 		
 		try {
 			setGroupByColNum(t.groupbyColNum());
@@ -53,7 +50,7 @@ public class PrivateTable extends Table implements GeneratedT {
 	@Override public int origId() { return origId; }
 
 	static TableDecl genDecl(Table t, Rule r) {
-		assert !t.hasNestedT();
+		assert !t.hasNesting();
 		
 		String newName = name(t, r);
 		

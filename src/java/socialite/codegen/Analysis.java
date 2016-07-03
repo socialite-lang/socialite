@@ -18,19 +18,14 @@ import org.apache.commons.logging.LogFactory;
 
 import socialite.dist.master.MasterNode;
 import socialite.functions.FunctionLoader;
-import socialite.functions.Max;
-import socialite.functions.MeetOp;
-import socialite.functions.Min;
 import socialite.parser.*;
 import socialite.parser.antlr.ClearTable;
 import socialite.parser.antlr.ColumnGroup;
 import socialite.parser.antlr.DropTable;
 import socialite.parser.antlr.RuleDecl;
-import socialite.parser.antlr.TableDecl;
 import socialite.parser.antlr.TableStmt;
 import socialite.resource.RuleMap;
 import socialite.util.AnalysisException;
-import socialite.util.Assert;
 import socialite.util.InternalException;
 import socialite.collection.SArrayList;
 
@@ -116,8 +111,8 @@ public class Analysis {
             if (!t.hasSortby()) continue;
             for (ColumnGroup g:t.getColumnGroups()) {
                 if (!g.isSorted()) continue;
-                if (g.hasIndex()) {
-                    String msg = "Cannot use both indexby and sortby to a (nested) table.";
+                if (g.hasIndex() && !g.hasArrayIndex()) {
+                    String msg = "Cannot use both indexby and sortby to a same nested table.";
                     p.removeTableDecl(t.decl());
                     throw new AnalysisException(msg, t);
                 }
@@ -240,7 +235,6 @@ public class Analysis {
         runErrorCheck();
 
         computeRuleDeps();
-        prepareRecOpts();
         makeEpochs();
 
         createDeltaRules();
@@ -300,19 +294,6 @@ public class Analysis {
             writeAccessedTables.add(t);
         }
     }
-    void prepareRecOpts() {
-        prepareLeftRecur();
-    }
-
-    void prepareLeftRecur() {
-        for (Rule r : rules) {
-            if (r.isSimpleUpdate()) { continue; }
-            if (isTrivialRecursion(r)) { continue; }
-            if (isLeftRec(r)) {
-                r.setLeftRec();
-            }
-        }
-    }
 
     void setGroupby() {
         for (Rule r : rules) {
@@ -340,11 +321,11 @@ public class Analysis {
         int idx = head.functionIdx();
         Table t = tableMap.get(head.name());
 
-        if (t instanceof IterTable) {
-            TableDecl decl = t.decl();
-            for (int i=0; i<decl.maxIter(); i++) {
-                t = tableMap.get(IterTable.name(decl.name(), i));
-                setGroupby(r, t, idx);
+        if (t instanceof IterTableMixin) {
+            IterTableMixin it = (IterTableMixin)t;
+            for (String name: it.getAllTableNames()) {
+                Table t2 = tableMap.get(name);
+                setGroupby(r, t2, idx);
             }
         } else {
             setGroupby(r, t, idx);
@@ -381,8 +362,9 @@ public class Analysis {
         if (!p1.name().equals(p2.name())) return false;
 
         Table t = map.get(p1.name());
-        Param[] params1 = p1.outputParams();
-        Param[] params2 = p2.outputParams();
+        Param[] params1 = p1.inputParams();
+        Param[] params2 = p2.inputParams();
+        assert params1.length==params2.length;
         int compareUpto=t.numColumns();
         if (p1.hasFunctionParam())
             compareUpto = p1.functionIdx();
@@ -473,16 +455,6 @@ public class Analysis {
         return true;
     }
 
-    static Table getOrigT(Table t) {
-        if (t instanceof RemoteHeadTable) {
-            return ((RemoteHeadTable)t).origT();
-        } else if (t instanceof DeltaTable) {
-            return ((DeltaTable)t).origT();
-        } else if (t instanceof PrivateTable) {
-            return ((PrivateTable)t).origT();
-        } else { return t; }
-    }
-
     public static boolean isSequentialRule(Rule r, Map<String, Table> tableMap) {
         Object first = r.getBody().get(0);
         if (!(first instanceof Predicate))
@@ -490,7 +462,6 @@ public class Analysis {
 
         Predicate firstP = (Predicate)first;
         Table firstT = tableMap.get(firstP.name());
-        if (firstT instanceof PrivateTable) return false;
 
         if (firstP.first() instanceof Const) {
             return true;
@@ -499,7 +470,7 @@ public class Analysis {
         }
     }
 
-    // XXX: re-implement privatization as rule rewriting, so that VisitorCodeGen does not need to know the details.
+    // XXX: re-implement privatization as rule rewriting, so that JoinerCodeGen does not need to know the details.
     // e.g.  Triangle(0, $inc(1)) :- Edge(a,b), Edge(b,c), Edge(c,a).
     //       => _Thread_Local_Triangle(worker, $inc(1)) :- Edge(a,b), Edge(b,c), Edge(c,a), worker=$workerId().
     void privatize() {
@@ -525,20 +496,19 @@ public class Analysis {
 
     public static boolean hasRemoteRuleBody(Rule r, Map<String, Table> tableMap) {
         List<Predicate> bodyP = r.getBodyP();
-        if (bodyP.size() <= 1)
+        if (bodyP.size() <= 1) {
             return false;
+        }
 
-        List<Integer> sendPos = tableSendPos(r, tableMap);
-        if (sendPos.isEmpty())
-            return false;
-        return true;
+        List<Integer> transferPos = tableTransferPos(r, tableMap);
+        return transferPos.size() > 0;
     }
 
     static boolean hasSamePartition(Table t1, Table t2) {
-        if (t1.isArrayTable() && t2.isArrayTable()) {
+        if (t1 instanceof ArrayTable && t2 instanceof ArrayTable) {
             return t1.arrayBeginIndex() == t2.arrayBeginIndex() &&
                     t1.arrayEndIndex() == t2.arrayEndIndex();
-        } else if (!t1.isArrayTable() && !t2.isArrayTable()) {
+        } else if (!(t1 instanceof ArrayTable) && !(t2 instanceof ArrayTable)) {
             return t1.getColumn(0).type().equals(t2.getColumn(0).type());
         } else {
             return false;
@@ -558,10 +528,10 @@ public class Analysis {
         }
         return !hasSamePartition(t1, t2);
     }
-    public static List<Integer> tableSendPos(Rule r, Map<String, Table> tableMap) {
+    public static List<Integer> tableTransferPos(Rule r, Map<String, Table> tableMap) {
         List<Predicate> bodyP = r.getBodyP();
 
-        List<Integer> sendPos = new ArrayList<Integer>();
+        List<Integer> transferPos = new ArrayList<>();
         Predicate prevp = null;
         for (Predicate p : bodyP) {
             if (prevp == null || prevp instanceof PrivPredicate) {
@@ -570,14 +540,13 @@ public class Analysis {
             }
             if (requireTransfer(prevp, p, tableMap)) {
                 if (collectLiveVarsAt(r, p.getPos()).isEmpty()) {
-                    //Assert.impossible();
                     continue;
                 }
-                sendPos.add(p.getPos());
+                transferPos.add(p.getPos());
             }
             prevp = p;
         }
-        return sendPos;
+        return transferPos;
     }
 
     public static boolean hasRemoteRuleHead(Rule r, Map<String, Table> tableMap) {
@@ -656,7 +625,7 @@ public class Analysis {
                 if (!v.equals(o)) continue;
 
                 Table t=tableMap.get(p.name());
-                if (t.hasNestedT()) {
+                if (t.hasNesting()) {
                     ColumnGroup group=t.getColumnGroups().get(0);
                     if (i<group.size()) {
                         return true;
@@ -806,7 +775,7 @@ public class Analysis {
 
     @SuppressWarnings("unchecked")
     void processRemoteRuleBody(Rule r, List<Rule> toAdd) {
-        List<Integer> sendPos = tableSendPos(r, tableMap);//tableSendPos(r.getBodyP());
+        List<Integer> sendPos = tableTransferPos(r, tableMap);//tableTransferPos(r.getBodyP());
         assert !sendPos.isEmpty();
         for (int pos : sendPos) {
             List<Variable> vars = collectLiveVarsAt(r, pos);
@@ -877,10 +846,6 @@ public class Analysis {
     void processRemoteRuleHead(Rule r, List<Rule> toAdd) {
         Predicate h = r.getHead();
         Table ht = tableMap.get(h.name());
-        if (ht instanceof PrivateTable) {
-            ht = ((PrivateTable) ht).origT();
-            assert ht.id() >= 0:"Private Table:"+ht.name()+", orig table:"+ht.name()+", id:"+ht.id();
-        }
         RemoteHeadTable rt = getRemoteHeadTable(ht, r);
 
         // new rule (for the receiving node) [ OrigPredicate() :- RemoteTable(). ]
@@ -1233,7 +1198,7 @@ public class Analysis {
         List<TableStmt> clearTables = new ArrayList<TableStmt>();
         for (Rule r:e.getRules()) {
             Table t = tableMap.get(r.getHead().name());
-            if (t instanceof IterTable) {
+            if (t instanceof IterTableMixin) {
                 if (initTables.contains(t)) continue;
                 clearTables.add(new ClearTable(t.name(), t.id()));
             }
@@ -1296,58 +1261,17 @@ public class Analysis {
     // returns true iff P(x, y, ..) :- P(a, b, ..).
     // where x,y,.. a,b are non-functions
     boolean isTrivialRecursion(Rule r) {
-        if (r.getBodyP().size() != 1) return false;
+        if (r.getBodyP().size() != 1) {
+            return false;
+        }
 
         Predicate h = r.getHead();
-        if (h.hasFunctionParam())
+        if (h.hasFunctionParam()) {
             return false;
+        }
 
         Predicate b = r.getBodyP().get(0);
-        if (h.name().equals(b.name()))
-            return true;
-        return false;
-    }
-
-    List<RuleComp> OLD_findRuleComp() {
-        // find SCC (strongly-connectec-component) and other rule compoments
-        // see {@link RuleComp}
-
-        Set<Rule> addedRules = new LinkedHashSet<>();
-        List<RuleComp> comps = new ArrayList<>();
-        Set<Rule> marked = new LinkedHashSet<>();
-        for (Rule r: rules) {
-            if (r.isSimpleUpdate()) continue;
-            if (r.isSimpleArrayInit()) continue;
-            if (isTrivialRecursion(r)) continue;
-
-            if (addedRules.contains(r)) continue;
-
-            marked.clear();
-            List<Rule> result = findSCCfrom(r, marked, r);
-            RuleComp scc;
-            if (result != null) {
-                for (Rule _r:result) _r.setInScc();
-                scc = new SCC(result);
-                comps.add(scc);
-                addedRules.addAll(result);
-            }
-            /*
-            result = findPipelinedCompFrom(r);
-            if (result != null) {
-                addedRules.addAll(result);
-                RuleComp rc = new RuleComp(result, false);
-                rc.addStartingRule(r);
-                rc.setPipeliningFrom(r);
-                comps.add(rc);
-            }*/
-        }
-
-        // (each single rule is a SCC by itself)
-        for (Rule r: rules) {
-            if (!addedRules.contains(r))
-                comps.add(new RuleComp(r));
-        }
-        return comps;
+        return h.name().equals(b.name());
     }
 
     boolean findScc(Table root, Map<Table, List<Table>> deps, Table cur, Set<Table> path, Set<Table> visited) {
@@ -1707,7 +1631,7 @@ public class Analysis {
         LinkedHashSet<Variable> resolved[] = new LinkedHashSet[termCount+1];
         Set<Variable> vars = null, prevVars = null;
         int i = 0;
-        for (Object o : rule.getBody()) {
+        for (Literal o : rule.getBody()) {
             if (o instanceof Predicate) {
                 Predicate p = (Predicate) o;
                 vars = p.getVariables();
@@ -1717,9 +1641,11 @@ public class Analysis {
                     AssignOp op = (AssignOp) e.root;
                     vars = op.getLhsVars();
                 }
-            } else assert false:"should not reach here";
+            } else {
+                assert false:"should not reach here";
+            }
 
-            resolved[i] = new LinkedHashSet<Variable>();
+            resolved[i] = new LinkedHashSet<>();
             if (i > 0) {
                 resolved[i].addAll(resolved[i - 1]);
                 resolved[i].addAll(prevVars);
@@ -1728,7 +1654,7 @@ public class Analysis {
             i++;
         }
 		/* resolved vars at the end of the rule */
-        resolved[i] = new LinkedHashSet<Variable>();
+        resolved[i] = new LinkedHashSet<>();
         resolved[i].addAll(resolved[i - 1]);
         resolved[i].addAll(prevVars);
         return resolved;

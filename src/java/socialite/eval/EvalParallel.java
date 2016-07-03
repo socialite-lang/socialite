@@ -237,12 +237,15 @@ public class EvalParallel extends Eval {
         Iterator<RuleComp> it = epoch.topologicalOrder();
 
         EvalRefCount.getInst().inc(epoch.id());
-        while (it.hasNext()) {
-            RuleComp rc = it.next();
-            issued |= eval(rc);
+        try {
+            while (it.hasNext()) {
+                RuleComp rc = it.next();
+                issued |= eval(rc);
+            }
+        } finally {
+            EvalRefCount.getInst().dec(epoch.id());
+            return issued;
         }
-        EvalRefCount.getInst().dec(epoch.id());
-        return issued;
     }
 
     boolean eval(RuleComp rc) {

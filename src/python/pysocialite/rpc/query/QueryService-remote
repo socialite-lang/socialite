@@ -24,9 +24,15 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print('Usage: ' + sys.argv[0] + ' [-h host[:port]] [-u url] [-f[ramed]] [-s[sl]] function [arg1 [arg2...]]')
   print('')
   print('Functions:')
+  print('  void gc()')
   print('  void runSimple(QueryMessage query)')
   print('  void run(QueryMessage query, string addr, i32 port, i64 queryid)')
   print('  TTuple getFirstTuple(QueryMessage query)')
+  print('  void clear(string table)')
+  print('  void drop(string table)')
+  print('  string getEnumKey(string kind, i32 id)')
+  print('  i32 getEnumId(string kind, string key)')
+  print('   getEnumKeyList(string kind)')
   print('')
   sys.exit(0)
 
@@ -83,7 +89,13 @@ protocol = TBinaryProtocol.TBinaryProtocol(transport)
 client = QueryService.Client(protocol)
 transport.open()
 
-if cmd == 'runSimple':
+if cmd == 'gc':
+  if len(args) != 0:
+    print('gc requires 0 args')
+    sys.exit(1)
+  pp.pprint(client.gc())
+
+elif cmd == 'runSimple':
   if len(args) != 1:
     print('runSimple requires 1 args')
     sys.exit(1)
@@ -100,6 +112,36 @@ elif cmd == 'getFirstTuple':
     print('getFirstTuple requires 1 args')
     sys.exit(1)
   pp.pprint(client.getFirstTuple(eval(args[0]),))
+
+elif cmd == 'clear':
+  if len(args) != 1:
+    print('clear requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.clear(args[0],))
+
+elif cmd == 'drop':
+  if len(args) != 1:
+    print('drop requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.drop(args[0],))
+
+elif cmd == 'getEnumKey':
+  if len(args) != 2:
+    print('getEnumKey requires 2 args')
+    sys.exit(1)
+  pp.pprint(client.getEnumKey(args[0],eval(args[1]),))
+
+elif cmd == 'getEnumId':
+  if len(args) != 2:
+    print('getEnumId requires 2 args')
+    sys.exit(1)
+  pp.pprint(client.getEnumId(args[0],args[1],))
+
+elif cmd == 'getEnumKeyList':
+  if len(args) != 1:
+    print('getEnumKeyList requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.getEnumKeyList(args[0],))
 
 else:
   print('Unrecognized method %s' % cmd)

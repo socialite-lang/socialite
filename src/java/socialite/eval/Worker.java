@@ -6,17 +6,16 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import socialite.dist.worker.Receiver;
+import socialite.resource.JoinerBuilder;
 import socialite.resource.RuleMap;
 import socialite.resource.SRuntime;
 import socialite.resource.Sender;
-import socialite.resource.VisitorBuilder;
 import socialite.tables.TableInst;
 import socialite.tables.TmpTableInst;
 import socialite.util.SocialiteFinishEval;
@@ -89,7 +88,7 @@ public class Worker implements Runnable {
 
     void setRuntime(SRuntime _runtime) { runtime = _runtime; }
     RuleMap ruleMap(int rule) { return runtime.getRuleMap(rule); }
-    VisitorBuilder builder(int rule) { return runtime.getVisitorBuilder(rule); }
+    JoinerBuilder builder(int rule) { return runtime.getJoinerBuilder(rule); }
 
     public TaskQueue getQueue() { return taskQ; }
 
@@ -119,7 +118,7 @@ public class Worker implements Runnable {
         return count;
     }
     public void addTasksForDelta(int ruleid, TmpTableInst deltaT, int priority) {
-        // XXX: fix VisitorCodeGen to generate proper code
+        // XXX: fix JoinerCodeGen to generate proper code
         if (priority==0) {
             addTasksForDelta(ruleid, deltaT, Priority.High);
         } else {
@@ -141,7 +140,7 @@ public class Worker implements Runnable {
     }
 
     void addTasksForDeltaReally(int ruleid, TmpTableInst deltaT, Priority priority, TIntArrayList depRules, boolean first) {
-        VisitorBuilder _builder;
+        JoinerBuilder _builder;
         for (int i=0; i<depRules.size(); i++) {
             int deltarule = depRules.get(i);
 
@@ -163,7 +162,7 @@ public class Worker implements Runnable {
             try {
                 task = reserveTask();
                 long start=0, end=0;
-                if (verbose) start=System.currentTimeMillis();
+                if (verbose) { start=System.currentTimeMillis(); }
                 try {
                     task.run(this);
                 } catch (SocialiteFinishEval e) {

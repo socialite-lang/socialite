@@ -2,53 +2,44 @@ package socialite.codegen;
 
 
 import gnu.trove.TIntCollection;
-import gnu.trove.list.array.TIntArrayList;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.python.modules.synchronize;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
 
-import socialite.parser.AggrFunction;
-import socialite.parser.Column;
 import socialite.parser.Const;
-import socialite.parser.Function;
 import socialite.parser.MyType;
 import socialite.parser.Predicate;
-import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.parser.Variable;
 import socialite.util.IdFactory;
-import socialite.util.InternalException;
 import socialite.util.MySTGroupFile;
-import socialite.util.SociaLiteException;
 
 // Utility class for code generation
-// used mostly by VisitorCodeGen and UpdaterCodeGen
+// used mostly by JoinerCodeGen and UpdaterCodeGen
 public class CodeGen {
     static String visitorBaseGroupFile = "VisitorBase.stg";
     static String visitorGroupFile = "Visitor.stg";
     static String evalGroupFile = "EvalEpoch.stg";
     static String tupleGroupFile = "Tuple.stg";
+    static String combinedIterateGroupFile = "CombinedIterator.stg";
 
+    static STGroup combinedIterateGroup = null;
     static STGroup visitorBaseGroup = null;
     static STGroup visitorTmplGroup = null;
     static STGroup evalTmplGroup = null;
     static STGroup tupleGroup = null;
 
     static {
-        visitorTmplGroup = new MySTGroupFile(VisitorCodeGen.class.getResource(visitorGroupFile),
+        visitorTmplGroup = new MySTGroupFile(JoinerCodeGen.class.getResource(visitorGroupFile),
                 "UTF-8", '<', '>');
         visitorTmplGroup.load();
+
+        combinedIterateGroup = new MySTGroupFile(JoinerCodeGen.class.getResource(combinedIterateGroupFile),
+                "UTF-8", '<', '>');
+        combinedIterateGroup.load();
 
         visitorBaseGroup = new MySTGroupFile(VisitorBaseGen.class.getResource(visitorBaseGroupFile),
                 "UTF-8", '<', '>');
@@ -67,6 +58,9 @@ public class CodeGen {
         return prefix+IdFactory.nextVarId();
     }
 
+    public static STGroup getCombinedIterateGroup() {
+        return combinedIterateGroup;
+    }
     public static STGroup getVisitorGroup() {
         return visitorTmplGroup;
     }
@@ -91,15 +85,8 @@ public class CodeGen {
 
     public static ST stmts() { return getVisitorST("simpleStmts"); }
 
-    public static String capitalizeFirstLetter(String str) {
-        String firstLetter = str.substring(0, 1);
-        String rest = str.substring(1);
-        return firstLetter.toUpperCase() + rest;
-    }
-
-    public static void throwNotImplementedException(ST m) {
-        String throwStmt="throw new RuntimeException(\"not implemented\")";
-        m.add("stmts", throwStmt);
+    public static String visitorClass(Table table) {
+        return table.visitorClass();
     }
 
     public static Class[] getArgTypes(Table t, int startCol, int endCol) {
@@ -111,7 +98,7 @@ public class CodeGen {
         }
         return result;
     }
-    public static void fillArgTypes(ST method, Predicate p, int startCol, int endCol) {
+    public static void addArgTypes(ST method, Predicate p, int startCol, int endCol) {
         Object[] params = p.inputParams();
         for (int i=startCol; i<=endCol; i++) {
             String arg="_"+(i-startCol); // fillVisitMethodBody
@@ -206,13 +193,41 @@ public class CodeGen {
         }
         return body;
     }
-
-    /* startCol, endCol include the primary index column */
     public static void fillVisitMethodBody(ST method, Predicate p,
-                                           int startCol, int endCol, Collection<Variable> resolved) {
-        fillVisitMethodBody(method, p, startCol, endCol, resolved, new TIntArrayList(0));
+                                           int startCol, int endCol,
+                                           Collection<Variable> resolved, TIntCollection idxbyCols) {
+        boolean innerMost=false;
+        if (endCol == p.params.size()-1) { innerMost = true; }
+        Object[] params = p.inputParams();
+        for (int i=startCol; i<=endCol; ) {
+            String arg="_"+(i-startCol); // same as addArgTypes
+            if (params[i] instanceof Variable &&
+                    ((Variable)params[i]).dontCare) {
+                i++;
+                continue;
+            }
+            if (idxbyCols.contains(i)) {
+                ST if_=generateFilter(params[i], arg, innerMost);
+                method.add("stmts", if_);
+                i++;
+            } else if (resolved.contains(params[i])) {
+                assert !p.isNegated();
+                ST if_=generateFilter(params[i], arg, innerMost);
+                method.add("stmts", if_);
+                i++;
+            } else if (params[i] instanceof Variable) {
+                Variable v=(Variable)params[i];
+                method.add("stmts", v+"=("+v.type.getSimpleName()+")"+arg);
+                i++;
+            } else { // Constants
+                assert params[i] instanceof Const;
+                ST if_=generateFilter(params[i], arg, innerMost);
+                method.add("stmts", if_);
+                i++;
+            }
+        }
     }
-    public static void fillVisitMethodBody(ST method, Predicate p,
+    public static void OLD_fillVisitMethodBody(ST method, Predicate p,
                                            int startCol, int endCol,
                                            Collection<Variable> resolved, TIntCollection idxbyCols) {
         ST body=findCodeBlockFor(method, p);
@@ -221,7 +236,7 @@ public class CodeGen {
         if (endCol == p.params.size()-1) { innerMost = true; }
         Object[] params = p.inputParams();
         for (int i=startCol; i<=endCol; ) {
-            String arg="_"+(i-startCol); // same as fillArgTypes
+            String arg="_"+(i-startCol); // same as addArgTypes
             if (params[i] instanceof Variable &&
                     ((Variable)params[i]).dontCare) {
                 i++; continue;
@@ -249,10 +264,12 @@ public class CodeGen {
     }
     static ST generateFilter(Object param, Object arg, boolean innerMost) {
         ST if_=getVisitorGroup().getInstanceOf("if");
-        if (MyType.isPrimitive(param)) if_.add("cond", param+"!="+arg);
-        else if_.add("cond", "!"+param+".equals("+arg+")");
-        if (innerMost) { if_.add("stmts", "break"); }
-        else { if_.add("stmts", "return false"); }
+        if (MyType.isPrimitive(param)) {
+            if_.add("cond", param+"!="+arg);
+        } else {
+            if_.add("cond", "!"+param+".equals("+arg+")");
+        }
+        if_.add("stmts", "return false");
         return if_;
     }
 
@@ -266,16 +283,16 @@ public class CodeGen {
     public static ST withLock(Object tableVar, Object key) {
         STGroup group = getVisitorGroup();
         ST try_ = group.getInstanceOf("try");
-        try_.add("stmts", tableVar+".wlock("+key+")");
-        try_.add("finally", tableVar+".wunlock("+key+")");
+//        try_.add("stmts", tableVar+".wlock("+key+")");
+//        try_.add("finally", tableVar+".wunlock("+key+")");
         return try_;
     }
 
     public static String getVisitColumns(int start, int end, int arity) {
-        if (end == arity-1) return "";
+        if (end == arity-1) { return ""; }
 
         String result="";
-        for (int i=start; i<=end; i++) result += "_"+i;
+        for (int i=start; i<=end; i++) { result += "_"+i; }
         return result;
     }
 }

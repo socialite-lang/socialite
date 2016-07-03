@@ -1,6 +1,7 @@
 package socialite.resource;
 
 import socialite.dist.master.MasterNode;
+import socialite.parser.ArrayTable;
 import socialite.parser.GeneratedT;
 import socialite.parser.Table;
 import socialite.util.BitUtils;
@@ -9,7 +10,7 @@ import socialite.yarn.ClusterConf;
 
 public interface DistPartitionInfo extends PartitionInfo {
     public static PartitionInfo create(DistTablePartitionMap map, Table t) {
-        if (t.isArrayTable()) {
+        if (t instanceof  ArrayTable) {
             return new DistArrayTablePartitionInfo(map, t);
         } else {
             return new DistHashPartitionInfo(map, t);

@@ -4,20 +4,7 @@ import socialite.eval.Worker;
 import socialite.tables.TableInst;
 import socialite.util.Assert;
 
-public interface IVisitor extends Runnable, IntVisitor, ObjectVisitor {
-	public void incPriority();
-	public boolean hasPriority();
-	
-	public void setWorker(Worker w);
-	public Worker getWorker();	
-	public int getWorkerId();	
-	
-	public void run();
-    public int getEpochId();
-	public int getRuleId();	
-	public TableInst[] getDeltaTables();
-	public TableInst[] getPrivateTable();
-	
+public interface IVisitor extends IntVisitor, ObjectVisitor {
 	boolean visit_0(int a1);
 	boolean visit_0(long a1);
 	boolean visit_0(float a1);

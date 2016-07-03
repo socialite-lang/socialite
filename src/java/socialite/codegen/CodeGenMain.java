@@ -14,7 +14,6 @@ import socialite.eval.EvalParallel;
 import socialite.parser.Const;
 import socialite.parser.GeneratedT;
 import socialite.parser.Predicate;
-import socialite.parser.PrivateTable;
 import socialite.parser.Query;
 import socialite.parser.Rule;
 import socialite.parser.Table;
@@ -23,7 +22,6 @@ import socialite.resource.SRuntime;
 import socialite.resource.TableInstRegistry;
 import socialite.tables.QueryRunnable;
 import socialite.tables.QueryVisitor;
-import socialite.tables.TableInst;
 import socialite.util.InternalException;
 import socialite.util.Loader;
 import socialite.util.SociaLiteException;
@@ -85,12 +83,6 @@ public class CodeGenMain {
     public SRuntime getRuntime() { return runtime; }
 
     public List<Rule> getRules() { return an.getRules(); }
-    public TableInst[] getTableArray(String name) {
-        Table t = tableMap.get(name);
-        if (t instanceof PrivateTable) return null;
-        TableInstRegistry reg = runtime.getTableRegistry();
-        return reg.getTableInstArray(t.id());
-    }
 
     Eval getEvalInstance(Epoch e) {
         return runtime.getEvalInst(e);
@@ -253,7 +245,7 @@ public class CodeGenMain {
         String sig=r.signature(tableMap);
         Class<?> klass = visitorClass$.get(sig);
         if (klass==null) {
-            VisitorCodeGen vgen = new VisitorCodeGen(e, r, tableMap);
+            JoinerCodeGen vgen = new JoinerCodeGen(e, r, tableMap);
             Compiler c = new Compiler();
             boolean success=c.compile(vgen.visitorName(), vgen.generate());
             if (!success) {

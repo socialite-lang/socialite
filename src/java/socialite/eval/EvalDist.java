@@ -8,53 +8,58 @@ import socialite.codegen.RuleComp;
 import socialite.parser.Const;
 import socialite.parser.Predicate;
 import socialite.parser.Rule;
+import socialite.parser.Table;
 import socialite.resource.SRuntime;
 
 
 public class EvalDist extends EvalParallel {
-	public static final Log L=LogFactory.getLog(EvalDist.class);
-	
-	public EvalDist(SRuntime _runtime, Epoch _epoch) {
-		super(_runtime, _epoch);
-	}
+    public static final Log L = LogFactory.getLog(EvalDist.class);
 
-	@Override
-	public void run() {
-    	init();
-    	runReally();
-	}
+    public EvalDist(SRuntime _runtime, Epoch _epoch) {
+        super(_runtime, _epoch);
+    }
 
-	boolean eval(RuleComp rc) {
-        boolean issued=false;
-		for (Rule r:rc.getStartingRules()) {
-			if (r!=null) {
-                assert r.getEpochId()==epoch.id();
+    @Override
+    public void run() {
+        init();
+        runReally();
+    }
+
+    boolean eval(RuleComp rc) {
+        boolean issued = false;
+        for (Rule r : rc.getStartingRules()) {
+            if (r != null) {
+                assert r.getEpochId() == epoch.id();
                 if (!needsLocalEval(r))
                     continue;
-				try { manager.addCmd(new EvalCommand(epoch.id(), r.id())); }
-                catch (InterruptedException e) { break; }
+                try {
+                    manager.addCmd(new EvalCommand(epoch.id(), r.id()));
+                } catch (InterruptedException e) {
+                    break;
+                }
                 issued = true;
-			}
-		}
+            }
+        }
         return issued;
-	}
-	boolean needsLocalEval(Rule r) {
-		Predicate firstP=r.firstP();
-		if (firstP==null) return true;
-		
-		if (firstP.first() instanceof Const) {
-			Const c = (Const)firstP.first();
-            int tid = runtime.getVisitorBuilder(r.id()).firstTableId(r.id());
+    }
+
+    boolean needsLocalEval(Rule r) {
+        Predicate firstP = r.firstP();
+        if (firstP == null) { return true; }
+
+        if (firstP.first() instanceof Const) {
+            Const c = (Const) firstP.first();
+            int tid = runtime.getTableMap().get(firstP.name()).id();
             return partitionMap.isLocal(tid, c.val);
-		}
-		return true;
-	}
-	
-	public String toString() {
-		String str="EvalDist:";
-		/*for (Rule r:epoch.getRules()) {
+        }
+        return true;
+    }
+
+    public String toString() {
+        String str = "EvalDist:";
+        /*for (Rule r:epoch.getRules()) {
 			str += r;
 		}*/
-		return str;
-	}
+        return str;
+    }
 }

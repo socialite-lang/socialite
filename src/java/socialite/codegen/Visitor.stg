@@ -19,6 +19,20 @@ class(packageStmt, description, imports, modifier, name, extends, interfaces, fi
 }
 >>
 
+newVisitor(var, visitorClass, methods) ::= <<
+<var> = new <visitorClass>() {
+    <methods; separator="\n">
+}
+>>
+
+visitMethod(name, args, stmts, ret) ::= <<
+public boolean <name>(<args; separator=", ">) {
+    <stmts; separator=";\n">;
+    <if(ret)><ret; separator=";\n">;
+    <else>return true;<endif>
+}
+>>
+
 method(comment, modifier, type, name, args, stmts, ret) ::= <<
 <if(comment)>/* <comment> */<endif>
 <modifier> <type> <name>(<args; separator=", ">) {

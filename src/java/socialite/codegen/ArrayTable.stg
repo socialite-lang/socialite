@@ -2,7 +2,7 @@ group array-table;
 
 import "TableCommon.stg"
 
-arrayTable(tableName, name, visitorClass, columns, gbColumns, gbAggrColumn,
+arrayTable(tableName, name, visitorClass, columns, pcolumns, gbColumns, gbAggrColumn,
         base, size,
         idxCols,
         methods, id, 
@@ -11,7 +11,6 @@ arrayTable(tableName, name, visitorClass, columns, gbColumns, gbAggrColumn,
 package socialite.tables;
 
 <importForTable()>
-
 <endif>
 
 // ArrayTable
@@ -28,10 +27,83 @@ package socialite.tables;
     public static <name> create(Long base, Integer size) { return new <name>(base.longValue(), size.intValue()); }
 <endif>
 
+    static volatile LockStatus lockStatus = LockStatus.writeLockEnabled;
+    static ReadWriteLock rwlock = new ReentrantReadWriteLock();
+
+    static void _enableInternalLock(boolean writeOnly) {
+        if (writeOnly) {
+            lockStatus = LockStatus.writeLockEnabled;
+        } else {
+            lockStatus = LockStatus.enabled;
+        }
+    }
+    static void _disableInternalLock() {
+        lockStatus = LockStatus.disabled;
+    }
+    static LockStatus _isLockEnabled() {
+        return lockStatus;
+    }
+
+    public void enableInternalLock(boolean writeOnly) {
+        _enableInternalLock(writeOnly);
+    }
+    public void disableInternalLock() {
+        _disableInternalLock();
+    }
+    public LockStatus isLockEnabled() {
+        return _isLockEnabled();
+    }
+
     <first(columns).type> base;
     AtomicByteArray filled;
+
+<if(pcolumns)>
+    <rest(pcolumns):{c|<c.type> pcol<c.pos>[];<\n>}>
+    void allocColumns(int size) {
+        <rest(pcolumns):{c|pcol<c.pos> = new <c.type>[size];<\n>}>
+    }
+    <rest(columns):{c|
+        private void setCol<i>(int i, <c.type> val) {
+        <if(c.bitPacked)>
+            val = val \<\< <c.bitShift>;
+            pcol<c.pcolIdx>[i] = pcol<c.pcolIdx>[i] ^ ((pcol<c.pcolIdx>[i] ^ val) & <c.bitMask>);
+        <else>
+            pcol<c.pcolIdx>[i] = val;
+        <endif>
+        \}<\n>}>
+    <rest(columns):{c|
+        public <c.type> col<i>(int i) {
+        <if(c.bitPacked)>
+            <c.type> v = (pcol<c.pcolIdx>[i] & <c.bitMask>) >\>> <c.bitShift>;
+            //int m = 32 - <c.numBits>;
+            //return (v \<\< m) >\> m; // sign extending
+            return v;
+        <else>
+            return pcol<c.pcolIdx>[i];
+        <endif>
+        \}<\n>}>
+<else>
     <rest(columns):{c|<c.type> col<i>[];<\n>}>
-    <idxCols:{ic|SPosIndex index<ic.relPos>;<\n>}>
+    void allocColumns(int size) {
+        <rest(columns):{c|
+            <if(c.arrayType)> col<i> = new <c.compType>[size][];
+            <else> col<i> = new <c.type>[size];
+            <endif>}>
+    }
+    <rest(columns):{c|
+        public <c.type> col<i>(int i) {
+            return col<i>[i];
+        \}}>
+     <rest(columns):{c|
+        private void setCol<i>(int i, <c.type> val) {
+            col<i>[i] = val;
+        \}<\n>}>
+<endif>
+
+    TIntObjectHashMap\<SIndex> indexMap = new TIntObjectHashMap();
+    IndexUtil indexUtil = new IndexUtil(this, rwlock);
+
+    <idxCols:{ic|SIndex index<ic.absPos> = new SIndex();<\n>}>
      
     boolean isEmpty = true;
     
@@ -39,11 +111,10 @@ package socialite.tables;
     public <name>(<first(columns).type> _base, int size) {
         base = _base;
         filled = new AtomicByteArray(size);
-        <rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[size][]<else><c.type>[size]<endif>;<\n>}>;
-        <idxCols:{ic|index<ic.relPos> = new SPosIndex();<\n>}>
+        allocColumns(size);
+        <idxCols:{ic|indexMap.put(<ic.absPos>, index<ic.absPos>);<\n>}>
     }
-    
-<rest(columns):{c| private <c.type> col<i>(int i) { return col<i>[i]; \}<\n>}>
+
 
     /** synchronization fields and methods */
     final static byte emptyMarker = -100, writeMarker = -1;
@@ -59,7 +130,7 @@ package socialite.tables;
             if (locked) { break; }
         <else>
             if (filled.get(i) != 0) {
-                throw new SociaLiteException("Entry starting with "+(i+base)+" is already filled");
+                throw new SociaLiteException("Entry starting with "+(i+base)+" already exists");
             }
         <endif>
             if (count++ > maxTry) {
@@ -68,15 +139,27 @@ package socialite.tables;
             }
         }
     }
-    public void wlock(<first(columns).type> a) { _lock((int)(a-base), writeMarker); }
-    public void wunlock(<first(columns).type> a) { filled.set((int)(a-base), (byte)1); }
 
-    boolean isEntryEmpty(int i) {
+    void wlock(<first(columns).type> a) {
+        if (lockStatus == LockStatus.disabled) { return; }
+
+        _lock((int)(a-base), writeMarker);
+    }
+    void wunlock(<first(columns).type> a) {
+        if (lockStatus == LockStatus.disabled) { return; }
+
+        if (filled.get((int)(a-base)) != 1) {
+            filled.set((int)(a-base), (byte)1);
+        }
+    }
+
+    public boolean isEntryEmpty(int i) {
         int flag = filled.get(i);
         return (flag == 0 || flag \< emptyMarker);
     }
 
-    
+    public <first(columns).type> base() { return base;}
+    public int length() { return filled.length(); }
     public int size() { throw new UnsupportedOperationException(); }
     public boolean isEmpty() { return isEmpty; }
     public int id() { return <id>; }
@@ -87,13 +170,12 @@ package socialite.tables;
         <rest(columns):{c|<c.type> init<i> = (<c.type>)args.get(<i0>);<\n>}>
         filled.fill((byte)1);
         for (int i=0; i\<filled.length(); i++) {
-            <rest(columns):{t| col<i>[i]=init<i>;<\n>}>;
+            <rest(columns):{t| setCol<i>(i, init<i>);<\n>}>;
         }
         isEmpty = false;
     }
 
     public void clearQuick() { clear(); }
-    
     public void clear() {
         filled.fill((byte)0);
         isEmpty = true;
@@ -137,8 +219,15 @@ package socialite.tables;
     }
 
     public boolean insert(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
+        wlock(a0);
+        try {
+            return insert_really(a0<rest(columns): {c|, a<i>}>);
+        } finally {
+            wunlock(a0);
+        }
+    }
+    boolean insert_really(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
         int i=(int)(a0-base); rangeCheck(i);
-
         if (!isEntryEmpty(i)) {
             if (contains(a0<rest(columns): {c|, a<i>}>)) return false;
 
@@ -148,58 +237,69 @@ package socialite.tables;
         }
         if (isEmpty) { isEmpty = false; }
 
-        <rest(columns):{c|col<i>[i] = a<i>;<\n>}>
+        <rest(columns):{c|setCol<i>(i, a<i>);<\n>}>
         <idxCols:{ic|index<ic.relPos>.add(a<ic.relPos>, i);<\n>}>
-        filled.compareAndSet(i, (byte)0, (byte)1);
+        filled.set(i, (byte)1);
         return true;
     }
 
     public void iterate(<visitorClass> v) {
         if (isEmpty) { return; }
+
         for (int i=0; i\<filled.length(); i++) {
             if (!isEntryEmpty(i)) {
                 boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
-                if (!$cont) return;
+                if (!$cont) { return; }
             }
         }
     }
-    public void iterate_by_<first(columns).absPos>(<first(columns).type> n, <visitorClass> v) {
-        int i=(int)(n-base); rangeCheck(i);
-        if (i\<0||i>=filled.length()) return;
-        if (!isEntryEmpty(i)) {
-            boolean $cont=v.visit(n <rest(columns): {c|,col<i>(i)}>);
-            if (!$cont) return;
+
+    public void iterate_at(ColumnConstraints _, int offset, Object o) {
+        if (isEmpty) { return; }
+        <visitorClass> v = (<visitorClass>)o;
+
+        if (!isEntryEmpty(offset)) {
+            <first(columns).type> val = base+(<first(columns).type>)offset;
+            boolean $cont=v.visit(val<rest(columns):{c|, col<i>(offset)}>);
+            if (!$cont) { return; }
         }
     }
-<idxCols:{c|
-    public void iterate_by_<c.absPos>(<c.type> a, final <visitorClass> v) {
-        final int _base = base;
-        ConcurrentReadIntArrayList indices = index<c.relPos>.get(a);
-        if (indices == null) { return; \}
-        for (int i=0; i\<indices.size(); i++) {
-            int pos = indices.getQuick(i);
-            v.visit(pos+base<rest(columns):{c|,col<i>(pos)};separator=", ">);
-        \}
-    \}
-}>
-    // XXX: revise this (include from_to?)
-    public void iterate_part_from_<first(columns).absPos>(<first(columns).type> from, boolean inclusive, <visitorClass> v) {
-        int start =(int)(from-base); rangeCheck(start);
-        for (int i=start; i\<=filled.length(); i++) {
-            if (!isEntryEmpty(i)) {
-                boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
-                if (!$cont) return;
+
+    public void iterate_by(ColumnConstraints constr, <visitorClass> v) {
+        if (isEmpty) { return; }
+
+        if (constr.hasRange(<first(columns).absPos>)) {
+            iterate_range(constr.getRange(<first(columns).absPos>), constr, v);
+        } else if (constr.hasColumn(<first(columns).absPos>)) {
+          <if(IsInt.(first(columns).type))>
+            ColumnValue colVal = constr.getColumnValue(<first(columns).absPos>);
+            <first(columns).type> val = colVal.getValue((<first(columns).type>)0);
+          <else>
+            ColumnValue colVal = constr.getColumnValue(<first(columns).absPos>);
+            <first(columns).type> val = constr.first().getValue((<first(columns).type>)0);
+          <endif>
+            int offset = (int)(val - base);
+            if (offset\<0||offset>=filled.length()) { return; }
+            if (!isEntryEmpty(offset)) {
+                boolean $cont=v.visit(val<rest(columns): {c|,col<i>(offset)}>);
+                if (!$cont) { return; }
             }
+        } else if (constr.getMaxColumn() \< <first(columns).absPos>) {
+            iterate(v);
+        } else {
+            indexUtil.iterateBy(indexMap, constr, v, this);
         }
     }
-    public void iterate_part_to_<first(columns).absPos>(<first(columns).type> to, boolean inclusive, <visitorClass> v) {
-        int end =(int)(to-base);
-        if (end > filled.length()-1) { end = filled.length()-1; }
-        for (int i=0; i\<=end; i++) {
-            if (!isEntryEmpty(i)) {
-                boolean $cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
-                if (!$cont) return;
-            }
+
+    public void iterate_range(ColumnRange range, ColumnConstraints _, <visitorClass> v) {
+        <first(columns).type> from = Math.max(((<first(columns).type>)range.getFrom()) - base, 0);
+        <first(columns).type> to = Math.min(((<first(columns).type>)range.getTo()) - base, 0);
+        rangeCheck(from);
+        if (to > filled.length()) { to = filled.length(); }
+        for (int i=from; i\<to; i++) {
+            if (isEntryEmpty(i)) { continue; }
+            boolean cont=v.visit(i+base<rest(columns):{c|, col<i>(i)}>);
+            if (!cont) { return; }
         }
     }
 
@@ -213,27 +313,31 @@ package socialite.tables;
 >>
 
 groupbyArray() ::= <<
-    public int groupby_getpos(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
+    public boolean groupby_update(AbstractAggregation aggrFunc<columns:{c|, <c.type> a<i0>}>) {
         int i=(int)(a0-base); rangeCheck(i);
+
+        boolean updated = false;
+        wlock(a0);
         if (isEntryEmpty(i)) {
-            return -1;
+            updated = insert_really(<columns:{c|a<i0>}; separator=", ">);
+            wunlock(a0);
         } else if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
-            return i;
+            <gbAggrColumn.type> oldVal = col<gbAggrColumn.relPos>(i);
+        <if(gbAggrColumn.immutable)>
+            <gbAggrColumn.type> ans = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
+            updated = (ans != oldVal);
+            if (updated) {
+                a<gbAggrColumn.relPos> = ans;
+                <rest(columns): {c|setCol<i>(i, a<i>);<\n>}>;
+            }
+        <else>
+            updated = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
+        <endif>
+            wunlock(a0);
         } else {
+            wunlock(a0);
             throw new AssertionError("Unexpected groupby operation");
         }
+        return updated;
     }
-    public <gbAggrColumn.type> groupby_groupby(long pos) {
-        return col<gbAggrColumn.relPos>[(int)pos];
-    }
-    public boolean groupby_insert(<columns:{c|<c.type> a<i0>};separator=", ">) {
-        insert(<columns:{c|a<i0>}; separator=", ">);
-        return true;
-    }
-    public boolean groupby_update(long pos<columns:{c|, <c.type> a<i0>}>) {
-        int i=(int)pos;
-        <rest(columns): {c|col<i>[i] = a<i>;<\n>}>;
-        return true;
-    }
-    public void groupby_done(long pos) { return; }
 >>

@@ -1,20 +1,18 @@
 package socialite.dist.worker;
 
+import gnu.trove.map.TIntFloatMap;
 import gnu.trove.map.hash.TIntFloatHashMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -43,7 +41,6 @@ import socialite.eval.Manager;
 import socialite.eval.Worker;
 import socialite.functions.PyInterp;
 import socialite.functions.PyInvoke;
-import socialite.parser.Table;
 import socialite.resource.*;
 import socialite.tables.ConstsWritable;
 import socialite.tables.QueryRunnable;
@@ -51,8 +48,6 @@ import socialite.tables.QueryVisitor;
 import socialite.eval.TmpTablePool;
 import socialite.util.Loader;
 import socialite.util.SocialiteFinishEval;
-import socialite.util.SocialiteInputStream;
-import socialite.util.SocialiteOutputStream;
 
 
 public class CmdListener implements WorkerCmd {
@@ -123,9 +118,9 @@ public class CmdListener implements WorkerCmd {
         Status s=new Status();
         s.putMemStatus(SRuntime.freeMemory());
         SRuntime runtime = SRuntimeWorker.getInst();
-        TIntFloatHashMap progressMap;
+        TIntFloatMap progressMap;
         if (runtime==null) { progressMap = new TIntFloatHashMap(); }
-        else { progressMap = runtime.getProgress().get(); }
+        else { progressMap = runtime.getProgress();}
 
         s.putProgress(progressMap);
         return Status.toWritable(s);
@@ -242,54 +237,6 @@ public class CmdListener implements WorkerCmd {
         deleteRecur(ws);
     }
 
-    void loadTables() {
-        SRuntime rt=SRuntimeWorker.getInst();
-        try {
-            FileSystem fs;
-            if (PathTo.cwd().startsWith("hdfs://"))
-                fs = FileSystem.get(new Configuration());
-            else fs = FileSystem.getLocal(new Configuration());
-            String mapFile=PathTo.cwd(TableInstRegistry.tableMapFile());
-            FSDataInputStream fsis = fs.open(new Path(mapFile));
-            SocialiteInputStream sis = new SocialiteInputStream(fsis);
-
-            TableInstRegistry reg=rt.getTableRegistry();
-            Map<String, Table> _tableMap=reg.loadTableMap(sis);
-            for (Table t:_tableMap.values()) {
-                rt.getPartitionMap().addTable(t);
-            }
-            String myidx = ""+rt.getWorkerAddrMap().myIndex();
-            String dataFile=PathTo.cwd("_table_storage", myidx, TableInstRegistry.tableDataFile());
-            fsis = fs.open(new Path(dataFile));
-            sis = new SocialiteInputStream(fsis);
-            reg.loadTableInsts(sis);
-        } catch (IOException e) {
-            L.error("Error while loading tables:");
-            L.warn(ExceptionUtils.getStackTrace(e));
-        }
-        L.info("Loading tables done");
-    }
-    void storeTables() {
-        SRuntime rc=SRuntimeWorker.getInst();
-        try {
-            FileSystem fs;
-            if (PathTo.cwd().startsWith("hdfs://"))
-                fs = FileSystem.get(new Configuration());
-            else fs = FileSystem.getLocal(new Configuration());
-            String myidx = ""+rc.getWorkerAddrMap().myIndex();
-            String dataFile=PathTo.cwd("_table_storage", myidx, TableInstRegistry.tableDataFile());
-            FSDataOutputStream fsos = fs.create(new Path(dataFile), true);
-            SocialiteOutputStream sos = new SocialiteOutputStream(fsos);
-
-            TableInstRegistry reg=rc.getTableRegistry();
-            reg.storeTableInsts(sos);
-            fs.close();
-        } catch (Exception e) {
-            L.error("Error while storing tables:");
-            L.warn(ExceptionUtils.getStackTrace(e));
-        }
-    }
-
     void prepare(SRuntime runtime, Epoch e) {
         runtime.updateTableMap(e.getTableMap());
         runtime.update(e);
@@ -349,7 +296,7 @@ public class CmdListener implements WorkerCmd {
         QueryRunnable qr=runningQueryMap.get(id.get());
         if (qr==null) return;
 
-        qr.setTerminated();
+        qr.kill();
     }
 
     @Override

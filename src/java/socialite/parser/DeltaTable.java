@@ -93,12 +93,7 @@ public class DeltaTable extends Table implements GeneratedT, FixedSizeTable {
 	}
 	
 	@Override
-	public boolean isModTable() { return false; }
-	@Override
 	public boolean hasOrderBy() { return false; }
-	
-	@Override
-	public boolean isPartitioned() { return false; }
 	
 	public static String name(Table origT) {
 		assert !(origT instanceof GeneratedT);

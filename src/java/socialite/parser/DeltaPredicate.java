@@ -4,9 +4,6 @@ package socialite.parser;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.List;
-
-import socialite.util.Assert;
 
 public class DeltaPredicate extends Predicate {
     private static final long serialVersionUID = 1;
@@ -22,7 +19,7 @@ public class DeltaPredicate extends Predicate {
     public DeltaPredicate() {}
 	public DeltaPredicate(Predicate p) {
 		params = p.params;
-		negated = p.negated;
+		isNegated = p.isNegated;
 		posAtRuleBody = p.posAtRuleBody;
 		name = DeltaTable.name(p);
 		origName = p.name;

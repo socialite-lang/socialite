@@ -82,11 +82,6 @@ public class RemoteBodyTable extends Table implements GeneratedT {
 	}
 	public List<Variable> getParamVars() { return vars;	}
 	
-	@Override
-	public boolean isPartitioned() { return false; }
-	@Override
-	public boolean isModTable() { return false; }
-	
 	public static String name(Rule r, int pos) {
 		return "RemoteBodyTable_"+r.id()+"_"+pos;
 	}

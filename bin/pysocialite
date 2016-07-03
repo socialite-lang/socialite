@@ -8,7 +8,7 @@ bin=`cd $bin; pwd`
 . "$bin/prepare-launch.sh"
 
 getPort() {
-    for _port in $(seq 51001 51100); do
+    for _port in $(seq 51001 51200); do
         exec 3<>/dev/tcp/127.0.0.1/${_port} || Port=${_port} && break
         exec 3>&-; exec 3<&-
     done
@@ -24,6 +24,7 @@ export PYTHONPATH="${SOCIALITE_HOME}/ext/python/thrift-0.9.3-py.egg:$PYTHONPATH"
 
 export SocialiteStandalonePort=$Port
 #exec python -i src/python/pysocialite/socialite.py "$@"
+
 python "$@"
 
 python $bin/../src/python/pysocialite/terminateSingleNode.py

@@ -1,5 +1,6 @@
 package socialite.dist.master;
 
+import gnu.trove.map.TIntFloatMap;
 import gnu.trove.map.hash.TIntFloatHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -370,9 +371,10 @@ public class QueryListener implements QueryProtocol {
 	void progressStatus(Status summary, WorkerAddrMap workerAddrMap, Status[] workerStats, int verbose) {
 		if (workerStats.length==0) return;
 
-		TIntFloatHashMap progStats[] = new TIntFloatHashMap[workerStats.length];
-		for (int i=0; i<workerStats.length; i++)
-			progStats[i] = (TIntFloatHashMap )workerStats[i].getProgress();
+		TIntFloatMap progStats[] = new TIntFloatMap[workerStats.length];
+		for (int i=0; i<workerStats.length; i++) {
+			progStats[i] = (TIntFloatMap) workerStats[i].getProgress();
+		}
 		String allEvalStat="", aggrEvalStat="";
 		int[] rules=progStats[0].keys();
 		Arrays.sort(rules);
@@ -384,8 +386,8 @@ public class QueryListener implements QueryProtocol {
 			int minEval=Integer.MAX_VALUE, maxEval=Integer.MIN_VALUE;
 			String minEvalInfo="", maxEvalInfo="";
 			for (int i=0; i<progStats.length; i++) {
-				if (!progStats[i].contains(rule)) continue next_rule;
-					
+				if (!progStats[i].containsKey(rule)) continue next_rule;
+
 				int x=(int)(progStats[i].get(rule)*100);
 				String evalInfo = workerAddrMap.get(i).getHostName()+":"+x+"%\n";
 				ruleEvalStat += "  "+evalInfo;				

@@ -3,9 +3,7 @@ package socialite.codegen;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,27 +13,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
 import socialite.dist.master.MasterNode;
-import socialite.parser.AggrFunction;
-import socialite.parser.AssignOp;
-import socialite.parser.CmpOp;
-import socialite.parser.Column;
-import socialite.parser.Const;
-import socialite.parser.DeltaPredicate;
-import socialite.parser.DeltaRule;
-import socialite.parser.DeltaTable;
-import socialite.parser.Expr;
-import socialite.parser.Function;
-import socialite.parser.GeneratedT;
-import socialite.parser.MyType;
-import socialite.parser.Op;
-import socialite.parser.Param;
-import socialite.parser.Predicate;
-import socialite.parser.PrivPredicate;
-import socialite.parser.RemoteBodyTable;
-import socialite.parser.RemoteHeadTable;
-import socialite.parser.Rule;
-import socialite.parser.Table;
-import socialite.parser.Variable;
+import socialite.parser.*;
 import socialite.parser.antlr.ColumnGroup;
 import socialite.resource.SRuntimeMaster;
 import socialite.tables.TableUtil;
@@ -43,24 +21,25 @@ import socialite.util.Assert;
 import socialite.functions.Choice;
 import socialite.yarn.ClusterConf;
 
-public class VisitorCodeGen {
+public class JoinerCodeGen {
     static String visitorPackage = "socialite.visitors";
 
     Rule rule;
+    STGroup combinerGroup;
     STGroup tmplGroup;
     ST visitorTmpl;
     String visitorName;
 
     Epoch epoch;
     Map<String, Table> tableMap;
-    Map<String, ST> visitMethodMap;
+    Map<String, ST> visitMethodMap = new HashMap<>();
+    Map<Predicate, ST> visitorMap = new HashMap<>();
     Predicate headP, iterStartP;
     Table headT;
     DeltaTable deltaHeadT;
-    int isParRule=-1;
     Set<Variable>[] resolvedVarsArray;
 
-    public VisitorCodeGen(Epoch e, Rule r, Map<String, Table> _tableMap) {
+    public JoinerCodeGen(Epoch e, Rule r, Map<String, Table> _tableMap) {
         epoch = e;
         rule = r;
         tableMap = _tableMap;
@@ -69,83 +48,59 @@ public class VisitorCodeGen {
 
         headP = rule.getHead();
         headT = tableMap.get(headP.name());
+        combinerGroup = CodeGen.getCombinedIterateGroup();
         tmplGroup = CodeGen.getVisitorGroup();
         visitorTmpl = tmplGroup.getInstanceOf("class");
 
-        visitMethodMap = new HashMap<String, ST>();
         if (rule.inScc()) {
-            if (headT instanceof DeltaTable)
+            if (headT instanceof DeltaTable) {
                 deltaHeadT = (DeltaTable) tableMap.get(headT.name());
-            else deltaHeadT = (DeltaTable) tableMap.get(DeltaTable.name(headT));
+            } else {
+                deltaHeadT = (DeltaTable) tableMap.get(DeltaTable.name(headT));
+            }
         }
 
         resolvedVarsArray = Analysis.getResolvedVars(rule);
     }
+    ST getCombinedIterte(TableType t1, TableType t2) {
+        if (t1.isArrayTable() && t2.isArrayTable()) {
+            return combinerGroup.getInstanceOf("combinedIterate_arr");
+        }
+        throw new AssertionError("Unsupported table types:"+t1+", "+t2);
+    }
     boolean isDistributed() {
         return MasterNode.getInstance() != null;
     }
-    boolean isParallelRule() {
-        if (isParRule<0) {
-            isParRule = Analysis.isParallelRule(rule, tableMap)?1:0;
-            if (isDistributed()) isParRule = 1;
-        }
-        return isParRule==1;
-    }
-    private String getVisitMethodSig(String name, Class... types) {
-        String sig = name;
-        for (Class type : types)
+    String getVisitMethodSig(Predicate p, String visitName, Class... types) {
+        String sig = p.name()+"."+p.getPos()+"."+visitName+"#";
+        for (Class type : types) {
             sig += "#" + type.getSimpleName();
+        }
         return sig;
     }
 
-    boolean needChoiceSkipCode(Predicate p, int startCol, int endCol) {
-        Predicate choiceP = firstOneWithAllResolvedButChoiceArg();
-        if (choiceP==null) return false;
-        if (p.getPos() > choiceP.getPos()) return true;
-        if (p.getPos()==choiceP.getPos()) {
-            for (int i=startCol; i<=endCol; i++) {
-                if (p.inputParams()[i] instanceof Variable) {
-                    Variable v=(Variable)p.inputParams()[i];
-                    if (v.equals(choiceArgVar()))
-                        return true;
-                }
-            }
-        }
-        return false;
-    }
-    ST skipCodeForChoice(ST method, Predicate p) {
-        Predicate choiceP = firstOneWithAllResolvedButChoiceArg();
-        ST if_ =tmplGroup.getInstanceOf("if");
-        if_.add("cond", choiceMadeVar()+"&&"+currentPredicateVar()+"=="+p.getPos());
-        if (p.getPos()==choiceP.getPos()) {
-            if_.add("stmts", choiceMadeVar()+"=false");
-        }
-        if_.add("stmts", "return false");
-        return if_;
-    }
-
-    ST getVisitMethod(Predicate p, int startCol, int endCol, int arity) {
-        String name = "visit" + CodeGen.getVisitColumns(startCol, endCol, arity);
+    ST getVisitMethod(Predicate p, int startCol, int endCol, int numColumns) {
+        String name = "visit" + CodeGen.getVisitColumns(startCol, endCol, numColumns);
         Table t = getTable(p);
         Class[] argTypes = CodeGen.getArgTypes(t, startCol, endCol);
-        String sig = getVisitMethodSig(name, argTypes);
+        String sig = getVisitMethodSig(p, name, argTypes);
         ST method = visitMethodMap.get(sig);
         if (method == null) {
-            method = getNewMethodTmpl(name, "boolean");
-            if (useChoice() && needChoiceSkipCode(p, startCol, endCol)) {
-                method.add("ret", skipCodeForChoice(method, p));
-            }
+            method = getNewVisitMethodTmpl(name);
             method.add("ret", "return true");
-            ST doWhile0 ;
-            doWhile0 = tmplGroup.getInstanceOf("doWhile0");
-            method.add("stmts", doWhile0);
-            CodeGen.fillArgTypes(method, p, startCol, endCol);
+            CodeGen.addArgTypes(method, p, startCol, endCol);
             visitMethodMap.put(sig, method);
-            visitorTmpl.add("methodDecls", method);
+            ST visitor = visitorMap.get(p);
+            visitor.add("methods", method);
         }
         return method;
     }
 
+    ST getNewVisitMethodTmpl(String name) {
+        ST m = tmplGroup.getInstanceOf("visitMethod");
+        m.add("name", name);
+        return m;
+    }
     ST getNewMethodTmpl(String name, String type) {
         return getNewMethodTmpl(name, "public", type);
     }
@@ -166,23 +121,14 @@ public class VisitorCodeGen {
         return visitorTmpl.getAttribute("name") != null;
     }
     public String generate() {
-        if (isGenerated()) return visitorTmpl.render();
+        if (isGenerated()) { return visitorTmpl.render(); }
 
         visitorTmpl.add("packageStmt", "package " + visitorPackage);
         visitorTmpl.add("modifier", "public");
         visitorTmpl.add("name", visitorName);
 
-        visitorTmpl.add("extends", "extends VisitorImpl");
+        visitorTmpl.add("extends", "extends Joiner");
         visitorTmpl.add("interfaces", "Runnable");
-
-    HashSet<String> addedInterfaces = new HashSet<String>();
-        for (Predicate p:rule.getBodyP()) {
-            Table t = getTable(p);
-            if (t.visitorInterface()==null) continue;
-            if (addedInterfaces.contains(t.visitorInterface())) continue;
-            visitorTmpl.add("interfaces", t.visitorInterface());
-            addedInterfaces.add(t.visitorInterface());
-        }
 
         importTablesDeclareFields();
         generateConstructor();
@@ -192,15 +138,12 @@ public class VisitorCodeGen {
 
     private void importTablesDeclareFields() {
         for (Predicate p : rule.getAllP()) {
-            String var=null;
-            if (p.isHeadP()) var = headTableVar();
-            else var = getVarName(p);
-
+            String var = getVarName(p);
             Table t = getTable(p);
             String tableClass = t.className();
 
             visitorTmpl.add("imports", TableUtil.getTablePath(tableClass));
-            if (isTablePartitioned(t)) tableClass += "[]";
+            if (isTablePartitioned(t)) { tableClass += "[]"; }
             visitorTmpl.add("fieldDecls", tableClass + " " + var);
         }
         maybeDeclareDeltaTable();
@@ -210,21 +153,22 @@ public class VisitorCodeGen {
         visitorTmpl.add("fieldDecls", "final int " + ruleIdVar());
         visitorTmpl.add("fieldDecls", "TableInstRegistry " + registryVar());
         visitorTmpl.add("fieldDecls", "TablePartitionMap " + partitionMapVar());
-        visitorTmpl.add("fieldDecls", "LockMap " + lockMapVar());
         for (Const c:rule.getConsts()) {
             String type = MyType.javaTypeName(c);
             visitorTmpl.add("fieldDecls", "final "+type+" "+c);
         }
         declareParamVariables();
 
-        visitorTmpl.add("fieldDecls", "int " + currentPredicateVar());
-        visitorTmpl.add("fieldDecls", "int " + firstTableIdx());
-        visitorTmpl.add("fieldDecls", "int " + logCount());
+        visitorTmpl.add("fieldDecls", "int " + firstTablePartitionIdx());
 
-        //declareAggrVarsAndAlloc();
         declareRemoteTablesIfAny();
-        if (useChoice()) {
-            visitorTmpl.add("fieldDecls", "boolean " + choiceMadeVar()+"=false");
+        declareVisitorVars();
+    }
+    void declareVisitorVars() {
+        for (Predicate p:rule.getBodyP()) {
+            Table t = getTable(p);
+            String decl = "final " + t.visitorClass() + " " + visitorVar(p);
+            visitorTmpl.add("fieldDecls", decl);
         }
     }
 
@@ -259,10 +203,9 @@ public class VisitorCodeGen {
     }
 
     void declareRemoteBodyTablesIfAny() {
-        if (!isDistributed()) return;
-        for (int pos : tableSendPos()) {
-            String tableCls = tableMap.get(RemoteBodyTable.name(rule, pos))
-                    .className();
+        if (!isDistributed()) { return; }
+        for (int pos : tableTransferPos()) {
+            String tableCls = tableMap.get(RemoteBodyTable.name(rule, pos)).className();
             String decl = tableCls + "[] " + remoteTableVar(pos) + "=new "
                     + tableCls + "[" + machineNum() + "]";
             visitorTmpl.add("fieldDecls", decl);
@@ -270,8 +213,8 @@ public class VisitorCodeGen {
     }
 
     void declareRemoteHeadTableIfAny() {
-        if (!isDistributed()) return;
-        if (!hasRemoteRuleHead()) return;
+        if (!isDistributed()) { return; }
+        if (!hasRemoteRuleHead()) { return;}
 
         Table t = headT;
         String tableCls = tableMap.get(RemoteHeadTable.name(t, rule)).className();
@@ -292,22 +235,10 @@ public class VisitorCodeGen {
 
     boolean accumlDelta(Rule r) {
         if (r.inScc()) { return true; }
-        if (r.hasPipelinedRules())
+        if (r.hasPipelinedRules()) {
             return true;
-        return false;
-    }
-
-    boolean allDontCareOrConst(Object[] params) {
-        for (Object o : params) {
-            if (o instanceof Variable) {
-                Variable v = (Variable) o;
-                if (!v.dontCare)
-                    return false;
-            }
-            if (o instanceof Function)
-                Assert.not_supported();
         }
-        return true;
+        return false;
     }
 
     Table getTable(Predicate p) {
@@ -328,109 +259,52 @@ public class VisitorCodeGen {
 
         for (Predicate p : rule.getBodyP()) {
             Table t = getTable(p);
-            String var = getVarName(p);
-            String argVar = "_$"+var;
-            String tableClass = t.className();
-
-            if (isTablePartitioned(t)) tableClass+="[]";
-            code.add("args", tableClass + " " + argVar);
-            code.add("stmts", var + " = " + argVar);
+            if (t instanceof GeneratedT) {
+                String tableClass = t.className();
+                String var = getVarName(p);
+                String argVar = "_$"+var;
+                code.add("args", tableClass + " " + argVar);
+                code.add("stmts", var + " = " + argVar);
+            }
         }
 
-        String headVarType = headT.className();
-        if (isTablePartitioned(headT)) headVarType += "[]";
-
-        if (headT instanceof DeltaTable) {
-            code.add("stmts", headTableVar()+"=null/*delta head table*/");
-        } else {
-            String argVar = "$"+headTableVar();
-            code.add("args",headVarType +" "+argVar);
-            code.add("stmts", headTableVar()+"=$"+headTableVar());
-        }
         code.add("args", "SRuntime _$runtime");
-        code.add("args", "int _$firstTableIdx");
+        code.add("args", "int _$firstTablePartitionIdx");
 
         code.add("stmts", epochIdVar()+"=_$epochId");
         code.add("stmts", ruleIdVar()+"=_$ruleId");
         code.add("stmts", runtimeVar()+"=_$runtime");
         code.add("stmts", partitionMapVar() + " = _$runtime.getPartitionMap()");
-        code.add("stmts", lockMapVar() + " = _$runtime.getLockMap()");
         code.add("stmts", registryVar() + "= _$runtime.getTableRegistry()");
-        code.add("stmts", firstTableIdx() + " = _$firstTableIdx");
-        code.add("stmts", currentPredicateVar() + "=0");
-    }
+        code.add("stmts", firstTablePartitionIdx() + " = _$firstTablePartitionIdx");
 
-    boolean hasChoiceFunc() {
-        Predicate h=rule.getHead();
-        if (h.hasFunctionParam() &&
-                h.getAggrF().klass().equals(Choice.class) &&
-                h.getAggrF().getArgs().get(0) instanceof Variable) {
-            return true;
-        }
-        return false;
-    }
-    int useChoice=-1;
-    boolean useChoice() {
-        if (useChoice==0) return false;
-        if (useChoice==1) return true;
-        assert useChoice==-1;
+        for (Predicate p : rule.getAllP()) {
+            Table t = getTable(p);
+            if (t instanceof GeneratedT) { continue; }
 
-        Predicate h=rule.getHead();
-        if (hasChoiceFunc() &&
-              (firstOneWithAllResolvedButChoiceArg()!=null ||
-               hasOnlyChoiceVar(h))) {
-            useChoice=1;
-            return true;
-        }
-        useChoice=0;
-        return false;
-    }
-    Variable choiceArgVar() {
-        Predicate h=rule.getHead();
-        return (Variable)h.getAggrF().getArgs().get(0);
-    }
-    boolean hasOnlyChoiceVar(Predicate p) {
-        for (Param o:p.inputParams()) {
-            if (o instanceof Variable) {
-                Variable v=(Variable)o;
-                if (!v.equals(choiceArgVar()))
-                    return false;
+            String var = getVarName(p);
+            String tableClass = t.className();
+            if (isTablePartitioned(t)) {
+                tableClass+="[]";
             }
+            code.add("stmts", var + " = ("+tableClass+")"+registryVar()+".getTableInstArray("+t.id()+")");
         }
-        return true;
+
+        for (Predicate p:rule.getBodyP()) {
+            ST alloc = getVisitor(p);
+            alloc.add("var", visitorVar(p));
+            code.add("stmts", alloc);
+        }
     }
-    Predicate _choiceP;
-    Predicate firstOneWithAllResolvedButChoiceArg() {
-        if (_choiceP==Predicate.NIL) return null;
-        if (_choiceP!=null) return _choiceP;
-
-        List body = rule.getBody();
-        for (int i=body.size()-1; i>=0; i--) {
-            Object o = body.get(i);
-            if (o instanceof Predicate) {
-                Predicate p = (Predicate)o;
-                if (allVarsResolvedOrDontcare(p))
-                    continue;
-
-                Set<Variable> newVars = p.getVariables();
-                newVars.removeAll(resolvedVarsArray[p.getPos()]);
-                for (Variable newVar:newVars) {
-                    if (newVar.dontCare) continue;
-                    if (newVar.equals(choiceArgVar())) continue;
-                    return null;
-                }
-                _choiceP = p;
-                return p;
-            } else {
-                Expr e = (Expr)o;
-                if (e.root instanceof AssignOp) {
-                    _choiceP = Predicate.NIL;
-                    return null;
-                }
-            }
+    ST getVisitor(Predicate p) {
+        ST visitor = visitorMap.get(p);
+        if (visitor == null) {
+            visitor = tmplGroup.getInstanceOf("newVisitor");
+            Table t = getTable(p);
+            visitor.add("visitorClass", t.visitorClass());
+            visitorMap.put(p, visitor);
         }
-        assert false:"never reaches here";
-        return null;
+        return visitor;
     }
 
     void generateMethods() {
@@ -456,8 +330,9 @@ public class VisitorCodeGen {
 
     String nullifyRemoteTableMethod(Object suffix) {
         String method = "nullifyRemoteTable_";
-        if (suffix != null)
+        if (suffix != null) {
             method += suffix;
+        }
         return method;
     }
     String getRemoteTableMethod(Object suffix) {
@@ -550,7 +425,7 @@ public class VisitorCodeGen {
 
         ST forEachVisitor = tmplGroup.getInstanceOf("forEach");
         forEachDepRule.add("stmts", forEachVisitor);
-        String visitors = runtimeVar()+".getVisitorBuilder(_$pr).getNewVisitorInst(_$pr, new TableInst[]{"+deltaVar+"})";
+        String visitors = runtimeVar()+".getJoinerBuilder(_$pr).getNewJoinerInst(_$pr, new TableInst[]{"+deltaVar+"})";
         forEachVisitor.add("set", visitors);
         forEachVisitor.add("elem", "IVisitor _$v");
         forEachVisitor.add("stmts", "_$v.setWorker(getWorker())");
@@ -586,15 +461,15 @@ public class VisitorCodeGen {
 
     List<Integer> tableSendPos = null;
 
-    List<Integer> tableSendPos() {
-        if (tableSendPos == null)
-            tableSendPos = Analysis.tableSendPos(rule, tableMap);
+    List<Integer> tableTransferPos() {
+        if (tableSendPos == null) {
+            tableSendPos = Analysis.tableTransferPos(rule, tableMap);
+        }
         return tableSendPos;
     }
 
-
     void genGetRemoteBodyTable() {
-        for (int pos : tableSendPos()) {
+        for (int pos : tableTransferPos()) {
             RemoteBodyTable rt = (RemoteBodyTable)tableMap.get(RemoteBodyTable.name(rule, pos));
             String tableCls = rt.className();
 
@@ -784,34 +659,62 @@ public class VisitorCodeGen {
         visitorTmpl.add("methodDecls", getter);
     }
 
-    boolean singlePrimAggrParam() {
-        if (headP.getAggrF().getArgs().size()!=1)
-            return false;
-        Object param=headP.getAggrF().getArgs().get(0);
-        return MyType.isPrimitive(param);
+    String invokeCombinedIterate(Predicate p1, Predicate p2) {
+        String invoke = "combined_iterate(";
+        Table t1 = getTable(p1);
+        Table t2 = getTable(p2);
+        String v1 = getVarName(p1);
+        String v2 = getVarName(p2);
+        if (p1.getPos() == 0) {
+            v1 += "["+ firstTablePartitionIdx()+"]";
+            v2 += "["+ firstTablePartitionIdx()+"]";
+            invoke += concatCommaSeparated(v1, v2)+")";
+            return invoke;
+        } else {
+            ST for_ = tmplGroup.getInstanceOf("for");
+            for_.add("init", "int _$i=0");
+            for_.add("cond", "_$i<"+partitionMapVar()+".partitionNum("+t1.id()+")");
+            for_.add("inc", "_$i++");
+            v1 += "[_$i]";
+            v2 += "[_$i]";
+            invoke += concatCommaSeparated(v1, v2)+")";
+            for_.add("stmts", invoke);
+            return for_.render();
+        }
+
     }
 
     void generateRunMethod() {
         ST run = getNewMethodTmpl("run", "void");
         visitorTmpl.add("methodDecls", run);
+        run.add("stmts", "_run()");
 
-        ST doWhile0 = tmplGroup.getInstanceOf("doWhile0");
-        run.add("stmts", doWhile0);
-        ST code = doWhile0;
+        ST _run = getNewMethodTmpl("_run", "boolean");
+        visitorTmpl.add("methodDecls", _run);
+        _run.add("ret", "return true");
+
+        ST code = _run;
         for (Object o : rule.getBody()) {
             if (o instanceof Expr) {
                 code = insertExprCode(code, (Expr) o);
             } else if (o instanceof Predicate) {
                 Predicate p = (Predicate) o;
                 if (allVarsResolvedOrDontcare(p)) {
-                    code = continueIfNotContains(code, p);
+                    code = returnIfNotContains(code, p);
+                } else if (canCombinedIterate(p)) {
+                    Predicate p2 = (Predicate)rule.getBody().get(p.getPos()+1);
+                    genCombinedIterate(p, p2);
+                    code.add("stmts", invokeCombinedIterate(p, p2));
+                    iterStartP = p;
+                    break;
                 } else {
                     Table t = getTable(p);
                     String tableVar = getVarName(p);
                     if (isTablePartitioned(t)) {
                         boolean first = rule.getBody().get(0).equals(p);
-                        if (first) tableVar += "[" + firstTableIdx() + "]";
-                        else if (isResolved(p, p.first())) {
+                        if (first) {
+                            tableVar += "[" + firstTablePartitionIdx() + "]";
+                        } else if (isResolved(p, p.first())) {
                             tableVar += "[" + partitionIdxGetter(t, p.first()) + "]";
                         } else {
                             ST for_ = tmplGroup.getInstanceOf("for");
@@ -827,7 +730,7 @@ public class VisitorCodeGen {
                     insertIterateCodeInRun(code, tableVar);
                     break;
                 }
-            } else assert false:"Expecting Expr or Predicate, but got:"+o;
+            } else { assert false:"Expecting Expr or Predicate, but got:"+o; }
         }
         if (iterStartP == null) {
             if (headTableLockNeeded()) {
@@ -854,7 +757,7 @@ public class VisitorCodeGen {
             code.add("stmts", "TmpTablePool.free(worker.id(),"+remoteTableVar("head")+")");
         }
         if (hasRemoteRuleBody()) {
-            for (int pos : tableSendPos()) {
+            for (int pos : tableTransferPos()) {
                 code.add("stmts", "TmpTablePool.free(worker.id(),"+remoteTableVar(pos)+")");
             }
         }
@@ -875,7 +778,7 @@ public class VisitorCodeGen {
     }
 
     void finishSendRemoteRuleBody(ST code) {
-        for (int pos:tableSendPos()) {
+        for (int pos: tableTransferPos()) {
             ST for_ = tmplGroup.getInstanceOf("for");
             code.add("stmts", for_);
             Predicate p=(Predicate)rule.getBody().get(pos);
@@ -903,7 +806,7 @@ public class VisitorCodeGen {
 
     String remoteBodyTablePos(String table) {
         String result = "";
-        for (int pos : tableSendPos()) {
+        for (int pos : tableTransferPos()) {
             RemoteBodyTable rt = (RemoteBodyTable)tableMap.get(RemoteBodyTable.name(rule, pos));
             result += "(" + table + " instanceof " + rt.className() + ")?"
                     + pos + ":\n\t\t";
@@ -942,12 +845,11 @@ public class VisitorCodeGen {
             code.add("stmts", withlock);
             code = withlock;
         }
-        code.add("stmts", currentPredicateVar() + "=" + iterStartP.getPos());
 
         String invokeIter;
         Set<Variable> resolvedVars = resolvedVarsArray[iterStartP.getPos()];
         if (updateFromRemoteHeadT()) {
-            invokeIter = tableVar+".iterate(this)";
+            invokeIter = tableVar+".iterate("+visitorVar(rule.firstP())+")";
             code.add("stmts", invokeIter);
         } else {
             invokeIter = tableVar+invokeIterate(iterStartP, resolvedVars);
@@ -1003,7 +905,7 @@ public class VisitorCodeGen {
     }
     int getOutmostResolvedIdxCol(Predicate p) {
         Table t = getTable(p);
-        if (!t.hasNestedT())
+        if (!t.hasNesting())
             return -1;
         ColumnGroup outmostGroup = t.getColumnGroups().get(0);
         ArrayList<Column> resolvedIdxCols = getResolvedIndexCols(p);
@@ -1019,23 +921,6 @@ public class VisitorCodeGen {
         if (getResolvedIndexCols(p).size()==0)
             return false;
         return true;
-    }
-    String getIteratebySuffix(Predicate p, String trailingArgs) {
-        TIntArrayList idxbyCols = getIndexByCols(p);
-        Table t=getTable(p);
-        Object[] params = p.inputParams();
-        String iteratebySuffix = "_by";
-        for (int i=0; i<idxbyCols.size(); i++) {
-            int idxPos = idxbyCols.get(i);
-            iteratebySuffix += "_"+idxPos;
-        }
-        iteratebySuffix += "(";
-        for (int i=0; i<idxbyCols.size(); i++) {
-            int idxPos = idxbyCols.get(i);
-            iteratebySuffix += params[idxPos] +", ";
-        }
-        iteratebySuffix += "this"+trailingArgs+")";
-        return iteratebySuffix;
     }
 
     boolean isConstOrResolved(Set<Variable> resolvedVars, Object varOrConst) {
@@ -1095,7 +980,6 @@ public class VisitorCodeGen {
         Op op = ((Expr) next).root;
         CmpOp cmpOp = (CmpOp) op;
 
-        Table t = getTable(p);
         Object lhs = cmpOp.getLHS();
         Object rhs = cmpOp.getRHS();
 
@@ -1110,15 +994,12 @@ public class VisitorCodeGen {
         Op op = ((Expr) next).root;
         CmpOp cmpOp = (CmpOp) op;
 
-        Table t = getTable(p);
         Object lhs = cmpOp.getLHS();
         Object rhs = cmpOp.getRHS();
         int sortCol = idxForIteratePart(p);
         Variable v = (Variable) p.inputParams()[sortCol];
-        if (v.equals(lhs))
-            return rhs;
-        else
-            return lhs;
+        if (v.equals(lhs)) { return rhs; }
+        else { return lhs; }
     }
 
     int idxForIteratePart(Predicate p) {
@@ -1141,7 +1022,7 @@ public class VisitorCodeGen {
             assert (c != null && c.isSorted());
             return c.getAbsPos();
         }
-        Assert.impossible("VisitorCodeGen.idxForIteratePart(): Should not reach here!");
+        Assert.impossible("JoinerCodeGen.idxForIteratePart(): Should not reach here!");
         return -1;
     }
 
@@ -1223,6 +1104,98 @@ public class VisitorCodeGen {
         return false;
     }
 
+    Column getSortedColumn(Table t) {
+        for (Column c:t.getColumns()) {
+            if (c.isSorted()) {
+                return c;
+            }
+        }
+        return null;
+    }
+    Variable getSortedColumnVar(Predicate p, Table t) {
+        Column sortedCol = getSortedColumn(t);
+        if (sortedCol == null) { return null; }
+        Param param = p.inputParams()[sortedCol.getAbsPos()];
+        if (param instanceof Variable) {
+            return (Variable)param;
+        } else {
+            return null;
+        }
+    }
+    boolean canCombinedIterate(Predicate p) {
+        // returns true if p and the next predicate
+        // can be iterated together using combined iterator.
+        // Currently we require the sorted column to be the 1st column.
+        if (true) return false;
+
+        Table t1 = getTable(p);
+        Variable v1 = getSortedColumnVar(p, t1);
+        if (v1 == null) { return false; }
+        if (!t1.getColumn(0).isSorted()) {
+            return false;
+        }
+
+        int nextPos = p.getPos()+1;
+        List body = rule.getBody();
+        if (nextPos >= body.size()) { return false; }
+
+        Object next = body.get(nextPos);
+        if (!(next instanceof Predicate)) { return false; }
+
+        Predicate nextP = (Predicate)next;
+        Table t2 = getTable(nextP);
+        Variable v2 = getSortedColumnVar(nextP, t2);
+        if (v2 == null) { return false; }
+        if (!t2.getColumn(0).isSorted()) {
+            return false;
+        }
+        return v1.equals(v2);
+    }
+
+    void genCombinedIterate_arr_and_arr(Table t1, Table t2, Predicate p1, Predicate p2) {
+        TableType tt1, tt2;
+        if (t1.hasNesting()) { tt1 = TableType.ArrayNestedTable; }
+        else { tt1 = TableType.ArrayTable; }
+        if (t2.hasNesting()) { tt2 = TableType.ArrayNestedTable; }
+        else { tt2 = TableType.ArrayTable; }
+
+        ST template = getCombinedIterte(tt1, tt2);
+        template.add("name1", t1.className());
+        template.add("name2", t2.className());
+        template.add("isNested1", t1.hasNesting());
+        template.add("isNested2", t2.hasNesting());
+        for (Column c:t1.getColumns()) {
+            template.add("columns1", c);
+        }
+        for (Column c:t2.getColumns()) {
+            template.add("columns2", c);
+        }
+
+        template.add("visitor1", visitorVar(p1));
+        template.add("visitor2", visitorVar(p2));
+
+        visitorTmpl.add("methodDecls", template.render());
+    }
+
+    void genCombinedIterate_arr_and(Table t1, Predicate p1, Table t2, Predicate p2) {
+        if (t2 instanceof ArrayTable) {
+            genCombinedIterate_arr_and_arr(t1, t2, p1, p2);
+        } else { // OtherTable
+            throw new AssertionError("genCombinedIterate: unsupported types:"+t1+","+t2);
+        }
+    }
+    void genCombinedIterate(Predicate p1, Predicate p2) {
+        Table t1 = getTable(p1);
+        Table t2 = getTable(p2);
+        if (t1 instanceof ArrayTable) {
+            genCombinedIterate_arr_and(t1, p1, t2, p2);
+        } else {
+
+            throw new AssertionError("genCombinedIterate: unsupported types:"+t1+","+t2);
+        }
+
+    }
+
     void generateVisitMethods() {
         if (iterStartP == null) return;
 
@@ -1236,14 +1209,22 @@ public class VisitorCodeGen {
             if (o instanceof Predicate) {
                 Predicate p = (Predicate) o;
                 if (allVarsResolvedOrDontcare(p)) {
-                    assert (code != null);
-                    code = continueIfNotContains(code, (Predicate) o);
-                } else {
+                    code = returnIfNotContains(code, (Predicate) o);
+                } else if (canCombinedIterate(p)) {
+                    Predicate p2 = (Predicate) body.get(i+1);
+                    if (p != iterStartP) {
+                        genCombinedIterate(p, p2);
+                    }
+                    genVisitMethodFor(p, resolved[i]);
+                    i++;
+                    code = genVisitMethodFor(p2, resolved[i]);
+              } else {
                     boolean added = insertContinuationCode(code, prevp, p, resolved[i]);
                     code = genVisitMethodFor(p, resolved[i]);
                     prevp = p;
-                    if (added && iteratePart(p, resolved[i]))
+                    if (added && iteratePart(p, resolved[i])) {
                         i++;
+                    }
                 }
             } else if (o instanceof Expr) {
                 Expr e = (Expr) o;
@@ -1253,14 +1234,6 @@ public class VisitorCodeGen {
                 Assert.impossible();
         }
         insertUpdateAccumlOrPipelining(code);
-    }
-
-    void assertCaseOrIterOrNull(ST code) {
-        if (code == null)
-            return;
-        String name = code.getName();
-        Assert.true_(name.equals("withIterator") || name.equals("/case"),
-                "Unexpected template name:" + name);
     }
 
     boolean hasRemoteRuleBody() {
@@ -1324,12 +1297,15 @@ public class VisitorCodeGen {
     }
 
     boolean requireBroadcast(Predicate p) {
-        if (p instanceof PrivPredicate) return false;
-        if (isResolved(p, p.first())) return false;
-        else return true;
+        if (p instanceof PrivPredicate) { return false; }
+        if (isResolved(p, p.first())) {
+            return false;
+        } else {
+            return true;
+        }
     }
     ST genAccumlRemoteBodyTable(ST code, Predicate p) {
-        assert tableSendPos().contains(p.getPos());
+        assert tableTransferPos().contains(p.getPos());
 
         if (requireBroadcast(p)) {
             return genBroadcastAccumlRemoteBodyTable(code, p);
@@ -1386,7 +1362,7 @@ public class VisitorCodeGen {
         if (updateFromRemoteHeadT()) {
                 return "["+partitionIdxGetter(headT, headP.first())+"]";
         } else if (Analysis.updateParallelShard(rule, tableMap)) {
-                return "["+firstTableIdx()+"]";
+                return "["+ firstTablePartitionIdx()+"]";
         } else {
                 return "["+partitionIdxGetter(headT, headP.first())+"]";
         }
@@ -1436,84 +1412,29 @@ public class VisitorCodeGen {
         groupbyGetPos += ")";
         return groupbyGetPos;
     }
+    String groupbyDone(String headTable, AggrFunction f, String groupbyPosVar) {
+        String groupbyDone = headTable + ".groupby_done(";
+        for (int i = 0; i < f.getIdx(); i++) {
+            Object p = headP.inputParams()[i];
+            groupbyDone += p;
+            groupbyDone += ", ";
+        }
+        groupbyDone += groupbyPosVar+")";
+        return groupbyDone;
+    }
 
+    String ifThen(String cond, String then) {
+         return "if" + cond + "{" + then + ";} ";
+    }
     String ifThenElse(String cond, String then, String _else) {
         return "if" + cond + "{" + then + ";} "+
                 "else {"+_else+";}";
     }
-    void genAggrCode(ST code, String headTable, ST ifUpdated) {
+    void genAggrCode(ST code, String headTableVar, ST ifUpdated) {
         AggrFunction f = headP.getAggrF();
 
-        String groupbyGetPos = groupbyGetPos(headTable, f);
-        code.add("stmts", "long _$groupbyPos = "+groupbyGetPos);
-
-        ST ifElse = tmplGroup.getInstanceOf("ifElse");
-        code.add("stmts", ifElse);
-        ifElse.add("cond", "_$groupbyPos < 0");
-        ifElse.add("stmts", assignVars(Arrays.asList(new Object[]{aggrVar()}), f.getArgs()));
-        ifElse.add("stmts", insertHeadParamsTo(headTable, "groupby_"));
-        ifElse.add("stmts", isUpdatedVar()+"=true");
-
-        String groupbyRetType = MyType.javaTypeName(f.getAggrColumnType());
-        ifElse.add("elseStmts", groupbyRetType+" _$oldAns="+headTable+".groupby_groupby(_$groupbyPos)");
-
-        ifElse.add("elseStmts", aggrVar()+"="+f.codegen("_$oldAns").render());
-
-        String updated;
-        if (f.getAggrColumnType().isPrimitive()) {
-            updated = "(" + aggrVar() + "!= _$oldAns)";
-        } else {
-            updated = "(!" + aggrVar() + ".equals(_$oldAns))";
-        }
-        ifElse.add("elseStmts", ifThenElse(updated,
-                                    isUpdatedVar()+"="+updateHeadParamsTo(headTable, "groupby_", "_$groupbyPos"),
-                                    headTable+".groupby_done(_$groupbyPos)"));
-    }
-
-    void genAggrUpdateCode(ST code, String headTable) {
-        AggrFunction f = headP.getAggrF();
-        boolean aggrPrimType= MyType.javaType(f.getArgs().get(0)).isPrimitive();
-        String groupbyRetType = MyType.javaTypeName(f.getAggrColumnType());
-        code.add("stmts", groupbyRetType + " _$oldAns");
-        String groupby = invokeGroupby(headTable, headP);
-        code.add("stmts", "_$oldAns="+groupby);
-
-        String eq = aggrPrimType?"==":".equals";
-        String contIfOldAns="if("+aggrVar()+eq+"(_$oldAns)) continue";
-
-        if (f.isSimpleAggr()) {
-            code.add("stmts", aggrVar()+"="+f.codegen("_$oldAns").render());
-            boolean hasNestingAfterAggr=headT.numColumns()>f.getIdx()+1 &&
-                                            headT.nestingBeginsAfter(f.getIdx()+1);
-            if (hasNestingAfterAggr) {
-                Object aggrParam = f.getArgs().get(0);
-                code.add("stmts", "if(!("+aggrVar()+eq+"("+aggrParam+"))) continue;");
-            } else {
-                code.add("stmts", contIfOldAns);
-            }
-            code.add("stmts", isUpdatedVar()+"="+updateHeadParamsTo(headTable));
-        } else {
-            code.add("stmts", aggrVar()+"=_$oldAns");
-            code.add("stmts", isUpdatedVar()+"="+f.codegen("_$oldAns").render());
-        }
-    }
-
-    String invokeGroupby(String tableVar, Predicate p, Object... rest) {
-        AggrFunction f = p.getAggrF();
-
-        String invoke = tableVar + ".groupby(";
-        Object params[] = p.inputParams();
-        for (int i = 0; i < f.getIdx(); i++) {
-            if (i != 0)
-                invoke += ", ";
-            invoke += params[i];
-        }
-        if (rest.length == 1)
-            invoke += ", " + rest[0];
-        else Assert.true_(rest.length == 0);
-
-        invoke += ")";
-        return invoke;
+        String gbupdate = groupbyUpdate(headTableVar, f);
+        code.add("stmts", isUpdatedVar()+"=" + gbupdate);
     }
 
     String assignVars(List lhs, List rhs) {
@@ -1525,25 +1446,17 @@ public class VisitorCodeGen {
         return assign;
     }
 
-    String updateToHead(String table) {
-        String insert = table + ".update(";
-        boolean first = true;
-        Object[] params = headP.outputParams();
-        for (Object o : params) {
-            if (!first) insert += ", ";
-            insert += o;
-            first = false;
-        }
-        insert += ")";
-        return insert;
-    }
-
     String insertHeadParamsTo(String tablePartition) {
         return insertHeadParamsTo(tablePartition, "");
     }
     String insertHeadParamsTo(String tablePartition, String prefix) {
         String insert = tablePartition + "."+prefix+"insert";
         insert += makeHeadParamsArgs();
+        return insert;
+    }
+    String groupbyUpdate(String tablePartition, AggrFunction func) {
+        String insert = tablePartition + "."+"groupby_update";
+        insert += makeHeadParamsArgs(func.className()+".get()");
         return insert;
     }
 
@@ -1570,7 +1483,10 @@ public class VisitorCodeGen {
         for (Object o:params) {
             if (!first) args += ", ";
             if (o instanceof Function) {
-                args += aggrVar();
+                Function f = (Function)o;
+                for (Param a:f.getArgs()) {
+                    args += a;
+                }
             } else { args += o; }
             first = false;
         }
@@ -1646,19 +1562,8 @@ public class VisitorCodeGen {
         msg += "+\"), \""+"+_$e";
         msg += "+\"\"";
         tryCatch.add("catchStmts", "VisitorImpl.L.error(ExceptionUtils.getStackTrace(_$e))");
-        if (false) { /* XXX error discovery == true */
-            ST if_ = tmplGroup.getInstanceOf("if");
-            tryCatch.add("catchStmts", if_);
-            if_.add("cond", logCount()+"<10");
-            if_.add("stmts", logCount()+"++");
-            String log = "UserLog.warn("+msg+")";
-            if_.add("stmts", log);
-
-            if_.add("stmts", "_$e.printStackTrace()");
-        } else {
-            _throw="throw new SociaLiteException("+msg+"+\", \"+_$e)";
-            tryCatch.add("catchStmts", _throw);
-        }
+        _throw="throw new SociaLiteException("+msg+"+\", \"+_$e)";
+        tryCatch.add("catchStmts", _throw);
         return tryCatch;
     }
     ST insertExprCode(ST code, Expr expr) {
@@ -1675,7 +1580,7 @@ public class VisitorCodeGen {
         } else {
             ST if_  = tmplGroup.getInstanceOf("if");
             if_.add("cond", "!" + expr.codegen().render());
-            if_.add("stmts", "continue");
+            if_.add("stmts", "return true");
             code.add("stmts", if_);
         }
         return code;
@@ -1721,28 +1626,44 @@ public class VisitorCodeGen {
         return true;
     }
 
+    String concatCommaSeparated(Object ...args) {
+        String result = "";
+        for (int i=0; i<args.length; i++) {
+            result += args[i];
+            if (i!=args.length-1) { result += ","; }
+        }
+        return result;
+    }
+
     String invokeIterate(Predicate p, Set<Variable> resolvedVars) {
         String invokeIterate = null;
+        String visitor = visitorVar(p);
         if (iteratePart(p, resolvedVars)) {
-            int idx = idxForIteratePart(p);
+            int sortedCol = idxForIteratePart(p);
             CmpOp.CmpType cmpType = cmpTypeForIteratePart(p);
-            boolean inclusive = cmpType.inclusive();
             Object cmpVal = cmpValForIteratePart(p);
+
+            String range = "new ColumnConstraints().addRange("+sortedCol+",";
             if (cmpType.greaterThan()) {
-                invokeIterate = ".iterate_part_from_"+idx;
+                range += cmpVal + ", null)";
             } else {
-                invokeIterate = ".iterate_part_to_"+idx;
+                range += "null, "+cmpVal + ")";
             }
-            if (getNestingLevel(p, idx) >= 1 && isOutmostIdxColResolved(p)) {
-                int idxCol = getOutmostResolvedIdxCol(p);
-                Object[] params = p.inputParams();
-                invokeIterate += "_by_"+idxCol+"("+params[idxCol]+",";
-            } else { invokeIterate += "("; }
-            invokeIterate += cmpVal+","+inclusive+", this)";
+            invokeIterate = ".iterate_by("+range+", "+visitor+")";
         } else if (isIndexColResolved(p)) {
-            invokeIterate = ".iterate"+getIteratebySuffix(p, "");
+            String by = "new ColumnConstraints()";
+            Table t = getTable(p);
+            Object[] params = p.inputParams();
+            for (int i=0; i<params.length; i++) {
+                if (isConstOrResolved(resolvedVars, params[i])) {
+                    if (t.getColumn(i).isIndexed() || t.getColumn(i).isSorted()) {
+                        by += ".add("+i+", "+params[i]+")";
+                    }
+                }
+            }
+            invokeIterate = ".iterate_by("+by+","+visitor+")";
         } else {
-            invokeIterate = ".iterate(this)";
+            invokeIterate = ".iterate("+visitor+")";
         }
         return invokeIterate;
     }
@@ -1756,11 +1677,10 @@ public class VisitorCodeGen {
         }
         ST origCode=code;
 
-        if (hasRemoteRuleBody() && tableSendPos().contains(p.getPos())) {
+        if (hasRemoteRuleBody() && tableTransferPos().contains(p.getPos())) {
             ST ifLocal = genAccumlRemoteBodyTable(code, p);
             code = ifLocal;
         }
-        code.add("stmts", currentPredicateVar() + "=" + p.getPos());
 
         Table t = getTable(p);
         String invokeIterate = invokeIterate(p, resolved);
@@ -1783,7 +1703,6 @@ public class VisitorCodeGen {
         }
         code.add("stmts", tableVar+invokeIterate);
 
-        origCode.add("stmts", currentPredicateVar() + "=" + prevp.getPos());
         return true;
     }
 
@@ -1879,13 +1798,8 @@ public class VisitorCodeGen {
         // p.isNegated() is used to generate negated filter
         return ifNotContains(code, p, "return true", dontCares);
     }
-    ST continueIfNotContains(ST code, Predicate p) {
-        boolean[] dontCares = getDontcareFlags(p);
-        // p.isNegated() is used to generate negated filter
-        return ifNotContains(code, p, "continue", dontCares);
-    }
     ST ifNotContains(ST code, Predicate p, String actionStmt, boolean[] dontcares) {
-        if (hasRemoteRuleBody() && tableSendPos().contains(p.getPos())) {
+        if (hasRemoteRuleBody() && tableTransferPos().contains(p.getPos())) {
             ST ifLocal = genAccumlRemoteBodyTable(code, p);
             code = ifLocal;
         }
@@ -1927,8 +1841,8 @@ public class VisitorCodeGen {
                 condition = var+contains;
                 if2_.add("cond", condition);
                 if2_.add("stmts", fallthrou+"=false; break");
-                if (p.isNegated()) condition = "!"+fallthrou;
-                else condition = fallthrou;
+                if (p.isNegated()) { condition = "!"+fallthrou; }
+                else { condition = fallthrou; }
             } else {
                 var += "["+ partitionIdxGetter(t, p.first())+"]";
                 if (p.isNegated()) condition = var+contains;
@@ -1952,32 +1866,27 @@ public class VisitorCodeGen {
         Table t = getTable(p);
         List<ColumnGroup> columnGroups = t.getColumnGroups();
         ST m = null;
-        int arity = t.numColumns();
+        int numColumns = t.numColumns();
         for (ColumnGroup g : columnGroups) {
             int startCol = g.startIdx();
             int endCol = g.endIdx();
 
-            m = getVisitMethod(p, startCol, endCol, arity);
-            if (allDontCaresWithin(p.inputParams(), g.startIdx(), arity-1)) {
-                // stop iteration after the visit method m.
-                ST if_ = tmplGroup.getInstanceOf("if");
-                if_.add("cond", currentPredicateVar() + "==" + p.getPos());
-                if_.add("stmts", "return false");
-                CodeGen.findCodeBlockFor(m, p).add("endstmt", if_);
+            m = getVisitMethod(p, startCol, endCol, numColumns);
+            if (allDontCaresWithin(p.inputParams(), g.startIdx(), numColumns-1)) {
+                m.add("ret", "return false");// stop iteration after the visit method m.
                 break;
             } else {
                 CodeGen.fillVisitMethodBody(m, p, startCol, endCol, resolved, idxbyCols);
             }
         }
-        ST code = CodeGen.findCodeBlockFor(m, p);
-        return code;
+        return m;
     }
 
-    boolean isResolved(Predicate p, Object param) {
+    boolean isResolved(Predicate p, Param param) {
         Set<Variable> resolved = resolvedVarsArray[p.getPos()];
-        if (param instanceof Variable)
+        if (param instanceof Variable) {
             return resolved.contains(param);
-        Assert.not_true(param instanceof Function);
+        }
         return true;
     }
 
@@ -2028,19 +1937,21 @@ public class VisitorCodeGen {
         return var;
     }
 
-    String currentPredicateVar() { return CodeGen.currentPredicateVar(); }
-    String getVarName(Predicate p) { return "$"+getVarName(p.name()) + p.getPos(); }
+    String visitorVar(Predicate p) { return "$v"+p.getPos(); }
+    String getVarName(Predicate p) {
+        if (p.isHeadP()) {
+            return headTableVar();
+        } else {
+            return "$"+getVarName(p.name()) + p.getPos();
+        }
+    }
     String headTableVar() { return "$headTable"; }
-    String logCount() { return "$userlogCount"; }
-    String firstTableIdx() { return "$firstTableIdx"; }
+    String firstTablePartitionIdx() { return "$firstTablePartitionIdx"; }
     String registryVar() { return "$registry"; }
-    String lockMapVar() { return "$lockMap"; }
     String partitionMapVar() { return "$partitionMap"; }
     String runtimeVar() { return "$runtime"; }
     String ruleIdVar() { return "$ruleId"; }
     String epochIdVar() { return "$epochId"; }
-    String choiceMadeVar() { return "$choiceMade"; }
     String isUpdatedVar() { return "$isUpdated"; }
     String aggrVar() { return "$aggrVar"; }
-
 }

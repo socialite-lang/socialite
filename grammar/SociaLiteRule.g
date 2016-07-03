@@ -214,6 +214,15 @@ col_decls returns [List<ColumnDecl> result]
 	;  
 col_decl returns [ColumnDecl result]
 	: ^(COL_DECL type ID col_opt?) {
+        if ($col_opt.result instanceof ColRange ||
+              $col_opt.result instanceof ColBit ||
+              $col_opt.result instanceof ColIter) {
+            if ($type.result != int.class && $type.result != long.class) {
+                throw new ParseException(getParser(), $ID.line-1, $ID.pos, 
+                            "Column "+$ID.text+" has unsupported option.");	 
+            }
+        }
+
 	$result = new ColumnDecl($type.result, $ID.text, $col_opt.result);
 	}
 	;
@@ -225,7 +234,7 @@ col_opt returns [ColOpt result]
 	 $result = new ColIter();
 	}
 	| ^(BIT i1=INT) {
-	    $result = new ColBitNum(Integer.parseInt($i1.text));
+	    $result = new ColBit(Integer.parseInt($i1.text));
 	}
 	;
 type returns [Class result]

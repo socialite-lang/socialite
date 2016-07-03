@@ -123,5 +123,6 @@
     <orderEntry type="library" name="annotations-5.1" level="project" />
     <orderEntry type="library" name="serialize" level="project" />
     <orderEntry type="library" name="jython-standalone-2.7.1b2" level="project" />
+    <orderEntry type="library" name="RoaringBitmap-0.5.18" level="project" />
   </component>
 </module>

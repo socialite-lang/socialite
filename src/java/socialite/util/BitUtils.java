@@ -28,4 +28,53 @@ public class BitUtils {
         }
         return pos;
     }
+
+    public static int getIntBitMask(int from, int to) {
+        int mask = 0;
+        to = Math.min(to, 32);
+        for (int i = from; i < to; i++) {
+            mask = mask | (1 << i);
+        }
+        return mask;
+    }
+
+    public static long getLongBitMask(int from, int to) {
+        long mask = 0;
+        to = Math.min(to, 64);
+        for (int i = from; i < to; i++) {
+            mask = mask | (1L << i);
+        }
+        return mask;
+    }
+
+    public static void main(String[] args) {
+        /*
+        System.out.println(Integer.toBinaryString(getIntBitMask(0, 1)));
+        System.out.println(Integer.toBinaryString(getIntBitMask(0, 2)));
+        System.out.println(Integer.toBinaryString(getIntBitMask(0, 3)));
+
+        System.out.println();
+
+        System.out.println(Integer.toBinaryString(getIntBitMask(1, 3)));
+        System.out.println(Integer.toBinaryString(getIntBitMask(1, 5)));
+        System.out.println(Integer.toBinaryString(getIntBitMask(1, 6)));
+
+        System.out.println();
+
+        System.out.println(Integer.toBinaryString(getIntBitMask(4, 6)));
+        System.out.println(Integer.toBinaryString(getIntBitMask(4, 7)));
+        System.out.println(Integer.toBinaryString(getIntBitMask(4, 15)));
+
+        System.out.println();
+        */
+
+        System.out.println(Long.toBinaryString(getLongBitMask(1, 2)));
+        System.out.println();
+
+        System.out.println(Long.toBinaryString(getLongBitMask(5, 10)));
+
+
+        System.out.println(Long.toBinaryString(getLongBitMask(5, 64)));
+        return;
+    }
 }

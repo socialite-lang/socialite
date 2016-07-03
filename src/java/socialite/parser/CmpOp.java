@@ -63,7 +63,6 @@ public class CmpOp extends Op {
 		arg2=_arg2;
 		assert !(arg1 instanceof Function);
 		assert !(arg2 instanceof Function);
-
 	}
 	
 	public ST codegen() {

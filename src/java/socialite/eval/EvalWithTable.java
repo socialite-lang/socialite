@@ -9,10 +9,10 @@ import java.io.ObjectOutput;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import socialite.resource.VisitorBuilder;
+import socialite.resource.JoinerBuilder;
 import socialite.tables.TmpTableInst;
 import socialite.tables.TableInst;
-import socialite.visitors.IVisitor;
+import socialite.visitors.Joiner;
 
 public class EvalWithTable extends EvalCommand implements Externalizable {
 	static final long serialVersionUID = 1;
@@ -34,11 +34,9 @@ public class EvalWithTable extends EvalCommand implements Externalizable {
 		int id=table.id();
 		return "Eval w/Table rule["+ruleId+"], table["+id+"]";
 	}	
-	public IVisitor[] newInst(VisitorBuilder builder) {
-		IVisitor[] visitors;
-		visitors=builder.getNewVisitorInst(ruleId, new TableInst[]{table});
-		return visitors;
-	}	
+	public Joiner[] newInst(JoinerBuilder builder) {
+		return builder.getNewJoinerInst(ruleId, new TableInst[]{table});
+	}
 
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {

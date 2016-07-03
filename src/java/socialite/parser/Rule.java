@@ -7,7 +7,6 @@ import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -16,15 +15,12 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import com.sun.javafx.scene.control.skin.VirtualFlow;
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
 import socialite.codegen.Epoch;
 import socialite.parser.antlr.RuleDecl;
 import socialite.util.AnalysisException;
 import socialite.util.Assert;
 import socialite.util.IdFactory;
 import socialite.util.InternalException;
-import gnu.trove.set.hash.TIntHashSet;
 
 public class Rule implements Externalizable {
     private static final long serialVersionUID = 1;
@@ -70,9 +66,6 @@ public class Rule implements Externalizable {
     public int getEpochId() { return epochId; }
     public void setInScc() { inScc=true; }
     public boolean inScc() { return inScc; }
-
-    public void setLeftRec() { isLeftRec=true; }
-    public boolean isLeftRec() { return isLeftRec; }
 
     public boolean isSimpleUpdate() { return ruleDecl.isSimpleUpdate(); }
 
@@ -296,17 +289,11 @@ public class Rule implements Externalizable {
     }
 
     public List<Predicate> getBodyP() {
-        List<Predicate> preds = new ArrayList<Predicate>();
-        for (Object o:ruleDecl.body){
-            if (o instanceof Predicate) {
-                preds.add((Predicate)o);
-            }
-        }
-        return preds;
+        return ruleDecl.getBodyP();
     }
 
     public List<Predicate> getAllP() {
-        List<Predicate> list = getBodyP();
+        List<Predicate> list = new ArrayList<>(getBodyP());
         list.add(getHead());
         return list;
     }
@@ -350,24 +337,7 @@ public class Rule implements Externalizable {
         sig += ".";
         return sig;
     }
-    /*
-    public String descr() {
-        String descr = ruleDecl.toString() + " <rule-id:"+ id() + ">";
-        if (isLeftRecOpt) descr += ", linearly-recursive";
-        if (inScc) descr += ", in-SCC";
 
-        descr += "\n\t";
-        descr += "depends on ";
-        for (Rule r:deps) {
-            descr += r.name() + " ,";
-        }
-        descr += "\n\t";
-        descr += "used by ";
-        for (Rule r:usedBy) {
-            descr += r.name() + " ,";
-        }
-        return descr;
-    }*/
     @Override
     public void readExternal(ObjectInput in) throws IOException,
             ClassNotFoundException {

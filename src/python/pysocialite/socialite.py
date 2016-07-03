@@ -2,7 +2,7 @@
 __doc__ = """
 """
 
-__all__ = ["decl", "run", "query"]
+__all__ = ["decl", "run", "query", "clear", "drop"]
 
 def _init():
     from callbackServer import getCallbackPort
@@ -21,20 +21,27 @@ def _init():
     import os
 
     def connect():
-        try:
-            port = int(os.environ["SocialiteStandalonePort"])
-            transport = TSocket.TSocket('localhost', port)
-            transport = TTransport.TFramedTransport(transport)
-            transport.open()
-            protocol = TCompactProtocol.TCompactProtocol(transport)
-            muxproto = TMultiplexedProtocol.TMultiplexedProtocol(protocol, "QueryService")
-            queryClient = QueryService.Client(muxproto)
-
-            return queryClient
-
-        except Thrift.TException as tx:
-            print "Exception while connecting to SociaLite SingleNodeServer"
-            print(('%s' % (tx.message)))
+        tryCnt = 0
+        while True:
+            try:
+                port = int(os.environ["SocialiteStandalonePort"])
+                transport = TSocket.TSocket('localhost', port)
+                transport = TTransport.TFramedTransport(transport)
+                transport.open()
+                protocol = TCompactProtocol.TCompactProtocol(transport)
+                muxproto = TMultiplexedProtocol.TMultiplexedProtocol(protocol, "QueryService")
+                queryClient = QueryService.Client(muxproto)
+                return queryClient
+            except Thrift.TException as tx:
+                tryCnt += 1
+                if tryCnt <= 30:
+                    import time
+                    time.sleep(0.02)
+                else:
+                    print "Exception while connecting to SociaLite SingleNodeServer"
+                    print(('%s' % (tx.message)))
+                    import sys
+                    sys.exit()
 
     class Socialite:
         def __init__(self, queryCli):
@@ -65,6 +72,42 @@ def _init():
                 raise Exception(qe.message)
             return translate(ttuple)
 
+        def clear(self, table):
+            try:
+                self.queryClient.clear(table)
+            except TQueryError as qe:
+                raise Exception(qe.message)
+
+        def drop(self, table):
+            try:
+                self.queryClient.drop(table)
+            except TQueryError as qe:
+                raise Exception(qe.message)
+
+        def getEnumId(self, kind, key):
+            try:
+                return self.queryClient.getEnumId(kind, key)
+            except TQueryError as qe:
+                raise Exception(qe.message)
+
+        def getEnumKey(self, kind, i):
+            try:
+                return self.queryClient.getEnumKey(kind, i)
+            except TQueryError as qe:
+                raise Exception(qe.message)
+
+        def getEnumKeyList(self, kind):
+            try:
+                return self.queryClient.getEnumKeyList(kind)
+            except TQueryError as qe:
+                raise Exception(qe.message)
+
+        def gc(self):
+            try:
+                return self.queryClient.gc()
+            except TQueryError as qe:
+                raise Exception(qe.message)
+
     queryClient = connect()
     socialite = Socialite(queryClient)
     return socialite
@@ -84,7 +127,7 @@ class DelayedQuery:
         from Queue import Queue
         from callbackServer import registerQueryQueue
 
-        self.queue = Queue(maxsize=1024)
+        self.queue = Queue()
         registerQueryQueue(self.queryid, self.queue)
         socialite.runQuery(self.query, self.queryid)
         return self
@@ -123,8 +166,23 @@ def query(query):
     query = "?-"+query+"."
     return DelayedQuery(query, filename, line)
 
+def clear(table):
+    socialite.clear(table)
 
+def drop(table):
+    socialite.drop(table)
 
+def getEnumId(kind, i):
+    return socialite.getEnumId(kind, i)
+
+def getEnumKey(kind, i):
+    return socialite.getEnumKey(kind, i)
+
+def getEnumKeyList(kind):
+    return socialite.getEnumKeyList(kind)
+
+def gc():
+    socialite.gc()
 """
 @internal
 def cwd(): return engine.cwd()

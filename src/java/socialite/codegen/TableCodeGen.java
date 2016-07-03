@@ -1,49 +1,22 @@
 package socialite.codegen;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
-import socialite.parser.Column;
-import socialite.parser.DeltaTable;
-import socialite.parser.FixedSizeTable;
-import socialite.parser.PrivateTable;
-import socialite.parser.RemoteBodyTable;
-import socialite.parser.RemoteHeadTable;
-import socialite.parser.Table;
+import socialite.parser.*;
 import socialite.parser.antlr.ColumnGroup;
-import socialite.resource.SRuntime;
 import socialite.tables.TableUtil;
 import socialite.util.Assert;
 import socialite.util.InternalException;
 import socialite.util.MySTGroupFile;
-import socialite.util.SociaLiteException;
-import socialite.util.concurrent.AtomicByteArray;
-import socialite.util.concurrent.NonAtomicByteArray;
-import socialite.util.concurrent.NonAtomicReferenceArray;
+import socialite.parser.TableType;
 
 public class TableCodeGen {
     static String tableGroupFile = "Table.stg";
     static STGroup tmplGroup =
         new MySTGroupFile(TableCodeGen.class.getResource(tableGroupFile),"UTF-8", '<', '>');
-
-    enum TableType {
-        ArrayTable(true, false),
-        DynamicTable(false, false),
-        ArrayNestedTable(true, true),
-        DynamicNestedTable(false, true);
-
-        final boolean isArrayTable;
-        final boolean hasNestedTable;
-        TableType(boolean _isArrayTable, boolean _hasNestedTable) {
-            isArrayTable = _isArrayTable;
-            hasNestedTable = _hasNestedTable;
-        }
-        public boolean isArrayTable() { return isArrayTable; }
-        public boolean hasNestedTable() { return hasNestedTable; }
-    }
 
     ST tableTmpl;
     List<ST> tableTmplList;
@@ -54,7 +27,7 @@ public class TableCodeGen {
 
     String tableName() { return TableUtil.getTablePath(table.className());}
 
-    boolean notNested() { return !table.hasNestedT(); }
+    boolean notNested() { return !table.hasNesting(); }
     public String generate() {
         String src=null;
 
@@ -66,7 +39,7 @@ public class TableCodeGen {
             return genRemoteBodyT(rt);
         }
 
-        if (table.hasNestedT()) {
+        if (table.hasNesting()) {
             src = genNestedTable();
         } else {
             if (table.isArrayTable()) src = genArrayTableSimple();
@@ -86,7 +59,7 @@ public class TableCodeGen {
         for (Column c:table.getColumns()) {
             tableTmpl.add("columns", c);
         }
-        tableTmpl.add("visitorClass", visitorClass());
+        tableTmpl.add("visitorClass", CodeGen.visitorClass(table));
         return tableTmpl.render();
     }
     String genRemoteBodyT(RemoteBodyTable rt) {
@@ -107,8 +80,50 @@ public class TableCodeGen {
         if (nestDepth > 4) nestDepth = 4;
         tableTmpl.add("nest", nestDepth);
 
-        tableTmpl.add("visitorClass", visitorClass());
+        tableTmpl.add("visitorClass", CodeGen.visitorClass(table));
         return tableTmpl.render();
+    }
+
+    PackedColumn createPackedColumn(Class type, int pos) {
+        return new PackedColumn(type, pos);
+    }
+    PackedColumn createPackedColumn(Column c, int pos) {
+        PackedColumn pc = new PackedColumn(c, pos);
+        return pc;
+    }
+    List<PackedColumn> createPackedColumns(ColumnGroup colGroup) {
+        List<PackedColumn> packedCols = new ArrayList<>();
+        PackedColumn pcol = null;
+        int nbits = 0;
+        for (Column c: colGroup.columns()) {
+            if (c.hasNumBits()) {
+                if (pcol == null) {
+                    pcol = createPackedColumn(int.class, packedCols.size());
+                    packedCols.add(pcol);
+                }
+                nbits += c.getNumBits();
+                if (nbits > 32) {
+                    nbits = c.getNumBits();
+                    pcol = createPackedColumn(int.class, packedCols.size());
+                    packedCols.add(pcol);
+                }
+                pcol.addColumn(c);
+            } else {
+                nbits = 0;
+                packedCols.add(createPackedColumn(c, packedCols.size()));
+            }
+        }
+        return packedCols;
+    }
+
+    void maybeAddPackedColumns(ST tmpl, ColumnGroup group) {
+        List<PackedColumn> packedColumns = null;
+        if (group.hasBitPackedColumn()) {
+            packedColumns = createPackedColumns(group);
+            for (PackedColumn pcol:packedColumns) {
+                tableTmpl.add("pcolumns", pcol);
+            }
+        }
     }
 
     String genArrayTableSimple() {
@@ -122,40 +137,29 @@ public class TableCodeGen {
         List<ColumnGroup> colGroups = table.getColumnGroups();
         ColumnGroup group = colGroups.get(0);
 
-        if (table.groupbyColNum()>0)
+        if (table.groupbyColNum()>0) {
             tableTmpl.add("gbAggrColumn", table.getColumn(table.groupbyColNum()));
+        }
+        maybeAddPackedColumns(tableTmpl, group);
         for (Column c:group.columns()) {
             if (c.isIter()) continue;
 
             tableTmpl.add("columns", c);
-            if (c.position() < table.groupbyColNum())
+            if (c.position() < table.groupbyColNum()) {
                 tableTmpl.add("gbColumns", c);
-            if (c.isIndexed() && !c.isArrayIndex())
+            }
+            if (c.isIndexed() && !c.isArrayIndex()) {
                 tableTmpl.add("idxCols", c);
+            }
         }
+        tableTmpl.add("visitorClass", CodeGen.visitorClass(table));
+
         tableTmpl.add("base", table.arrayBeginIndex());
         tableTmpl.add("size", table.arrayTableSize());
-        
-        tableTmpl.add("visitorClass", visitorClass());
         return tableTmpl.render();
     }
 
-    String visitorClass() {
-        String visitorClass = "VisitorImpl";
-        if (table.visitorInterface()!=null)
-            visitorClass = table.visitorInterface();
-        return visitorClass;
-    }
-
-    String getColumnType(Class<?> type) {
-        return type.getSimpleName();
-    }
-
     boolean isDelta() { return table instanceof DeltaTable; }
-    boolean isRemoteHT() { return table instanceof RemoteHeadTable; }
-
-    boolean isPriv() { return table instanceof PrivateTable; }
-    boolean isDeltaOrPriv() { return isDelta() || isPriv(); }
 
     ST getTableTemplate(TableType type) {
         switch (type) {
@@ -172,26 +176,6 @@ public class TableCodeGen {
                 return null;
         }
     }
-
-    @Deprecated
-    Map<ColumnGroup, ST> columnGroupToTableST = new HashMap<ColumnGroup, ST>();
-    @Deprecated
-    ST OLD_getTableTemplate(ColumnGroup g, boolean hasNested) {
-        if (columnGroupToTableST.containsKey(g) )
-            return columnGroupToTableST.get(g);
-        ST st=null;
-        if (hasNested) {
-            if (g.first().hasRange()) st = tmplGroup.getInstanceOf("arrayNestedTable");
-            else st = tmplGroup.getInstanceOf("dynamicNestedTable");
-        } else {
-            if (g.first().hasRange()) st = tmplGroup.getInstanceOf("arrayTable");
-            else  st = tmplGroup.getInstanceOf("dynamicTable");
-        }
-        ST old=columnGroupToTableST.put(g, st);
-        assert old==null;
-        return st;
-    }
-
 
     TableType getTableType(ColumnGroup g, boolean hasNested) {
         if (hasNested) {
@@ -220,16 +204,12 @@ public class TableCodeGen {
             if (i>0) tmpl.add("isNested", true);
 
             ColumnGroup group=table.getColumnGroups().get(i);
+            maybeAddPackedColumns(tableTmpl, group);
             for (Column c:group.columns()) {
                 if (c.isIter()) continue;
                 tmpl.add("columns", c);
                 if (c.isIndexed() && !c.isArrayIndex()) { tmpl.add("idxCols", c); }
-                if (c.isSorted()) { tmpl.add("sortedCol", c); }
-            }
-            if (tableType.isArrayTable()) {
-                Column first = group.first();
-                tmpl.add("base", first.getRange()[0]);
-                tmpl.add("size", first.getRange()[1]-first.getRange()[0]+1);
+                if (!c.isArrayIndex() && c.isSorted()) { tmpl.add("sortedCol", c); }
             }
 
             if (hasNested) {
@@ -245,11 +225,19 @@ public class TableCodeGen {
                     }
                 }
             }
-            tmpl.add("visitorClass", visitorClass());
+            tmpl.add("visitorClass", CodeGen.visitorClass(table));
+            if (tableType.isArrayTable()) {
+                tmpl.add("base", table.arrayBeginIndex());
+                tmpl.add("size", table.arrayTableSize());
+            }
             if (i==0) tableTmpl = tmpl;
             else tableTmpl.add("classes", tmpl);
             tableTmplList.add(tmpl);
         }
+        /*if (table.isArrayTable()) {
+            tableTmpl.add("base", table.arrayBeginIndex());
+            tableTmpl.add("size", table.arrayTableSize());
+        }*/
         addGroupbyCode();
         return tableTmpl.render();
     }
@@ -301,8 +289,16 @@ public class TableCodeGen {
         List<ColumnGroup> colGroups = table.getColumnGroups();
         assert colGroups.size()==1;
         ColumnGroup group = colGroups.get(0);
-        if (table.groupbyColNum()>0)
+        if (table.groupbyColNum()>0) {
             tableTmpl.add("gbAggrColumn", table.getColumn(table.groupbyColNum()));
+        }
+        List<PackedColumn> packedColumns = null;
+        if (group.hasBitPackedColumn()) {
+            packedColumns = createPackedColumns(group);
+            for (PackedColumn pcol:packedColumns) {
+                tableTmpl.add("pcolumns", pcol);
+            }
+        }
         for (Column c:group.columns()) {
             if (c.isIter()) continue;
             tableTmpl.add("columns", c);
@@ -311,7 +307,7 @@ public class TableCodeGen {
             if (c.isSorted()) { tableTmpl.add("sortedCol", c); }
         }
 
-        tableTmpl.add("visitorClass", visitorClass());
+        tableTmpl.add("visitorClass", CodeGen.visitorClass(table));
         return tableTmpl.render();
     }
 

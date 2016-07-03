@@ -12,6 +12,8 @@ public class ColBit extends ColOpt {
     }
     public ColOpt clone() { return new ColBit(nbits); }
 
+    public int getNumBits() { return nbits; }
+
     public int hashCode() { return nbits; }
     public boolean equals(Object o) {
         if (!(o instanceof ColRange)) return false;

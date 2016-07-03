@@ -2,10 +2,18 @@ group array-nested-table;
 
 import "TableCommon.stg"
 
+newArrayNestedTable(var, name, id, partitionMap) ::= <<
+for(int $i=0; $i\< <partitionMap>.partitionNum(<id>); $i++) {
+    <var>[$i]=<name>.create(<partitionMap>.partitionBegin(<id>,$i),
+                            <partitionMap>.partitionSize(<id>,$i));
+};
+>>
+
 arrayNestedTable(tableName, name, visitorClass, nestedTable, classes,
-                 base, size, 
-                 methods, id,  
-                 columns, nestedColumns, nestedNestedColumns, gbColumns, gbNestedColumns, gbAggrColumn,
+                 base, size,
+                 methods, id,
+                 columns, pcolumns, nestedColumns, nestedNestedColumns,
+                 gbColumns, gbNestedColumns, gbAggrColumn,
                  idxCols,
                  multiSet=false, isNested=false) ::= <<
 <if(!isNested)>
@@ -28,11 +36,87 @@ package socialite.tables;
     public static <name> create(Long base, Integer size) { return new <name>(base.longValue(), size.intValue()); }
 <endif>
 
+    static volatile LockStatus lockStatus = LockStatus.writeLockEnabled;
+    static ReadWriteLock rwlock = new ReentrantReadWriteLock();
+
+    static void _enableInternalLock(boolean writeOnly) {
+        if (writeOnly) {
+            lockStatus = LockStatus.writeLockEnabled;
+        } else {
+            lockStatus = LockStatus.enabled;
+        }
+        <nestedTable>._enableInternalLock(writeOnly);
+    }
+    static void _disableInternalLock() {
+        lockStatus = LockStatus.disabled;
+        <nestedTable>._disableInternalLock();
+    }
+    static LockStatus _isLockEnabled() {
+        return lockStatus;
+    }
+
+    public void enableInternalLock(boolean writeOnly) {
+        _enableInternalLock(writeOnly);
+    }
+
+    public void disableInternalLock() {
+        _disableInternalLock();
+    }
+    public LockStatus isLockEnabled() {
+        return _isLockEnabled();
+    }
+
     <first(columns).type> base;
     AtomicByteArray filled;
-    <rest(columns): {c|<c.type> col<i>[];<\n>}>
-    <idxCols:{ic|SPosIndex index<ic.relPos>;<\n>}>
-    <nestedTable>[] nestedTables;
+
+<if(pcolumns)>
+    <rest(pcolumns):{c|<c.type> pcol<c.pos>[];<\n>}>
+    void allocColumns(int size) {
+        <rest(pcolumns):{c|pcol<c.pos> = new <c.type>[size];<\n>}>
+    }
+    <rest(columns):{c|
+        private void setCol<i>(int i, <c.type> val) {
+        <if(c.bitPacked)>
+            val = val \<\< <c.bitShift>;
+            pcol<c.pcolIdx>[i] = pcol<c.pcolIdx>[i] ^ ((pcol<c.pcolIdx>[i] ^ val) & <c.bitMask>);
+        <else>
+            pcol<c.pcolIdx>[i] = val;
+        <endif>
+        \}<\n>}>
+    <rest(columns):{c|
+        <c.type> col<i>(int i) {
+        <if(c.bitPacked)>
+            <c.type> v = (pcol<c.pcolIdx>[i] & <c.bitMask>) >\>> <c.bitShift>;
+            //int m = 32 - <c.numBits>;
+            //return (v \<\< m) >\> m; // sign extending
+            return v;
+        <else>
+            return pcol<c.pcolIdx>[i];
+        <endif>
+        \}<\n>}>
+<else>
+    <rest(columns):{c|<c.type> col<i>[];<\n>}>
+    void allocColumns(int size) {
+        <rest(columns):{c|
+            <if(c.arrayType)> col<i> = new <c.compType>[size][];
+            <else> col<i> = new <c.type>[size];
+            <endif>}>
+    }
+    <rest(columns):{c|
+        <c.type> col<i>(int i) {
+            return col<i>[i];
+        \}}>
+     <rest(columns):{c|
+        private void setCol<i>(int i, <c.type> val) {
+            col<i>[i] = val;
+        \}<\n>}>
+<endif>
+
+    TIntObjectHashMap\<SIndex> indexMap = new TIntObjectHashMap();
+    IndexUtil indexUtil = new IndexUtil(this, rwlock);
+
+    <idxCols:{ic|SIndex index<ic.absPos> = new SIndex();<\n>}>
+    public <nestedTable>[] nestedTables;
 
     boolean isEmpty = true;
     
@@ -40,12 +124,10 @@ package socialite.tables;
     public <name>(<first(columns).type> _base, int size) {
         base = _base;
         filled = new AtomicByteArray(size);
-        <rest(columns):{c|col<i>=new <if(c.arrayType)><c.compType>[size][]<else><c.type>[size]<endif>;<\n>}>;
-        <idxCols:{ic|index<ic.relPos> = new SPosIndex();<\n>}>
+        allocColumns(size);
+        <idxCols:{ic|indexMap.put(<ic.absPos>, index<ic.absPos>);<\n>}>
         nestedTables = new <nestedTable>[size];
     }
-
-<rest(columns):{c|private <c.type> col<i>(int i) {return col<i>[i];\}<\n>}>
 
     /** synchronization fields and methods */
     final static byte emptyMarker = -100, writeMarker = -1;
@@ -64,29 +146,32 @@ package socialite.tables;
             }
         }
     }
-    public void wlock(<first(columns).type> a) { _lock((int)(a-base), writeMarker); }
-    public void wunlock(<first(columns).type> a) { filled.set((int)(a-base), (byte)1); }
-    boolean requireLock(<first(columns).type> a) { return filled.get(a-base) \< 0; }
-    void lock(<first(columns).type> a, <nestedTable> nested, <first(nestedColumns).type> b) {
-        if (requireLock(a)) { nested.wlock(b); }
+    void wlock(<first(columns).type> a) {
+        if (lockStatus == LockStatus.disabled) { return; }
+
+        _lock((int)(a-base), writeMarker);
     }
-    void unlock(<first(columns).type> a, <nestedTable> nested, <first(nestedColumns).type> b) {
-        if (requireLock(a)) { nested.wunlock(b); }
+    void wunlock(<first(columns).type> a) {
+        if (lockStatus == LockStatus.disabled) { return; }
+
+        if (filled.get((int)(a-base)) != 1) {
+            filled.set((int)(a-base), (byte)1);
+        }
     }
 
-    boolean isEntryEmpty(int i) {
+    public boolean isEntryEmpty(int i) {
         int flag = filled.get(i);
         return (flag == 0 || flag \< emptyMarker);
     }
 
-
+    public <first(columns).type> base() { return base;}
+    public int length() { return nestedTables.length; }
     public int size() { throw new UnsupportedOperationException(); }
     public boolean isEmpty() { return isEmpty; }
     public int id() { return <id>; }
     public String name() { return "<tableName>"; }
     
     public void clearQuick() { clear(); }
-
     public void clear() {
         filled.fill((byte)0);
         isEmpty = true;
@@ -109,7 +194,8 @@ package socialite.tables;
             throw new SociaLiteException("Value out of range for <tableName> <first(columns).absPos>'th column: "+(i+base));
         }
     }
-    public boolean contains_prefix(int n<rest(columns):{c|, <c.type> a<i>}>) {
+
+    public boolean contains_prefix(<first(columns).type> n<rest(columns):{c|, <c.type> a<i>}>) {
         int i=(int)(n-base); rangeCheck(i);
         if (isEntryEmpty(i)) { return false; }
 
@@ -149,11 +235,21 @@ package socialite.tables;
     }
 
     public boolean insert(<columns:{c|<c.type> a<i0>};separator=","><nestedColumns:{c|, <c.type> b<i>}>) {
-    <if(!isNested && !multiSet)>
-        if (contains(<columns:{c|a<i0>};separator=","><nestedColumns:{c|, b<i>}>)) return false;
-    <endif>
         int i=(int)(a0-base); rangeCheck(i);
-
+        wlock(a0);
+        try {
+            return insert_really(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i>}>);
+        } finally {
+            wunlock(a0);
+        }
+    }
+    boolean insert_really(<columns:{c|<c.type> a<i0>};separator=","><nestedColumns:{c|, <c.type> b<i>}>) {
+        int i=(int)(a0-base);
+    <if(!isNested && !multiSet)>
+        if (contains(<columns:{c|a<i0>};separator=","><nestedColumns:{c|, b<i>}>)) {
+            return false;
+        }
+    <endif>
         if (!isEntryEmpty(i)) {
             if (!contains_prefix(<columns:{c|a<i0>};separator=",">)) {
                 String msg = "Cannot insert the tuple {"+a0<rest(columns):{c|+","+a<i>}> +", ...} to <tableName>\n";
@@ -167,10 +263,8 @@ package socialite.tables;
 
         <nestedTable> nested = nestedTables[i];
         if (nestedTables[i]==null) { nested = nestedTables[i] = <nestedTable>.create(); }
-        lock(a0, nested, b1);
         nested.insert(<nestedColumns:{c|b<i>};separator=", ">);
         <idxCols:{ic|index<ic.relPos>.add(a<ic.relPos>, i);<\n>}>
-        unlock(a0, nested, b1);
         filled.compareAndSet(i, (byte)0, (byte)1);
         return true;
     }
@@ -184,122 +278,62 @@ package socialite.tables;
             }
         }
     }
-    public void iterate_by_<first(columns).absPos>(<first(columns).type> n, <visitorClass> v) {
-        int i=(int)(n-base); rangeCheck(i);
-        if (!isEntryEmpty(i)) {
-            boolean cont=v.visit<columns:{c|_<c.absPos>}>(n<rest(columns):{c|, col<i>(i)}>);
-            if (cont) { nestedTables[i].iterate(v); }
-        }
-    }
 
-<idxCols:{c|
-    public void iterate_by_<c.absPos>(<c.type> a, final <visitorClass> v) {
-        ConcurrentReadIntArrayList indices = index<c.relPos>.get(a);
-        if (indices == null) { return; \}
-        for (int i=0; i\<indices.size(); i++) {
-            boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-            if (cont) { nestedTables[i].iterate(v); \}
-        \}
-    <nestedColumns:{nc|<if(nc.indexed)>
-        public void iterate_by_<c.absPos>_<nc.absPos>(<c.type> a, <nc.type> b, final <visitorClass> v) {
-            ConcurrentReadIntArrayList indices = index<c.relPos>.get(a);
-            if (indices == null) { return; \}
-            for (int i=0; i\<indices.size(); i++) {
-                boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-                if (cont) { nestedTables[i].iterate_by_<nc.absPos>(b, v); \}
-        \}
-        <endif>
-        <if(nc.sorted)>
-        public void iterate_part_from_<nc.absPos>_by_<c.absPos>(<c.type> a, final <nc.type> from, final boolean inclusive, <visitorClass> v) {
-            ConcurrentReadIntArrayList indices = index<c.relPos>.get(a);
-            if (indices == null) { return; \}
-            for (int i=0; i\<indices.size(); i++) {
-                boolean cont = v.visit(i+base<rest(columns):{c|,col<i>(pos)};separator=", ">);
-                if (cont) { nestedTables[i].iterate_part_from_<nc.absPos>(<nc.type> from, final boolean inclusive, <visitorClass> v); \}
-        \}
-        public void iterate_part_to_<nc.absPos>_by_<c.absPos>(<c.type> a, final <nc.type> to, final boolean inclusive, <visitorClass> v) {
-            ConcurrentReadIntArrayList indices = index<c.relPos>.get(a);
-            if (indices == null) { return; \}
-            for (int i=0; i\<indices.size(); i++) {
-                boolean cont = v.visit(i+base<rest(columns):{c|,col<i>(pos)};separator=", ">);
-                if (cont) { nestedTables[i].iterate_part_to_<nc.absPos>(<nc.type> from, final boolean inclusive, <visitorClass> v); \}
-        \}
-        <endif>
-    }>
-}>
-    public void iterate_part_from_<first(columns).absPos>(<first(columns).type> from, boolean inclusive, <visitorClass> v) {
-        int start =(int)(from-base); rangeCheck(start);
-        for (int i=start; i\<nestedTables.length; i++) {
-            if (!isEntryEmpty(i)) {
-                boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-                if (cont) { nestedTables[i].iterate(v);}
-            }
-        }
-    }
-    public void iterate_part_to_<first(columns).absPos>(<first(columns).type> to, boolean inclusive, <visitorClass> v) {
-        int end =(int)(to-base); rangeCheck(end);
-        if (end > nestedTables.length-1) end = nestedTables.length-1;
-        for (int i=0; i\<=end; i++) {
-            if (!isEntryEmpty(i)) {
-                boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
-                if (cont) { nestedTables[i].iterate(v); }
+    public void iterate_at(ColumnConstraints constr, int offset, Object o) {
+        if (isEmpty) { return; }
+        <visitorClass> v = (<visitorClass>)o;
+        if (!isEntryEmpty(offset)) {
+            <first(columns).type> val = base+(<first(columns).type>)offset;
+            boolean cont=v.visit<columns:{c|_<c.absPos>}>(val<rest(columns):{c|, col<i>(offset)}>);
+            if (cont) {
             }
         }
     }
 
-<nestedColumns:{c|
-    <if(c.indexed)>
-    public void iterate_by_<c.absPos>(<c.type> n, <visitorClass> v) {
-        for (int i=0; i\<nestedTables.length; i++) {
+    public void iterate_by(ColumnConstraints constr, <visitorClass> v) {
+        if (isEmpty) { return; }
+
+        if (constr.hasRange(<first(columns).absPos>)) {
+            iterate_range(constr.getRange(<first(columns).absPos>), constr, v);
+        } else if (constr.hasColumn(<first(columns).absPos>)) {
+          <if(IsInt.(first(columns).type))>
+            <first(columns).type> val = (Integer)constr.first().getValue();
+          <else>
+            <first(columns).type> val = (Long)constr.first().getValue();
+          <endif>
+            int offset = (int)(val - base);
+            if (offset\<0||offset>=filled.length()) { return; }
+            if (!isEntryEmpty(offset)) {
+                boolean cont=v.visit<columns:{c|_<c.absPos>}>(val<rest(columns): {c|,col<i>(offset)}>);
+                if (cont) {
+                    nestedTables[offset].iterate_by(constr, v);
+                }
+            }
+        } else if (constr.getMinColumn() > <last(columns).absPos>) {
+            for (int i=0; i\<nestedTables.length; i++) {
+                if (!isEntryEmpty(i)) {
+                    boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
+                    if (cont) { nestedTables[i].iterate_by(constr, v); }
+                }
+            }
+        } else if (constr.getMaxColumn() \< <first(columns).absPos>) {
+            iterate(v);
+        } else {
+            indexUtil.iterateBy(indexMap, constr, v, this);
+        }
+    }
+
+    public void iterate_range(ColumnRange range, ColumnConstraints constr, <visitorClass> v) {
+        <first(columns).type> from = Math.max(((<first(columns).type>)range.getFrom()) - base, 0);
+        <first(columns).type> to = Math.min(((<first(columns).type>)range.getTo()) - base, nestedTables.length);
+        rangeCheck(from);
+        for (int i=from; i\<to; i++) {
             if (!isEntryEmpty(i)) {
-                boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(i+base<rest(columns):{c2|, col<i>(i)}>);
-                if (cont) nestedTables[i].iterate_by_<c.absPos>(n, v);
-            \}
-        \}
-    \}
-    public void iterate_by_<first(columns).absPos>_<c.absPos>(<first(columns).type> a0, <c.type> b0, <visitorClass> v) {
-        int i=(int)(a0-base); rangeCheck(i);
-        if (isEntryEmpty(i)) { return; \}
-
-        boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(a0<rest(columns):{c2|, col<i>(i)}>);
-        if (cont) { nestedTables[i].iterate_by_<c.absPos>(b0, v); \}
-    \}
-    <endif>
-    <if(c.sorted)>
-    public void iterate_part_from_<c.absPos>(<c.type> from, boolean inclusive, <visitorClass> v) {
-        for (int i=0; i\<nestedTables.length; i++) {
-            if (nestedTables[i]!=null && !nestedTables[i].isEmpty()) {
-                boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(i+base<rest(columns):{c2|, col<i>(i)}>);
-                if (cont) nestedTables[i].iterate_part_from_<c.absPos>(from, inclusive, v);
-            \}
-        \}
-    \}
-    public void iterate_part_to_<c.absPos>(<c.type> to, boolean inclusive, <visitorClass> v) {
-        for (int i=0; i\<nestedTables.length; i++) {
-            if (nestedTables[i]!=null && !nestedTables[i].isEmpty()) {
-                boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(i+base<rest(columns):{c2|, col<i>(i)}>);
-                if (cont) nestedTables[i].iterate_part_to_<c.absPos>(to, inclusive, v);
-            \}
-        \}
-    \}
-    public void iterate_part_from_<c.absPos>_by_<first(columns).absPos>(<first(columns).type> a0, <c.type> from, boolean inclusive, <visitorClass> v) {
-        int i=(int)(a0-base); rangeCheck(i);
-        if (nestedTables[i]==null) return;
-        if (nestedTables[i].isEmpty()) return;
-
-        boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(a0<rest(columns):{c2|, col<i>(i)}>);
-        if (cont) nestedTables[i].iterate_part_from_<c.absPos>(from, inclusive, v);
-    \}
-    public void iterate_part_to_<c.absPos>_by_<first(columns).absPos>(<first(columns).type> a0, <c.type> to, boolean inclusive, <visitorClass> v) {
-        int i=(int)(a0-base); rangeCheck(i);
-        if (nestedTables[i]==null) return;
-        if (nestedTables[i].isEmpty()) return;
-
-        boolean cont=v.visit<columns:{c2|_<c2.absPos>}>(a0<rest(columns):{c2|, col<i>(i)}>);
-        if (cont) nestedTables[i].iterate_part_to_<c.absPos>(to, inclusive, v);
-    \}
-    <endif>
-}>
+                boolean cont=v.visit<columns:{c|_<c.absPos>}>(i+base<rest(columns):{c|, col<i>(i)}>);
+                if (cont) { nestedTables[i].iterate_by(constr, v); }
+            }
+        }
+    }
 
     <methods;separator="\n">
 
@@ -326,64 +360,63 @@ groupbyArrayNested() ::= <<
 <endif>
 
 <if(gbNestedColumns)> // if(gbNestedColumns) [
-    public long groupby_getpos(<gbColumns:{c|<c.type> a<i0>};separator=", ">
-                               <gbNestedColumns:{c|, <c.type> b<i0>}>) {
+    public boolean groupby_update(AbstractAggregation aggrFunc
+                       <columns:{c|, <c.type> a<i0>}><nestedColumns:{c|,<c.type> b<i0>}>) {
         int i=(int)(a0-base); rangeCheck(i);
+
+        boolean updated = false;
+        wlock(a0);
         if (isEntryEmpty(i)) {
-            return -1;
+            updated = insert_really(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>);
+            wunlock(a0);
         } else if (true<rest(gbColumns):{c|&&(col<i>[i]<EqOpMap.(c.type)>(a<i>))}>) {
-            long offset = nestedTables[i].groupby_getpos(<gbNestedColumns:{c|b<i0>};separator=", ">);
-            if (offset \< 0) { return -1; }
-            return composeGroupby(i, offset);
+            wunlock(a0);
+            updated = nestedTables[i].groupby_update(aggrFunc<nestedColumns:{c|, b<i0>}>);
         } else {
+            wunlock(a0);
             throw new AssertionError("Unexpected groupby operation");
         }
+        return updated;
     }
-    public <gbAggrColumn.type> groupby_groupby(long pos) {
-        int i = getGroupbyPos(pos);
-        long offset = getGroupbyOffset(pos);
-        return nestedTables[i].groupby_groupby(offset);
-    }
-    public boolean groupby_insert(<columns:{c|<c.type> a<i0>};separator=","><nestedColumns:{c|,<c.type> b<i0>}>) {
-        insert(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>);
-        return true;
-    }
-    public boolean groupby_update(long pos<columns:{c|, <c.type> a<i0>}><nestedColumns:{c|, <c.type> b<i0>}>) {
-        int i = getGroupbyPos(pos);
-        long offset = getGroupbyOffset(pos);
-        return nestedTables[i].groupby_update(offset<nestedColumns:{c|, b<i0>}>);
-    }
-    public void groupby_done(long pos) { return; }
 <else> // if(!gbNestedColumns) [
-    public long groupby_getpos(<gbColumns:{c|<c.type> a<i0>};separator=", ">) {
+    public boolean groupby_update(AbstractAggregation aggrFunc
+                       <columns:{c|, <c.type> a<i0>}><nestedColumns:{c|,<c.type> b<i0>}>) {
         int i=(int)(a0-base); rangeCheck(i);
-        if (isEntryEmpty(i)) {
-            return -1;
-        } else if (true<rest(gbColumns):{c|&&(col<i>[i]<EqOpMap.(c.type)>(a<i>))}>) {
-            return (long)i;
-        } else {
-            throw new AssertionError("Unexpected groupby operation");
+
+        boolean updated = false;
+        boolean equals = false;
+        wlock(a0);
+        trh {
+            if (isEntryEmpty(i)) {
+                updated = insert_really(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>);
+            } else if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
+                <gbAggrColumn.type> oldVal = col<gbAggrColumn.relPos>(i);
+            <if(gbAggrColumn.immutable)>
+                <gbAggrColumn.type> ans = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
+                equals = a<gbAggrColumn.relPos> == oldVal;
+                updated = (ans != oldVal);
+                if (updated) {
+                    a<gbAggrColumn.relPos> = ans;
+                    <rest(columns): {c|setCol<i>(i, a<i>);<\n>}>;
+                }
+            <else>
+                updated = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
+                equals = a<gbAggrColumn.relPos>.equals(oldVal);
+            <endif>
+                if (updated) {
+                    nestedTables[i].clear();
+                    nestedTables[i].insert(offset<nestedColumns:{c|, b<i0>}>);
+                }
+                if (equals) {
+                    nestedTables[i].insert(offset<nestedColumns:{c|, b<i0>}>);
+                }
+            } else {
+                throw new AssertionError("Unexpected groupby operation");
+            }
+        } finally {
+            wunlock(a0);
         }
+        return updated;
     }
-    public <gbAggrColumn.type> groupby_groupby(long pos) {
-        return col<gbAggrColumn.relPos>[(int)pos];
-    }
-    public boolean groupby_insert(<columns:{c|<c.type> a<i0>};separator=","><nestedColumns:{c|,<c.type> b<i0>}>) {
-        insert(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>);
-        return true;
-    }
-    public boolean groupby_update(long pos<columns:{c|, <c.type> a<i0>}><nestedColumns:{c|, <c.type> b<i0>}>) {
-        int i = (int)post;
-        <gbAggrColumn.type> aggr = col<gbAggrColumn.relPos>[i];
-        if (aggr<EqOpMap.(gbAggrColumn.type)>(a<gbAggrColumn.relPos>)) {
-            <rest(columns): {c|col<i>[i] = a<i>;};separator="\n">
-            return nestedTables[i].groupby_update(offset<nestedColumns:{c|, b<i0>}>);
-        } else {
-            nestedTables[i].clear();
-            <rest(columns): {c|col<i>[i] = a<i>;};separator="\n">
-            return nestedTables[i].groupby_update(offset<nestedColumns:{c|, b<i0>}>);
-        }
-    }
-    public void groupby_done(long pos) { return; }
 <endif> // // ] gbNestedColumns
 >>

@@ -15,7 +15,6 @@ import socialite.dist.EvalRefCount;
 import socialite.dist.worker.WorkerConnPool;
 import socialite.dist.worker.WorkerNode;
 import socialite.eval.Eval;
-import socialite.eval.EvalProgress;
 import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.tables.QueryRunnable;
@@ -70,33 +69,22 @@ public class SRuntimeWorker extends SRuntime {
 			tableReg = new TableInstRegistry(this);
 		return tableReg;
 	}
-	public LockMap getLockMap() {
-		if (lockMap==null) {
-			assert tableMap!=null;
-			int maxId=0;
-			for (Table t:tableMap.values()) {
-				if (t.id() > maxId) maxId = t.id();
-			}
-			lockMap = new LockMap(maxId, getPartitionMap());
-		}
-		return lockMap;
-	}
-	
+
 	public void createVisitorBuilderFor(List<Rule> rules) {		
-		VisitorBuilder builder = new VisitorBuilder(this, rules);
+		JoinerBuilder builder = new JoinerBuilder(this, rules);
 		synchronized(builderMap) {			
 			for (Rule r:rules) {
 				builderMap.put(r.id(), builder);
 			}
 		}
 	}
-	public VisitorBuilder getVisitorBuilder(Rule rule) {
+	public JoinerBuilder getVisitorBuilder(Rule rule) {
 		synchronized(builderMap) {
 			assert builderMap.containsKey(rule.id());
 			return builderMap.get(rule.id());
 		}
 	}
-	public VisitorBuilder getVisitorBuilder(int rule) {
+	public JoinerBuilder getJoinerBuilder(int rule) {
 		synchronized(builderMap) {
 			assert builderMap.containsKey(rule);
 			return builderMap.get(rule);
@@ -176,9 +164,5 @@ public class SRuntimeWorker extends SRuntime {
 			L.fatal(ExceptionUtils.getStackTrace(e));
 			throw new SociaLiteException(e);
 		}
-	}
-	
-	public EvalProgress getProgress() {		
-		return evalProgress;
 	}
 }

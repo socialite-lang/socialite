@@ -4,6 +4,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class Str {
+	public static int startsWith(String s, String prefix) {
+        if (s.startsWith(prefix)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 	public static String trim(String s, char d) {
         int len = s.length();
         int idx = 0;

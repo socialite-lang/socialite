@@ -1,5 +1,6 @@
 package socialite.engine;
 
+import gnu.trove.map.TIntFloatMap;
 import gnu.trove.map.hash.TIntFloatHashMap;
 
 import java.io.File;
@@ -8,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -88,6 +90,8 @@ public class LocalEngine {
 			    }*/
             }
         } catch (Exception e) {
+            L.warn("Exception while running program:"+program);
+            L.warn("Stack trace:"+ExceptionUtils.getStackTrace(e));
             throw new SociaLiteException(e);
         }
     }
@@ -136,6 +140,17 @@ public class LocalEngine {
     }
     public void dropTable(String name) {
         TableInstRegistry reg=runtime.getTableRegistry();
+        if (name.equals("*")) {
+            Map<String, Table> tableMap = parser.getTableMap();
+            List<String> tableNames = new ArrayList(tableMap.keySet());
+            for (String n:tableNames) {
+                parser.dropTable(n);
+                reg.dropTable(n);
+            }
+        } else {
+            parser.dropTable(name);
+            reg.dropTable(name);
+        }
     }
 
 
@@ -153,7 +168,7 @@ public class LocalEngine {
         for (File f:outdir.listFiles()) {
             if (f.isDirectory()) { cleanup(f); }
             else if (f.getName().endsWith(".class")) { f.delete(); }
-            else if (f.getName().endsWith(".java")) { f.delete(); }
+            //else if (f.getName().endsWith(".java")) { f.delete(); }
         }
     }
 
@@ -163,7 +178,7 @@ public class LocalEngine {
         s.putNodeNum("1");
         int freeMem=(int)(SRuntime.freeMemory()/1024/1024);
         s.putMemStatus(""+freeMem+"MB");
-        TIntFloatHashMap progressMap = runtime.getProgress().get();
+        TIntFloatMap progressMap = runtime.getProgress();
         int[] rules=progressMap.keys();
         Arrays.sort(rules);
         String evalStat="";

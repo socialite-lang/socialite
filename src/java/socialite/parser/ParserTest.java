@@ -456,29 +456,6 @@ public class ParserTest {
 		Assert.true_(epoch.size()==4, "Epoch #:"+epoch.size());
 	}
 	
-	static void testPrivatization() {
-		String query="Edge(int s:0..100000, (int t)).\n"+
-				"Clique(int x:10, int y, int z) indexby x.\n"+
-				"Clique(x,y,z):-Edge(x,y), Edge(y, z), Edge(z, s).\n";
-		
-		Parser p=new Parser();
-		p.parse(query);
-		Analysis an=new Analysis(p);
-		an.run();
-		List<Epoch> epochs=an.getEpochs();
-		Epoch e=epochs.get(0);
-
-		List<Rule> rules=e.getRules();
-        boolean hasPrivateTable=false;
-        for (Rule r:rules) {
-            Map<String, Table> tableMap = an.getTableMap();
-            Table t = tableMap.get(r.getHead().name());
-            if (t instanceof PrivateTable)
-                hasPrivateTable=true;
-        }
-        Assert.true_(hasPrivateTable);
-	}
-	
 	static void testDistRule() {
 		String query ="Edge(int a:0..100,(int b)).\n" +
 		"InEdge(int a:0..100,(int b)).\n" +
@@ -628,7 +605,6 @@ public class ParserTest {
 		testEpochRecursive(); dot();
 		testEpochRecursive2(); dot();
 				
-		testPrivatization(); dot(); 
 		testDistRule(); dot();
 		testLocationOpInPredicate(); dot();
 	

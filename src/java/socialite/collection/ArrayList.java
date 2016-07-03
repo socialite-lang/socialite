@@ -13,7 +13,7 @@ public class ArrayList<E> extends AbstractCollection<E>
 {
     private static final long serialVersionUID = 42L;
 
-    protected transient Object[] elems;
+    protected volatile transient Object[] elems;
     protected int size;
 
     public ArrayList(int initCapacity) {
@@ -131,6 +131,12 @@ public class ArrayList<E> extends AbstractCollection<E>
 
     public void add(int idx, E e) {
         if (idx<0||idx>size) {
+            try {
+                throw new RuntimeException();
+            } catch (Exception e2) {
+                e2.printStackTrace();
+            }
+
             throw new IndexOutOfBoundsException("Index:"+idx+", Size:"+size);
         }
 

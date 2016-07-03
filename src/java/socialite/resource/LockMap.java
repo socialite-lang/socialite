@@ -7,6 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import socialite.parser.Table;
 
 // This holds locks for table partitions.
+@Deprecated
 public class LockMap {
 	TablePartitionMap sliceMap;
 	ReentrantLock[][] locks;

@@ -81,7 +81,8 @@ public class EvalRefCount {
     public void decBy(int id, int by) {
         AtomicInteger cnt = counterMap.get(id);
         if (cnt==null) {
-            throw new SociaLiteException("Epoch["+id+"] is not registered to EvalTerminationManager");
+            L.info("Epoch["+id+"] is not registered");
+            return;
         }
         if (cnt.addAndGet(-by)==0) {
             if (!idleTimestampMap.containsKey(id)) {
@@ -94,7 +95,8 @@ public class EvalRefCount {
     public void dec(int id) {
         AtomicInteger cnt = counterMap.get(id);
         if (cnt==null) {
-            throw new SociaLiteException("Epoch["+id+"] is not registered to EvalTerminationManager");
+            L.info("Epoch["+id+"] is not registered");
+            return;
         }
         int x=cnt.decrementAndGet();
         if (x==0) {
@@ -113,6 +115,10 @@ public class EvalRefCount {
         return counter.get() == 0 && timestamp.get() == ts;
     }
 
+    public void discard(int id) {
+        callback.call(id, -1);
+        clear(id);
+    }
     public void clear(int id) {
         ready.remove(id);
         counterMap.remove(id);

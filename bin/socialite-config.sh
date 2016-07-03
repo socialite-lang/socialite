@@ -31,6 +31,7 @@ CLASSPATH=${CLASSPATH}:${EXT}/jython.jar
 CLASSPATH=${CLASSPATH}:${EXT}/ST-4.0.7.jar:${EXT}/antlr-3.5.2-complete-no-st3.jar:${EXT}/trove-3.0.3.jar 
 CLASSPATH=${CLASSPATH}:${EXT}/commons-collections-3.2.1.jar
 CLASSPATH=${CLASSPATH}:${EXT}/guava-18.0.jar
+CLASSPATH=${CLASSPATH}:${EXT}/RoaringBitmap-0.5.18.jar 
 CLASSPATH=${CLASSPATH}:${EXT}/python/jython-standalone-2.7.1b2.jar
 CLASSPATH=${CLASSPATH}:${EXT}/hadoop/*
 CLASSPATH=${CLASSPATH}:${EXT}/serialize/*

@@ -159,6 +159,14 @@ EqOpMap ::= [
     default: ".equals"
 ]
 
+CmpOpMap ::= [
+    "int": "-",
+    "long": "-",
+    "float": "-",
+    "double": "-",
+    default: ".compareTo"
+]
+
 IsInt ::= [
     "int": true,
     "long": false,

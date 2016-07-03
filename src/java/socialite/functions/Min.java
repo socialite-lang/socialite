@@ -2,34 +2,12 @@ package socialite.functions;
 
 import socialite.type.Utf8;
 
-public class Min implements MeetOp {
-	public static int invoke(int ans, int newVal) {
-		if (ans<newVal) return ans;
-		else return newVal;
-	}	
-	public static long invoke(long ans, long newVal) {
-		if (ans<newVal) return ans;
-		else return newVal;
-	}
-	public static float invoke(float ans, float newVal) {
-		if (ans<newVal) return ans;
-		else return newVal;
-	}	
-	public static double invoke(double ans, double newVal) {
-		if (ans<newVal) return ans;
-		else return newVal;
-	}	
-	public static String invoke(String ans, String newVal) {
-		if (ans.compareTo(newVal)<0) return ans;
-		else return newVal;
-	}	
-	public static Utf8 invoke(Utf8 ans, Utf8 newVal) {
-		if (ans.compareTo(newVal)<0) return ans;
-		else return newVal;
-	}	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Comparable invoke(Comparable c1, Comparable c2) {
-		if (c1.compareTo(c2)<0) return c1;
-		else return c2;
-	}
+public class Min extends AbstractAggregation {
+    static Min inst = new Min();
+    public static Min get() { return inst; }
+
+    public int apply(int a, int b) { return Math.min(a, b); }
+    public long apply(long a, long b) { return Math.min(a, b); }
+    public float apply(float a, float b) { return Math.min(a, b); }
+    public double apply(double a, double b) { return Math.min(a, b); }
 }

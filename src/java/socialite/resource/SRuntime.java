@@ -2,7 +2,9 @@ package socialite.resource;
 
 
 import gnu.trove.impl.sync.TSynchronizedIntObjectMap;
+import gnu.trove.map.TIntFloatMap;
 import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntFloatHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.lang.reflect.Constructor;
@@ -27,213 +29,226 @@ import socialite.tables.TableInst;
 import socialite.tables.TableUtil;
 import socialite.util.Loader;
 import socialite.util.SociaLiteException;
+import socialite.util.concurrent.AtomicUtil;
 
 // SocialiteRuntime
 public class SRuntime {
-	public static final Log L=LogFactory.getLog(SRuntime.class);
+    public static final Log L = LogFactory.getLog(SRuntime.class);
 
-	static long usedMemory() {
-		return Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
-	}
-	public static long freeMemory() { return maxMemory() - usedMemory(); }
-	public static long maxMemory() { return Runtime.getRuntime().maxMemory(); }
+    static long usedMemory() {
+        return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+    }
 
-	static SRuntime inst=null;
-	public static SRuntime create() {
-		inst = new SRuntime();
-		return inst;
-	}
-	public static SRuntime getInst() { return inst; }
+    public static long freeMemory() {
+        return maxMemory() - usedMemory();
+    }
 
-	Map<String, Table> tableMap;
-	TablePartitionMap partitionMap;
-	TableInstRegistry tableReg;
-	LockMap lockMap;
+    public static long maxMemory() {
+        return Runtime.getRuntime().maxMemory();
+    }
 
-	TIntObjectMap<VisitorBuilder> builderMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>(128));
-	TIntObjectMap<RuleMap> rulemapMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>(128));
+    static SRuntime inst = null;
 
-	EvalProgress evalProgress=EvalProgress.getInst();
+    public static SRuntime create() {
+        inst = new SRuntime();
+        return inst;
+    }
 
-	ConcurrentHashMap<Integer, Object> idleMap;
-	class LocalIdleCallback implements EvalRefCount.IdleCallback {
-		public void call(int id, int idleTimestamp) {
-			Object o = new Object();
-			Object prev = idleMap.putIfAbsent(id, o);
-			if (prev!=null) o = prev;
+    public static SRuntime getInst() {
+        return inst;
+    }
 
-			synchronized(o) { o.notify(); }
-		}
-	}
-	public SRuntime() {
-		tableMap = new HashMap<>();
-		idleMap = new ConcurrentHashMap<>(128, 0.75f, 32);
-		EvalRefCount.getInst(new LocalIdleCallback());
-	}
-	public void waitForIdle(int epochId) throws InterruptedException {
-		Object o = new Object();
-		synchronized (o) {
-			Object prev = idleMap.putIfAbsent(epochId, o);
-			if (prev==null) {
-				o.wait();
-			}
-		}
-		idleMap.remove(epochId);
-		EvalRefCount.getInst().clear(epochId);
-	}
-	public WorkerAddrMap getWorkerAddrMap() { throw new SociaLiteException("Not supported"); }
-	public Sender sender() { throw new SociaLiteException("Not supported"); }
+    volatile Map<String, Table> tableMap;
+    TablePartitionMap partitionMap;
+    TableInstRegistry tableReg;
 
-	public TablePartitionMap getPartitionMap() {
-		if (partitionMap==null) {
-			partitionMap = new TablePartitionMap();
-		}
-		return partitionMap;
-	}
-	public TableInstRegistry getTableRegistry() {
-		if (tableReg==null)
-			tableReg = new TableInstRegistry(this);
-		return tableReg;
-	}
-	public LockMap getLockMap() {
-		if (lockMap==null) {
-			assert tableMap!=null;
-			int maxId=0;
-			for (Table t:tableMap.values()) {
-				if (t.id() > maxId) maxId = t.id();
-			}
-			lockMap = new LockMap(maxId, getPartitionMap());
-		}
-		return lockMap;
-	}
+    TIntObjectMap<JoinerBuilder> builderMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>(128));
+    TIntObjectMap<RuleMap> rulemapMap = new TSynchronizedIntObjectMap<>(new TIntObjectHashMap<>(128));
 
-	public void createVisitorBuilderFor(List<Rule> rules) {
-		VisitorBuilder builder = new VisitorBuilder(this, rules);
-		for (Rule r:rules) {
-			builderMap.put(r.id(), builder);
-		}
-	}
-	public VisitorBuilder getVisitorBuilder(Rule rule) {
-		assert builderMap.containsKey(rule.id());
-		return builderMap.get(rule.id());
-	}
-	public VisitorBuilder getVisitorBuilder(int rule) {
-		assert builderMap.containsKey(rule);
-		return builderMap.get(rule);
-	}
+    ConcurrentHashMap<Integer, TaskReport> idleMap; /* epoch-id to TaskReport mapping */
 
-	public void update(Epoch e) {
-		assert tableMap!=null;
-		createVisitorBuilderFor(e.getRules());
+    class LocalIdleCallback implements EvalRefCount.IdleCallback {
+        public void call(int id, int idleTimestamp) {
+            TaskReport r = new TaskReport();
+            TaskReport prev = idleMap.putIfAbsent(id, r);
+            if (prev != null) { r = prev; }
+            r.setDone();
+            synchronized (r) {
+                r.notify();
+            }
+        }
+    }
 
-		for (Table t:e.getNewTables()) {
-			if (t.isCompiled()) {
-				getPartitionMap().addTable(t);
-			}
-			if (t instanceof GeneratedT) {
-				Class<?> tableCls=TableUtil.load(t.className());
-				assert tableCls!=null;
-			} else {
-				getLockMap().createLock(t);
-			}
-		}
+    public SRuntime() {
+        tableMap = new HashMap<>();
+        idleMap = new ConcurrentHashMap<>(128, 0.75f, 32);
+        EvalRefCount.getInst(new LocalIdleCallback());
+    }
 
-		addRuleMap(e.getRules(), e.getRuleMap());
-		for (Rule r:e.getRules()) {
-			if (r.isSimpleArrayInit()) continue;
-			String visitorClsName = e.getVisitorClassName(r.id());
-			if (visitorClsName!=null) {
-				Class<?> visitorCls = Loader.forName(visitorClsName);
-				if (visitorCls == null) {
-					L.error("Visitor class ("+visitorClsName+") is null for rule:"+r.id());
-				}
-				getVisitorBuilder(r.id()).setVisitorClass(r.id(), visitorCls);
-			}
-		}
-	}
-	public void cleanup(Epoch e) {
-		for (Rule r:e.getRules()) {
-			rulemapMap.remove(r.id());
-		}
-		for (Rule r:e.getRules()) {
-			if (r.isSimpleArrayInit()) continue;
-			String visitorClsName = e.getVisitorClassName(r.id());
-			if (visitorClsName!=null) {
-				builderMap.remove(r.id());
-			}
-		}
-	}
+    public void waitForIdle(int epochId) throws InterruptedException {
+        TaskReport r = new TaskReport ();
+        TaskReport prev = idleMap.putIfAbsent(epochId, r);
+        if (prev != null) { r = prev; }
 
-	public Map<String, Table> getTableMap() {
-		assert tableMap!=null;
-		return tableMap;
-	}
+        synchronized (r) {
+            while (!r.isDone()) {
+                r.wait();
+            }
+        }
+        idleMap.remove(epochId);
+        EvalRefCount.getInst().clear(epochId);
+        if (r.isFailed()) {
+            throw new RuntimeException(r.getErrorMessage());
+        }
+    }
 
-	static class MergeTableMap {
-		final public Map<String, Table> map;
-		MergeTableMap(Map<String, Table> old, Map<String, Table> newMap) {
-			if (old.keySet().equals(newMap.keySet())) {
-				map = newMap;
-			} else {
-				map = new HashMap<String, Table>(old);
-				map.putAll(newMap);
-			}
-		}
-	}
-	public void updateTableMap(Map<String, Table> _tableMap) {
-		assert tableMap!=null;
-		tableMap = new MergeTableMap(tableMap, _tableMap).map;
-	}
-	public void addRuleMap(List<Rule> rules, RuleMap rmap) {
-		for (Rule r:rules) {
-			assert !rulemapMap.containsKey(r.id());
-			rulemapMap.put(r.id(), rmap);
-		}
-	}
-	public RuleMap getRuleMap(int rule) {
-		assert rulemapMap.containsKey(rule);
-		return rulemapMap.get(rule);
-	}
+    public WorkerAddrMap getWorkerAddrMap() {
+        throw new SociaLiteException("Not supported");
+    }
 
-	public Eval getEvalInst(Epoch epoch) {
-		@SuppressWarnings("rawtypes")
-		Class evalClass=epoch.getEvalclass();
-		if (evalClass==null) return null;
+    public Sender sender() {
+        throw new SociaLiteException("Not supported");
+    }
 
-		Eval inst=null;
-		try {
-			@SuppressWarnings("unchecked")
-			Constructor<? extends Runnable> c = evalClass.getConstructor(SRuntime.class, Epoch.class);
-			inst = (Eval)c.newInstance(this, epoch);
-		} catch (Exception e) {
-			L.fatal("Cannot get/call constructor of "+evalClass+":"+e);
-			L.fatal(ExceptionUtils.getStackTrace(e));
-			throw new SociaLiteException(e);
-		}
-		return inst;
-	}
+    public TablePartitionMap getPartitionMap() {
+        if (partitionMap == null) {
+            partitionMap = new TablePartitionMap();
+        }
+        return partitionMap;
+    }
 
-	@SuppressWarnings("unchecked")
-	public QueryRunnable getQueryInst(int queryTableId, String queryClsName, QueryVisitor qv) {
-		Constructor<? extends Runnable> c=null;
+    public TableInstRegistry getTableRegistry() {
+        if (tableReg == null)
+            tableReg = new TableInstRegistry(this);
+        return tableReg;
+    }
 
-		TableInst[] tableArray = tableReg.getTableInstArray(queryTableId);
-		Object tableArg = tableArray;
-		@SuppressWarnings("rawtypes")
-		Class queryClass = Loader.forName(queryClsName);
-		Class<?> type=tableArg.getClass();
-		try {
-			c=queryClass.getConstructor(type, QueryVisitor.class, TablePartitionMap.class);
-			QueryRunnable qr = (QueryRunnable)c.newInstance(tableArg, qv, partitionMap);
-			return qr;
-		} catch (Exception e) {
-			L.fatal("getQueryInst(): Cannot retrieve constructor of "+queryClsName+", "+e);
-			L.fatal(ExceptionUtils.getStackTrace(e));
-			throw new SociaLiteException(e);
-		}
-	}
+    public void createVisitorBuilderFor(List<Rule> rules) {
+        JoinerBuilder builder = new JoinerBuilder(this, rules);
+        for (Rule r : rules) {
+            builderMap.put(r.id(), builder);
+        }
+    }
 
-	public EvalProgress getProgress() {
-		return evalProgress;
-	}
+    public JoinerBuilder getJoinerBuilder(int rule) {
+        assert builderMap.containsKey(rule);
+        return builderMap.get(rule);
+    }
+
+    public void update(Epoch e) {
+        assert tableMap != null;
+        createVisitorBuilderFor(e.getRules());
+
+        for (Table t : e.getNewTables()) {
+            if (t.isCompiled()) {
+                getPartitionMap().addTable(t);
+            }
+            if (t instanceof GeneratedT) {
+                Class<?> tableCls = TableUtil.load(t.className());
+                assert tableCls != null;
+            }
+        }
+
+        addRuleMap(e.getRules(), e.getRuleMap());
+        for (Rule r : e.getRules()) {
+            if (r.isSimpleArrayInit()) continue;
+            String visitorClsName = e.getVisitorClassName(r.id());
+            if (visitorClsName != null) {
+                Class<?> visitorCls = Loader.forName(visitorClsName);
+                if (visitorCls == null) {
+                    L.error("Visitor class (" + visitorClsName + ") is null for rule:" + r.id());
+                }
+                getJoinerBuilder(r.id()).setJoinerClass(r.id(), visitorCls);
+            }
+        }
+    }
+
+    public void cleanup(Epoch e) {
+        for (Rule r : e.getRules()) {
+            rulemapMap.remove(r.id());
+        }
+        for (Rule r : e.getRules()) {
+            if (r.isSimpleArrayInit()) continue;
+            String visitorClsName = e.getVisitorClassName(r.id());
+            if (visitorClsName != null) {
+                builderMap.remove(r.id());
+            }
+        }
+    }
+
+    public Map<String, Table> getTableMap() {
+        assert tableMap != null;
+        return tableMap;
+    }
+
+    public void updateTableMap(Map<String, Table> _tableMap) {
+        tableMap = AtomicUtil.atomicMerge(tableMap, _tableMap);
+    }
+
+    public void addRuleMap(List<Rule> rules, RuleMap rmap) {
+        for (Rule r : rules) {
+            assert !rulemapMap.containsKey(r.id());
+            rulemapMap.put(r.id(), rmap);
+        }
+    }
+
+    public RuleMap getRuleMap(int rule) {
+        assert rulemapMap.containsKey(rule);
+        return rulemapMap.get(rule);
+    }
+
+    public Eval getEvalInst(Epoch epoch) {
+        @SuppressWarnings("rawtypes")
+        Class evalClass = epoch.getEvalclass();
+        if (evalClass == null) return null;
+
+        Eval inst = null;
+        try {
+            @SuppressWarnings("unchecked")
+            Constructor<? extends Runnable> c = evalClass.getConstructor(SRuntime.class, Epoch.class);
+            inst = (Eval) c.newInstance(this, epoch);
+        } catch (Exception e) {
+            L.fatal("Cannot get/call constructor of " + evalClass + ":" + e);
+            L.fatal(ExceptionUtils.getStackTrace(e));
+            throw new SociaLiteException(e);
+        }
+        return inst;
+    }
+
+    @SuppressWarnings("unchecked")
+    public QueryRunnable getQueryInst(int queryTableId, String queryClsName, QueryVisitor qv) {
+        Constructor<? extends Runnable> c = null;
+
+        TableInst[] tableArray = tableReg.getTableInstArray(queryTableId);
+        Object tableArg = tableArray;
+        @SuppressWarnings("rawtypes")
+        Class queryClass = Loader.forName(queryClsName);
+        Class<?> type = tableArg.getClass();
+        try {
+            c = queryClass.getConstructor(type, QueryVisitor.class, TablePartitionMap.class);
+            QueryRunnable qr = (QueryRunnable) c.newInstance(tableArg, qv, partitionMap);
+            return qr;
+        } catch (Exception e) {
+            L.fatal("getQueryInst(): Cannot retrieve constructor of " + queryClsName + ", " + e);
+            L.fatal(ExceptionUtils.getStackTrace(e));
+            throw new SociaLiteException(e);
+        }
+    }
+    public TaskReport getTaskReport(int epochId) {
+        TaskReport r = idleMap.get(epochId);
+        if (r == null) {
+            r = new TaskReport();
+            TaskReport prev = idleMap.putIfAbsent(epochId, r);
+            if (prev != null) { r = prev; }
+        }
+        return r;
+    }
+
+    public synchronized TIntFloatMap getProgress() {
+        TIntFloatMap progressMap = new TIntFloatHashMap();
+        for (TaskReport report: idleMap.values()) {
+            progressMap.putAll(report.getProgressMap());
+        }
+        return progressMap;
+    }
 }

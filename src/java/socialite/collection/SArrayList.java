@@ -37,7 +37,11 @@ public class SArrayList<E> extends ArrayList<E> implements Externalizable {
 		if (other==null) return;
 		addAll(other);
 	}
-	
+
+	public void replaceWith(int offset, E e1, E e2) {
+		set(offset, e1);
+		add(offset+1, e2);
+	}
 	public E getQuick(int offset) {
 		return get(offset);
 	}

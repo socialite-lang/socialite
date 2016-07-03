@@ -77,16 +77,6 @@ public class RemoteHeadTable extends Table implements GeneratedT, FixedSizeTable
 		decl.setOptions(opts);	
 	}
 	
-	@Override
-	public boolean isModTable() {
-		return origT.isModTable();
-	}
-	
-	@Override
-	public boolean isPartitioned() {
-		return false;
-	}
-	
 	@Override public Table origT() { return origT; }
 	@Override public int origId() { return origId; }
 	

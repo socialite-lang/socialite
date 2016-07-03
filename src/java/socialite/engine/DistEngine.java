@@ -82,9 +82,6 @@ public class DistEngine {
 			codeGen.generate();
 		}
 		
-		for (Rule r:an.getRules()) {
-			runtime.getProgress().init(r.id());
-		}		
 		if (qv!=null) codeGen.generateQuery(qv);
 		return codeGen;
 	}

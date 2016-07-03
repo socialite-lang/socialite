@@ -1,6 +1,7 @@
 package socialite.standalone;
 
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
@@ -28,8 +29,8 @@ import socialite.rpc.queryCallback.QueryCallbackService;
 import socialite.rpc.standalone.StandaloneService;
 import socialite.tables.Tuple;
 
-import java.io.ByteArrayOutputStream;
-import java.util.HashMap;
+import socialite.functions.EnumId;
+import java.util.List;
 
 /**
  * Socialite server running on a single machine.
@@ -75,7 +76,7 @@ public class SingleNodeServer {
     public static void main(String[] args) {
         SingleNodeServer server = new SingleNodeServer();
         try { server.serve(); }
-        catch (TTransportException e) {
+        catch (Exception e) {
             L.fatal("Cannot run SingleNodeServer:"+e);
         }
     }
@@ -103,6 +104,7 @@ class QueryHandler implements QueryService.Iface {
         try {
             engine.run(query.getQuery());
         } catch (Exception e) {
+            SingleNodeServer.L.info("Exception:"+ org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace(e));
             throw new TQueryError(e.getMessage());
         }
     }
@@ -132,8 +134,11 @@ class QueryHandler implements QueryService.Iface {
         try {
             engine.run(query.getQuery(), sender);
         } catch (Exception e) {
+            SingleNodeServer.L.info("Exception:"+ org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace(e));
             throw new TQueryError(e.getMessage());
         }
+        //long usedMem = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024/1024;
+        //SingleNodeServer.L.warn("Used Memory:"+usedMem+"MB");
     }
 
     @Override
@@ -147,7 +152,43 @@ class QueryHandler implements QueryService.Iface {
         } catch (Exception e) {
             throw new TQueryError(e.getMessage());
         }
-
     }
 
+    @Override
+    public void clear(String table) throws TQueryError, TException {
+        try {
+            engine.clearTable(table);
+        } catch (Exception e) {
+            throw new TQueryError(e.getMessage());
+        }
+    }
+
+    @Override
+    public void drop(String table) throws TQueryError, TException {
+        try {
+            engine.dropTable(table);
+        } catch (Exception e) {
+            throw new TQueryError(e.getMessage());
+        }
+    }
+
+    @Override
+    public int getEnumId(String kind, String key) throws TQueryError, TException {
+        return EnumId.get(kind, key);
+    }
+
+    @Override
+    public String getEnumKey(String kind, int id) throws TQueryError, TException {
+        return EnumId.get(kind, id);
+    }
+
+    @Override
+    public List<String> getEnumKeyList(String kind) throws TQueryError, TException {
+        return EnumId.get(kind);
+    }
+
+    @Override
+    public void gc() throws TQueryError, TException {
+        System.gc();
+    }
 }

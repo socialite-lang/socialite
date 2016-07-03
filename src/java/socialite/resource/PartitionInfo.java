@@ -1,34 +1,35 @@
 package socialite.resource;
 
+import socialite.parser.ArrayTable;
 import socialite.parser.GeneratedT;
 import socialite.parser.Table;
 import socialite.util.BitUtils;
 
 public interface PartitionInfo {
     static PartitionInfo create(TablePartitionMap map, Table t) {
-        if (t.isArrayTable()) {
+        if (t instanceof ArrayTable) {
             return new ArrayTablePartitionInfo(map, t);
         } else {
             return new HashPartitionInfo(map, t);
         }
     }
 
-    public int partitionNum();
-    public boolean isLocal(int hash);
+    int partitionNum();
+    boolean isLocal(int hash);
 
-    public int partitionBegin(int partitionIdx);
-    public int partitionSize(int partitionIdx);
-    public int[] getRange(int partitionIdx);
-    public int getIndex(Object o);
-    public int getIndex(int val);
-    public int getRangeIndex(int range);
-    public int getHashIndex(int hash);
+    int partitionBegin(int partitionIdx);
+    int partitionSize(int partitionIdx);
+    int[] getRange(int partitionIdx);
+    int getIndex(Object o);
+    int getIndex(int val);
+    int getRangeIndex(int range);
+    int getHashIndex(int hash);
 
-    public int machineIndexFor(Object o);
-    public int machineIndexFor(int i);
-	public int machineIndexFor(long l);
-	public int machineIndexFor(float f);
-	public int machineIndexFor(double d);
+    int machineIndexFor(Object o);
+    int machineIndexFor(int i);
+	int machineIndexFor(long l);
+	int machineIndexFor(float f);
+	int machineIndexFor(double d);
 }
 
 class ArrayTablePartitionInfo implements PartitionInfo {

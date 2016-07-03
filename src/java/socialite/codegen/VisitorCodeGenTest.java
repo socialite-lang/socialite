@@ -14,7 +14,7 @@ import socialite.tables.Tuple;
 import socialite.util.Assert;
 import socialite.util.InternalException;
 import socialite.util.SociaLiteException;
-import socialite.visitors.IVisitor;
+import socialite.visitors.Joiner;
 
 
 public class VisitorCodeGenTest {
@@ -112,11 +112,11 @@ public class VisitorCodeGenTest {
 		//for (Eval e:evals) e.run();
 		
 		Rule r = an.getRules().get(0);
-		IVisitor[] visitors = 
-			c.getRuntime().getVisitorBuilder(r.id()).getNewVisitorInst(r.id());
+		Joiner[] visitors =
+			c.getRuntime().getJoinerBuilder(r.id()).getNewJoinerInst(r.id());
 		Assert.not_null(visitors);
 		Assert.equals(visitors.length, 1);
-		IVisitor v=visitors[0];
+		Joiner v=visitors[0];
 		en.shutdown();
 	}
 	
@@ -486,7 +486,7 @@ public class VisitorCodeGenTest {
 		return an;		
 	}
 	static void compileRule(Epoch e, Rule r, Map<String, Table> tableMap) {
-		VisitorCodeGen gen = new VisitorCodeGen(e, r, tableMap);
+		JoinerCodeGen gen = new JoinerCodeGen(e, r, tableMap);
 		String src = gen.generate();
 		Compiler c= new Compiler();
 		boolean success=c.compile(gen.visitorName(), src);

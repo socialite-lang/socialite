@@ -6,15 +6,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
 import socialite.engine.LocalEngine;
-import socialite.parser.AssignOp;
-import socialite.parser.DeltaPredicate;
-import socialite.parser.Expr;
-import socialite.parser.IterTable;
-import socialite.parser.MyType;
-import socialite.parser.Predicate;
-import socialite.parser.Rule;
-import socialite.parser.Table;
-import socialite.parser.Variable;
+import socialite.parser.*;
 import socialite.tables.QueryVisitor;
 import socialite.tables.Tuple;
 import socialite.util.Loader;
@@ -148,12 +140,12 @@ public class TupleCodeGen {
 		}
 	}
 	static void _findTuplesToGenForIterTable(Table t, TupleDecls required) {
-		if (t instanceof IterTable && t.numColumns()+1 > PREGEN_WIDTH) {
+		if (t instanceof IterTableMixin && t.numColumns()+1 > PREGEN_WIDTH) {
 			ArrayList<Class<?>> types = new ArrayList<Class<?>>(t.numColumns()+1);
 			for (int i = 0; i < t.numColumns(); i++)
 				types.add(t.getColumn(i).type());
-			IterTable itable=(IterTable)t;
-			types.add(itable.iterColumn(), int.class);
+			IterTableMixin it = (IterTableMixin)t;
+			types.add(it.iterColumn(), int.class);
 			required.add(types.toArray(new Class<?>[]{}));
 		}
 	}

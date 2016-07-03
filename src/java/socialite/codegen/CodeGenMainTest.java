@@ -31,93 +31,7 @@ public class CodeGenMainTest {
 		en.shutdown();
 	}
 
-	static void evalSimpleJoinRules() {
-		String query = "Edge(int s:1..10, (int t)).\n"
-				+ "Triangle(int x, int y, int z) sortby x, orderby x.\n"				
-				+ "Edge(s, t) :- s=1,t=2.\n"
-				+ "Edge(s, t) :- s=2,t=3.\n"
-				+ "Edge(s, t) :- s=3,t=1.\n"
-				+ "Edge(s, t) :- s=3,t=8.\n"
-				+ "Edge(s, t) :- s=8,t=9.\n"
-				+ "Edge(s, t) :- s=9,t=10.\n"
-				+ "Edge(s, t) :- s=10,t=8.\n"
-				+ "Triangle(x, y, z):-Edge(x, y),y>x,Edge(y, z),z>y,Edge(z, x).\n";
-		LocalEngine en = new LocalEngine();
-		CodeGenMain c=en.compile(query);
-		
-		List<Eval> evals = c.getEvalInsts();
-		for (Eval e:evals) e.run();
-		
-		Table t = c.tableMap.get("Triangle");
-		TableInst triangleArray[]=c.getTableRegistry().getTableInstArray(t.id());
-		Assert.true_(triangleArray.length==1);
-		TableInst triangle=triangleArray[0];		
-		try{
-			Method m = FunctionLoader.loadMethod(triangle.getClass(), "iterate", new Class[]{VisitorImpl.class});
-			class TestVisitor extends VisitorImpl {			
-				int count=0;
-                public int getEpochId() { return 0; }
-                public int getRuleId() { return 0; }
-                public boolean visit(int x, int y, int z) {
-					count++;
-					Assert.true_((x==1 && y==2 && z==3)||(x==8 && y==9 && z==10));
-					return true;
-				}
-				public boolean success() { return count==2; }
 
-			}
-			TestVisitor v=new TestVisitor();
-			m.invoke(triangle, v);
-			Assert.true_(v.success());
-		} catch(Exception e) { 
-			Assert.die(e.toString()); 
-		} 
-		en.shutdown();
-	}
-
-	static void evalAggregateRule() {
-		String query = "Edge(int s:1..10, (int t)).\n"
-				+ "Triangle(int x, int y, int z) sortby x.\n"
-				+ "Count(int k:0..0, int c).\n"
-				+ "Edge(s, t) :- s=1,t=2.\n"
-				+ "Edge(s, t) :- s=2,t=3.\n"
-				+ "Edge(s, t) :- s=3,t=1.\n"
-				+ "Edge(s, t) :- s=3,t=8.\n"
-				+ "Edge(s, t) :- s=8,t=9.\n"
-				+ "Edge(s, t) :- s=9,t=10.\n"
-				+ "Edge(s, t) :- s=10,t=8.\n"
-				+ "Triangle(x, y, z):-Edge(x, y),y>x,Edge(y, z),z>y,Edge(z, x).\n"
-				+ "Count(0, $inc(1)) :- Triangle(x, y, z).\n";
-		LocalEngine en = new LocalEngine();
-		CodeGenMain c=en.compile(query);
-		
-		List<Eval> evals = c.getEvalInsts();
-		for (Eval e:evals) e.run();
-		
-		Table t = c.tableMap.get("Count");
-		TableInst countTable[]=c.getTableRegistry().getTableInstArray(t.id());
-		Assert.true_(countTable.length==1);
-		TableInst count=countTable[0];		
-		try{
-			Method m = FunctionLoader.loadMethod(count.getClass(), "iterate", new Class[]{VisitorImpl.class});
-			class TestVisitor extends VisitorImpl {			
-				int count=0;
-                public int getEpochId() { return 0; }
-                public int getRuleId() { return 0; }
-				public boolean visit(int c, int x) {
-					count++;
-					Assert.true_(c==0 && x==2);
-					return true;
-				}
-				public boolean success() { return count==1; }
-			}
-			TestVisitor v=new TestVisitor();
-			m.invoke(count, v);
-			Assert.true_(v.success());
-		} catch(Exception e) { Assert.die(e.toString()); }
-		en.shutdown();
-	}
-	
 	static void evalAggr2() {
 		String query = "Edge(int s:1..10, (int t)).\n"
 			+ "Triangle(int x, int y, int z) sortby x.\n"
@@ -354,8 +268,6 @@ s:1768196, d:62
 	public static void main(String args[]) {
 		//System.out.println("some tests are disabled");
 		createInst(); dot();
-		evalSimpleJoinRules(); dot();
-		evalAggregateRule(); dot();
 		evalAggr2(); dot();
 		
 		//evalSP();
