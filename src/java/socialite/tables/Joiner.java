@@ -1,4 +1,4 @@
-package socialite.visitors;
+package socialite.tables;
 
 import socialite.eval.Worker;
 import socialite.tables.TableInst;

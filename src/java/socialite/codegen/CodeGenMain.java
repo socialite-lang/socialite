@@ -30,15 +30,14 @@ import socialite.util.SociaLiteException;
 public class CodeGenMain {
     static final Log L=LogFactory.getLog(CodeGenMain.class);
 
-    static CodeClassCache visitorClass$ = new CodeClassCache();
-    @SuppressWarnings("rawtypes")
-    static QueryCache<Class> queryClass$ = new QueryCache<Class>();
+    static CodeClassCache joinerClass$ = new CodeClassCache();
+    static QueryCache<Class> queryClass$ = new QueryCache<>();
     public static void clearCache() {
-        visitorClass$.clear();
+        joinerClass$.clear();
         queryClass$.clear();
     }
     public static void maybeClearCache() {
-        visitorClass$.clearIfLarge();
+        joinerClass$.clearIfLarge();
         queryClass$.clearIfLarge();
     }
     static final LinkedHashMap<String,byte[]> EMPTY_MAP = new LinkedHashMap<String,byte[]>(0);
@@ -243,18 +242,18 @@ public class CodeGenMain {
 
     void genVisitor(Epoch e, Rule r) {
         String sig=r.signature(tableMap);
-        Class<?> klass = visitorClass$.get(sig);
+        Class<?> klass = joinerClass$.get(sig);
         if (klass==null) {
             JoinerCodeGen vgen = new JoinerCodeGen(e, r, tableMap);
             Compiler c = new Compiler();
-            boolean success=c.compile(vgen.visitorName(), vgen.generate());
+            boolean success=c.compile(vgen.joinerName(), vgen.generate());
             if (!success) {
                 String msg="Error while compiling visitor class:"+c.getErrorMsg();
                 throw new SociaLiteException(msg);
             }
             addToGeneratedClasses(c.getCompiledClasses());
-            klass=Loader.forName(vgen.visitorName());
-            visitorClass$.put(r.signature(tableMap), klass);
+            klass=Loader.forName(vgen.joinerName());
+            joinerClass$.put(r.signature(tableMap), klass);
         }
         e.addVisitorClass(r.id(), klass);
     }
@@ -286,7 +285,7 @@ class CodeClassCache {
     Map<String, Class<?>> classMap;
     int size=0;
     CodeClassCache() {
-        classMap = new HashMap<String, Class<?>>();
+        classMap = new HashMap<>();
     }
     public synchronized void clear() {
         classMap.clear();

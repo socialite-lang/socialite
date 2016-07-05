@@ -236,35 +236,6 @@ class TestArrayNestedTable(TestDynamicNestedTable):
         s.drop("*")
 
 
-class TestTableJoin(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        s.decl("Foo(int a, int b, int c, int d).")
-        s.decl("Bar(int a, int b, int c, int d).")
-        s.decl("Qux(int a, int b, int c, int d).")
-
-        cls.initTables()
-
-    @classmethod
-    def tearDownClass(cls):
-        s.drop("*")
-
-    @classmethod
-    def initTables(cls):
-        s.run("Bar(a,b,c,d) :- a=$range(0,1000), b=1, c=1, d=2.")
-        s.run("Foo(a,b,c,d) :- a=$range(42, 43), b=1, c=1, d=2.")
-
-    
-    def test_combined_iterate(self):
-        s.run("Qux(a,b,c,d) :- Foo(a,b,c,d), Bar(a,b,c,d).")
-
-        expected = [(a, 1, 1, 2) for a in xrange(42, 43)]
-        result = []
-        for a,b,c,d in s.query("Qux(a,b,c,d)"):
-            result.append((a,b,c,d))
-
-        self.assertEqual(sorted(result), sorted(expected))
-
 def main():
     unittest.main()
 

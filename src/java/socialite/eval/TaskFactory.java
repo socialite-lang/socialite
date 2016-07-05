@@ -9,7 +9,7 @@ import socialite.resource.*;
 import socialite.tables.TmpTableInst;
 import socialite.tables.TableInst;
 import socialite.util.SocialiteFinishEval;
-import socialite.visitors.Joiner;
+import socialite.tables.Joiner;
 
 
 abstract class VisitorWrapper extends Joiner {

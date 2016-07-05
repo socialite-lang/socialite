@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.python.antlr.ast.VisitorBase;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
@@ -21,6 +22,7 @@ import socialite.util.SociaLiteException;
 
 
 public class VisitorBaseGen {
+    static String visitorPackage = "socialite.visitors";
     static STGroup tmplGroup = CodeGen.getVisitorBaseGroup();
     static int id = 0;
 
@@ -114,7 +116,7 @@ public class VisitorBaseGen {
 
             Compiler c = new Compiler();
             VisitorBaseGen baseGen = new VisitorBaseGen();
-            String fullname = JoinerCodeGen.visitorPackage + "." + baseGen.name();
+            String fullname = VisitorBaseGen.visitorPackage + "." + baseGen.name();
             t.setVisitorClass(fullname);
             for (MethodDecl d : decls) {
                 baseGen.add(d);
@@ -158,7 +160,7 @@ public class VisitorBaseGen {
                 }
             }
         }
-        String visitorImpl = JoinerCodeGen.visitorPackage + ".VisitorImpl";
+        String visitorImpl = VisitorBaseGen.visitorPackage + ".VisitorImpl";
         boolean success = c.compile(visitorImpl, baseGen.generate());
         if (!success) {
             String msg = "Cannot compile VisitorImpl class";

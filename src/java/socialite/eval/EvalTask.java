@@ -3,7 +3,7 @@ package socialite.eval;
 import socialite.tables.TableInst;
 import socialite.util.SocialiteFinishEval;
 import socialite.visitors.IVisitor;
-import socialite.visitors.Joiner;
+import socialite.tables.Joiner;
 import socialite.visitors.VisitorImpl;
 
 public class EvalTask implements Task {

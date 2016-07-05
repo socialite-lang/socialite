@@ -439,17 +439,6 @@ public class Analysis {
         return false;
     }
 
-    static int firstColumnWithVar(Predicate p, Table t) {
-        for (ColumnGroup group:t.getColumnGroups()) {
-            Column c=group.first();
-            if (c.isPrimaryShard()) continue;
-            int paramIdx=c.getAbsPos();
-            if (p.params.get(paramIdx) instanceof Variable)
-                return c.getAbsPos();
-        }
-        return -1;
-    }
-
     public static boolean isParallelRule(Rule r, Map<String, Table> tableMap) {
         if (isSequentialRule(r, tableMap)) return false;
         return true;

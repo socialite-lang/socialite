@@ -2,37 +2,105 @@
   Testing join operations.
 """
 
+import socialite as s
 import unittest
 
-class TestIterTable(unittest.TestCase):
-    def __init__(self, methodName='runTest'):
-        unittest.TestCase.__init__(self, methodName)
-        `Rank(int a, int i:iter, float f) indexby a.` 
-        #`Rank(a, 0, f) :- a=$range(0, 10), f=1.0f.`
-        `Rank(a, 0, f) :- a=10, f=1.0f.`
+class TestJoin(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        s.decl("Foo(int a, int b, int c, int d).")
+        s.decl("FooArr(int a:0..100, int b, int c, int d).")
+        s.decl("Bar(int a, int b, int c, int d).")
+        s.decl("BarArr(int a:0..1000, int b, int c, int d).")
+        s.decl("Qux(int a, int b, int c, int d).")
 
-    def test_iter_table_in_multiple_body(self):
-        for i in range(1):
-            #`Rank(a, $i+1, $sum(f)) :- a=$range(0,10), f=1.0f;
-            #                        :- a=$range(0,10), f=1.1f;
-            #                        :- Rank(a, $i, f).`
-            `Rank(a, $i+1, $sum(f)) :- a=0, f=1.0f;
-                                    :- a=0, f=1.0f;
-                                    :- a=0, f=1.0f.`
+        cls.initTables()
 
-        for a,_,r in `Rank(a,$i,r)`:
-            print a,r
+    @classmethod
+    def initTables(cls):
+        s.run("Bar(a,b,c,d) :- a=$range(0,1000), b=1, c=1, d=2.")
+        s.run("BarArr(a,b,c,d) :- a=$range(0,1000), b=1, c=1, d=2.")
+        s.run("Foo(a,b,c,d) :- a=$range(42, 43), b=1, c=1, d=2.")
+        s.run("FooArr(a,b,c,d) :- a=$range(42, 43), b=1, c=1, d=2.")
 
-        for a,_,r in `Rank(a,$i,r)`:
-            print a,r
+    @classmethod
+    def tearDownClass(cls):
+        s.drop("*")
 
-        for a,_,r in `Rank(a,$i,r)`:
-            print a,r
+    def setUp(self):
+        s.clear("Qux")
 
-        #a, _, r = `Rank(0, $i, r)`.next()
-        #print a, r
+    def test_combined_iterate(self):
+        self._testrun("Qux(a,b,c,d) :- Foo(a,b,c,d), Bar(a,b,c,d).")
 
-        #self.assertEqual(r, 1.0+1.0+1.1, "Unexpected value r:%f, expecting %f"%(r,1.0+1.0+1.1))
+    def test_combined_iterate2(self):
+        self._testrun("Qux(a,b,c,d) :- FooArr(a,b,c,d), Bar(a,b,c,d).")
+
+    def test_combined_iterate2(self):
+        self._testrun("Qux(a,b,c,d) :- Bar(a,b,c,d), FooArr(a,b,c,d).")
+
+    def test_combined_iterate4(self):
+        self._testrun("Qux(a,b,c,d) :- FooArr(a,b,c,d), BarArr(a,b,c,d).")
+
+    def _testrun(self, query):
+        s.run(query)
+
+        expected = [(a, 1, 1, 2) for a in xrange(42, 43)]
+        result = []
+        for a,b,c,d in s.query("Qux(a,b,c,d)"):
+            result.append((a,b,c,d))
+
+        self.assertEqual(sorted(result), sorted(expected))
+
+
+class TestSortMergeJoin2(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        s.decl("""Foo(int a, (int b)) sortby a, sortby b.""")
+        s.decl("""FooArr(int a:0..200, (int b)) sortby a, sortby b.""")
+        s.decl("""FooArrArr(int a:0..200, (int b:0..50)) sortby a, sortby b.""")
+        s.decl("""Bar(int a, (int b)) sortby a, sortby b.""")
+        s.decl("""BarArr(int a:0..200, (int b)) sortby a, sortby b.""")
+        s.decl("""BarArrArr(int a:0..200, (int b:0..50)) sortby a, sortby b.""")
+        s.decl("""Qux(int a, int b) indexby a.""")
+
+        cls.initTables()
+
+    @classmethod
+    def tearDownClass(cls):
+        s.drop("*")
+
+    @classmethod
+    def initTables(cls):
+        s.run("Foo(a,b) :- a=$range(0,160), b=$range(42, 45).")
+        s.run("FooArr(a,b) :- a=$range(0,160), b=$range(42, 45).")
+        s.run("FooArrArr(a,b) :- a=$range(0,160), b=$range(42, 45).")
+        s.run("Bar(a,b) :- a=$range(150,200), b=$range(42, 45).")
+        s.run("BarArr(a,b) :- a=$range(150,200), b=$range(42, 45).")
+        s.run("BarArrArr(a,b) :- a=$range(150,200), b=$range(42, 45).")
+
+    def setUp(self):
+        s.clear("Qux")
+
+    def test_combined_iterate(self):
+        self._testrun("Qux(a,b) :- Foo(a,b), Bar(a,b).")
+
+    def _testrun(self, query):
+        s.run(query)
+
+        expected = [(a, b) for a in range(150, 160) for b in range(42, 45)]
+        result = []
+        for a,b in s.query("Qux(a,b)"):
+            result.append((a,b))
+
+        self.assertEqual(sorted(result), sorted(expected))
+
+
+def main():
+    unittest.main()
+
+if __name__ == '__main__':
+    main()
 
 """
 class TestJoin(unittest.TestCase):

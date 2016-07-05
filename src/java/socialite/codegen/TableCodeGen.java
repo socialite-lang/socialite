@@ -8,10 +8,45 @@ import org.stringtemplate.v4.STGroup;
 import socialite.parser.*;
 import socialite.parser.antlr.ColumnGroup;
 import socialite.tables.TableUtil;
-import socialite.util.Assert;
 import socialite.util.InternalException;
 import socialite.util.MySTGroupFile;
-import socialite.parser.TableType;
+
+
+class TableTemplateSelector {
+    static String tableGroupFile = "Table.stg";
+    static STGroup tmplGroup =
+        new MySTGroupFile(TableCodeGen.class.getResource(tableGroupFile),"UTF-8", '<', '>');
+
+    public static ST select(Table t, ColumnGroup g, boolean hasNesting) {
+        if (g.first().hasRange()) {
+            return selectArrayTable(g, hasNesting);
+        } else {
+            return selectDynamicTable(g, hasNesting);
+        }
+    }
+    static ST selectArrayTable(ColumnGroup g, boolean hasNesting) {
+        if (hasNesting) {
+            return tmplGroup.getInstanceOf("arrayNestedTable");
+        } else {
+            return tmplGroup.getInstanceOf("arrayTable");
+        }
+    }
+    static ST selectDynamicTable(ColumnGroup g, boolean hasNesting) {
+        if (hasNesting) {
+            if (g.isSorted()) {
+                return tmplGroup.getInstanceOf("dynamicNestedSortedTable");
+            } else {
+                return tmplGroup.getInstanceOf("dynamicNestedTable");
+            }
+        } else {
+            if (g.isSorted()) {
+                return tmplGroup.getInstanceOf("dynamicSortedTable");
+            } else {
+                return tmplGroup.getInstanceOf("dynamicTable");
+            }
+        }
+    }
+}
 
 public class TableCodeGen {
     static String tableGroupFile = "Table.stg";
@@ -27,10 +62,8 @@ public class TableCodeGen {
 
     String tableName() { return TableUtil.getTablePath(table.className());}
 
-    boolean notNested() { return !table.hasNesting(); }
     public String generate() {
-        String src=null;
-
+        String src;
         if (table instanceof FixedSizeTable) {
             assert table instanceof DeltaTable || table instanceof RemoteHeadTable;
             return genFixedSizeTable(table);
@@ -42,8 +75,11 @@ public class TableCodeGen {
         if (table.hasNesting()) {
             src = genNestedTable();
         } else {
-            if (table.isArrayTable()) src = genArrayTableSimple();
-            else src = genDynamicTableSimple();
+            if (table instanceof ArrayTable) {
+                src = genArrayTableSimple();
+            } else {
+                src = genDynamicTableSimple();
+            }
         }
 
         return src;
@@ -161,44 +197,18 @@ public class TableCodeGen {
 
     boolean isDelta() { return table instanceof DeltaTable; }
 
-    ST getTableTemplate(TableType type) {
-        switch (type) {
-            case ArrayTable:
-                return tmplGroup.getInstanceOf("arrayTable");
-            case ArrayNestedTable:
-                return tmplGroup.getInstanceOf("arrayNestedTable");
-            case DynamicTable:
-                return tmplGroup.getInstanceOf("dynamicTable");
-            case DynamicNestedTable:
-                return tmplGroup.getInstanceOf("dynamicNestedTable");
-            default:
-                Assert.impossible("Unexpected table type:"+type);
-                return null;
-        }
-    }
-
-    TableType getTableType(ColumnGroup g, boolean hasNested) {
-        if (hasNested) {
-            if (g.first().hasRange()) return TableType.ArrayNestedTable;
-            else return TableType.DynamicNestedTable;
-        } else {
-            if (g.first().hasRange()) return TableType.ArrayTable;
-            else return TableType.DynamicTable;
-        }
-    }
     String genNestedTable() {
         int nestDepth=table.getColumnGroups().size();
-        tableTmplList = new ArrayList<ST>(nestDepth);
+        tableTmplList = new ArrayList<>(nestDepth);
         for (int i=0; i<nestDepth; i++) {
             boolean hasNested=false;
-            if (i<nestDepth-1) hasNested=true;
+            if (i<nestDepth-1) { hasNested=true; }
 
-            TableType tableType = getTableType(table.getColumnGroups().get(i), hasNested);
-            ST tmpl = getTableTemplate(tableType);
-            if (hasNested) tmpl.add("nestedTable", nestedTableName(i+1));
+            ST tmpl = TableTemplateSelector.select(table, table.getColumnGroups().get(i), hasNested);
+            if (hasNested) { tmpl.add("nestedTable", table.nestedClassName(i+1));}
 
             tmpl.add("tableName", table.name());
-            tmpl.add("name", nestedTableName(i));
+            tmpl.add("name", table.nestedClassName(i));
             tmpl.add("id", table.id());
             tmpl.add("multiSet", table.isMultiSet());
             if (i>0) tmpl.add("isNested", true);
@@ -211,7 +221,6 @@ public class TableCodeGen {
                 if (c.isIndexed() && !c.isArrayIndex()) { tmpl.add("idxCols", c); }
                 if (!c.isArrayIndex() && c.isSorted()) { tmpl.add("sortedCol", c); }
             }
-
             if (hasNested) {
                 for (int j=group.endIdx()+1; j<table.numColumns(); j++) {
                     Column c = table.getColumn(j);
@@ -226,25 +235,23 @@ public class TableCodeGen {
                 }
             }
             tmpl.add("visitorClass", CodeGen.visitorClass(table));
-            if (tableType.isArrayTable()) {
-                tmpl.add("base", table.arrayBeginIndex());
-                tmpl.add("size", table.arrayTableSize());
+            if (group.first().hasRange()) {
+                int[] range = group.first().getRange();
+                tmpl.add("base", range[0]);
+                tmpl.add("size", range[1]-range[0]);
             }
-            if (i==0) tableTmpl = tmpl;
-            else tableTmpl.add("classes", tmpl);
+            if (i==0) { tableTmpl = tmpl; }
+            else { tableTmpl.add("classes", tmpl); }
             tableTmplList.add(tmpl);
         }
-        /*if (table.isArrayTable()) {
-            tableTmpl.add("base", table.arrayBeginIndex());
-            tableTmpl.add("size", table.arrayTableSize());
-        }*/
+
         addGroupbyCode();
         return tableTmpl.render();
     }
 
     void addGroupbyCode() {
         int groupby = table.groupbyColNum();
-        if (groupby<=0) return;
+        if (groupby<=0) { return; }
 
         Column aggrColumn = table.getColumn(groupby);
         int nestDepth=table.getColumnGroups().size();
@@ -252,8 +259,9 @@ public class TableCodeGen {
             ST tmpl = tableTmplList.get(i);
             ColumnGroup group = table.getColumnGroups().get(i);
 
-            if (group.first().getAbsPos() >= groupby)
+            if (group.first().getAbsPos() >= groupby) {
                 break;
+            }
 
             tmpl.add("gbAggrColumn", aggrColumn);
             for (Column c:group.columns()) {
@@ -267,15 +275,6 @@ public class TableCodeGen {
                 }
             }
         }
-    }
-
-    String nestedTableName(int depth) {
-        /** This is used in {@link Compiler} for ordering compilation.
-         *  @see JavaMemFileManager#topoSortedClasses.
-         */
-        String name=table.className();
-        for (int i=0; i<depth; i++) name += "$Nested";
-        return name;
     }
 
     String genDynamicTableSimple() {
@@ -315,10 +314,11 @@ public class TableCodeGen {
 
     static final LinkedHashMap<String,byte[]> EMPTY_MAP = new LinkedHashMap<String,byte[]>(0);
     public static LinkedHashMap<String, byte[]> ensureExist(List<Table> tables) throws InternalException {
-        if (tables.isEmpty()) return EMPTY_MAP;
+        if (tables.isEmpty()) {
+            return EMPTY_MAP;
+        }
         Compiler c=new Compiler();
         LinkedHashMap<String,byte[]> generatedClasses = new LinkedHashMap<String,byte[]>();
-        Class<?> tableClass;
         for (Table t:tables) {
             TableCodeGen gen = new TableCodeGen(t);
             if (t.isPredefined()) {
@@ -327,7 +327,7 @@ public class TableCodeGen {
                     msg += " "+c.getErrorMsg();
                     throw new InternalException(msg);
                 }
-                tableClass=TableUtil.load(t.className());
+                TableUtil.load(t.className());
                 t.setCompiled();
             } else {
                 if (!TableUtil.exists(t.className())) {
@@ -340,7 +340,7 @@ public class TableCodeGen {
                     }
                     generatedClasses.putAll(c.getCompiledClasses());
                 }
-                tableClass=TableUtil.load(t.className());
+                TableUtil.load(t.className());
                 t.setCompiled();
             }
         }

@@ -3,7 +3,9 @@ group table;
 import "ArrayTable.stg"
 import "ArrayNestedTable.stg"
 import "DynamicTable.stg"
+import "DynamicSortedTable.stg"
 import "DynamicNestedTable.stg"
+import "DynamicNestedSortedTable.stg"
 import "FixedSizeTable.stg"
 import "RemoteTable.stg"
 

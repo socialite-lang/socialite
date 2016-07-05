@@ -1,6 +1,6 @@
 import "TableCommon.stg"
 
-node(name, pcolumns, columns, sortedCol) ::= <<
+nodeSorted(name, pcolumns, columns, sortedCol) ::= <<
     static final class Node$Init extends Node {
     // write lock is controlled by the caller (host table)
     // read lock is internally used
@@ -237,8 +237,7 @@ node(name, pcolumns, columns, sortedCol) ::= <<
             if (len \< 0) { return -(len--)-1; }
             else { return len++; }
         }
-    <if(sortedCol)>
-        int insert_sorted(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+        int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
             int pos = -1;
             if (len() == 0) { pos = 0; }
             else { pos = Arrays.binarySearch(col<sortedCol.relPos>, 0, len(), a<sortedCol.relPos>); }
@@ -286,17 +285,8 @@ node(name, pcolumns, columns, sortedCol) ::= <<
                 runlock();
             }
         }
-        public int cmp_sortedCol_at(int pos, <first(columns).type> val) {
-           return (col<sortedCol.relPos>(pos)<CmpOpMap.(first(columns).type)>(val));
-        }
-    <endif>
         void update(int offset, <columns:{c|<c.type> a<i0>}; separator=", ">) {
             <columns:{c|setCol<i0>(offset, a<i0>);<\n>}>
-        }
-        int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
-            <if(sortedCol)>if (true) {return insert_sorted(<columns:{c|a<i0>}; separator=", ">);}<endif>
-            <columns:{c|setCol<i0>(len(), a<i0>);<\n>}>
-            return inc_len();
         }
         boolean iterate(<visitorClass> v) {
             rlock();

@@ -6,7 +6,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import socialite.resource.JoinerBuilder;
-import socialite.visitors.Joiner;
+import socialite.tables.Joiner;
 
 
 public class EvalCommand implements Command, Externalizable {

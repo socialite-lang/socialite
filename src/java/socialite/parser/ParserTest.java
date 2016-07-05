@@ -282,9 +282,7 @@ public class ParserTest {
 		
 		Table triangle = an.getTableMap().get("Triangle");
 		Column col = triangle.getColumn(0);
-		Assert.true_(col.isPrimaryShard());
 		col = triangle.getColumn(1);
-		Assert.not_true(col.isPrimaryShard());
 		List<ColumnGroup> cg=triangle.getColumnGroups();
 		Assert.true_(cg.size()==2);
 		

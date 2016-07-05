@@ -15,7 +15,6 @@ public class Column implements Externalizable {
     private static final long serialVersionUID = 1;
 
     ColumnDecl decl;
-    boolean isPrimShard;
     boolean indexed=false;
     boolean sorted=false;
     boolean asc=false;
@@ -26,17 +25,10 @@ public class Column implements Externalizable {
     int bitMask=0xffffffff;
     int bitShift=0;
     int pcolIdx=-1;
-    boolean bitPacked=false;
 
     public Column() { }
     public Column(ColumnDecl _decl) {
         decl=_decl;
-        isPrimShard = false;
-    }
-    public Column(ColumnDecl _decl, boolean primShardIdx) {
-        decl=_decl;
-        isPrimShard = primShardIdx;
-        assert(isPrimShard);
     }
 
     public int hashCode() {
@@ -49,7 +41,6 @@ public class Column implements Externalizable {
 
         Column c=(Column)o;
         if (!decl.equals(c.decl)) return false;
-        if (isPrimShard!=c.isPrimShard) return false;
         if (indexed!=c.indexed) return false;
         if (sorted!=c.sorted) return false;
         if (asc!=c.asc) return false;
@@ -64,7 +55,6 @@ public class Column implements Externalizable {
         Assert.true_(relPos==-1);
         relPos=idx;
     }
-
     public int getRelPos() { // used by StringTemplate
         Assert.true_(relPos!=-1);
         return relPos;
@@ -72,11 +62,8 @@ public class Column implements Externalizable {
 
     public int getAbsPos() { return decl.pos(); } // used by StringTemplate
 
-    public void setPrimaryShardIndex(boolean f) {
-        isPrimShard = f;
-    }
-    public boolean isPrimaryShard() { return isPrimShard; }
     public int position() { return decl.pos(); }
+
     public String name() { return decl.name(); }
     public Class type() { return decl.type(); }
     public Class getComponentType() {
@@ -126,7 +113,7 @@ public class Column implements Externalizable {
     public void setOrdered() { ordered=true; }
 
     public boolean isArrayIndex() { return hasRange();}
-    public boolean isIndexed() { return isPrimShard || indexed || hasRange();}
+    public boolean isIndexed() { return indexed || hasRange();}
     public boolean isSorted() { return sorted || isArrayIndex(); }
     public boolean isSortedAsc() { return sorted; }
     public boolean isSortedDesc() { return false; }
@@ -178,10 +165,9 @@ public class Column implements Externalizable {
         decl = new ColumnDecl();
         decl.readExternal(in);
         byte encoded = in.readByte();
-        if ((encoded & 0x01)>0) isPrimShard = true;
-        if ((encoded & 0x02)>0) indexed = true;
-        if ((encoded & 0x04)>0) sorted = true;
-        if ((encoded & 0x08)>0) asc = true;
+        if ((encoded & 0x01)>0) indexed = true;
+        if ((encoded & 0x02)>0) sorted = true;
+        if ((encoded & 0x04)>0) asc = true;
         if ((encoded & 0x10)>0) ordered = true;
         if ((encoded & 0x20)>0) isConst = true;
 
@@ -194,10 +180,9 @@ public class Column implements Externalizable {
     public void writeExternal(ObjectOutput out) throws IOException {
         byte encoded=0;
         decl.writeExternal(out);
-        if (isPrimShard) encoded |= 0x01;
-        if (indexed) encoded |= 0x02;
-        if (sorted) encoded |= 0x04;
-        if (asc) encoded |= 0x08;
+        if (indexed) encoded |= 0x01;
+        if (sorted) encoded |= 0x02;
+        if (asc) encoded |= 0x04;
         if (ordered) encoded |= 0x10;
         if (isConst) encoded |= 0x20;
         out.writeByte(encoded);

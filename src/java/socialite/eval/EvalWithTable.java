@@ -12,7 +12,7 @@ import org.apache.commons.logging.LogFactory;
 import socialite.resource.JoinerBuilder;
 import socialite.tables.TmpTableInst;
 import socialite.tables.TableInst;
-import socialite.visitors.Joiner;
+import socialite.tables.Joiner;
 
 public class EvalWithTable extends EvalCommand implements Externalizable {
 	static final long serialVersionUID = 1;

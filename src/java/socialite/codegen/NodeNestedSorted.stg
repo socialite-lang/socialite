@@ -1,0 +1,214 @@
+import "TableCommon.stg"
+import "NodeNestedCommon.stg"
+
+nodeNestedSorted(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
+    <nodeNestedInit()>
+
+    static class Node implements NodeBase {
+        static final int CHUNK_SIZE = 128;  // must be smaller than 256
+
+        <nodeNestedDataDecl()>
+
+        volatile <nestedTable>[] nested;
+        volatile int len;
+
+        Node() { this(CHUNK_SIZE); }
+        Node(int capacity) { allocColumns(capacity); }
+
+        boolean isEmpty() { return len() == 0; }
+        boolean isFull() { return len() == CHUNK_SIZE; }
+        int len() {
+            int l = len;
+            if (l \< 0) { l = -l-1; }
+            return l;
+        }
+        <nestedTable> nested(int offset) { return nested[offset]; }
+
+        static long lenOffset;
+        static {
+            try {
+                lenOffset = unsafe.objectFieldOffset(Node.class.getDeclaredField("len"));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        void wlock() {
+            if (<name>._isLockEnabled() == LockStatus.disabled) { return; }
+
+            do {
+                int l = len;
+                if (l >= 0 && unsafe.compareAndSwapInt(this, lenOffset, l, -l-1)) {
+                    break;
+                }
+            } while (true);
+        }
+        void wunlock() {
+            if (<name>._isLockEnabled() == LockStatus.disabled) { return; }
+
+            int l = len;
+            unsafe.compareAndSwapInt(this, lenOffset, l, -l-1);
+        }
+        void rlock() { wlock(); }
+        void runlock() { wunlock(); }
+
+        public String toString() {
+            String s="{";
+            for (int i=0; i\<len(); i++) {
+                s+="(";
+                <columns:{c|s+= col<i0>(i)+" ";<\n>}>
+                s+="),";
+            }
+            s+="}";
+            return s;
+        }
+        int binarySearch1(<sortedCol.type> val) {
+            int pos = Arrays.binarySearch(col<sortedCol.relPos>, 0, len(), val);
+            if (pos \< 0) { return pos; }
+            while (pos > 0) {
+                pos--;
+                if (!(col<sortedCol.relPos>(pos)<EqOpMap.(sortedCol.type)>(val))) {
+                    return pos+1;
+                }
+            }
+            return pos;
+        }
+        public boolean contains(<columns:{c|<c.type> a<i0>}; separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
+            int pos = binarySearch1(a<sortedCol.relPos>);
+            if (pos \< 0) { return false; }
+            for (int i=pos; i\<len(); i++) {
+                if (!(col<sortedCol.relPos>(i)<EqOpMap.(sortedCol.type)>(a<sortedCol.relPos>))) {return false;}
+                if (contains_at(<columns:{c|a<i0>}; separator=", ">,i) &&
+                        nested[i].contains(<nestedColumns:{c|b<i0>};separator=",">)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        boolean contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at) {
+            int i = at;
+            return true<columns:{c|&& a<i0><EqOpMap.(c.type)>(col<i0>(i))}>;
+        }
+        boolean contains_at(<columns:{c|<c.type> a<i0>, }><nestedColumns:{c|<c.type> b<i0>, }>int at) {
+            return true<columns:{c|&& a<i0><EqOpMap.(c.type)>(col<i0>(at))}> &&
+                        nested(at).contains(<nestedColumns:{c|b<i0>};separator=",">);
+        }
+        int inc_len() {
+            if (len \< 0) { return -(len--)-1; }
+            else { return len++; }
+        }
+        public int insert(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
+            int pos = -1;
+            if (len() == 0) { pos = 0; }
+            else { pos = Arrays.binarySearch(col<sortedCol.relPos>, 0, len(), a<sortedCol.relPos>); }
+            if (pos \< 0) { pos = -pos-1; }
+            if (pos != len()) {
+                <columns:{c|System.arraycopy(col<i0>, pos, col<i0>, pos+1, len()-pos);<\n>}>
+                System.arraycopy(nested, pos, nested, pos+1, len()-pos);
+            }
+            <columns:{c|setCol<i0>(pos, a<i0>);<\n>}>
+            <nestedTable> _nested = nested[pos];
+            if (_nested == null) { _nested = nested[pos] = <nestedTable>.create(); }
+            _nested.insert(<nestedColumns:{c|b<i0>};separator=",">);
+            return inc_len();
+        }
+        public boolean iterate_sortby(<sortedCol.type> a, ColumnConstraints constr, <visitorClass> v) {
+            rlock();
+            try {
+                int _len = len();
+                int pos = Arrays.binarySearch(col<sortedCol.relPos>, 0, _len, a);
+                if (pos \< 0) { return false; }
+
+                for (int i=pos; i\<_len; i++) {
+                    if (!(col<sortedCol.relPos>(i)<EqOpMap.(sortedCol.type)>(a))) {
+                        return false;
+                    }
+                    boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(i)}; separator=", ">);
+                    if (cont) { nested(i).iterate_by(constr, v); }
+                }
+                return true;
+            } finally {
+                runlock();
+            }
+        }
+        public boolean iterate_range(<sortedCol.type> from, <sortedCol.type> to, ColumnConstraints constr, <visitorClass> v) {
+            rlock();
+            try {
+                for (int i=0; i\<len(); i++) {
+                  <if(sortedCol.primitive)>
+                    if (col<sortedCol.relPos>(i) \< from) { continue; }
+                    if (col<sortedCol.relPos>(i) > to) { continue; }
+                  <else>
+                    if (col<sortedCol.relPos>(i).compareTo(from) \< 0) { continue; }
+                    if (col<sortedCol.relPos>(i).compareTo(to) > 0) { continue; }
+                  <endif>
+                    boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(i)}; separator=", ">);
+                    if (cont) { nested(i).iterate_by(constr, v); }
+                }
+                return true;
+            } finally {
+                runlock();
+            }
+        }
+        boolean insert_with_prefix(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
+            int pos = binarySearch1(a<sortedCol.relPos>); assert pos>=0;
+            for (int i=pos; i\<len(); i++) {
+                if (!(col<sortedCol.relPos>(i)<EqOpMap.(sortedCol.type)>(a<sortedCol.relPos>))) { return false; }
+                if (contains_at(<columns:{c|a<i0>}; separator=", ">,i)) {
+                    nested(i).insert(<nestedColumns:{c|b<i0>};separator=",">);
+                    return true;
+                }
+            }
+            return false;
+        }
+        void update(int offset<columns:{c|, <c.type> a<i0>}><nestedColumns:{c|, <c.type> b<i0>}>) {
+            <columns:{c|setCol<i0>(len(), a<i0>);<\n>}>
+        }
+        boolean iterate(<visitorClass> v) {
+            rlock();
+            try {
+                int _len = len();
+                for (int i=0; i\<_len; i++) {
+                    boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(i)}; separator=", ">);
+                    if (cont) { nested(i).iterate(v); }
+                }
+                return true;
+            } finally {
+                runlock();
+            }
+        }
+        public boolean iterate_at(ColumnConstraints constr, int pos, <visitorClass> v) {
+            rlock();
+            try {
+                boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(pos)}; separator=", ">);
+                if (cont) {
+                    if (constr.getMaxColumn() > <last(columns).absPos>) {
+                        nested(pos).iterate_by(constr, v);
+                        return true;
+                    } else {
+                        nested(pos).iterate(v);
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            } finally {
+                runlock();
+            }
+        }
+
+        public boolean iterate_by(ColumnConstraints constr, <visitorClass> v) {
+            rlock();
+            try {
+                int _len = len();
+                for (int i=0; i\<_len; i++) {
+                    boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(i)}; separator=", ">);
+                    if (cont) { nested(i).iterate_by(constr, v); }
+                }
+                return true;
+            } finally {
+                runlock();
+            }
+        }
+    }
+>>

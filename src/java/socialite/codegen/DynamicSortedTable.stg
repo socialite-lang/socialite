@@ -1,0 +1,284 @@
+group dynamic-table;
+
+import "TableCommon.stg"
+import "NodeSorted.stg"
+
+dynamicSortedTable(tableName, name, visitorClass, methods,
+             size, id,
+             columns, pcolumns, gbColumns, gbAggrColumn,
+             sortedCol, idxCols,
+             multiSet=false, isNested=false) ::= <<
+<if(!isNested)>
+package socialite.tables;
+
+<importForTable()>
+<endif>
+
+// dynamicSortedTable
+<if(!isNested)>public<endif> final class <name> extends AbstractTableInst {
+    private static final long serialVersionUID = 1;
+
+    public static int tableid() { return <id>; }
+    public static <name> create() { return new <name>(); }    
+    
+    <nodeSorted(name, pcolumns, columns, sortedCol)>
+
+    /** synchronization fields and methods */
+    static volatile LockStatus lockStatus = LockStatus.writeLockEnabled;
+    static VoidLock nolock = new VoidLock();
+    static ReentrantReadWriteLock reallock = new ReentrantReadWriteLock();
+
+    static volatile Lock writeLock = reallock.writeLock();
+    static volatile Lock readLock = nolock.readLock();
+
+    static void _enableInternalLock(boolean writeOnly) {
+        writeLock = reallock.writeLock();
+        if (writeOnly) {
+            readLock = nolock.readLock();
+            lockStatus = LockStatus.writeLockEnabled;
+        } else {
+            readLock = reallock.readLock();
+            lockStatus = LockStatus.enabled;
+        }
+    }
+    static void _disableInternalLock() {
+        writeLock = nolock.writeLock();
+        readLock = nolock.readLock();
+        lockStatus = LockStatus.disabled;
+    }
+    static LockStatus _isLockEnabled() {
+        return lockStatus;
+    }
+
+    public void enableInternalLock(boolean writeOnly) {
+        _enableInternalLock(writeOnly);
+    }
+    public void disableInternalLock() {
+        _disableInternalLock();
+    }
+    public LockStatus isLockEnabled() {
+        return _isLockEnabled();
+    }
+
+    void wlock() { writeLock.lock(); }
+    void wunlock() { writeLock.unlock(); }
+
+    void rlock() { readLock.lock(); }
+    void runlock() { readLock.unlock(); }
+
+    // forces acquiring readlock even if only write lock is enabled (writeLockEnabled)
+    void force_rlock() {
+        if (lockStatus == LockStatus.writeLockEnabled) {
+            reallock.readLock().lock();
+        } else {
+            readLock.lock();
+        }
+    }
+    void force_runlock() {
+        if (lockStatus == LockStatus.writeLockEnabled) {
+            reallock.readLock().unlock();
+        } else {
+            readLock.unlock();
+        }
+    }
+
+    SArrayList\<Node> nodeList;
+
+    public <name>() {
+        nodeList = new SArrayList\<Node>(8);
+    }
+
+    public int id() { return <id>; }
+    public int size() { assert false; return -1; }
+    public String name() { return "<tableName>"; }
+
+    public boolean isEmpty() { return nodeList.size() == 0; }
+    public String toString() {
+        String str="Table <tableName>(id=<id>):";
+        return str + nodeList.getQuick(0).toString();
+    }
+    public void clearQuick() { clear(); }
+    public void clear() {
+        nodeList.clear();
+        <idxCols:{ic|index<ic.absPos>.clear();<\n>}>
+        <if(gbColumns)>groupbyMap.clear();<endif>
+    }
+
+    int binarySearch(<sortedCol.type> v) {
+        if (nodeList.size()==0) {return -1;}
+        int lo=0, hi=nodeList.size()-1;
+        <sortedCol.type> midVal1, midVal2;
+        while (lo \<= hi) {
+            int mid = (lo+hi)/2;
+            Node n = nodeList.getQuick(mid);
+            int _len = n.len();
+            midVal1 = n.col<sortedCol.relPos>(0);
+            midVal2 = n.col<sortedCol.relPos>(_len-1);
+        <if(sortedCol.primitive)>
+            if (midVal2 \< v) {lo = mid+1;} 
+            else if (midVal1 > v) {hi = mid-1;}
+            else {return mid;}
+        <else>
+            if (midVal2.compareTo(v) \< 0) {lo = mid+1;}
+            else if (midVal1.compareTo(v) > 0) {hi = mid-1;} 
+            else {return mid;}
+        <endif> 
+        }
+        if (lo == nodeList.size()) {
+            if (!nodeList.get(lo-1).isFull()) { lo--; }
+        }
+        return -(lo+1);
+    }
+    int binarySearch1(<sortedCol.type> v) {
+        int pos = binarySearch(v);
+        if (pos \< 0) return pos;
+        while (pos > 0) {
+            pos--;
+            Node n = nodeList.getQuick(pos);
+            int _len = n.len();
+            if (!(n.col<sortedCol.relPos>(_len-1)<EqOpMap.(sortedCol.type)>(v))) {return pos+1;}
+        }
+        return pos;
+    }
+    int binarySearch2(<sortedCol.type> v) {
+        int pos = binarySearch(v);
+        if (pos \< 0) return pos;
+        while (pos \< nodeList.size()-1) {
+            pos++;
+            Node n = nodeList.getQuick(pos);
+            if (!(n.col<sortedCol.relPos>(0)<EqOpMap.(sortedCol.type)>(v))) {return pos-1;}
+        }
+        return pos;
+    }
+    public boolean contains(<columns:{c|final <c.type> a<i0>};separator=", ">) {
+        rlock();
+        try {
+            int pos = binarySearch1(a<sortedCol.relPos>);
+            if (pos \< 0) {return false;}
+            for (int i=pos; i\<nodeList.size(); i++) {
+            <if(sortedCol.primitive)>
+                if (nodeList.getQuick(i).col<sortedCol.relPos>(0) > a<sortedCol.relPos>) {return false;}
+            <else>
+                if (nodeList.getQuick(i).col<sortedCol.relPos>(0).compareTo(a<sortedCol.relPos>) > 0) {return false;}
+            <endif>
+                if (nodeList.getQuick(i).contains(<columns:{c|a<i0>};separator=", ">)) {
+                    return true;
+                }
+            }
+            return false;
+        } finally {
+            runlock();
+        }
+    }
+    public boolean insert(<columns:{c|<c.type> a<i0>};separator=", ">) {
+        wlock();
+    <if(!isNested && !multiSet)>
+        if (contains(<columns:{c|a<i0>};separator=",">)) {
+            wunlock();
+            return false;
+        }
+    <endif>
+        int pos = binarySearch1(a<sortedCol.relPos>);
+        if (pos \< 0) { pos = -pos-1; }
+        if (nodeList.size() == 0) {
+            Node n = new Node$Init();
+            n.insert(<columns:{c|a<i0>};separator=", ">);
+            nodeList.add(n);
+            wunlock();
+        } else {
+            if (pos >= nodeList.size()) { pos = nodeList.size()-1; }
+            Node n = nodeList.getQuick(pos);
+            n.wlock();
+            if (n.isFull()) {
+                Node n1 = n.copyOfRange(0, n.len()/2);
+                Node n2 = n.copyOfRange(n.len()/2, n.len());
+            <if(sortedCol.primitive)>
+                boolean smaller = a<sortedCol.relPos> \< n2.col<sortedCol.relPos>(0);
+            <else>
+                boolean smaller = a<sortedCol.relPos>.compareTo(n2.col<sortedCol.relPos>(0)) \< 0;
+            <endif>
+                if (smaller) {
+                    n1.insert(<columns:{c|a<i0>};separator=", ">);
+                } else {
+                    n2.insert(<columns:{c|a<i0>};separator=", ">);
+                }
+                nodeList.replaceWith(pos, n1, n2);
+                wunlock();
+                n.wunlock();
+            } else {
+                wunlock();
+                n.insert(<columns:{c|a<i0>};separator=", ">);
+                n.wunlock();
+            }
+        }
+        return true;
+    }
+
+    public void iterate(<visitorClass> v) {
+        rlock();
+        try {
+            for (int i=0; i\<nodeList.size(); i++) {
+                Node n = nodeList.getQuick(i);
+                boolean cont = n.iterate(v);
+                if (!cont) { return; }
+            }
+         } finally {
+            runlock();
+         }
+    }
+    public void iterate_by(ColumnConstraints constr, final <visitorClass> v) {
+        rlock();
+        try {
+            if (constr.hasRange(<sortedCol.absPos>)) {
+                iterate_range(constr.getRange(<sortedCol.absPos>), constr, v);
+                return;
+            } else if (constr.hasColumn(<sortedCol.absPos>)) {
+                ColumnValue colVal = constr.getColumnValue(<sortedCol.absPos>);
+                <sortedCol.type> a = colVal.getValue((<sortedCol.type>)0);
+                int nodePos = binarySearch1(a);
+                if (nodePos \< 0) { nodePos = -nodePos-1; \}
+                for (int i=nodePos; i\<nodeList.size(); i++) {
+                    Node n = nodeList.getQuick(i);
+                    boolean cont = n.iterate_sortby(a, v);
+                    if (!cont) { break; }
+                }
+                return;
+            }
+        } finally { runlock(); }
+    }
+
+    public void iterate_range(ColumnRange range, ColumnConstraints _, final <visitorClass> v) {
+        rlock();
+        try {
+            <sortedCol.type> from = (<sortedCol.type>)range.getFrom();
+            <sortedCol.type> to = (<sortedCol.type>)range.getTo();
+
+            int nodePos1 = binarySearch1(from);
+            if (nodePos1 \< 0) { nodePos1 = -nodePos1-1; }
+            int nodePos2 = binarySearch2(to);
+            if (nodePos2 \< 0) { nodePos2 = -nodePos2-1; }
+            if (nodePos2 >= nodeList.size()) { nodePos2 = nodeList.size()-1; }
+
+            for (int i=nodePos1; i\<=nodePos2; i++) {
+                Node n = nodeList.getQuick(i);
+                n.iterate_range(from, to, v);
+            }
+        } finally { runlock(); }
+    }
+
+    public void iterate_at(ColumnConstraints _, int at, Object o) {
+        <visitorClass> v = (<visitorClass>)o;
+        int nodePos =  IndexUtil.getPos(at);
+        int offset = IndexUtil.getOffset(at);
+        rlock();
+        try {
+            Node n = nodeList.getQuick(nodePos);
+            n.iterate_at(_, offset, v);
+        } finally {
+            runlock();
+        }
+    }
+
+    <methods;separator="\n">
+}
+>>

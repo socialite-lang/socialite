@@ -1,6 +1,6 @@
 group dynamic-nested-table;
 import "TableCommon.stg"
-import "DynNestTableNode.stg"
+import "NodeNested.stg"
 
 dynamicNestedTable(tableName, name, visitorClass, nestedTable, classes, methods, 
         size, id, 
@@ -21,9 +21,8 @@ package socialite.tables;
     public static int tableid() { return <id>; }
     public static <name> create() { return new <name>(); }
     
-    <nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable)>
+    <nodeNested(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable)>
 
-    // XXX: if possible move to AbstractTableInst
     /** synchronization fields and methods */
     static volatile LockStatus lockStatus = LockStatus.writeLockEnabled;
     static VoidLock nolock = new VoidLock();
@@ -128,7 +127,6 @@ package socialite.tables;
     }
 
     public boolean contains(<columns:{c|final <c.type> a<i0>};separator=", "><nestedColumns:{c|, final <c.type> b<i0>}>) {
-    <if(sortedCol)>if (true) {return contains_sorted(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>,null);}<endif>
     <if(idxCols)>
         if (isEmpty()) { return false; }
         rlock();
@@ -167,46 +165,6 @@ package socialite.tables;
     <endif>
     }
 
-    public boolean contains(<columns:{c|final <c.type> a<i0>};separator=", "><nestedColumns:{c|, final <c.type> b<i0>}>, final boolean[] dontcare) {
-    <if(sortedCol)> if(dontcare==null || !dontcare[<sortedCol.relPos>]) {return contains_sorted(<columns:{c|a<i0>};separator=","><nestedColumns:{c|, b<i0>}>, dontcare);} <endif>
-        if (dontcare==null) {return contains(<columns:{c|a<i0>};separator=", "><nestedColumns:{c|, b<i0>}>);}
-    <if(idxCols)>
-        rlock();
-        using_index:
-        try {
-            ColumnConstraints constr = new ColumnConstraints();
-            <idxCols:{ic|if(!dontcare[<ic.relPos>]){constr.add(<ic.absPos>, a<ic.relPos>);\}<\n>}>
-            if (constr.isEmpty()) { break using_index; }
-            RoaringBitmap index = indexUtil.getExclusiveIndex(indexMap, constr);
-            if (index == null) { return false; }
-            IntIterator iter = index.getIntIterator();
-            while (iter.hasNext()) {
-                int val = iter.next();
-                int pos = IndexUtil.getPos(val);
-                int offset = IndexUtil.getOffset(val);
-                Node n = nodeList.getQuick(pos);
-                if (n.contains_at(<columns:{c|a<i0>};separator=", "><nestedColumns:{c|, b<i0>}>, offset, dontcare)) {
-                    return true;
-                }
-            }
-            return false;
-        } finally {
-            runlock();
-        }
-    <endif>
-        rlock();
-        try {
-            for (int i=0; i\<nodeList.size(); i++) {
-                Node n = nodeList.getQuick(i);
-                if (n.contains(<columns:{c|a<i0>};separator=", "><nestedColumns:{c|, b<i0>}>, dontcare)) {
-                    return true;
-                }
-            }
-            return false;
-        } finally {
-            runlock();
-        }
-    }
     void addToIndex(<idxCols:{ic|<ic.type> a<ic.relPos> ,}>int pos) {
         <idxCols:{ic|indexUtil.addIndex(index<ic.absPos>, a<ic.relPos>, pos);<\n>}>
     }
@@ -223,138 +181,13 @@ package socialite.tables;
         <endif>
     <endif>
     }
-<if(sortedCol)>
-    int binarySearch(<sortedCol.type> v, SArrayList\<Node> _nodeList) {
-        if (_nodeList.size()==0) {return -1;}
-        int lo=0, hi=_nodeList.size()-1;
-        <sortedCol.type> midVal1, midVal2;
-        while (lo \<= hi) {
-            int mid = (lo+hi)/2;
-            Node n = _nodeList.getQuick(mid);
-            int _len = n.len();
-            midVal1 = n.col<sortedCol.relPos>(0);
-            midVal2 = n.col<sortedCol.relPos>(_len-1);
-        <if(sortedCol.primitive)>
-            if (midVal2 \< v) {lo = mid+1;}
-            else if (midVal1 > v) {hi = mid-1;}
-            else {return mid;}
-        <else>
-            if (midVal2.compareTo(v) \< 0) {lo = mid+1;}
-            else if (midVal1.compareTo(v) > 0) {hi = mid-1;}
-            else {return mid;}
-        <endif>
-        }
-        if (lo == _nodeList.size()) {
-            if (!_nodeList.get(lo-1).isFull()) { lo--; }
-        }
-        return -(lo+1);
-    }
-    int binarySearch1(<sortedCol.type> v, SArrayList\<Node> _nodeList) {
-        int pos = binarySearch(v);
-        if (pos \< 0) return pos;
-        while (pos > 0) {
-            pos--;
-            Node n = _nodeList.getQuick(pos);
-            int _len = n.len();
-            if (!(n.col<sortedCol.relPos>(_len-1)<EqOpMap.(sortedCol.type)>(v))) {return pos+1;}
-        }
-        return pos;
-    }
-    int binarySearch2(<sortedCol.type> v, SArrayList\<Node> _nodeList) {
-        int pos = binarySearch(v);
-        if (pos \< 0) return pos;
-        while (pos \< _nodeList.size()-1) {
-            pos++;
-            Node n = _nodeList.getQuick(pos);
-            if (!(n.col<sortedCol.relPos>(0)<EqOpMap.(sortedCol.type)>(v))) {return pos-1;}
-        }
-        return pos;
-    }
-    boolean contains_sorted(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|,<c.type> b<i0>}>,boolean[] dontcare) {
-        rlock();
-        try {
-            int pos = binarySearch1(a<sortedCol.relPos>, nodeList);
-            if (pos \< 0) {return false;}
-            for (int i=pos; i\<nodeList.size(); i++) {
-            <if(sortedCol.primitive)>
-                if (myNodeList.getQuick(i).col<sortedCol.relPos>(0) > a<sortedCol.relPos>) {return false;\}
-            <else>
-                if (myNodeList.getQuick(i).col<sortedCol.relPos>(0).compareTo(a<sortedCol.relPos>) > 0) {return false;\}
-            <endif>
-                if (nodeList.getQuick(i).contains(<columns:{c|a<i0>,}><nestedColumns:{c| b<i0>,}> dontcare)) {
-                    return true;
-                }
-            }
-            return false;
-        } finally {
-            runlock();
-        }
-    }
-    boolean insert_sorted(<columns:{c|final <c.type> a<i0>};separator=", "><nestedColumns:{c|, final <c.type> b<i0>}>) {
-        wlock();
-    <if(!isNested && !multiSet)>
-        if (contains(<columns:{c|a<i0>};separator=","><nestedColumns:{c|, b<i0>}>)) {
-            wunlock();
-            return false;
-        }
-    <endif>
-        int pos = binarySearch1(a<sortedCol.relPos>, nodeList);
-        boolean found = pos >= 0;
-        if (found) {
-            for (int i=pos; i \< nodeList.size(); i++) {
-                Node n = nodeList.getQuick(pos);
-            <if(sortedCol.primitive)>
-                if (n.col<sortedCol.relPos>(0) > a<sortedCol.relPos>) {break;}
-            <else>
-                if (n.col<sortedCol.relPos>(0).compareTo(a<sortedCol.relPos>) > 0) {break;}
-            <endif>
-                if (n.insert_with_prefix(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>)) {
-                    wunlock();
-                    return true;
-                }
-            }
-        }
-        if (pos \< 0) { pos = -pos-1; }
-        if (nodeList.size() == 0) {
-            Node n = new Node$Init();
-            n.insert(<columns:{c|a<i0>};separator=", "><nestedColumns:{c|,b<i0>}>);
-            nodeList.add(n);
-            wunlock();
-        } else {
-            if (pos >= nodeList.size()) { pos = nodeList.size()-1; }
-            Node n = nodeList.getQuick(pos);
-            n.wlock();
-            if (n.isFull()) {
-                Node n1 = n.copyOfRange(0, n.len()/2);
-                Node n2 = n.copyOfRange(n.len()/2, n.len());
-            <if(sortedCol.primitive)>
-                boolean smaller = a<sortedCol.relPos> \< n2.col<sortedCol.relPos>(0);
-            <else>
-                boolean smaller = a<sortedCol.relPos>.compareTo(n2.col<sortedCol.relPos>(0)) \< 0;
-            <endif>
-                if (smaller) {
-                    n1.insert(<columns:{c|a<i0>};separator=", "><nestedColumns:{c|,b<i0>}>);
-                } else {
-                    n2.insert(<columns:{c|a<i0>};separator=", "><nestedColumns:{c|,b<i0>}>);
-                }
-                nodeList.replaceWith(pos, n1, n2);
-                wunlock();
-                n.wunlock();
-            } else {
-                wunlock();
-                n.insert(<columns:{c|a<i0>};separator=", "><nestedColumns:{c|,b<i0>}>);
-                n.wunlock();
-            }
-        }
-        return true;
-    }
-<endif> <! if(sortedCol) !>
+
     boolean insert_with_prefix(<columns:{c|final <c.type> a<i0>};separator=", "><nestedColumns:{c|, final <c.type> b<i0>}>) {
     <if(idxCols)>
         ColumnConstraints constr = new ColumnConstraints();
         <idxCols:{ic|constr.add(<ic.absPos>, a<ic.relPos>);<\n>}>
         RoaringBitmap index = indexUtil.getExclusiveIndex(indexMap, constr);
-        do {
+        if (true) {
             if (index == null) { break; }
             IntIterator iter = index.getIntIterator();
             while (iter.hasNext()) {
@@ -370,7 +203,7 @@ package socialite.tables;
                 }
             }
             return false;
-        } while (false);
+        }
     <endif>
         for (int j=0; j\<nodeList.size(); j++) {
             Node n = nodeList.getQuick(j);
@@ -386,7 +219,6 @@ package socialite.tables;
         return false;
     }
     public boolean insert(<columns:{c|final <c.type> a<i0>};separator=", "><nestedColumns:{c|, final <c.type> b<i0>}>) {
-    <if(sortedCol)> if (true) { return insert_sorted(<columns:{c|a<i0>};separator=", "><nestedColumns:{c|,b<i0>}>); } <endif>
         wlock();
     <if(!isNested && !multiSet)>
         if (contains(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>)) {
@@ -449,25 +281,6 @@ package socialite.tables;
     }
 
     public void iterate_by(ColumnConstraints constr, final <visitorClass> v) {
-      <if(sortedCol)>
-        rlock();
-        try {
-            if (constr.hasRange(<sortedCol.absPos>) {
-                iterate_range(constr.getRange(<sortedCol.absPos>, constr, this);
-            } else if (constr.hasColumn(<sortedCol.absPos>)) {
-                ColumnVal colVal = constr.getColumnValue(<sortedCol.absPos>);
-                <sortedCol.type> a = colVal.getValue((sortedCol.type)0);
-                int nodePos = binarySearch1(a, nodeList);
-                if (nodePos \< 0) { nodePos = -nodePos-1; \}
-                for (int i=nodePos; i\<nodeList.size(); i++) {
-                    Node n = nodeList.getQuick(i);
-                    boolean cont = n.iterate_sortby(a, constr, v);
-                    if (!cont) { break; }
-                }
-                return;
-             }
-         } finally { runlock(); }
-      <endif>
         if (constr.getMinColumn() > <last(columns).absPos>) {
             rlock();
             try {
@@ -497,29 +310,6 @@ package socialite.tables;
             runlock();
         }
     }
-
-<if(sortedCol)>
-    public void iterate_range(ColumnRange range, ColumnConstraints constr, <visitorClass> v) {
-        rlock();
-        try {
-            <sortedCol.type> from = (<sortedCol.type>)range.getFrom();
-            <sortedCol.type> to = (<sortedCol.type>)range.getTo();
-
-            int nodePos1 = binarySearch1(from, nodeList);
-            if (nodePos1 \< 0) { nodePos1 = -nodePos1-1; }
-            int nodePos2 = binarySearch2(to, nodeList);
-            if (nodePos2 \< 0) { nodePos2 = -nodePos2-1; }
-            if (nodePos2 >= nodeList.size()) { nodePos2 = nodeList.size()-1; }
-
-            for (int i=nodePos1; i\<=nodePos2; i++) {
-                Node n = nodeList.getQuick(i);
-                boolean cont = n.iterate_range(from, to, constr, v);
-                if (!cont) { break; }
-            }
-        } finally { runlock(); }
-    }
-<endif> <! if(sortedCol) !>
-
     <methods;separator="\n">
 }
 <classes; separator="\n">

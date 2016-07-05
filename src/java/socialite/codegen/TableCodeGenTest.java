@@ -48,7 +48,6 @@ public class TableCodeGenTest {
 		Assert.not_true(t1.getColumn(0).isIndexed());
 		t1=map.get("Attr4a");
 		Assert.true_(t1.getColumn(0).isIndexed());
-		Assert.true_(t1.getColumn(0).isPrimaryShard());
 		Assert.equals(t1.getColumn(1).type(), String.class);
 		Assert.equals(t1.getColumn(2).type(), int.class);
 		

@@ -1,0 +1,105 @@
+
+
+nodeNestedInit() ::= <<
+// nodeNestedInit [[
+    static final class Node$Init extends Node {
+        static final int INIT_CHUNK_SIZE=2;
+        Node$Init() { super(INIT_CHUNK_SIZE); }
+
+        public int insert(<columns:{c|<c.type> a<i0>}; separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
+            if (len() == capacity()) {
+                expand();
+            }
+            return super.insert(<columns:{c|a<i0>}; separator=", "><nestedColumns:{c|, b<i0>}>);
+        }
+
+    <if(pcolumns)>
+        void expand() {
+            int size = len()*3/2;
+            if (size > CHUNK_SIZE) { size=CHUNK_SIZE; }
+            <pcolumns:{c|<c.type>[] _pcol<c.pos> = new <c.type>[size];<\n>}>
+            <pcolumns:{c|System.arraycopy(pcol<c.pos>, 0, _pcol<c.pos>, 0, len());<\n>}>
+            <pcolumns:{c|pcol<c.pos> = _pcol<c.pos>;<\n>}>
+
+            <nestedTable>[] _nested = new <nestedTable>[size];
+            System.arraycopy(nested, 0, _nested, 0, len());
+            nested = _nested;
+        }
+    <else>
+        void expand() {
+            int size = len()*3/2;
+            if (size > CHUNK_SIZE) { size=CHUNK_SIZE; }
+            <columns:{c|<c.type>[] _col<i0> = <if(c.arrayType)>new <c.componentType>[size][];<else>new <c.type>[size];<endif><\n>}>
+            <columns:{c|System.arraycopy(col<i0>, 0, _col<i0>, 0, len());<\n>}>
+            <columns:{c|col<i0> = _col<i0>;<\n>}>
+
+            <nestedTable>[] _nested = new <nestedTable>[size];
+            System.arraycopy(nested, 0, _nested, 0, len());
+            nested = _nested;
+        }
+    <endif>
+    }
+// ]] nodeNestedInit
+>>
+
+nodeNestedDataDecl() ::= <<
+// nodeNestedDataDecl [[
+<if(pcolumns)>
+    <pcolumns:{c|volatile <c.type>[] pcol<c.pos>;<\n>}>
+    void allocColumns(int size) {
+        <pcolumns:{c|pcol<c.pos> = new <c.type>[size];<\n>}>
+        nested = new <nestedTable>[size];
+    }
+    <columns:{c|
+        void setCol<i0>(int i, <c.type> val) {
+        <if(c.bitPacked)>
+            val = val \<\< <c.bitShift>;
+            pcol<c.pcolIdx>[i] = pcol<c.pcolIdx>[i] ^ ((pcol<c.pcolIdx>[i] ^ val) & <c.bitMask>);
+        <else>
+            pcol<c.pcolIdx>[i] = val;
+        <endif>
+        \}<\n>}>
+    <columns:{c|
+        <c.type> col<i0>(int i) {
+        <if(c.bitPacked)>
+            <c.type> v = (pcol<c.pcolIdx>[i] & <c.bitMask>) >\>> <c.bitShift>;
+            return v;
+        <else> return pcol<c.pcolIdx>[i];
+        <endif>
+        \}<\n>}>
+    Node copyOfRange(int from, int to) {
+        Node n = new Node();
+        <pcolumns:{c|System.arraycopy(pcol<i0>, from, n.pcol<i0>, 0, to-from);<\n>}>
+        System.arraycopy(nested, 0, n.nested, 0, len());
+        n.len = to-from;
+        return n;
+    }
+    int capacity() { return pcol0.length; }
+<else>
+    <columns:{c|volatile <c.type>[] col<i0>;<\n>}>
+    void allocColumns(int size) {
+        <columns:{c|
+            <if(c.arrayType)> col<i0> = new <c.compType>[size][];
+            <else> col<i0> = new <c.type>[size];
+            <endif>}>
+        nested = new <nestedTable>[size];
+    }
+    <columns:{c|
+        <c.type> col<i0>(int i) {
+            return col<i0>[i];
+        \}}>
+    <columns:{c|
+        void setCol<i0>(int i, <c.type> val) {
+            col<i0>[i] = val;
+        \}<\n>}>
+    Node copyOfRange(int from, int to) {
+        Node n = new Node();
+        <columns:{c|System.arraycopy(col<i0>, from, n.col<i0>, 0, to-from);<\n>}>
+        System.arraycopy(nested, 0, n.nested, 0, len());
+        n.len = to-from;
+        return n;
+    }
+    int capacity() { return col0.length; }
+<endif>
+// ]] nodeNestedDataDecl
+>>

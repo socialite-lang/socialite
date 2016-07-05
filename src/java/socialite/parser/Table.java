@@ -1,6 +1,7 @@
 package socialite.parser;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import socialite.parser.antlr.ColumnGroup;
@@ -174,12 +175,30 @@ public class Table implements Serializable {
 
     public Column[] getColumns() { return columns; }
     public Column getColumn(int idx) { return columns[idx]; }
+    public Column[] getSortedColumns() {
+        ArrayList<Column> cols = new ArrayList<>();
+        for (Column c:columns) {
+            if (c.isSorted()) {
+                cols.add(c);
+            }
+        }
+        return cols.toArray(new Column[]{});
+    }
     public int numColumns() { return columns.length; }
 
     public Class[] types() { return types; }
     public String className() { return className; }
+    public String nestedClassName(int level) {
+        /** This is used in {@link Compiler} for ordering compilation.
+         *  @see JavaMemFileManager#topoSortedClasses.
+         */
+        String name = className();
+        for (int i=0; i<level; i++) {
+            name += "$Nested";
+        }
+        return name;
+    }
 
-    public TemplateType getTemplateType() { return decl.getTemplateType();}
     public boolean isConcurrent() { return decl.isConcurrent(); }
     public boolean isApprox() { return decl.isApproxSet(); }
     public boolean isPredefined() { return decl.isPredefined(); }
@@ -192,6 +211,10 @@ public class Table implements Serializable {
         return true;
     }
 
+    public int nestingDepth() {
+        return nestedTableIndices.size();
+    }
+
     public int[] nestPos() {
         return nestedTableIndices.toArray();
     }
@@ -202,7 +225,7 @@ public class Table implements Serializable {
     }
 
     public int[] sortbyCols() {
-        if (sortbyCols==null) sortbyCols = decl.sortbyCols().toArray();
+        if (sortbyCols==null) { sortbyCols = decl.sortbyCols().toArray(); }
         return sortbyCols;
     }
     public int[] orderbyCols() {

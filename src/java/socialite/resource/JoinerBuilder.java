@@ -11,9 +11,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import socialite.parser.*;
 import socialite.tables.TableInst;
 import socialite.util.SociaLiteException;
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import socialite.visitors.Joiner;
+import socialite.tables.Joiner;
 
 public class JoinerBuilder {
     public static final Log L=LogFactory.getLog(JoinerBuilder.class);

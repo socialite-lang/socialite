@@ -45,5 +45,8 @@ class TestFunctions(unittest.TestCase):
                                  :- Path(s, d1), Edge(s,n), d=d1+1.""")
         self.assertEqual(s.query("Path(5, d)").first(), (5, 3))
 
-if __name__ == '__main__':
+def main():
     unittest.main()
+
+if __name__ == '__main__':
+    main()

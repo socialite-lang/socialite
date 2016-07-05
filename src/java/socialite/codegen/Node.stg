@@ -1,15 +1,18 @@
 import "TableCommon.stg"
 
-nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
+node(name, pcolumns, columns, sortedCol) ::= <<
     static final class Node$Init extends Node {
+    // write lock is controlled by the caller (host table)
+    // read lock is internally used
+
         static final int INIT_CHUNK_SIZE=2;
         Node$Init() { super(INIT_CHUNK_SIZE); }
 
-        int insert(<columns:{c|<c.type> a<i0>}; separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
+        int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
             if (len() == capacity()) {
                 expand();
             }
-            return super.insert(<columns:{c|a<i0>}; separator=", "><nestedColumns:{c|, b<i0>}>);
+            return super.insert(<columns:{c|a<i0>}; separator=", ">);
         }
 
     <if(pcolumns)>
@@ -19,10 +22,6 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
             <pcolumns:{c|<c.type>[] _pcol<c.pos> = new <c.type>[size];<\n>}>
             <pcolumns:{c|System.arraycopy(pcol<c.pos>, 0, _pcol<c.pos>, 0, len());<\n>}>
             <pcolumns:{c|pcol<c.pos> = _pcol<c.pos>;<\n>}>
-
-            <nestedTable>[] _nested = new <nestedTable>[size];
-            System.arraycopy(nested, 0, _nested, 0, len());
-            nested = _nested;
         }
     <else>
         void expand() {
@@ -31,10 +30,6 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
             <columns:{c|<c.type>[] _col<i0> = <if(c.arrayType)>new <c.componentType>[size][];<else>new <c.type>[size];<endif><\n>}>
             <columns:{c|System.arraycopy(col<i0>, 0, _col<i0>, 0, len());<\n>}>
             <columns:{c|col<i0> = _col<i0>;<\n>}>
-
-            <nestedTable>[] _nested = new <nestedTable>[size];
-            System.arraycopy(nested, 0, _nested, 0, len());
-            nested = _nested;
         }
     <endif>
     }
@@ -46,7 +41,6 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
         <pcolumns:{c|volatile <c.type>[] pcol<c.pos>;<\n>}>
         void allocColumns(int size) {
             <pcolumns:{c|pcol<c.pos> = new <c.type>[size];<\n>}>
-            nested = new <nestedTable>[size];
         }
         <columns:{c|
             void setCol<i0>(int i, <c.type> val) {
@@ -61,7 +55,7 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
             <c.type> col<i0>(<c.type>[] _pcol<c.pcolIdx>, int i) {
             <if(c.bitPacked)>
                 <c.type> v = (_pcol<c.pcolIdx>[i] & <c.bitMask>) >\>> <c.bitShift>;
-                //int m = (32 - <c.numBits>);
+                //int m = 32 - <c.numBits>;
                 //return (v \<\< m) >\> m; // sign extending
                 return v;
             <else> return _pcol<c.pcolIdx>[i];
@@ -70,7 +64,7 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
             <c.type> col<i0>(int i) {
             <if(c.bitPacked)>
                 <c.type> v = (pcol<c.pcolIdx>[i] & <c.bitMask>) >\>> <c.bitShift>;
-                //int m = (32 - <c.numBits>);
+                //int m = 32 - <c.numBits>;
                 //return (v \<\< m) >\> m; // sign extending
                 return v;
             <else> return pcol<c.pcolIdx>[i];
@@ -79,7 +73,6 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
         Node copyOfRange(int from, int to) {
             Node n = new Node();
             <pcolumns:{c|System.arraycopy(pcol<i0>, from, n.pcol<i0>, 0, to-from);<\n>}>
-            System.arraycopy(nested, 0, n.nested, 0, len());
             n.len = to-from;
             return n;
         }
@@ -91,7 +84,6 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
                 <if(c.arrayType)> col<i0> = new <c.compType>[size][];
                 <else> col<i0> = new <c.type>[size];
                 <endif>}>
-            nested = new <nestedTable>[size];
         }
         <columns:{c|
             <c.type> col<i0>(<c.type>[] _col<i0>, int i) {
@@ -108,14 +100,12 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
         Node copyOfRange(int from, int to) {
             Node n = new Node();
             <columns:{c|System.arraycopy(col<i0>, from, n.col<i0>, 0, to-from);<\n>}>
-            System.arraycopy(nested, 0, n.nested, 0, len());
             n.len = to-from;
             return n;
         }
         int capacity() { return col0.length; }
     <endif>
 
-        volatile <nestedTable>[] nested;
         volatile int len;
 
         Node() { this(CHUNK_SIZE); }
@@ -128,7 +118,6 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
             if (l \< 0) { l = -l-1; }
             return l;
         }
-        <nestedTable> nested(int offset) { return nested[offset]; }
 
         static long lenOffset;
         static {
@@ -186,90 +175,81 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
             }
             return pos;
         }
-        boolean contains_sorted(<columns:{c|<c.type> a<i0>}; separator=", "><nestedColumns:{c|, <c.type> b<i0>}>, boolean[] dontcare) {
+        boolean contains_sorted(<columns:{c|<c.type> a<i0>}; separator=", ">, boolean[] dontcare) {
             int pos = binarySearch1(a<sortedCol.relPos>);
             if (pos \< 0) { return false; }
-            boolean[] dontcareNested = null;
-            if (dontcare!=null) {
-                dontcareNested = Arrays.copyOfRange(dontcare, <length(columns)>, dontcare.length);
-            }
             for (int i=pos; i\<len(); i++) {
                 if (!(col<sortedCol.relPos>(i)<EqOpMap.(sortedCol.type)>(a<sortedCol.relPos>))) {return false;}
-                if (contains_at(<columns:{c|a<i0>}; separator=", ">,i,dontcare) &&
-                        nested[i].contains(<nestedColumns:{c|b<i0>};separator=",">, dontcareNested)) {
-                    return true;
-                }
+                if (contains_at(<columns:{c|a<i0>}; separator=", ">,i,dontcare)) {return true;}
             }
             return false;
         }
     <endif>
-        boolean contains(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>, boolean[] dontcare) {
+        boolean contains(<columns:{c|<c.type> a<i0>}; separator=", ">, boolean[] dontcare) {
+            return _contains(<columns:{c|a<i0>};separator=",">, dontcare);
+        }
+        boolean _contains(<columns:{c|<c.type> a<i0>}; separator=", ">, boolean[] dontcare) {
         <if(sortedCol)>
             if (dontcare==null || !dontcare[<sortedCol.relPos>]) {
                 return contains_sorted(<columns:{c|a<i0>}; separator=", ">,dontcare);
             }
         <endif>
-            if (dontcare==null) {return contains(<columns:{c|a<i0>};separator=","><nestedColumns:{c|, b<i0>}>);}
-            boolean[] dontcareNested = Arrays.copyOfRange(dontcare, <length(columns)>, dontcare.length);
+            if (dontcare==null) {return contains(<columns:{c|a<i0>};separator=",">);}
             for (int i=0; i\<len(); i++) {
                 if (true<columns:{c|&& (dontcare[<i0>]||col<i0>(i)<EqOpMap.(c.type)>(a<i0>))}>) {
-                    return nested(i).contains(<nestedColumns:{c|b<i0>};separator=",">, dontcareNested);
+                    return true;
                 }
             }
             return false;
         }
-        boolean contains(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
+        boolean contains(<columns:{c|<c.type> a<i0>}; separator=", ">) {
+            return _contains(<columns:{c|a<i0>};separator=",">);
+        }
+
+        boolean _contains(<columns:{c|<c.type> a<i0>}; separator=", ">) {
         <if(sortedCol)>
-            return contains_sorted(<columns:{c|a<i0>}; separator=", "><nestedColumns:{c|,b<i0>}>,null);
+            return contains_sorted(<columns:{c|a<i0>}; separator=", ">,null);
         <else>
             for (int i=0; i\<len(); i++) {
                 if (true<columns:{c|&& col<i0>(i)<EqOpMap.(c.type)>(a<i0>)}>) {
-                    return nested(i).contains(<nestedColumns:{c|b<i0>};separator=",">);
+                    return true;
                 }
             }
             return false;
         <endif>
         }
         boolean contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at, boolean[] dontcare) {
-            if (dontcare==null) {return contains_at(<columns:{c|a<i0>}; separator=", ">,at);}
+            return _contains_at(<columns:{c|a<i0>}; separator=", ">, at, dontcare);
+        }
+        boolean contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at) {
+            return _contains_at(<columns:{c|a<i0>}; separator=", ">, at);
+        }
+        boolean _contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at, boolean[] dontcare) {
+            if (dontcare==null) {return _contains_at(<columns:{c|a<i0>}; separator=", ">,at);}
             int i = at;
             return true<columns:{c|&& (dontcare[<i0>]||a<i0><EqOpMap.(c.type)>(col<i0>(i)))}>;
         }
-        boolean contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at) {
+        boolean _contains_at(<columns:{c|<c.type> a<i0>}; separator=", ">, int at) {
             int i = at;
             return true<columns:{c|&& a<i0><EqOpMap.(c.type)>(col<i0>(i))}>;
-        }
-        boolean contains_at(<columns:{c|<c.type> a<i0>, }><nestedColumns:{c|<c.type> b<i0>, }>int at, boolean[] dontcare) {
-            if (dontcare==null) {return contains_at(<columns:{c|a<i0>}; separator=", "><nestedColumns:{c|,b<i0>}>,at);}
-            return true<columns:{c|&& (dontcare[<i0>]||a<i0><EqOpMap.(c.type)>(col<i0>(at)))}> &&
-                        nested(at).contains(<nestedColumns:{c|b<i0>};separator=",">,
-                                    Arrays.copyOfRange(dontcare, <length(columns)>, dontcare.length));
-        }
-        boolean contains_at(<columns:{c|<c.type> a<i0>, }><nestedColumns:{c|<c.type> b<i0>, }>int at) {
-            return true<columns:{c|&& a<i0><EqOpMap.(c.type)>(col<i0>(at))}> &&
-                        nested(at).contains(<nestedColumns:{c|b<i0>};separator=",">);
         }
         int inc_len() {
             if (len \< 0) { return -(len--)-1; }
             else { return len++; }
         }
     <if(sortedCol)>
-        int insert_sorted(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
+        int insert_sorted(<columns:{c|<c.type> a<i0>}; separator=", ">) {
             int pos = -1;
             if (len() == 0) { pos = 0; }
             else { pos = Arrays.binarySearch(col<sortedCol.relPos>, 0, len(), a<sortedCol.relPos>); }
             if (pos \< 0) { pos = -pos-1; }
             if (pos != len()) {
                 <columns:{c|System.arraycopy(col<i0>, pos, col<i0>, pos+1, len()-pos);<\n>}>
-                System.arraycopy(nested, pos, nested, pos+1, len-pos);
             }
             <columns:{c|setCol<i0>(pos, a<i0>);<\n>}>
-            <nestedTable> _nested = nested[pos];
-            if (_nested == null) { _nested = nested[pos] = new <nestedTable>(); }
-            _nested.insert(<nestedColumns:{c|b<i0>};separator=",">);
             return inc_len();
         }
-        boolean iterate_sortby(<sortedCol.type> a, ColumnConstraints constr, <visitorClass> v) {
+        boolean iterate_sortby(<sortedCol.type> a, <visitorClass> v) {
             rlock();
             try {
                 int _len = len();
@@ -280,15 +260,15 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
                     if (!(col<sortedCol.relPos>(i)<EqOpMap.(sortedCol.type)>(a))) {
                         return false;
                     }
-                    boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(i)}; separator=", ">);
-                    if (cont) { nested(i).iterate_by(constr, v); }
+                    v.visit(<columns:{c|col<i0>(i)}; separator=", ">);
                 }
                 return true;
             } finally {
                 runlock();
             }
         }
-        boolean iterate_range(<sortedCol.type> from, <sortedCol.type> to, ColumnConstraints constr, <visitorClass> v) {
+
+        boolean iterate_range(<sortedCol.type> from, <sortedCol.type> to, <visitorClass> v) {
             rlock();
             try {
                 for (int i=0; i\<len(); i++) {
@@ -299,35 +279,20 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
                     if (col<sortedCol.relPos>(i).compareTo(from) \< 0) { continue; }
                     if (col<sortedCol.relPos>(i).compareTo(to) > 0) { continue; }
                   <endif>
-                    boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(i)}; separator=", ">);
-                    if (cont) { nested(i).iterate_by(constr, v); }
+                    v.visit(<columns:{c|col<i0>(i)}; separator=", ">);
                 }
                 return true;
             } finally {
                 runlock();
             }
         }
-        boolean insert_with_prefix(<columns:{c|<c.type> a<i0>};separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
-            int pos = binarySearch1(a<sortedCol.relPos>); assert pos>=0;
-            for (int i=pos; i\<len(); i++) {
-                if (col<sortedCol.relPos>(i)<EqOpMap.(c.type)>(a<sortedCol.relPos>)) { return false; }
-                if (contains_at(<columns:{c|a<i0>}; separator=", ">,i)) {
-                    nested(i).insert(<nestedColumns:{c|b<i0>};separator=",">);
-                    return true;
-                }
-            }
-            return false;
+    <endif>// if(sorted)
+        void update(int offset, <columns:{c|<c.type> a<i0>}; separator=", ">) {
+            <columns:{c|setCol<i0>(offset, a<i0>);<\n>}>
         }
-    <endif>
-        void update(int offset<columns:{c|, <c.type> a<i0>}><nestedColumns:{c|, <c.type> b<i0>}>) {
-            <columns:{c|setCol<i0>(len(), a<i0>);<\n>}>
-        }
-        int insert(<columns:{c|<c.type> a<i0>}; separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
+        int insert(<columns:{c|<c.type> a<i0>}; separator=", ">) {
             <if(sortedCol)>if (true) {return insert_sorted(<columns:{c|a<i0>}; separator=", ">);}<endif>
             <columns:{c|setCol<i0>(len(), a<i0>);<\n>}>
-            <nestedTable> _nested = nested[len()];
-            if (_nested == null) { _nested = nested[len()] = new <nestedTable>(); }
-            _nested.insert(<nestedColumns:{c|b<i0>};separator=",">);
             return inc_len();
         }
         boolean iterate(<visitorClass> v) {
@@ -335,46 +300,22 @@ nodeNest(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <<
             try {
                 int _len = len();
                 for (int i=0; i\<_len; i++) {
-                    boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(i)}; separator=", ">);
-                    if (cont) { nested(i).iterate(v); }
+                    boolean cont = v.visit(<columns:{c|col<i0>(i)}; separator=", ">);
+                    if (!cont) { return false; }
                 }
                 return true;
             } finally {
                 runlock();
             }
         }
-        public boolean iterate_at(ColumnConstraints constr, int pos, <visitorClass> v) {
+        public boolean iterate_at(ColumnConstraints _, int pos, <visitorClass> v) {
             rlock();
             try {
-                boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(pos)}; separator=", ">);
-                if (cont) {
-                    if (constr.getMaxColumn() > <last(columns).absPos>) {
-                        nested(pos).iterate_by(constr, v);
-                        return true;
-                    } else {
-                        nested(pos).iterate(v);
-                        return true;
-                    }
-                } else {
-                    return false;
-                }
+                return v.visit(<columns:{c|col<i0>(pos)}; separator=", ">);
             } finally {
                 runlock();
             }
         }
 
-        public boolean iterate_by(ColumnConstraints constr, <visitorClass> v) {
-            rlock();
-            try {
-                int _len = len();
-                for (int i=0; i\<_len; i++) {
-                    boolean cont = v.visit<columns:{c|_<c.absPos>}>(<columns:{c|col<i0>(i)}; separator=", ">);
-                    if (cont) { nested(i).iterate_by(constr, v); }
-                }
-                return true;
-            } finally {
-                runlock();
-            }
-        }
     }
 >>

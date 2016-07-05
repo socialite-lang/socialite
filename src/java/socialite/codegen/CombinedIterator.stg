@@ -2,7 +2,7 @@ group combined-iterate;
 
 import "TableCommon.stg"
 
-combinedIterate_arr(name1, columns1, isNested1, name2, columns2, isNested2, visitor1, visitor2) ::= <<
+combinedIterate_arr(name1, columns1, sortedCol1, name2, columns2, sortedCol2, isNested, visitor1, visitor2) ::= <<
 // Array[Nested]Table, Array[Nested]Table
 
 void combined_iterate(<name1> table1, <name2> table2) {
@@ -18,84 +18,159 @@ void combined_iterate(<name1> table1, <name2> table2) {
     while (i \< size) {
         if (!table1.isEntryEmpty(i) && !table2.isEntryEmpty(i)) {
             <first(columns1).type> val = base1+i;
-            <callVisitor_arr("val", columns1, "table1", isNested1, visitor1)>
-            <callVisitor_arr("val", columns2, "table2", isNested2, visitor2)>
+            boolean cont;
+            <if(isNested)>
+                <visitor>.visit<columns1:{c|_<c.absPos>}>(val<rest(columns):{c|, table1.col<i>(i)}>);
+                cont = <visitor>.visit<columns2:{c|_<c.absPos>}>(val<rest(columns):{c|, table2.col<i>(i)}>);
+                if (cont) {combined_iterate(table1.nestedTables[i], table2.nestedTables[i]);}
+            <else>
+                <visitor1>.visit(val<rest(columns1):{c|, table1.col<i>(i)}>);
+                <visitor2>.visit(val<rest(columns2):{c|, table2.col<i>(i)}>);
+            <endif>
         }
         i++;
     }
 }
 >>
 
-callVisitor_arr(val, columns, tableName, isNested, visitor) ::= <<
+outmostVisitSuffix(col) ::= "<if(col.outmost)>_<col.absPos><endif>"
+outmostVisitParam(col, tableName) ::= "<if(col.outmost)>, <tableName>.col<col.absPos>(i)<endif>"
+
+callVisitor(val, columns, tableName, isNested, visitor) ::= <<
 <if(isNested)>
-  boolean cont = <visitor>.visit<columns:{c|_<c.absPos>}>(<val><rest(columns):{c|, <tableName>.col<i>(i)}>);
+  cont = <visitor>.visit<columns:outmostVisitSuffix()>(<val><rest(columns):outmostVisitParam(tableName)>);
   if (cont) { <tableName>.nestedTables[i].iterate(<visitor>); }
 <else>
   <visitor>.visit(<val><rest(columns):{c|, <tableName>.col<i>(i)}>);
 <endif>
 >>
 
-combinedIterate_dyn(name1, columns1, isNested1, name2, columns2, isNested2, visitorClass) ::= <<
+combinedIterate_dyn(name1, columns1, sortedCol1, name2, columns2, sortedCol2, isNested, visitor1, visitor2) ::= <<
 // Dynamic[Nested]Table, Dynamic[Nested]Table
 
-  static void combined_iterate_dyn(<name1> table1, <name2> table2, <visitorClass> visitor) {
-  // we assume col0 is sorted column
-    <name1>.Node node1 = table1.nodeList.get(0);
-    int offset1 = 0;
-    <name2>.Node node2 = table2.nodeList.get(0);
-    int offset2 = 0;
-    while (True) {
-        int cmp = node1.cmp_sorted_col_at(offset1, node2.col0(offset2));
-        if (cmp == 0) {
-            <callVisitor(columns1, "node1", isNested1)>
-            <callVisitor(columns2, "node2", isNested2)>
-        } else if (cmp > 0) {
-            offset2++;
-        } else {
-            offset1++;
+void combined_iterate(<name1> table1, <name2> table2) {
+    // we assume col0 is sorted column
+    int nodeIdx1 = 0, nodeIdx2 = 0;
+    int nodeListSize1 = table1.nodeList.size();
+    int nodeListSize2 = table2.nodeList.size();
+    while (nodeIdx1 \< nodeListSize1 && nodeIdx2 \< nodeListSize2) {
+        <name1>.Node node1 = table1.nodeList.get(nodeIdx1);
+        <name2>.Node node2 = table2.nodeList.get(nodeIdx2);
+
+        int offset1 = 0, offset2 = 0;
+        int len1 = node1.len(), len2 = node2.len();
+        while (offset1 \< len1 && offset2 \< len2) {
+            <sortedCol1.type> val1 = node1.col<sortedCol1.relPos>(offset1);
+            <sortedCol2.type> val2 = node2.col<sortedCol2.relPos>(offset2);
+            int cmp = (val1<CmpOpMap.(sortedCol1.type)>(val2));
+            if (cmp == 0) {
+                boolean cont;
+            <if(isNested)>
+                <visitor1>.visit<columns1:{c|_<c.absPos>}>(<columns1:{c|node1.col<i0>(offset1)}; separator=", ">);
+                cont = <visitor2>.visit<columns2:{c|_<c.absPos>}>(<columns2:{c|node2.col<i0>(offset2)}; separator=", ">);
+                if (cont) {combined_iterate(node1.nested[offset1], node2.nested[offset2]);}
+            <else>
+                node1.iterate_at(null, offset1, <visitor1>);
+                node2.iterate_at(null, offset2, <visitor2>);
+            <endif>
+                offset1++;
+                offset2++;
+            } else if (cmp > 0) {
+                offset2++;
+            } else {
+                offset1++;
+            }
         }
+        if (offset1 >= len1) { nodeIdx1++; }
+        if (offset2 >= len2) { nodeIdx2++; }
     }
-  }
+}
 >>
 
-callVisitor_dyn(columns, nodeVar, isNested) ::= <<
-<if(isNested)>
-  boolean cont = visitor.visit<columns:{c|_<c.absPos>}>(<columns:{c|, <nodeVar>.col<i>(i)}>);
-  if (cont) { <nodeVar>.nested(i).iterate(visitor); }
-<else>
-  visitor.visit(<columns:{c|, <nodeVar>.col<i>(i)}>);
-<endif>
+combinedIterate_arr_dyn(name1, columns1, sortedCol1, name2, columns2, sortedCol2, isNested, visitor1, visitor2) ::= <<
+// table1 is ArrayTable, table2 is DynamicTable
+void combined_iterate(<name1> table1, <name2> table2) {
+    int size1 = table1.length();
+
+    <first(columns1).type> base1 = table1.base();
+    int nodeListSize2 = table2.nodeList.size();
+    int nodeIdx2 = 0;
+    int i=0;
+    while (i \< size1 && nodeIdx2 \< nodeListSize2) {
+        <name2>.Node node2 = table2.nodeList.get(nodeIdx2);
+        int offset2 = 0;
+        int len2 = node2.len();
+
+        while (i \< size1 && offset2 \< len2) {
+            if (table1.isEntryEmpty(i)) {
+                i++;
+                continue;
+            }
+            <first(columns1).type> val1 = ((<first(columns1).type>)base1)+i;
+            <sortedCol2.type> val2 = node2.col<sortedCol2.relPos>(offset2);
+            int cmp = (val1<CmpOpMap.(sortedCol1.type)>(val2));
+            if (cmp == 0) {
+            <if(isNested)>
+                <visitor1>.visit<columns1:{c|_<c.absPos>}>(val<rest(columns1):{c|, table1.col<i>(i)}>);
+                cont = <visitor2>.visit<columns2:{c|_<c.absPos>}>(<columns2:{c|node2.col<i0>(offset2)}; separator=", ">);
+                if (cont) {combined_iterate(table1.nestedTables[i], table2.nestedTables[i]);}
+            <else>
+                <callVisitor("val1", columns1, "table1", isNested, visitor1)>
+                node2.iterate_at(null, offset2, <visitor2>);
+            <endif>
+                i++;
+                offset2++;
+            } else if (cmp > 0) {
+                offset2++;
+            } else {
+                i++;
+            }
+        }
+        if (offset2 >= len2) { nodeIdx2++; }
+    }
+}
 >>
 
-combine_arr(state, joinColumnVar, visitCall, arr, idx, columns, isNested) ::= <<
-  switch(<state>) {
-    case 0:
-        <idx> = 0;
-        <state> = 1;
+combinedIterate_dyn_arr(name1, columns1, sortedCol1, name2, columns2, sortedCol2, isNested, visitor1, visitor2) ::= <<
+// table1 is DynamicTable, table2 is ArrayTable
+void combined_iterate(<name1> table1, <name2> table2) {
 
-    case 1:
-        if (<joinColumnVar> > <arr>.base+<idx>) {
-            <idx> = <joinColumnVar> - <arr>.base;
+    int nodeListSize1 = table1.nodeList.size();
+    <first(columns2).type> base2 = table2.base();
+    int size2 = table2.length();
+    int nodeIdx1 = 0;
+    int i=0;
+    while (i \< size2 && nodeIdx1 \< nodeListSize1) {
+        <name1>.Node node1 = table1.nodeList.get(nodeIdx1);
+        int offset1 = 0;
+        int len1 = node1.len();
+
+        while (i \< size2 && offset1 \< len1) {
+            if (table2.isEntryEmpty(i)) {
+                i++;
+                continue;
+            }
+            <sortedCol1.type> val1 = node1.col<sortedCol1.relPos>(offset1);
+            <first(columns2).type> val2 = ((<first(columns2).type>)base2)+i;
+            int cmp = (val2<CmpOpMap.(sortedCol2.type)>(val1));
+            if (cmp == 0) {
+            <if(isNested)>
+                <visitor1>.visit<columns1:{c|_<c.absPos>}>(<columns1:{c|node1.col<i0>(offset1)}; separator=", ">);
+                cont = <visitor2>.visit<columns2:{c|_<c.absPos>}>(val<rest(columns2):{c|, table1.col<i>(i)}>);
+                if (cont) {combined_iterate(table1.nestedTables[i], table2.nestedTables[i]);}
+            <else>
+                node1.iterate_at(null, offset1, <visitor1>);
+                <callVisitor("val2", columns2, "table2", isNested, visitor2)>
+            <endif>
+                i++;
+                offset1++;
+            } else if (cmp > 0) {
+                offset1++;
+            } else {
+                i++;
+            }
         }
-        // now <joinColumnVar> \<= <arr>.base+<idx>
-        while (isEntryEmpty(<idx>) && <idx> \< <arr>._length()) {
-            <idx>++;
-        }
-
-        if (<idx> \>= <arr>._length()) {
-            <state> = 2; // done for the array table!
-            throw new StopIteration();
-        }
-
-        if (<joinColumnVar> == <arr>.base+<idx>) {
-            <first(columns).type> val = base1+<idx>;
-
-            <callVisitor_arr("val", columns, arr, isNested1)>
-            <visitCall>
-            <idx>++;
-        } 
-        break;
-    case 2:
-        throw new StopIteration();
-  }
+        if (offset1 >= len1) { nodeIdx1++; }
+    }
+}
 >>

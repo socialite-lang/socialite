@@ -1,24 +1,13 @@
 package socialite.codegen;
 
-import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
 
 import socialite.engine.LocalEngine;
 import socialite.eval.Eval;
-import socialite.functions.FunctionLoader;
-import socialite.parser.Parser;
 import socialite.parser.Rule;
-import socialite.parser.Table;
-import socialite.resource.SRuntime;
-import socialite.resource.TableInstRegistry;
 import socialite.tables.QueryVisitor;
-import socialite.tables.TableInst;
-import socialite.tables.TableUtil;
 import socialite.tables.Tuple;
 import socialite.util.Assert;
-import socialite.util.IdFactory;
-import socialite.visitors.VisitorImpl;
 
 
 public class CodeGenMainTest {
@@ -243,11 +232,11 @@ s:1768196, d:62
 		List<Eval> evals = codeGen.getEvalInsts();
 		for (Eval e:evals) e.run();
 		Rule r = codeGen.getEpoch().get(0).getRules().get(0);
-		Class prevKlass =CodeGenMain.visitorClass$.get(r.signature(codeGen.getRuntime().getTableMap())); 
+		Class prevKlass =CodeGenMain.joinerClass$.get(r.signature(codeGen.getRuntime().getTableMap()));
 		query = "Result(x, y) :- Rdf(x, u\"p2\", y).\n";
 		codeGen = en.compile(query);		
 		r=codeGen.getEpoch().get(0).getRules().get(0);
-		Class klass = CodeGenMain.visitorClass$.get(r.signature(codeGen.getRuntime().getTableMap()));
+		Class klass = CodeGenMain.joinerClass$.get(r.signature(codeGen.getRuntime().getTableMap()));
 		assert klass == prevKlass;
 		evals = codeGen.getEvalInsts();
 		for (Eval e:evals) e.run();

@@ -130,6 +130,9 @@ class DistArrayTablePartitionInfo implements PartitionInfo {
     public int machineIndexFor(double d) {
         throw new UnsupportedOperationException();
     }
+    public boolean isValidRange(int range) {
+        return range >= arrayBegin && range <= arrayEnd;
+    }
 }
 
 class DistHashPartitionInfo implements PartitionInfo {
@@ -222,4 +225,5 @@ class DistHashPartitionInfo implements PartitionInfo {
     public int[] getRange(int partitionIdx) { throw new UnsupportedOperationException(); }
     public int getRangeIndex(int range) { throw new UnsupportedOperationException(); }
 
+    public boolean isValidRange(int range) { return true; }
 }

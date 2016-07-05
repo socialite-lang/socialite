@@ -210,30 +210,6 @@ package socialite.tables;
         int i=(int)(n-base);
         return nestedTables[i].contains(<nestedColumns:{c|b<i>}; separator=", ">);
     }
-    public boolean contains(int n<rest(columns):{c|, <c.type> a<i>}><nestedColumns:{c|, <c.type> b<i>}>, boolean[] dontcare) {
-        if (dontcare==null || dontcare[0]) {
-            boolean contains=false;
-            for (int i=0; i\<nestedTables.length; i++) {
-                if (isEntryEmpty(i)) { continue; }
-                if (true<rest(columns): {c|&& (dontcare[<i>] || col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
-                    contains = nestedTables[i].contains(<nestedColumns:{c|b<i>}; separator=", ">, Arrays.copyOfRange(dontcare, <length(columns)>, dontcare.length));
-                }
-                if (contains) { return true; }
-            }
-            return false;
-        }
-        int i=(int)(n-base); rangeCheck(i);
-        if (isEntryEmpty(i)) { return false; }
-
-        <if(rest(columns))>
-        if (<rest(columns): {c|(dontcare[<i>] || col<i>(i)<EqOpMap.(c.type)>(a<i>))}; separator="&& ">) {
-            return nestedTables[i].contains(<nestedColumns:{t|b<i>}; separator=", ">, Arrays.copyOfRange(dontcare, <length(columns)>, dontcare.length));
-        } else { return false; }
-        <else>
-        return nestedTables[i].contains(<nestedColumns:{t|b<i>}; separator=", ">, Arrays.copyOfRange(dontcare, <length(columns)>, dontcare.length));
-        <endif>
-    }
-
     public boolean insert(<columns:{c|<c.type> a<i0>};separator=","><nestedColumns:{c|, <c.type> b<i>}>) {
         int i=(int)(a0-base); rangeCheck(i);
         wlock(a0);

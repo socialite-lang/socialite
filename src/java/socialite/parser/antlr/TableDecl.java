@@ -40,13 +40,15 @@ public class TableDecl implements Serializable {
     public TableDecl(String _name, List<ColumnDecl> _colDecls, NestedTableDecl _table) {
         name = _name;
         colDecls = _colDecls;
-        if (colDecls==null) colDecls = new ArrayList<ColumnDecl>();
+        if (colDecls==null) {
+            colDecls = new ArrayList<>();
+        }
         nestedTable = _table;
-        sortBy = new HashMap<String, SortBy>();
-        orderBy = new HashMap<String, OrderBy>();
-        indexBy = new HashMap<String, IndexBy>();
+        sortBy = new HashMap<>();
+        orderBy = new HashMap<>();
+        indexBy = new HashMap<>();
 
-        colNameToPos = new TObjectIntHashMap<String>();
+        colNameToPos = new TObjectIntHashMap<>();
         setColumnPositions();
     }
 
@@ -272,7 +274,6 @@ public class TableDecl implements Serializable {
         return num;
     }
 
-    public TemplateType getTemplateType() { return templateType; }
     public boolean isNested() { return nestedTable!=null; }
     public boolean isMultiSet() { return multiSet; }
     public boolean isApproxSet() { return approx; }

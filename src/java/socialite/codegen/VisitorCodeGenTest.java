@@ -14,7 +14,7 @@ import socialite.tables.Tuple;
 import socialite.util.Assert;
 import socialite.util.InternalException;
 import socialite.util.SociaLiteException;
-import socialite.visitors.Joiner;
+import socialite.tables.Joiner;
 
 
 public class VisitorCodeGenTest {
@@ -489,7 +489,7 @@ public class VisitorCodeGenTest {
 		JoinerCodeGen gen = new JoinerCodeGen(e, r, tableMap);
 		String src = gen.generate();
 		Compiler c= new Compiler();
-		boolean success=c.compile(gen.visitorName(), src);
+		boolean success=c.compile(gen.joinerName(), src);
 		if (!success) {
 			System.out.println(c.getErrorMsg());
 			throw new SociaLiteException();

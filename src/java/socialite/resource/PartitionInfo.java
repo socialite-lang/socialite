@@ -30,6 +30,7 @@ public interface PartitionInfo {
 	int machineIndexFor(long l);
 	int machineIndexFor(float f);
 	int machineIndexFor(double d);
+    boolean isValidRange(int range);
 }
 
 class ArrayTablePartitionInfo implements PartitionInfo {
@@ -113,6 +114,10 @@ class ArrayTablePartitionInfo implements PartitionInfo {
     public int machineIndexFor(long l) { throw new UnsupportedOperationException(); }
     public int machineIndexFor(float f) { throw new UnsupportedOperationException(); }
     public int machineIndexFor(double d) { throw new UnsupportedOperationException(); }
+
+    public boolean isValidRange(int range) {
+        return range >= arrayBegin && range <= arrayEnd;
+    }
 }
 
 class HashPartitionInfo implements PartitionInfo {
@@ -164,4 +169,6 @@ class HashPartitionInfo implements PartitionInfo {
 	public int machineIndexFor(long l) { throw new UnsupportedOperationException(); }
 	public int machineIndexFor(float f) { throw new UnsupportedOperationException(); }
 	public int machineIndexFor(double d) { throw new UnsupportedOperationException(); }
+
+    public boolean isValidRange(int range) { return true; }
 }

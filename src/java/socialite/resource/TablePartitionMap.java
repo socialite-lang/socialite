@@ -111,5 +111,8 @@ public class TablePartitionMap {
         return partitionInfo.get(tableId).getRange(partitionIndex);
     }
 
+    public boolean isValidRange(int tableId, int range) {
+        return partitionInfo.get(tableId).isValidRange(range);
+    }
 }
 

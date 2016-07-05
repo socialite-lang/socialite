@@ -2,11 +2,7 @@ package socialite.codegen;
 
 import gnu.trove.list.array.TIntArrayList;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.stringtemplate.v4.ST;
@@ -18,17 +14,16 @@ import socialite.parser.antlr.ColumnGroup;
 import socialite.resource.SRuntimeMaster;
 import socialite.tables.TableUtil;
 import socialite.util.Assert;
-import socialite.functions.Choice;
 import socialite.yarn.ClusterConf;
 
 public class JoinerCodeGen {
-    static String visitorPackage = "socialite.visitors";
+    static String joinerPackage = "socialite.tables";
 
     Rule rule;
     STGroup combinerGroup;
     STGroup tmplGroup;
     ST visitorTmpl;
-    String visitorName;
+    String joinerName;
 
     Epoch epoch;
     Map<String, Table> tableMap;
@@ -44,7 +39,7 @@ public class JoinerCodeGen {
         rule = r;
         tableMap = _tableMap;
 
-        visitorName = visitorClassName(rule, tableMap);
+        joinerName = joinerClassName(rule, tableMap);
 
         headP = rule.getHead();
         headT = tableMap.get(headP.name());
@@ -113,8 +108,8 @@ public class JoinerCodeGen {
         return m;
     }
 
-    public String visitorName() {
-        return visitorPackage + "." + visitorName;
+    public String joinerName() {
+        return joinerPackage + "." + joinerName;
     }
 
     boolean isGenerated() {
@@ -123,9 +118,9 @@ public class JoinerCodeGen {
     public String generate() {
         if (isGenerated()) { return visitorTmpl.render(); }
 
-        visitorTmpl.add("packageStmt", "package " + visitorPackage);
+        visitorTmpl.add("packageStmt", "package " + joinerPackage);
         visitorTmpl.add("modifier", "public");
-        visitorTmpl.add("name", visitorName);
+        visitorTmpl.add("name", joinerName);
 
         visitorTmpl.add("extends", "extends Joiner");
         visitorTmpl.add("interfaces", "Runnable");
@@ -246,7 +241,7 @@ public class JoinerCodeGen {
     }
 
     void generateConstructor() {
-        ST code = getNewMethodTmpl(visitorName, "");
+        ST code = getNewMethodTmpl(joinerName, "");
         visitorTmpl.add("methodDecls", code);
 
         code.add("args", "int _$epochId");
@@ -699,9 +694,9 @@ public class JoinerCodeGen {
                 code = insertExprCode(code, (Expr) o);
             } else if (o instanceof Predicate) {
                 Predicate p = (Predicate) o;
-                if (allVarsResolvedOrDontcare(p)) {
+                if (allVarsResolved(p)) {
                     code = returnIfNotContains(code, p);
-                } else if (canCombinedIterate(p)) {
+                } else if (canCombineIterate(p)) {
                     Predicate p2 = (Predicate)rule.getBody().get(p.getPos()+1);
                     genCombinedIterate(p, p2);
                     code.add("stmts", invokeCombinedIterate(p, p2));
@@ -943,11 +938,12 @@ public class JoinerCodeGen {
         return false;
     }
 
-    boolean allVarsResolvedOrDontcare(Predicate p) {
+    boolean allVarsResolved(Predicate p) {
         Set<Variable> resolvedVars = resolvedVarsArray[p.getPos()];
         for (Object param : p.inputParams()) {
-            if (!isDontCare(param) && !isConstOrResolved(resolvedVars, param))
+            if (!isConstOrResolved(resolvedVars, param)) {
                 return false;
+            }
         }
         return true;
     }
@@ -1122,78 +1118,28 @@ public class JoinerCodeGen {
             return null;
         }
     }
-    boolean canCombinedIterate(Predicate p) {
-        // returns true if p and the next predicate
-        // can be iterated together using combined iterator.
-        // Currently we require the sorted column to be the 1st column.
-        if (true) return false;
 
-        Table t1 = getTable(p);
-        Variable v1 = getSortedColumnVar(p, t1);
-        if (v1 == null) { return false; }
-        if (!t1.getColumn(0).isSorted()) {
-            return false;
-        }
+    boolean canCombineIterate(Predicate p) {
+        // Returns true if p and the next predicate can be iterated in a lock-step.
 
-        int nextPos = p.getPos()+1;
+        int nextPos = p.getPos() + 1;
         List body = rule.getBody();
         if (nextPos >= body.size()) { return false; }
 
         Object next = body.get(nextPos);
         if (!(next instanceof Predicate)) { return false; }
+        Predicate nextP = (Predicate) next;
 
-        Predicate nextP = (Predicate)next;
+        Table t1 = getTable(p);
         Table t2 = getTable(nextP);
-        Variable v2 = getSortedColumnVar(nextP, t2);
-        if (v2 == null) { return false; }
-        if (!t2.getColumn(0).isSorted()) {
-            return false;
-        }
-        return v1.equals(v2);
+        return CombinedIteratorGen.canCombineIterate(t1, t2, p, nextP);
     }
 
-    void genCombinedIterate_arr_and_arr(Table t1, Table t2, Predicate p1, Predicate p2) {
-        TableType tt1, tt2;
-        if (t1.hasNesting()) { tt1 = TableType.ArrayNestedTable; }
-        else { tt1 = TableType.ArrayTable; }
-        if (t2.hasNesting()) { tt2 = TableType.ArrayNestedTable; }
-        else { tt2 = TableType.ArrayTable; }
-
-        ST template = getCombinedIterte(tt1, tt2);
-        template.add("name1", t1.className());
-        template.add("name2", t2.className());
-        template.add("isNested1", t1.hasNesting());
-        template.add("isNested2", t2.hasNesting());
-        for (Column c:t1.getColumns()) {
-            template.add("columns1", c);
-        }
-        for (Column c:t2.getColumns()) {
-            template.add("columns2", c);
-        }
-
-        template.add("visitor1", visitorVar(p1));
-        template.add("visitor2", visitorVar(p2));
-
-        visitorTmpl.add("methodDecls", template.render());
-    }
-
-    void genCombinedIterate_arr_and(Table t1, Predicate p1, Table t2, Predicate p2) {
-        if (t2 instanceof ArrayTable) {
-            genCombinedIterate_arr_and_arr(t1, t2, p1, p2);
-        } else { // OtherTable
-            throw new AssertionError("genCombinedIterate: unsupported types:"+t1+","+t2);
-        }
-    }
     void genCombinedIterate(Predicate p1, Predicate p2) {
         Table t1 = getTable(p1);
         Table t2 = getTable(p2);
-        if (t1 instanceof ArrayTable) {
-            genCombinedIterate_arr_and(t1, p1, t2, p2);
-        } else {
-
-            throw new AssertionError("genCombinedIterate: unsupported types:"+t1+","+t2);
-        }
-
+        String m = CombinedIteratorGen.generate(t1, t2, visitorVar(p1), visitorVar(p2));
+        visitorTmpl.add("methodDecls", m);
     }
 
     void generateVisitMethods() {
@@ -1208,9 +1154,9 @@ public class JoinerCodeGen {
             Object o = body.get(i);
             if (o instanceof Predicate) {
                 Predicate p = (Predicate) o;
-                if (allVarsResolvedOrDontcare(p)) {
+                if (allVarsResolved(p)) {
                     code = returnIfNotContains(code, (Predicate) o);
-                } else if (canCombinedIterate(p)) {
+                } else if (canCombineIterate(p)) {
                     Predicate p2 = (Predicate) body.get(i+1);
                     if (p != iterStartP) {
                         genCombinedIterate(p, p2);
@@ -1794,11 +1740,10 @@ public class JoinerCodeGen {
     }
 
     ST returnIfNotContains(ST code, Predicate p) {
-        boolean[] dontCares = getDontcareFlags(p);
         // p.isNegated() is used to generate negated filter
-        return ifNotContains(code, p, "return true", dontCares);
+        return ifNotContains(code, p, "return true");
     }
-    ST ifNotContains(ST code, Predicate p, String actionStmt, boolean[] dontcares) {
+    ST ifNotContains(ST code, Predicate p, String actionStmt) {
         if (hasRemoteRuleBody() && tableTransferPos().contains(p.getPos())) {
             ST ifLocal = genAccumlRemoteBodyTable(code, p);
             code = ifLocal;
@@ -1812,45 +1757,24 @@ public class JoinerCodeGen {
             contains += o;
             firstParam = false;
         }
-        if (dontcares.length>0) {
-            contains += ", new boolean[]{";
-            for (int i=0; i<dontcares.length; i++) {
-                if (i!=0) contains += ",";
-                contains += dontcares[i];
-            }
-            contains += "}";
-        }
         contains += ")";
 
         String condition;
         String var = getVarName(p);
         if (isTablePartitioned(t)) {
-            if (dontcares.length>0 && dontcares[0]) {
-                String fallthrou=CodeGen.uniqueVar("_$fallthrou");
-                code.add("stmts", "boolean "+fallthrou+"=true");
-
-                ST for_ = tmplGroup.getInstanceOf("for");
-                for_.add("init", "int _$$i=0");
-                for_.add("cond", "_$$i<"+partitionMapVar()+".partitionNum("+t.id()+")");
-                for_.add("inc", "_$$i++");
-                code.add("stmts", for_);
-                ST if2_ = CodeGen.getVisitorST("if");
-                for_.add("stmts", if2_);
-
-                var += "[_$$i]";
-                condition = var+contains;
-                if2_.add("cond", condition);
-                if2_.add("stmts", fallthrou+"=false; break");
-                if (p.isNegated()) { condition = "!"+fallthrou; }
-                else { condition = fallthrou; }
+            condition = "!"+call(partitionMapVar(),"isValidRange",t.id(), p.first())+"||";
+            var += "["+ partitionIdxGetter(t, p.first())+"]";
+            if (p.isNegated()) {
+                condition += var+contains;
             } else {
-                var += "["+ partitionIdxGetter(t, p.first())+"]";
-                if (p.isNegated()) condition = var+contains;
-                else condition = "!" + var+contains;
+                condition += "!" + var+contains;
             }
         } else {
-            if (p.isNegated()) condition = var+contains;
-            else condition = "!" + var+contains;
+            if (p.isNegated()) {
+                condition = var+contains;
+            } else {
+                condition = "!" + var+contains;
+            }
         }
 
         ST if_ = CodeGen.getVisitorST("if");
@@ -1912,8 +1836,8 @@ public class JoinerCodeGen {
         return varName;
     }
 
-    static String visitorClassName(Rule r, Map<String, Table> tableMap) {
-        Class visitorClass = CodeGenMain.visitorClass$.get(r.signature(tableMap));
+    static String joinerClassName(Rule r, Map<String, Table> tableMap) {
+        Class visitorClass = CodeGenMain.joinerClass$.get(r.signature(tableMap));
         if (visitorClass!=null) {
             return visitorClass.getSimpleName();
         }
@@ -1937,6 +1861,25 @@ public class JoinerCodeGen {
         return var;
     }
 
+    String printOut(Object ...args) {
+        String out = "System.out.println(\"\"";
+        for (Object a:args) {
+            out += "+"+a;
+        }
+        out += ")";
+        return out;
+    }
+
+    String call(String instance, String method, Object ...args) {
+        return instance+"."+method+"("+makeArgs(args)+")";
+    }
+    String call(String method, Object ...args) {
+        return method+"("+makeArgs(args)+")";
+    }
+    String makeArgs(Object ... args) {
+        String[] strArgs = Arrays.stream(args).map(a->a.toString()).toArray(String[]::new);
+        return String.join(",", strArgs);
+    }
     String visitorVar(Predicate p) { return "$v"+p.getPos(); }
     String getVarName(Predicate p) {
         if (p.isHeadP()) {

@@ -153,6 +153,10 @@ public class Builtin {
     public static int len(float[] a) { return a.length; }
     public static int len(double[] a) { return a.length; }
 
+    public static int print(int a, int b) {
+        System.out.println(""+a+","+b);
+        return 1;
+    }
     public static int print(int a, int b, int c, int d) {
         System.out.println(""+a+","+b+", "+c+", "+d);
         return 1;
