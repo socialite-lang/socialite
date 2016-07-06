@@ -5,7 +5,7 @@ import "NodeSorted.stg"
 
 dynamicSortedTable(tableName, name, visitorClass, methods,
              size, id,
-             columns, pcolumns, gbColumns, gbAggrColumn,
+             columns, pcolumns, gbColumns, gbAggrColumns,
              sortedCol, idxCols,
              multiSet=false, isNested=false) ::= <<
 <if(!isNested)>

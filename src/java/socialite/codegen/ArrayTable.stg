@@ -2,7 +2,7 @@ group array-table;
 
 import "TableCommon.stg"
 
-arrayTable(tableName, name, visitorClass, columns, pcolumns, gbColumns, gbAggrColumn,
+arrayTable(tableName, name, visitorClass, columns, pcolumns, gbColumns, gbAggrColumns,
         base, size,
         idxCols,
         methods, id, 
@@ -313,31 +313,36 @@ package socialite.tables;
 >>
 
 groupbyArray() ::= <<
-    public boolean groupby_update(AbstractAggregation aggrFunc<columns:{c|, <c.type> a<i0>}>) {
+    public boolean groupby_update(<columns:{c|<c.type> a<i0>,}><gbAggrColumns:{c|AbstractAggregation f<i0>};separator=",">) {
         int i=(int)(a0-base); rangeCheck(i);
 
         boolean updated = false;
         wlock(a0);
-        if (isEntryEmpty(i)) {
-            updated = insert_really(<columns:{c|a<i0>}; separator=", ">);
-            wunlock(a0);
-        } else if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
-            <gbAggrColumn.type> oldVal = col<gbAggrColumn.relPos>(i);
-        <if(gbAggrColumn.immutable)>
-            <gbAggrColumn.type> ans = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
-            updated = (ans != oldVal);
-            if (updated) {
-                a<gbAggrColumn.relPos> = ans;
-                <rest(columns): {c|setCol<i>(i, a<i>);<\n>}>;
+        try {
+            if (isEntryEmpty(i)) {
+                return insert_really(<columns:{c|a<i0>}; separator=", ">);
+            } else if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
+            <gbAggrColumns: {c|
+                if (f<i0>!=null) {
+                    <c.type> oldVal<i0> = col<c.relPos>(i);
+                    <c.type> ans<i0> = f<i0>.apply(oldVal<i0>, a<c.relPos>);
+                    updated |= !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
+                    if (updated) {
+                        a<c.relPos> = ans<i0>;
+                    \} else {
+                        a<c.relPos> = oldVal<i0>;
+                    \}
+                \}
+            }>
+                if (updated) {
+                    <rest(columns): {c|setCol<i>(i, a<i>);<\n>}>;
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                throw new AssertionError("Unexpected groupby operation");
             }
-        <else>
-            updated = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
-        <endif>
-            wunlock(a0);
-        } else {
-            wunlock(a0);
-            throw new AssertionError("Unexpected groupby operation");
-        }
-        return updated;
+        } finally { wunlock(a0); }
     }
 >>

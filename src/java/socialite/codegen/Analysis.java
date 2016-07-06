@@ -318,7 +318,7 @@ public class Analysis {
         Predicate head = r.getHead();
         if (!head.hasFunctionParam()) return;
 
-        int idx = head.functionIdx();
+        int idx = head.firstFunctionIdx();
         Table t = tableMap.get(head.name());
 
         if (t instanceof IterTableMixin) {
@@ -367,9 +367,9 @@ public class Analysis {
         assert params1.length==params2.length;
         int compareUpto=t.numColumns();
         if (p1.hasFunctionParam())
-            compareUpto = p1.functionIdx();
+            compareUpto = p1.firstFunctionIdx();
         if (p2.hasFunctionParam())
-            compareUpto = p2.functionIdx();
+            compareUpto = p2.firstFunctionIdx();
 
         for (int i = 0; i < compareUpto; i++) {
             if (params1[i] instanceof Const &&  params2[i] instanceof Const) {
@@ -1155,11 +1155,13 @@ public class Analysis {
         Table t = tableMap.get(p.name());
         prepareAggrFunction(p, t);
     }
+
     void prepareAggrFunction(Predicate p, Table t) {
-        AggrFunction f = p.getAggrF();
-        if (f == null) return;
-        int idx = p.functionIdx();
-        f.initPredicateInfo(t, p, idx);
+        List<AggrFunction> list = p.getAggrFuncs();
+        for (AggrFunction aggr: list) {
+            int idx = p.functionIdx(aggr);
+            aggr.initPredicateInfo(t, p, idx);
+        }
     }
 
     void prepareEpochs() {
@@ -1604,11 +1606,11 @@ public class Analysis {
                 i++;
             }
             if (r.getHead().hasFunctionParam()) {
-                Function f = r.getHead().getAggrF();
-
-                if (!resolvedVars[i].containsAll(f.getVariables())) {
-                    String msg="Unbound variable(s) in rule:"+r;
-                    throw new AnalysisException(msg, r);
+                for (Function f:r.getHead().getAggrFuncs()) {
+                    if (!resolvedVars[i].containsAll(f.getVariables())) {
+                        String msg = "Unbound variable(s) in rule:" + r;
+                        throw new AnalysisException(msg, r);
+                    }
                 }
             }
         }

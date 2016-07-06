@@ -173,15 +173,6 @@ public class JoinerCodeGen {
             String type = MyType.javaTypeName(v);
             visitorTmpl.add("fieldDecls", type + " " + v);
         }
-        if (headP.hasFunctionParam()) {
-            AggrFunction f = headP.getAggrF();
-            for (Variable v : f.getReturns()) {
-                String type = MyType.javaTypeName(v);
-                visitorTmpl.add("fieldDecls", type + " " + v);
-            }
-            String aggrType=MyType.javaTypeName(f.getAggrColumnType());
-            visitorTmpl.add("fieldDecls", aggrType + " " + aggrVar());
-        }
     }
 
     void maybeDeclareDeltaTable() {
@@ -1377,9 +1368,10 @@ public class JoinerCodeGen {
                 "else {"+_else+";}";
     }
     void genAggrCode(ST code, String headTableVar, ST ifUpdated) {
-        AggrFunction f = headP.getAggrF();
+        //AggrFunction f = headP.getAggrF();
+        List<AggrFunction> funcs = headP.getAggrFuncs();
 
-        String gbupdate = groupbyUpdate(headTableVar, f);
+        String gbupdate = groupbyUpdate(headTableVar, funcs);
         code.add("stmts", isUpdatedVar()+"=" + gbupdate);
     }
 
@@ -1400,55 +1392,56 @@ public class JoinerCodeGen {
         insert += makeHeadParamsArgs();
         return insert;
     }
-    String groupbyUpdate(String tablePartition, AggrFunction func) {
+    String OLD_groupbyUpdate(String tablePartition, AggrFunction func) {
         String insert = tablePartition + "."+"groupby_update";
         insert += makeHeadParamsArgs(func.className()+".get()");
         return insert;
     }
+    String groupbyUpdate(String tablePartition, List<AggrFunction> funcs) {
+        String insert = tablePartition + "."+"groupby_update";
+
+        int numAggrColumn = headT.numColumns() - headT.groupbyColNum();
+        String[] suffixArgs = new String[numAggrColumn];
+        int i=0;
+        for (AggrFunction f:funcs) {
+            suffixArgs[i++] = call(f.className(),"get");
+        }
+        if (i < numAggrColumn) { suffixArgs[i++] = "null"; }
+        insert += makeHeadParamsArgs(suffixArgs);
+        return insert;
+    }
 
     String updateHeadParamsTo(String tablePartition) {
-        return updateHeadParamsTo(tablePartition, "", null);
-    }
-    String updateHeadParamsTo(String tablePartition, String prefix, String arg0) {
-        String update = tablePartition + "."+prefix+"update";
-        update += makeHeadParamsArgs(arg0);
+        String update = tablePartition + "."+"update";
+        update += makeHeadParamsArgs();
         return update;
     }
 
-    String makeHeadParamsArgs() {
-        return makeHeadParamsArgs(null);
-    }
-    String makeHeadParamsArgs(String arg0) {
-        String args = "(";
-        boolean first=true;
-        if (arg0 != null) {
-            args += arg0;
-            first=false;
-        }
-        Object[] params = headP.params.toArray();
-        for (Object o:params) {
-            if (!first) args += ", ";
-            if (o instanceof Function) {
-                Function f = (Function)o;
+    List<Object> headParams() {
+        List<Object> params = new ArrayList<>();
+        for (Param p:headP.params) {
+            if (p instanceof Function) {
+                Function f = (Function)p;
                 for (Param a:f.getArgs()) {
-                    args += a;
+                    params.add(a);
                 }
-            } else { args += o; }
-            first = false;
+            } else { params.add(p); }
         }
-        return args+")";
+        return params;
+    }
+    String makeHeadParamsArgs() {
+        return "("+makeArgs(headParams())+")";
+    }
+    String makeHeadParamsArgs(String... suffixArgs) {
+        List<Object> args = headParams();
+        for(String a:suffixArgs) {
+            args.add(a);
+        }
+        return "("+makeArgs(args)+")";
     }
 
     String insertArgs(String table, Object[] args) {
-        String insert = table + ".insert(";
-        boolean firstParam = true;
-        for (Object a:args) {
-            if (!firstParam) insert += ", ";
-            insert += a;
-            firstParam = false;
-        }
-        insert += ")";
-        return insert;
+        return call(table, "insert", args);
     }
     String insertArgs(String table, List args) {
         String insert = table + ".insert(";
@@ -1870,11 +1863,15 @@ public class JoinerCodeGen {
         return out;
     }
 
-    String call(String instance, String method, Object ...args) {
-        return instance+"."+method+"("+makeArgs(args)+")";
+    String call(String obj, String method, Object ...args) {
+        return obj+"."+method+"("+makeArgs(args)+")";
     }
     String call(String method, Object ...args) {
         return method+"("+makeArgs(args)+")";
+    }
+
+    String makeArgs(List<Object> args) {
+        return makeArgs(args.toArray());
     }
     String makeArgs(Object ... args) {
         String[] strArgs = Arrays.stream(args).map(a->a.toString()).toArray(String[]::new);
@@ -1896,5 +1893,4 @@ public class JoinerCodeGen {
     String ruleIdVar() { return "$ruleId"; }
     String epochIdVar() { return "$epochId"; }
     String isUpdatedVar() { return "$isUpdated"; }
-    String aggrVar() { return "$aggrVar"; }
 }

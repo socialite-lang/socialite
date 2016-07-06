@@ -17,6 +17,10 @@ class TableTemplateSelector {
     static STGroup tmplGroup =
         new MySTGroupFile(TableCodeGen.class.getResource(tableGroupFile),"UTF-8", '<', '>');
 
+    public static ST select(Table t) {
+        assert !t.hasNesting();
+        return select(t, t.getColumnGroups().get(0), false);
+    }
     public static ST select(Table t, ColumnGroup g, boolean hasNesting) {
         if (g.first().hasRange()) {
             return selectArrayTable(g, hasNesting);
@@ -163,7 +167,7 @@ public class TableCodeGen {
     }
 
     String genArrayTableSimple() {
-        tableTmpl = tmplGroup.getInstanceOf("arrayTable");
+        tableTmpl = TableTemplateSelector.select(table);
 
         tableTmpl.add("tableName", table.name());
         tableTmpl.add("name", table.className());
@@ -174,7 +178,9 @@ public class TableCodeGen {
         ColumnGroup group = colGroups.get(0);
 
         if (table.groupbyColNum()>0) {
-            tableTmpl.add("gbAggrColumn", table.getColumn(table.groupbyColNum()));
+            for (int i=table.groupbyColNum(); i<table.numColumns(); i++) {
+                tableTmpl.add("gbAggrColumns", table.getColumn(i));
+            }
         }
         maybeAddPackedColumns(tableTmpl, group);
         for (Column c:group.columns()) {
@@ -253,8 +259,8 @@ public class TableCodeGen {
         int groupby = table.groupbyColNum();
         if (groupby<=0) { return; }
 
-        Column aggrColumn = table.getColumn(groupby);
         int nestDepth=table.getColumnGroups().size();
+        List<Column> aggrCols = new ArrayList<>();
         for (int i=0; i<nestDepth; i++) {
             ST tmpl = tableTmplList.get(i);
             ColumnGroup group = table.getColumnGroups().get(i);
@@ -263,10 +269,12 @@ public class TableCodeGen {
                 break;
             }
 
-            tmpl.add("gbAggrColumn", aggrColumn);
             for (Column c:group.columns()) {
-                if (c.getAbsPos()<groupby)
+                if (c.getAbsPos()<groupby) {
                     tmpl.add("gbColumns", c);
+                } else {
+                    aggrCols.add(c);
+                }
             }
             if (group.last().getAbsPos() < groupby) {
                 for (int j=group.last().getAbsPos()+1; j<groupby; j++) {
@@ -275,10 +283,16 @@ public class TableCodeGen {
                 }
             }
         }
+        for (int i=0; i<nestDepth; i++) {
+            ST tmpl = tableTmplList.get(i);
+            for (Column c:aggrCols) {
+                tmpl.add("gbAggrColumns", c);
+            }
+        }
     }
 
     String genDynamicTableSimple() {
-        tableTmpl = tmplGroup.getInstanceOf("dynamicTable");
+        tableTmpl = TableTemplateSelector.select(table);
 
         tableTmpl.add("tableName", table.name());
         tableTmpl.add("name", table.className());
@@ -289,7 +303,9 @@ public class TableCodeGen {
         assert colGroups.size()==1;
         ColumnGroup group = colGroups.get(0);
         if (table.groupbyColNum()>0) {
-            tableTmpl.add("gbAggrColumn", table.getColumn(table.groupbyColNum()));
+            for (int i=table.groupbyColNum(); i<table.numColumns(); i++) {
+                tableTmpl.add("gbAggrColumns", table.getColumn(i));
+            }
         }
         List<PackedColumn> packedColumns = null;
         if (group.hasBitPackedColumn()) {

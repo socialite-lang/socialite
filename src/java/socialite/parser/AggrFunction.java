@@ -137,7 +137,7 @@ public class AggrFunction extends Function implements Externalizable {
 
     SArrayList<Variable> makeReturnVars() {
         SArrayList<Variable> retVars = new SArrayList<Variable>(1);
-        Variable v = new Variable("aggr$ret", getMethodReturnType());
+        Variable v = new Variable("aggr$ret"+idxInParamList, getMethodReturnType());
         retVars.add(v);
         return retVars;
     }

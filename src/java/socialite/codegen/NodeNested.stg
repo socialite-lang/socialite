@@ -81,7 +81,10 @@ nodeNested(name, pcolumns, columns, nestedColumns, sortedCol, nestedTable) ::= <
             else { return len++; }
         }
         void update(int offset<columns:{c|, <c.type> a<i0>}><nestedColumns:{c|, <c.type> b<i0>}>) {
-            <columns:{c|setCol<i0>(len(), a<i0>);<\n>}>
+            <columns:{c|setCol<i0>(offset, a<i0>);<\n>}>
+            <nestedTable> _nested = nested[offset];
+            nested[offset].clear();
+            nested[offset].insert(<nestedColumns:{c|b<i0>};separator=",">);
         }
         int insert(<columns:{c|<c.type> a<i0>}; separator=", "><nestedColumns:{c|, <c.type> b<i0>}>) {
             <if(sortedCol)>if (true) {return insert_sorted(<columns:{c|a<i0>}; separator=", "><nestedColumns:{c|, b<i0>}>);}<endif>

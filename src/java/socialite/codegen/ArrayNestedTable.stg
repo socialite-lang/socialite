@@ -13,7 +13,7 @@ arrayNestedTable(tableName, name, visitorClass, nestedTable, classes,
                  base, size,
                  methods, id,
                  columns, pcolumns, nestedColumns, nestedNestedColumns,
-                 gbColumns, gbNestedColumns, gbAggrColumn,
+                 gbColumns, gbNestedColumns, gbAggrColumns,
                  idxCols,
                  multiSet=false, isNested=false) ::= <<
 <if(!isNested)>
@@ -336,8 +336,8 @@ groupbyArrayNested() ::= <<
 <endif>
 
 <if(gbNestedColumns)> // if(gbNestedColumns) [
-    public boolean groupby_update(AbstractAggregation aggrFunc
-                       <columns:{c|, <c.type> a<i0>}><nestedColumns:{c|,<c.type> b<i0>}>) {
+    public boolean groupby_update(<columns:{c|<c.type> a<i0>,}><nestedColumns:{c|<c.type> b<i0>,}>
+                                  <gbAggrColumns:{c|AbstractAggregation f<i0>};separator=",">) {
         int i=(int)(a0-base); rangeCheck(i);
 
         boolean updated = false;
@@ -347,7 +347,7 @@ groupbyArrayNested() ::= <<
             wunlock(a0);
         } else if (true<rest(gbColumns):{c|&&(col<i>[i]<EqOpMap.(c.type)>(a<i>))}>) {
             wunlock(a0);
-            updated = nestedTables[i].groupby_update(aggrFunc<nestedColumns:{c|, b<i0>}>);
+            updated = nestedTables[i].groupby_update(<nestedColumns:{c|b<i0>,}><gbAggrColumns:{c|f<i0>};separator=",">);
         } else {
             wunlock(a0);
             throw new AssertionError("Unexpected groupby operation");
@@ -355,44 +355,46 @@ groupbyArrayNested() ::= <<
         return updated;
     }
 <else> // if(!gbNestedColumns) [
-    public boolean groupby_update(AbstractAggregation aggrFunc
-                       <columns:{c|, <c.type> a<i0>}><nestedColumns:{c|,<c.type> b<i0>}>) {
+    public boolean groupby_update(<columns:{c|<c.type> a<i0>,}><nestedColumns:{c|,<c.type> b<i0>,}>
+                                  <gbAggrColumns:{c|AbstractAggregation f<i0>};separator=",">) {
         int i=(int)(a0-base); rangeCheck(i);
 
         boolean updated = false;
         boolean equals = false;
         wlock(a0);
-        trh {
+        try {
             if (isEntryEmpty(i)) {
-                updated = insert_really(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>);
+                return insert_really(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>);
             } else if (true<rest(gbColumns):{c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
-                <gbAggrColumn.type> oldVal = col<gbAggrColumn.relPos>(i);
-            <if(gbAggrColumn.immutable)>
-                <gbAggrColumn.type> ans = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
-                equals = a<gbAggrColumn.relPos> == oldVal;
-                updated = (ans != oldVal);
+            <gbAggrColumns: {c|
+                if (f<i0>!=null) {
+                    <c.type> oldVal<i0> = col<c.relPos>(i);
+                    <c.type> ans<i0> = f<i0>.apply(oldVal<i0>, a<c.relPos>);
+
+                    equals &= a<c.relPos><EqOpMap.(c.type)>(oldVal<i0>);
+                    updated |= !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
+                    if (updated) {
+                        a<c.relPos> = ans<i0>;
+                    \} else {
+                        a<c.relPos> = oldVal<i0>;
+                    \}
+                \}
+            }>
                 if (updated) {
-                    a<gbAggrColumn.relPos> = ans;
                     <rest(columns): {c|setCol<i>(i, a<i>);<\n>}>;
-                }
-            <else>
-                updated = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
-                equals = a<gbAggrColumn.relPos>.equals(oldVal);
-            <endif>
-                if (updated) {
                     nestedTables[i].clear();
                     nestedTables[i].insert(offset<nestedColumns:{c|, b<i0>}>);
-                }
-                if (equals) {
-                    nestedTables[i].insert(offset<nestedColumns:{c|, b<i0>}>);
+                    return true;
+                } else {
+                    if (equals) {
+                        nestedTables[i].insert(offset<nestedColumns:{c|, b<i0>}>);
+                    }
+                    return false;
                 }
             } else {
                 throw new AssertionError("Unexpected groupby operation");
             }
-        } finally {
-            wunlock(a0);
-        }
-        return updated;
+        } finally { wunlock(a0); }
     }
 <endif> // // ] gbNestedColumns
 >>

@@ -72,7 +72,7 @@ public class Column implements Externalizable {
     }
 
     public boolean isPrimitive() { return type().isPrimitive(); }
-    public boolean isImmutable() {
+    public boolean isImmutable() { // used by template
         if (isPrimitive()) {
             return true;
         } else if (type().equals(String.class)) {

@@ -151,18 +151,38 @@ public class Predicate implements Literal {
         }
         return null;
     }
+    public List<AggrFunction> getAggrFuncs() {
+        ArrayList<AggrFunction> funcs = new ArrayList<AggrFunction>();
+        for (Param o:params) {
+            if (o instanceof AggrFunction) {
+                funcs.add((AggrFunction)o);
+            }
+        }
+        return funcs;
+    }
 
-    public int functionIdx() {
+    public int firstFunctionIdx() {
         int i = 0;
-        for (Param o : params) {
-            if (o instanceof Function)
+        for (Param param:params) {
+            if (param instanceof Function) {
                 return i;
+            }
             i++;
         }
         assert false : "should not reach here";
         return -1;
     }
 
+    public int functionIdx(AggrFunction f) {
+        int i=0;
+        for (Param param:params) {
+            if (param == f) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
     public Param removeParamAt(int i) {
         inputParams = null;
         return params.remove(i);

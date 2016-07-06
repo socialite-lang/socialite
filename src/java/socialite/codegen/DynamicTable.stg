@@ -5,7 +5,7 @@ import "Node.stg"
 
 dynamicTable(tableName, name, visitorClass, methods,
              size, id,
-             columns, pcolumns, gbColumns, gbAggrColumn,
+             columns, pcolumns, gbColumns, gbAggrColumns,
              sortedCol, idxCols,
              multiSet=false, isNested=false) ::= <<
 <if(!isNested)>
@@ -320,7 +320,7 @@ getNodeAndOffset() ::= <<
 >>
 
 groupbyDyn() ::= <<
-    public boolean groupby_update(AbstractAggregation aggrFunc<columns:{c|, <c.type> a<i0>}>) {
+    public boolean groupby_update(<columns:{c|<c.type> a<i0>,}><gbAggrColumns:{c|AbstractAggregation f<i0>};separator=",">) {
         force_rlock();
         <groupbyGet()>
         if (pos \< 0) {
@@ -341,23 +341,27 @@ groupbyDyn() ::= <<
     // update value:
         boolean updated = false;
         <getNodeAndOffset()>
-    <if(gbAggrColumn.immutable)>
+
         n.wlock();
-        <gbAggrColumn.type> oldVal = n.col<gbAggrColumn.relPos>(offset);
         try {
-            <gbAggrColumn.type> ans = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
-            updated = (ans != oldVal);
+        <gbAggrColumns: {c|
+            if (f<i0>!=null) {
+                <c.type> oldVal<i0> = n.col<c.relPos>(offset);
+                <c.type> ans<i0> = f<i0>.apply(oldVal<i0>, a<c.relPos>);
+                updated |= !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
+                if (updated) {
+                    a<c.relPos> = ans<i0>;
+                \} else {
+                    a<c.relPos> = oldVal<i0>;
+                \}
+            \}
+        }>
             if (updated) {
-                a<gbAggrColumn.relPos> = ans;
                 n.update(offset<columns:{c|, a<i0>}>);
+                return true;
+            } else {
+                return false;
             }
         } finally { n.wunlock(); }
-    <else>
-        n.wlock();
-        try {
-            updated = aggrFunc.apply(aggrVal, a<gbAggrColumn.relPos>);
-        } finally { n.wunlock(); }
-    <endif>
-        return updated;
     }
 >>

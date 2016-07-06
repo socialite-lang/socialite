@@ -226,6 +226,7 @@ public class Function implements Param {
             loadPyFunc();
             return;
         }
+
         Class<?>[] argTypes = makeArgTypes();
         if (FunctionLoader.hasMethod(klass(), methodName(), argTypes)) {
             method = FunctionLoader.loadMethod(klass(), methodName(), argTypes);

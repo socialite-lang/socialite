@@ -5,7 +5,7 @@ import "NodeNested.stg"
 dynamicNestedTable(tableName, name, visitorClass, nestedTable, classes, methods, 
         size, id, 
         pcolumns, columns, nestedColumns, nestedNestedColumns,
-        gbColumns, gbNestedColumns, gbAggrColumn,
+        gbColumns, gbNestedColumns, gbAggrColumns,
         sortedCol, idxCols,
         concurrent=false, multiSet=false, isNested=false) ::= <<
 <if(!isNested)>
@@ -187,7 +187,7 @@ package socialite.tables;
         ColumnConstraints constr = new ColumnConstraints();
         <idxCols:{ic|constr.add(<ic.absPos>, a<ic.relPos>);<\n>}>
         RoaringBitmap index = indexUtil.getExclusiveIndex(indexMap, constr);
-        if (true) {
+        do {
             if (index == null) { break; }
             IntIterator iter = index.getIntIterator();
             while (iter.hasNext()) {
@@ -203,7 +203,7 @@ package socialite.tables;
                 }
             }
             return false;
-        }
+        } while(false);
     <endif>
         for (int j=0; j\<nodeList.size(); j++) {
             Node n = nodeList.getQuick(j);
@@ -352,8 +352,8 @@ groupbyDynNested() ::= <<
 <endif>
 
 <if(gbNestedColumns)> // if(gbNestedColumns) [
-    public boolean groupby_update(AbstractAggregation aggrFunc
-                       <columns:{c|, <c.type> a<i0>}><nestedColumns:{c|,<c.type> b<i0>}>) {
+     public boolean groupby_update(<columns:{c|<c.type> a<i0>,}><nestedColumns:{c|<c.type> b<i0>,}>
+                                   <gbAggrColumns:{c|AbstractAggregation f<i0>};separator=",">) {
         force_rlock();
         <groupbyGet()>
         if (pos \< 0) {
@@ -376,7 +376,7 @@ groupbyDynNested() ::= <<
         <getNodeAndOffset()>
         n.wlock();
         try {
-            updated = n.nested(offset).groupby_update(aggrFunc<nestedColumns:{c|, b<i0>}>);
+            updated = n.nested(offset).groupby_update(<nestedColumns:{c|b<i0>,}><gbAggrColumns:{c|f<i0>};separator=",">);
         } finally {
             n.wunlock();
         }
@@ -384,8 +384,8 @@ groupbyDynNested() ::= <<
     }
 
 <else> // if (!gbNestedColumns) [
-    public boolean groupby_update(AbstractAggregation aggrFunc
-                       <columns:{c|, <c.type> a<i0>}><nestedColumns:{c|,<c.type> b<i0>}>) {
+    public boolean groupby_update(<columns:{c|<c.type> a<i0>,}><nestedColumns:{c|<c.type> b<i0>,}>
+                                  <gbAggrColumns:{c|AbstractAggregation f<i0>};separator=",">) {
         force_rlock();
         <groupbyGet()>
         if (pos \< 0) {
@@ -408,33 +408,32 @@ groupbyDynNested() ::= <<
         boolean equals = false;
         <getNodeAndOffset()>
 
-    <if(gbAggrColumn.immutable)>
         n.wlock();
-        <gbAggrColumn.type> oldVal = n.col<gbAggrColumn.relPos>(offset);
-        equals = a<gbAggrColumn.relPos> == oldVal;
         try {
-            <gbAggrColumn.type> ans = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
-            updated = (ans != oldVal);
+        <gbAggrColumns: {c|
+            if (f<i0>!=null) {
+                <c.type> oldVal<i0> = n.col<c.relPos>(offset);
+                <c.type> ans<i0> = f<i0>.apply(oldVal<i0>, a<c.relPos>);
+
+                equals &= a<c.relPos><EqOpMap.(c.type)>(oldVal<i0>);
+                updated |= !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
+                if (updated) {
+                    a<c.relPos> = ans<i0>;
+                \} else {
+                    a<c.relPos> = oldVal<i0>;
+                \}
+            \}
+         }>
             if (updated) {
-                n.nested(offset).clear();
-                a<gbAggrColumn.relPos> = ans;
-                n.update(offset<columns:{c|, a<i0>}>);
-            }
-            if (equals) {
-                n.nested(offset).insert(<nestedColumns:{c|b<i0>};separator=",">);
+                n.update(offset<columns:{c|, a<i0>}><nestedColumns:{c|, b<i0>}>);
+                return true;
+            } else {
+                if (equals) {
+                    n.nested(offset).insert(<nestedColumns:{c|b<i0>};separator=",">);
+                }
+                return false;
             }
         } finally { n.wunlock(); }
-    <else>
-        n.wlock();
-        <gbAggrColumn.type> oldVal = n.col<gbAggrColumn.relPos>(offset);
-        equals = a<gbAggrColumn.relPos>.equals(oldVal);
-        try {
-            updated = aggrFunc.apply(oldVal, a<gbAggrColumn.relPos>);
-            if (equals) {
-                n.nested(offset).insert(<nestedColumns:{c|b<i0>};separator=",">);
-            }
-        } finally { n.unwlock(); }
-    <endif>
     }
 <endif> // ] if (gbNestedColumns)
 >>

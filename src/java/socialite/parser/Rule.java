@@ -48,7 +48,9 @@ public class Rule implements Externalizable {
     Set<Function> findFunctions() {
         Set<Function> s = new LinkedHashSet<Function>();
         if (ruleDecl.head.hasFunctionParam()) {
-            s.add(ruleDecl.head.getAggrF());
+            for (AggrFunction f:ruleDecl.head.getAggrFuncs()) {
+                s.add(f);
+            }
         }
         for (Object o:ruleDecl.body) {
             if (!(o instanceof Expr)) continue;
