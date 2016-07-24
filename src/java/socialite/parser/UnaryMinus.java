@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -16,7 +15,7 @@ import java.io.ObjectOutput;
 
 import org.stringtemplate.v4.ST;
 
-import socialite.codegen.CodeGen;
+import socialite.codegen.CodeGenBase;
 import socialite.util.AnalysisException;
 import socialite.util.InternalException;
 
@@ -33,7 +32,7 @@ public class UnaryMinus extends Op implements UnaryOp {
 		return type(arg);
 	}
 	public ST codegen() {
-		ST expr=CodeGen.expr();
+		ST expr= CodeGenBase.expr();
 		expr.add("expr", "(-"+codeStr(arg)+")");
 		return expr;
 	}

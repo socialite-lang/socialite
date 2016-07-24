@@ -1,53 +1,142 @@
 package socialite.tables;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import socialite.collection.SArrayList;
 
-public class ColumnConstraints implements Iterable<ColumnValue> {
-    ArrayList<ColumnValue> constraints;
-    ColumnValue first;
-    ColumnValue second;
-    ColumnRange range;
+public class ColumnConstraints {
+    SArrayList<Constraint> constraints;
+    int maxCol=-1, minCol=Integer.MAX_VALUE;
+    boolean hasRange=false;
 
     public ColumnConstraints() {
-        constraints = new ArrayList(2);
-        first = new ColumnValue(-1, -1);
-        range = new ColumnRange(-1, -1, -1);
-        second = (ColumnValue)range;
+        constraints = new SArrayList(2);
+    }
+
+    public ColumnConstraints add(int col, int val) {
+        constraints.add(new ColumnValue(col, val));
+        return this;
+    }
+    public ColumnConstraints add(int col, long val) {
+        constraints.add(new ColumnValue(col, val));
+        return this;
     }
     public ColumnConstraints add(int col, Object val) {
-        if (constraints.size() == 0) {
-            first.col = col;
-            first.val = val;
-            constraints.add(first);
-        } else if (constraints.size() == 1) {
-            second.col = col;
-            second.val = val;
-            constraints.add(second);
-        } else {
-            constraints.add(new ColumnValue(col, val));
+        constraints.add(new ColumnValue(col, val));
+        return this;
+    }
+    public ColumnConstraints set(int col, int val) {
+        for (int i=0; i<constraints.size(); i++) {
+            Constraint c = constraints.getQuick(i);
+            if (c.getColumn()==col) {
+                ((ColumnValue)c).setValue(col, val);
+                return this;
+            }
         }
-        return this;
+        return add(col, val);
+    }
+    public ColumnConstraints set(int col, long val) {
+        for (int i=0; i<constraints.size(); i++) {
+            Constraint c = constraints.getQuick(i);
+            if (c.getColumn()==col) {
+                ((ColumnValue)c).setValue(col, val);
+                return this;
+            }
+        }
+        return add(col, val);
+    }
+    public ColumnConstraints set(int col, Object val) {
+        for (int i=0; i<constraints.size(); i++) {
+            Constraint c = constraints.getQuick(i);
+            if (c.getColumn()==col) {
+                ((ColumnValue)c).setValue(col, val);
+                return this;
+            }
+        }
+        return add(col, val);
     }
 
-    public ColumnConstraints addRange(int col, Number from, Number to) {
-        assert isEmpty();
-        range.col = col;
-        range.setRange(from, to);
-        constraints.add(range);
+    public ColumnConstraints addRange(int col, int from, int to) {
+        hasRange = true;
+        constraints.add(new ColumnRange(col, from, to));
         return this;
     }
+    public ColumnConstraints addRange(int col, long from, long to) {
+        hasRange = true;
+        constraints.add(new ColumnRange(col, from, to));
+        return this;
+    }
+    public ColumnConstraints addRange(int col, float from, float to) {
+        hasRange = true;
+        constraints.add(new ColumnRange(col, from, to));
+        return this;
+    }
+    public ColumnConstraints addRange(int col, double from, double to) {
+        hasRange = true;
+        constraints.add(new ColumnRange(col, from, to));
+        return this;
+    }
+    public ColumnConstraints setRange(int col, int from, int to) {
+        for (int i=0; i<constraints.size(); i++) {
+            Constraint c = constraints.getQuick(i);
+            if (c instanceof ColumnRange) {
+                ColumnRange colRange = (ColumnRange)c;
+                if (colRange.getColumn() == col) {
+                    colRange.setRange(from, to);
+                    return this;
+                }
+            }
+        }
+        return addRange(col, from, to);
+    }
+    public ColumnConstraints setRange(int col, long from, long to) {
+        for (int i=0; i<constraints.size(); i++) {
+            Constraint c = constraints.getQuick(i);
+            if (c instanceof ColumnRange) {
+                ColumnRange colRange = (ColumnRange)c;
+                if (colRange.getColumn() == col) {
+                    colRange.setRange(from, to);
+                    return this;
+                }
+            }
+        }
+        return addRange(col, from, to);
+    }
+    public ColumnConstraints setRange(int col, float from, float to) {
+        for (int i=0; i<constraints.size(); i++) {
+            Constraint c = constraints.getQuick(i);
+            if (c instanceof ColumnRange) {
+                ColumnRange colRange = (ColumnRange)c;
+                if (colRange.getColumn() == col) {
+                    colRange.setRange(from, to);
+                    return this;
+                }
+            }
+        }
+        return addRange(col, from, to);
+    }
+    public ColumnConstraints setRange(int col, double from, double to) {
+        for (int i=0; i<constraints.size(); i++) {
+            Constraint c = constraints.getQuick(i);
+            if (c instanceof ColumnRange) {
+                ColumnRange colRange = (ColumnRange)c;
+                if (colRange.getColumn() == col) {
+                    colRange.setRange(from, to);
+                    return this;
+                }
+            }
+        }
+        return addRange(col, from, to);
+    }
 
+
+    public Constraint getAt(int i) { return constraints.getQuick(i); }
     public int size() { return constraints.size(); }
     public boolean isEmpty() {
         return constraints.isEmpty();
     }
-    public boolean hasRange(int col) {
-        return getRange(col) != null;
-    }
+    public boolean hasRange(int col) { return hasRange; }
     public ColumnRange getRange(int col) {
-         for (int i=0; i<constraints.size(); i++) {
-            ColumnValue val = constraints.get(i);
+        for (int i=0; i<constraints.size(); i++) {
+            Constraint val = constraints.getQuick(i);
             if (val.getColumn() == col &&
                     val instanceof ColumnRange) {
                 return (ColumnRange)val;
@@ -57,16 +146,16 @@ public class ColumnConstraints implements Iterable<ColumnValue> {
     }
     public ColumnValue getColumnValue(int col) {
           for (int i=0; i<constraints.size(); i++) {
-              ColumnValue val = constraints.get(i);
+              Constraint val = constraints.getQuick(i);
               if (val.getColumn() == col) {
-                  return val;
+                  return (ColumnValue)val;
               }
           }
         return null;
     }
     public boolean hasColumn(int col) {
         for (int i=0; i<constraints.size(); i++) {
-            ColumnValue val = constraints.get(i);
+            Constraint val = constraints.getQuick(i);
             if (val.getColumn() == col) {
                 return true;
             }
@@ -74,32 +163,27 @@ public class ColumnConstraints implements Iterable<ColumnValue> {
         return false;
     }
     public int getMinColumn() {
-        int minCol = Integer.MAX_VALUE;
+        if (minCol != Integer.MAX_VALUE) { return minCol; }
+
         for (int i=0; i<constraints.size(); i++) {
-            ColumnValue val = constraints.get(i);
+            Constraint val = constraints.get(i);
             minCol = Math.min(minCol, val.getColumn());
         }
         return minCol;
     }
     public int getMaxColumn() {
-        int maxCol = -1;
+        if (maxCol != -1) { return maxCol; }
+
         for (int i=0; i<constraints.size(); i++) {
-            ColumnValue val = constraints.get(i);
+            Constraint val = constraints.get(i);
             maxCol = Math.max(maxCol, val.getColumn());
         }
         return maxCol;
     }
-    public ColumnValue first() {
-        return constraints.get(0);
-    }
-    public Iterator<ColumnValue> iterator() {
-        return constraints.iterator();
-    }
-
     public String toString() {
         String str = "Constraint(";
         for (int i=0; i<constraints.size(); i++) {
-            ColumnValue val = constraints.get(i);
+            Constraint val = constraints.get(i);
             str += "["+val+"]";
         }
         str += ")";

@@ -98,8 +98,9 @@ if [ "x$JAVA_HEAP_MIN" == "x" ]; then
 fi
 
 JVM_OPTS="$JVM_OPTS -da"
-JVM_OPTS="$JVM_OPTS -server -Xss256k"
-JVM_OPTS="$JVM_OPTS -XX:MaxInlineSize=128"
+JVM_OPTS="$JVM_OPTS -server -Xss512k"
+#JVM_OPTS="$JVM_OPTS -XX:MaxInlineSize=128"
+JVM_OPTS="$JVM_OPTS -XX:MaxInlineSize=48"
 JVM_OPTS="$JVM_OPTS -XX:+UseG1GC -XX:+UseTLAB -XX:TLABSize=8M -XX:+ResizeTLAB"
 
 # Use conditional card marking for Java 1.7.0_40 and up

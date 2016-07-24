@@ -167,7 +167,6 @@ public class LocalEngine {
         assert outdir.isDirectory();
         for (File f:outdir.listFiles()) {
             if (f.isDirectory()) { cleanup(f); }
-            else if (f.getName().endsWith(".class")) { f.delete(); }
             //else if (f.getName().endsWith(".java")) { f.delete(); }
         }
     }

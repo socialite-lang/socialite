@@ -14,7 +14,7 @@ import socialite.util.SociaLiteException;
 
 public class TupleCodeGen {
 	static String tuplePackage = "socialite.tables";
-	static STGroup tmplGroup = CodeGen.getTupleGroup();
+	static STGroup tmplGroup = CodeGenBase.getTupleGroup();
 
 	Class<?>[] types;
 	ST tupleTmpl;

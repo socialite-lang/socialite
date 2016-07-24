@@ -35,7 +35,7 @@ public class EvalCodeGen {
         newTables = _tables;
         tableMap = _tableMap;
 
-        tmplGroup = CodeGen.getEvalGroup();
+        tmplGroup = CodeGenBase.getEvalGroup();
         evalTmpl = tmplGroup.getInstanceOf("evalClass");
         evalName="Eval"+(id++);
 

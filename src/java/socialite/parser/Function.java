@@ -6,7 +6,6 @@ import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TIterator;
 import gnu.trove.iterator.TLongIterator;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -31,7 +30,7 @@ import org.python.core.PyTuple;
 import org.python.core.PyType;
 import org.stringtemplate.v4.ST;
 
-import socialite.codegen.CodeGen;
+import socialite.codegen.CodeGenBase;
 import socialite.functions.FunctionLoader;
 import socialite.functions.PyInterp;
 import socialite.functions.PyInvoke;
@@ -455,7 +454,7 @@ public class Function implements Param {
     }
 
     public ST codegen() {
-        ST expr = CodeGen.expr();
+        ST expr = CodeGenBase.expr();
         String invoke = invokeBegin();
         for (int i = 0; i < getArgs().size(); i++) {
             invoke += getArgs().get(i);

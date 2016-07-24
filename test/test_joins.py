@@ -5,6 +5,54 @@
 import socialite as s
 import unittest
 
+class TestIndexJoin(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        s.decl("Foo(int a, int b, (int c, int d)) indexby a, indexby b, indexby c.")
+        s.decl("FooArr(int a:0..100, int b, (int c, int d)) indexby b, indexby c.")
+        s.decl("Bar(int a, int b, int c, int d) indexby a, indexby c.")
+        s.decl("BarArr(int a:0..1000, int b, int c, int d) indexby a, indexby c.")
+        s.decl("Qux(int a, int b, int c, int d) indexby a, indexby c.")
+
+        cls.initTables()
+
+    @classmethod
+    def initTables(cls):
+        s.run("Bar(a,b,c,d) :- a=$range(0,1000), b=1, c=1, d=2.")
+        s.run("BarArr(a,b,c,d) :- a=$range(0,1000), b=1, c=1, d=2.")
+        s.run("Foo(a,b,c,d) :- a=$range(42, 43), b=1, c=1, d=2.")
+        s.run("FooArr(a,b,c,d) :- a=$range(42, 43), b=1, c=1, d=2.")
+
+    @classmethod
+    def tearDownClass(cls):
+        s.drop("*")
+
+    def setUp(self):
+        s.clear("Qux")
+
+    def test_idx_join(self):
+        self._testrun("Qux(a,b,c,d) :- Foo(a,b,c,d), Bar(a,b,c,d).")
+
+    def test_idx_join2(self):
+        self._testrun("Qux(a,b,c,d) :- FooArr(a,b,c,d), Bar(a,b,c,d).")
+
+    def test_idx_join3(self):
+        self._testrun("Qux(a,b,c,d) :- Foo(a,b,c,d), BarArr(a,b,c,d).")
+
+    def test_idx_join4(self):
+        self._testrun("Qux(a,b,c,d) :- FooArr(a,b,c,d), BarArr(a,b,c,d).")
+
+    def _testrun(self, query):
+        s.run(query)
+
+        expected = [(a, 1, 1, 2) for a in xrange(42, 43)]
+        result = []
+        for a,b,c,d in s.query("Qux(a,b,c,d)"):
+            result.append((a,b,c,d))
+
+        self.assertEqual(sorted(result), sorted(expected))
+
+
 class TestJoin(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

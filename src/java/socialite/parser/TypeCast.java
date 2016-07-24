@@ -1,6 +1,5 @@
 package socialite.parser;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -14,7 +13,7 @@ import java.util.TreeSet;
 
 import org.stringtemplate.v4.ST;
 
-import socialite.codegen.CodeGen;
+import socialite.codegen.CodeGenBase;
 
 public class TypeCast extends Op implements UnaryOp {
 	private static final long serialVersionUID = 1L;
@@ -55,7 +54,7 @@ public class TypeCast extends Op implements UnaryOp {
 	}
 	@Override
 	public ST codegen() {
-		ST expr=CodeGen.expr();
+		ST expr= CodeGenBase.expr();
 		String castExpr = "("+type.getSimpleName()+")"+codeStr(arg);
 		expr.add("expr", castExpr);
 		return expr;

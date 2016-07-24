@@ -1,12 +1,11 @@
 package socialite.parser;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.stringtemplate.v4.ST;
 
-import socialite.codegen.CodeGen;
+import socialite.codegen.CodeGenBase;
 import socialite.util.InternalException;
 
 public class AssignDotVar extends AssignOp {
@@ -49,7 +48,7 @@ public class AssignDotVar extends AssignOp {
 	}
 	
 	public ST codegen() {
-		return CodeGen.stmts();
+		return CodeGenBase.stmts();
 	}
 	public String toString() {
 		return "";

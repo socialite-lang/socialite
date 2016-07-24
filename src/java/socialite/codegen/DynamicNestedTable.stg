@@ -95,7 +95,7 @@ package socialite.tables;
       <endif>
     <endif>
 
-    <rest(idxCols):{ic|SPosIndex index<ic.relPos> = new SPosIndex();<\n>}>
+    <rest(idxCols):{ic|SIndex index<ic.relPos> = new SIndex();<\n>}>
     <if(gbColumns)>
     <if(!rest(gbColumns) && first(gbColumns).indexed)>
         SIndex1 groupbyMap = index<first(gbColumns).absPos>;

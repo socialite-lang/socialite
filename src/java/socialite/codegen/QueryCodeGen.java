@@ -1,6 +1,5 @@
 package socialite.codegen;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +16,7 @@ import socialite.tables.TableUtil;
 //import org.antlr.stringtemplate.StringTemplate;
 //import org.antlr.stringtemplate.StringTemplateGroup;
 
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.set.TIntSet;
 
 public class QueryCodeGen {
     static String queryPackage = "socialite.query";
@@ -36,7 +33,7 @@ public class QueryCodeGen {
 
     public QueryCodeGen(Query _query, Map<String, Table> _tableMap, QueryVisitor qv) {
         query = _query;
-        tmplGroup = CodeGen.getVisitorGroup();
+        tmplGroup = CodeGenBase.getVisitorGroup();
         queryTmpl = tmplGroup.getInstanceOf("class");
         table = _tableMap.get(query.getP().name());
         constVars = makeConstVars(query.getP());
@@ -216,62 +213,11 @@ public class QueryCodeGen {
 
     boolean isIndexColResolved() {
         for (int i : constVars.keys()) {
-            if (table.getColumn(i).isIndexed())
+            if (table.getColumn(i).isIndexed()) {
                 return true;
+            }
         }
         return false;
-    }
-
-    ArrayList<Column> getResolvedIndexCols() {
-        ArrayList<Column> idxCols = new ArrayList<Column>();
-        TIntSet resolvedIdx = constVars.keySet();
-        for (Column c : table.getColumns()) {
-            if (c.isIndexed() && resolvedIdx.contains(c.getAbsPos()))
-                idxCols.add(c);
-        }
-        return idxCols;
-    }
-
-    TIntArrayList getIndexByCols() {
-        ArrayList<Column> resolvedIdxCols = getResolvedIndexCols();
-        TIntArrayList idxbyCols = new TIntArrayList(4);
-        if (resolvedIdxCols.size() >= 1)
-            idxbyCols.add(resolvedIdxCols.get(0).getAbsPos());
-        if (resolvedIdxCols.size() <= 1) return idxbyCols;
-
-        List<ColumnGroup> colGroups = table.getColumnGroups();
-        if (colGroups.size() == 1) return idxbyCols;
-
-        int nest = 1;
-        for (ColumnGroup g : colGroups.subList(1, colGroups.size())) {
-            if (nest > 3) break;
-            if (g.first().isArrayIndex()) {
-                Column arrayCol = g.first();
-                if (resolvedIdxCols.contains(arrayCol))
-                    idxbyCols.add(arrayCol.getAbsPos());
-            } else {
-                break;
-            }
-            nest++;
-        }
-        return idxbyCols;
-    }
-
-    String getIteratebySuffix() {
-        TIntArrayList idxbyCols = getIndexByCols();
-        Param[] params = queryP.inputParams();
-        String iteratebySuffix = "_by";
-        for (int i = 0; i < idxbyCols.size(); i++) {
-            int idxPos = idxbyCols.get(i);
-            iteratebySuffix += "_" + idxPos;
-        }
-        iteratebySuffix += "(";
-        for (int i = 0; i < idxbyCols.size(); i++) {
-            int idxPos = idxbyCols.get(i);
-            iteratebySuffix += constVars.get(idxPos) + ", ";
-        }
-        iteratebySuffix += "this)";
-        return iteratebySuffix;
     }
 
     boolean isFirstParamResolved() {
@@ -310,12 +256,12 @@ public class QueryCodeGen {
     }
 
     ST getVisitMethod(int startCol, int endCol, int numColumns) {
-        String name = "visit" + CodeGen.getVisitColumns(startCol, endCol, numColumns);
+        String name = "visit" + CodeGenBase.getVisitColumns(startCol, endCol, numColumns);
 
         ST method = getNewMethodTmpl(name, "public", "boolean");
         method.add("ret", "return true");
         Predicate p = queryP;
-        CodeGen.addArgTypes(method, p, startCol, endCol);
+        CodeGenBase.addArgTypes(method, p, startCol, endCol);
         queryTmpl.add("methodDecls", method);
         return method;
     }
@@ -346,9 +292,7 @@ public class QueryCodeGen {
                 break;
             }
             method = getVisitMethod(startCol, endCol, numColumns);
-            CodeGen.fillVisitMethodBody(method, p,
-                    startCol, endCol,
-                    resolved, getIndexByCols());
+            CodeGenBase.fillVisitMethodBody(method, p, startCol, endCol, resolved);
         }
         invokeQueryVisitor(method);
     }

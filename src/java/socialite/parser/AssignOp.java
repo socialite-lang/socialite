@@ -1,6 +1,5 @@
 package socialite.parser;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -15,7 +14,7 @@ import java.util.TreeSet;
 
 import org.stringtemplate.v4.ST;
 
-import socialite.codegen.CodeGen;
+import socialite.codegen.CodeGenBase;
 import socialite.util.InternalException;
 
 public class AssignOp extends Op {
@@ -129,7 +128,7 @@ public class AssignOp extends Op {
 	}
 	
 	public ST codegen() {
-		ST stmts=CodeGen.stmts();
+		ST stmts= CodeGenBase.stmts();
 		if (arg2 instanceof Function) {
 			return genFunctionAssign(stmts);
 		} else {
@@ -144,12 +143,12 @@ public class AssignOp extends Op {
 	ST genFunctionAssign(ST stmts) {
 		Function f=(Function)arg2;
 		if (multiRows()) {
-			ST withIter=CodeGen.getVisitorST("withIterator");
+			ST withIter= CodeGenBase.getVisitorST("withIterator");
 			stmts.add("stmts", withIter);
 			if (f.isPython()) withIter.add("iterGetter", "(Iterator)"+f.codegen().render());
 			else withIter.add("iterGetter", f.codegen().render());
-			withIter.add("iterVar", CodeGen.uniqueVar("$iter"));
-			String funcRet=CodeGen.uniqueVar("$v");
+			withIter.add("iterVar", CodeGenBase.uniqueVar("$iter"));
+			String funcRet= CodeGenBase.uniqueVar("$v");
 			withIter.add("var", funcRet);
 
             if (isMultipleAssign() && f.isArrayType()) {
@@ -185,7 +184,7 @@ public class AssignOp extends Op {
 			return withIter;
 		} else {
 			if (isMultipleAssign() && f.isArrayType()) {
-				String arrayVar=CodeGen.uniqueVar("$array");
+				String arrayVar= CodeGenBase.uniqueVar("$array");
 				@SuppressWarnings("unchecked")
 				List<Variable> lhs=(List<Variable>)arg1;
 				String arrType = "Object[]";

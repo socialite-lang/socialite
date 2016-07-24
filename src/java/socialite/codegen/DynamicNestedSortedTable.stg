@@ -173,8 +173,8 @@ package socialite.tables;
     public void iterate_range(ColumnRange range, ColumnConstraints constr, <visitorClass> v) {
         rlock();
         try {
-            <sortedCol.type> from = (<sortedCol.type>)range.getFrom();
-            <sortedCol.type> to = (<sortedCol.type>)range.getTo();
+            <sortedCol.type> from = range.getFrom((<sortedCol.type>)0);
+            <sortedCol.type> to = range.getTo((<sortedCol.type>)0);
 
             int nodePos1 = binarySearch1(from);
             if (nodePos1 \< 0) { nodePos1 = -nodePos1-1; }

@@ -82,7 +82,7 @@ package socialite.tables;
         }
     }
 
-    TIntObjectHashMap\<SIndex> indexMap = new TIntObjectHashMap();
+    IndexMap indexMap = new IndexMap();
     IndexUtil indexUtil = new IndexUtil(this, reallock);
 
     SArrayList\<Node> nodeList;
@@ -280,14 +280,14 @@ package socialite.tables;
         }
     }
 
-    public void iterate_at(ColumnConstraints _, int at, Object o) {
+    public void iterate_at(ColumnConstraints __, int at, Object o) {
         <visitorClass> v = (<visitorClass>)o;
         int nodePos =  IndexUtil.getPos(at);
         int offset = IndexUtil.getOffset(at);
         rlock();
         try {
             Node n = nodeList.getQuick(nodePos);
-            n.iterate_at(_, offset, v);
+            n.iterate_at(__, offset, v);
         } finally {
             runlock();
         }

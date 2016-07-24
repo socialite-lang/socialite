@@ -1,6 +1,5 @@
 package socialite.codegen;
 
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
@@ -12,7 +11,7 @@ import socialite.parser.antlr.ColumnGroup;
  * Generates combined-iterators for lock-step iterations.
  */
 public class CombinedIteratorGen {
-    static STGroup combinerGroup = CodeGen.getCombinedIterateGroup();;
+    static STGroup combinerGroup = CodeGenBase.getCombinedIterateGroup();;
 
     public static String generate(Table t1, Table t2, String visitorVar1, String visitorVar2) {
         String code = "";
@@ -41,6 +40,10 @@ public class CombinedIteratorGen {
         // 5. (a) Tables are either flat tables or
         //    (b) Have same nesting structure, with nested columns being sorted in the same way.
 
+        if (t1 instanceof ArrayTable && t2 instanceof ArrayTable) {
+            // if t1 and t2 are both ArrayTable, we use 
+            return false;
+        }
         if (t1 instanceof ArrayTable && !(t2 instanceof ArrayTable)) {return false;}
         if (t2 instanceof ArrayTable && !(t1 instanceof ArrayTable)) {return false;}
 

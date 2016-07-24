@@ -99,7 +99,7 @@ public class TableCodeGen {
         for (Column c:table.getColumns()) {
             tableTmpl.add("columns", c);
         }
-        tableTmpl.add("visitorClass", CodeGen.visitorClass(table));
+        tableTmpl.add("visitorClass", CodeGenBase.visitorClass(table));
         return tableTmpl.render();
     }
     String genRemoteBodyT(RemoteBodyTable rt) {
@@ -120,7 +120,7 @@ public class TableCodeGen {
         if (nestDepth > 4) nestDepth = 4;
         tableTmpl.add("nest", nestDepth);
 
-        tableTmpl.add("visitorClass", CodeGen.visitorClass(table));
+        tableTmpl.add("visitorClass", CodeGenBase.visitorClass(table));
         return tableTmpl.render();
     }
 
@@ -194,7 +194,7 @@ public class TableCodeGen {
                 tableTmpl.add("idxCols", c);
             }
         }
-        tableTmpl.add("visitorClass", CodeGen.visitorClass(table));
+        tableTmpl.add("visitorClass", CodeGenBase.visitorClass(table));
 
         tableTmpl.add("base", table.arrayBeginIndex());
         tableTmpl.add("size", table.arrayTableSize());
@@ -240,7 +240,7 @@ public class TableCodeGen {
                     }
                 }
             }
-            tmpl.add("visitorClass", CodeGen.visitorClass(table));
+            tmpl.add("visitorClass", CodeGenBase.visitorClass(table));
             if (group.first().hasRange()) {
                 int[] range = group.first().getRange();
                 tmpl.add("base", range[0]);
@@ -322,7 +322,7 @@ public class TableCodeGen {
             if (c.isSorted()) { tableTmpl.add("sortedCol", c); }
         }
 
-        tableTmpl.add("visitorClass", CodeGen.visitorClass(table));
+        tableTmpl.add("visitorClass", CodeGenBase.visitorClass(table));
         return tableTmpl.render();
     }
 

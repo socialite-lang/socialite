@@ -8,12 +8,11 @@ import java.util.TreeSet;
 
 import org.stringtemplate.v4.ST;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import socialite.codegen.CodeGen;
+import socialite.codegen.CodeGenBase;
 import socialite.util.InternalException;
 
 public class BinOp extends Op {
@@ -35,7 +34,7 @@ public class BinOp extends Op {
 	}
 	
 	public ST codegen() {
-		ST expr=CodeGen.expr();
+		ST expr= CodeGenBase.expr();
 		String binExpr="(";
 		binExpr += codeStr(arg1);
 		binExpr += op;

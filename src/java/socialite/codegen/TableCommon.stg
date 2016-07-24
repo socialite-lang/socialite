@@ -84,6 +84,7 @@ import socialite.util.ByteBufferPool;
 import socialite.functions.AbstractAggregation;
 
 import socialite.util.concurrent.AtomicByteArray;
+import socialite.util.concurrent.NonAtomicByteArray;
 import socialite.util.concurrent.ConcurrentReadArrayList;
 import socialite.util.concurrent.ConcurrentReadIntArrayList;
 

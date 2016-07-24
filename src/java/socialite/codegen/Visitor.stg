@@ -12,7 +12,7 @@ class(packageStmt, description, imports, modifier, name, extends, interfaces, fi
 <imports: {cls| import <cls>;<\n>}>
 
 <modifier> final class <name> <extends> implements <interfaces; separator=", "> {
-    <fieldDecls:{f|private <f>;<\n>}>;
+    <fieldDecls:{f|<f>;<\n>}>;
     <methodDecls; separator="\n">
     
     <classDefs>

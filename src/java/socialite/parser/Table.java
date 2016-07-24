@@ -237,8 +237,9 @@ public class Table implements Serializable {
             TIntArrayList cols= decl.indexbyCols();
             for (int i=0; i<numColumns(); i++) {
                 Column c=getColumn(i);
-                if (c.hasRange() && !cols.contains(i))
+                if (c.hasRange() && !cols.contains(i)) {
                     cols.add(i);
+                }
             }
             cols.sort();
             indexedCols=cols.toArray();

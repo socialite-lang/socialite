@@ -1,33 +1,27 @@
 package socialite.parser;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.stringtemplate.v4.ST;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 
-import socialite.codegen.CodeGen;
+import socialite.codegen.CodeGenBase;
 import socialite.util.Assert;
 import socialite.util.InternalException;
 
 
 public class CmpOp extends Op {
-    public static enum CmpType {
-        LT(-2), LT_EQ(-1), EQ(0), GT_EQ(1), GT(2);
-        private int value;
-        private CmpType(int val) {
-            value = val;
-        }
+    public enum CmpType {
+        LT(), LT_EQ(), EQ(), GT_EQ(), GT();
+        CmpType() { }
         public boolean lessThan() {
             return this == LT_EQ || this == LT;
         }
@@ -50,7 +44,6 @@ public class CmpOp extends Op {
             }
         }
     }
-    public static int EQ=1, LT=1, GT=1;
 
     private static final long serialVersionUID = 1L;
 
@@ -66,7 +59,7 @@ public class CmpOp extends Op {
 	}
 	
 	public ST codegen() {
-		ST expr=CodeGen.expr();	
+		ST expr= CodeGenBase.expr();
 		
 		String cmpExpr="("+cmpExprStr()+")";
 		expr.add("expr", cmpExpr);

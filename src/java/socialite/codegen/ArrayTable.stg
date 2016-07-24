@@ -100,7 +100,7 @@ package socialite.tables;
         \}<\n>}>
 <endif>
 
-    TIntObjectHashMap\<SIndex> indexMap = new TIntObjectHashMap();
+    IndexMap indexMap = new IndexMap();
     IndexUtil indexUtil = new IndexUtil(this, rwlock);
 
     <idxCols:{ic|SIndex index<ic.absPos> = new SIndex();<\n>}>
@@ -271,13 +271,7 @@ package socialite.tables;
         if (constr.hasRange(<first(columns).absPos>)) {
             iterate_range(constr.getRange(<first(columns).absPos>), constr, v);
         } else if (constr.hasColumn(<first(columns).absPos>)) {
-          <if(IsInt.(first(columns).type))>
-            ColumnValue colVal = constr.getColumnValue(<first(columns).absPos>);
-            <first(columns).type> val = colVal.getValue((<first(columns).type>)0);
-          <else>
-            ColumnValue colVal = constr.getColumnValue(<first(columns).absPos>);
-            <first(columns).type> val = constr.first().getValue((<first(columns).type>)0);
-          <endif>
+            <first(columns).type> val = constr.getColumnValue(<first(columns).absPos>).getValue((<first(columns).type>)0);
             int offset = (int)(val - base);
             if (offset\<0||offset>=filled.length()) { return; }
             if (!isEntryEmpty(offset)) {
@@ -292,8 +286,8 @@ package socialite.tables;
     }
 
     public void iterate_range(ColumnRange range, ColumnConstraints _, <visitorClass> v) {
-        <first(columns).type> from = Math.max(((<first(columns).type>)range.getFrom()) - base, 0);
-        <first(columns).type> to = Math.min(((<first(columns).type>)range.getTo()) - base, 0);
+        <first(columns).type> from = Math.max(range.getFrom((<first(columns).type>)0) - base, 0);
+        <first(columns).type> to = Math.min(range.getTo((<first(columns).type>)0) - base, 0);
         rangeCheck(from);
         if (to > filled.length()) { to = filled.length(); }
         for (int i=from; i\<to; i++) {

@@ -10,7 +10,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.python.antlr.ast.VisitorBase;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 
@@ -23,7 +22,7 @@ import socialite.util.SociaLiteException;
 
 public class VisitorBaseGen {
     static String visitorPackage = "socialite.visitors";
-    static STGroup tmplGroup = CodeGen.getVisitorBaseGroup();
+    static STGroup tmplGroup = CodeGenBase.getVisitorBaseGroup();
     static int id = 0;
 
     String name;

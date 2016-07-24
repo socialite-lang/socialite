@@ -9,7 +9,7 @@ import org.apache.commons.logging.LogFactory;
  * Created by jiwon on 1/25/16.
  */
 public class SIndex {
-    public static final Log L = LogFactory.getLog(SPosIndex.class);
+    public static final Log L = LogFactory.getLog(SIndex.class);
 
     volatile Object index;
 

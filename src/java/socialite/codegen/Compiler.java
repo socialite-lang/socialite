@@ -52,7 +52,13 @@ public class Compiler {
     public LinkedHashMap<String, byte[]> getCompiledClasses() { return compiledClasses; }
     public String getErrorMsg() { return errorMsg; }
 
+    boolean isAlreadyCompiled(String name) {
+        return Loader.exists(name);
+    }
     public boolean compile(String name, String sourceCode) {
+        if (isAlreadyCompiled(name)) {
+            return true;
+        }
         JavaFileObject javaSrc = new JavaSourceFromString(name, sourceCode);
         JavaMemFileManager fileManager = new JavaMemFileManager(compiler.getStandardFileManager(dc, null, null));
         try {

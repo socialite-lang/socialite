@@ -1,5 +1,6 @@
 <project name="socialite" default="compile" basedir=".">
     <property name="src" value="${basedir}/src" />
+    <property name="gen" value="${basedir}/gen/" />
     <property name="classes" value="${basedir}/classes" />
     <property name="distdir" value="${basedir}/dist" />
     <property name="lib" value="${basedir}/ext/" />
@@ -29,8 +30,7 @@
     </target>
 
     <target name="compile" depends="init">
-        <javac includeantruntime="false" srcdir="${src}/java" destdir="${classes}" debug="${debug}"
-            excludes="**/socialite/programs/*.java">
+        <javac includeantruntime="false" srcdir="${src}/java" destdir="${classes}" debug="${debug}">
           <compilerarg value="-XDignore.symbol.file"/>
           <classpath refid="classpath"/>
         </javac>
@@ -44,6 +44,16 @@
                 <exclude name="**/*.jar"/>
             </fileset>
         </jar>
+    </target>
+
+    <target name="gen-compile" depends="init">
+        <javac includeantruntime="false" srcdir="${gen}/socialite/classes/" destdir="${classes}" debug="${debug}">
+          <compilerarg value="-XDignore.symbol.file"/>
+          <classpath refid="classpath"/>
+        </javac>
+        <copy todir="${classes}">
+            <fileset dir="${src}/java" excludes="**/*.java"/>
+        </copy>
     </target>
 
     <target name="build-thrift" depends="init">

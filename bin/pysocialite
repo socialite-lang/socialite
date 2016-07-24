@@ -15,6 +15,10 @@ getPort() {
 }
 getPort > /dev/null 2>&1
 
+
+#"$JAVA" -XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+LogCompilation -XX:+PrintAssembly -XX:+PrintInlining $JAVA_HEAP_MAX $JAVA_HEAP_MIN $JVM_OPTS $SOCIALITE_OPTS -classpath "$CLASSPATH" socialite.standalone.SingleNodeServer -Dsocialite.standalone.port=${Port} > inline.log & 
+#-XX:+PrintCompilation   print methods as they are jitted
+#"$JAVA" -XX:+TieredCompilation -XX:+UnlockDiagnosticVMOptions  -XX:+TraceClassLoading -XX:+LogCompilation -XX:+PrintAssembly -XX:+PrintOptoAssembly $JAVA_HEAP_MAX $JAVA_HEAP_MIN $JVM_OPTS $SOCIALITE_OPTS -classpath "$CLASSPATH" socialite.standalone.SingleNodeServer -Dsocialite.standalone.port=${Port} &
 "$JAVA" $JAVA_HEAP_MAX $JAVA_HEAP_MIN $JVM_OPTS $SOCIALITE_OPTS -classpath "$CLASSPATH" socialite.standalone.SingleNodeServer -Dsocialite.standalone.port=${Port} &
 
 export PYTHONPATH="${SOCIALITE_HOME}/src/python/:$PYTHONPATH"

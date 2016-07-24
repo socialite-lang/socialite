@@ -16,6 +16,8 @@ public class MySTGroupFile extends STGroupFile {
 			char delimiterStartChar, char delimiterStopChar) {
 		super(fullyQualifiedFileName, encoding, delimiterStartChar, delimiterStopChar);
 	}
+    public MySTGroupFile(URL resource) { this(resource, "UTF-8", '<', '>'); }
+
 	public MySTGroupFile(URL resource, String encoding,
 			char delimiterStartChar, char delimiterStopChar) {
 		super(resource, encoding, delimiterStartChar, delimiterStopChar);

@@ -5,19 +5,15 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.python.core.PyBaseCode;
 import org.stringtemplate.v4.ST;
 
-import socialite.codegen.CodeGen;
+import socialite.codegen.CodeGenBase;
 import socialite.collection.SArrayList;
-import socialite.functions.PyInvoke;
 import socialite.util.Assert;
 import socialite.util.InternalException;
-import socialite.util.SociaLiteException;
-import socialite.functions.FunctionLoader;
 
 public class AggrFunction extends Function implements Externalizable {
     static final long serialVersionUID = 1;
@@ -182,7 +178,7 @@ public class AggrFunction extends Function implements Externalizable {
     }
 
     public ST codegen(String ans) {
-        ST expr = CodeGen.expr();
+        ST expr = CodeGenBase.expr();
         String invoke = invokeBegin() + ans;
         for (int i = 0; i < getArgs().size(); i++) {
             Object o = getArgs().get(i);

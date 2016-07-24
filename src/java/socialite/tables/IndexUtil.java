@@ -45,38 +45,52 @@ public class IndexUtil {
         rwlock.readLock().unlock();
     }
 
+    RoaringBitmap getIndex(ColumnValue colVal, IndexMap indexMap) {
+        int col = colVal.getColumn();
+        Class type = colVal.getType();
+        if (type.equals(int.class)) {
+            int ival = colVal.getValue(0);
+            return indexMap.get(col).get(ival);
+        } else if (type.equals(long.class)) {
+            long lval = colVal.getValue(0L);
+            return indexMap.get(col).get(lval);
+        } else {
+            Object val = colVal.getValue();
+            return indexMap.get(col).get(val);
+        }
+    }
     /* Returns a new non-shared index, satisfying the given constraints.
      */
-    public RoaringBitmap getExclusiveIndex(TIntObjectHashMap<SIndex> indexMap,
+    public RoaringBitmap getExclusiveIndex(IndexMap indexMap,
                                   ColumnConstraints constr) {
-        rlock();
+        //rlock();
         try {
+            if (constr.size() == 1) {
+                Constraint c = constr.getAt(0);
+                if (c instanceof ColumnValue) {
+                    return getIndex((ColumnValue)c, indexMap);
+                }
+            }
             RoaringBitmap[] indices = new RoaringBitmap[constr.size()];
             int idxlen = 0;
-            for (ColumnValue colVal : constr) {
-                int col = colVal.getColumn();
-                Object val = colVal.getValue();
-                RoaringBitmap tmpidx;
-                if (val instanceof Integer) {
-                    int ival = (Integer)val;
-                    tmpidx = indexMap.get(col).get(ival);
-                } else if (val instanceof Long) {
-                    long lval = (Long)val;
-                    tmpidx = indexMap.get(col).get(lval);
-                } else {
-                    tmpidx = indexMap.get(col).get(val);
-                }
+            for (int i=0; i<constr.size(); i++) {
+                Constraint c = constr.getAt(i);
+                if (!(c instanceof ColumnValue)) { continue; }
+
+                RoaringBitmap tmpidx = getIndex((ColumnValue)c, indexMap);
                 if (tmpidx != null) {
                     indices[idxlen++] = tmpidx;
                 }
             }
-            if (idxlen == 0) { return null; }
-            else if (idxlen == 1) { return indices[0].clone(); }
-            else {
+            if (idxlen == 0) {
+                return null;
+            } else if (idxlen == 1) {
+                return indices[0];
+            } else {
                 return MyRoaringBitmap.and(indices);
             }
         } finally {
-            runlock();
+            //runlock();
         }
     }
 
@@ -96,9 +110,7 @@ public class IndexUtil {
         finally { wunlock(); }
     }
 
-    public void iterateBy(TIntObjectHashMap<SIndex> indexMap,
-                          ColumnConstraints constr, Object v,
-                          TableInst table) {
+    public void iterateBy(IndexMap indexMap, ColumnConstraints constr, Object v, TableInst table) {
         RoaringBitmap index = getExclusiveIndex(indexMap, constr);
         if (index == null) { return; }
         IntIterator iter = index.getIntIterator();
