@@ -195,11 +195,6 @@ public class CodeGenMain {
         queryVisitor = qv;
         queryClass = queryClass$.get(query.getP(), tableMap);
         if (queryClass!=null) return;
-        Table queryT = tableMap.get(query.getP().name());
-        if (!queryT.isCompiled()) {
-            queryClass=null;
-            return;
-        }
 
         QueryCodeGen qgen = new QueryCodeGen(query, tableMap, qv);
         Compiler c = new Compiler();

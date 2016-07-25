@@ -243,6 +243,9 @@ package socialite.tables;
                     if (!cont) { break; }
                 }
                 return;
+            } else {
+                iterate(v);
+                return;
             }
         } finally { runlock(); }
     }

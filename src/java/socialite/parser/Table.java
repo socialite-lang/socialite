@@ -27,11 +27,8 @@ public class Table implements Serializable {
 
     int groupby=0;
     int[] sortbyCols;
-    int[] orderbyCols;
     int[] indexedCols;
     String visitorClass="VisitorImpl";
-
-    boolean compiled;
 
     public Table() {
         decl=null;
@@ -47,6 +44,10 @@ public class Table implements Serializable {
     public String visitorClass() { return visitorClass; }
 
     public TableDecl decl() { return decl; }
+
+    public int getPartitionColumn() {
+        return decl.getPartitionColumn();
+    }
 
     void init() {
         columnGroupList = decl.buildColumnGroups();
@@ -66,8 +67,6 @@ public class Table implements Serializable {
         for (int i=0; i<numColumns(); i++) {
             types[i] = columns[i].type();
         }
-
-        compiled=false;
     }
 
     public int hashCode() { return decl.hashCode();	}
@@ -114,10 +113,8 @@ public class Table implements Serializable {
             if (columns[i].isSortedAsc()) sig += "asc";
             else sig += "asc";
         }
-        for (int i:orderbyCols()) {
-            sig += "_orderby"+i;
-        }
         sig += "_groupby"+groupbyColNum();
+        sig += "_shardby"+getPartitionColumn();
         if (isConcurrent()) sig += "_concurrent";
         return sig;
     }
@@ -132,12 +129,6 @@ public class Table implements Serializable {
     }
 
     public void setGroupByColNum(int num) throws InternalException {
-        if (compiled && groupby!=num) {
-            String msg="Cannot add groupby with "+num+" columns: table "+ name()+" is already compiled. "+
-                    "Add groupby("+num+") to "+name()+".";
-            throw new InternalException(msg);
-        }
-
         if (groupby>0 && groupby!=num) {
             throw new InternalException("Table "+ name()+" is already configured with #"+groupby+" groupby columns.");
         }
@@ -228,10 +219,6 @@ public class Table implements Serializable {
         if (sortbyCols==null) { sortbyCols = decl.sortbyCols().toArray(); }
         return sortbyCols;
     }
-    public int[] orderbyCols() {
-        if (orderbyCols==null) orderbyCols = decl.orderbyCols().toArray();
-        return orderbyCols;
-    }
     public int[] indexedCols() {
         if (indexedCols==null) {
             TIntArrayList cols= decl.indexbyCols();
@@ -246,9 +233,6 @@ public class Table implements Serializable {
         }
         return indexedCols;
     }
-    public void setCompiled() { compiled=true; }
-    public boolean isCompiled() { return compiled; }
-
     public String toString() {
         return name() + "(class="+className()+", id:"+id+")";
     }

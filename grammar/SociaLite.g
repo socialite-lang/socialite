@@ -30,6 +30,7 @@ tokens {
     SORT_BY;
     ORDER_BY;
     INDEX_BY;
+    SHARD_BY;
     GROUP_BY;
     RANGE;
     BIT;
@@ -134,10 +135,11 @@ table_decl: ID '(' decls ')' table_opts? DOT_END  -> ^(DECL ID decls ^(OPTION ta
         ;
 table_opts: t_opt (','! t_opt)*
 	;
-t_opt	: 'sortby' col=ID (order=SORT_ORDER)? -> ^(SORT_BY $col $order?)
+t_opt	:'sortby' col=ID (order=SORT_ORDER)? -> ^(SORT_BY $col $order?)
 	|'orderby' ID -> ^(ORDER_BY ID)
 	|'indexby' ID -> ^(INDEX_BY ID)
 	|'groupby' '(' INT ')' -> ^(GROUP_BY INT)
+	|'shardby' ID -> ^(SHARD_BY ID) 
 	|'predefined' -> PREDEFINED
 	|'concurrent' -> CONCURRENT
 	|'multiset' -> MULTISET

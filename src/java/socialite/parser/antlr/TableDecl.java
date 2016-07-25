@@ -22,6 +22,7 @@ public class TableDecl implements Serializable {
     private static final long serialVersionUID = 1;
 
     String name;
+    int partitionCol;
     List<ColumnDecl> colDecls;
     NestedTableDecl nestedTable;
     Map<String, SortBy> sortBy;
@@ -45,7 +46,6 @@ public class TableDecl implements Serializable {
         }
         nestedTable = _table;
         sortBy = new HashMap<>();
-        orderBy = new HashMap<>();
         indexBy = new HashMap<>();
 
         colNameToPos = new TObjectIntHashMap<>();
@@ -79,6 +79,9 @@ public class TableDecl implements Serializable {
         }
     }
 
+    public int getPartitionColumn() {
+        return partitionCol;
+    }
     public String toString() {
         String s=name;
         s+="(";
@@ -153,8 +156,6 @@ public class TableDecl implements Serializable {
 
         if (sortBy==null && td.sortBy!=null) return false;
         if (sortBy!=null && td.sortBy==null) return false;
-        if (orderBy==null && td.orderBy!=null) return false;
-        if (orderBy!=null && td.orderBy==null) return false;
         if (indexBy==null && td.indexBy!=null) return false;
         if (indexBy!=null && td.indexBy==null) return false;
 
@@ -216,8 +217,6 @@ public class TableDecl implements Serializable {
             for(Column c:cg.columns()) {
                 SortBy sb=sortBy.get(c.name());
                 if (sb!=null) c.setSorted(sb.isAsc());
-                OrderBy ob=orderBy.get(c.name());
-                if (ob!=null) c.setOrdered();
                 IndexBy ib=indexBy.get(c.name());
                 if (ib!=null) c.setIndexed();
             }
@@ -251,7 +250,6 @@ public class TableDecl implements Serializable {
     public int maxIter() { return maxIter; }
 
     public TIntArrayList sortbyCols() { return columnsWithOption(sortBy); }
-    public TIntArrayList orderbyCols() { return columnsWithOption(orderBy); }
     public TIntArrayList indexbyCols() { return columnsWithOption(indexBy); }
 
     TIntArrayList columnsWithOption(Map<String, ? extends TableOpt> optMap) {
@@ -304,14 +302,11 @@ public class TableDecl implements Serializable {
                 templateType = (TemplateType) opt;
             } else if (opt instanceof SortBy) {
                 sortBy.put(opt.columnName(), (SortBy) opt);
-            } else if (opt instanceof OrderBy) {
-                if (orderBy.size()!=0) {
-                    String n=orderBy.keySet().iterator().next();
-                    throw new ParseException("Orderby column already exists: column "+n);
-                }
-                orderBy.put(opt.columnName(), (OrderBy)opt);
             } else if (opt instanceof IndexBy) {
                 indexBy.put(opt.columnName(), (IndexBy)opt);
+            } else if (opt instanceof ShardBy) {
+                String col = opt.columnName();
+                partitionCol = colNameToPos.get(col);
             } else if (opt instanceof GroupBy) {
                 int gb = ((GroupBy)opt).groupby();
                 if (hasIterColumn()) gb--;

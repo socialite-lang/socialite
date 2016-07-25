@@ -83,7 +83,7 @@ package socialite.tables;
         }
     }
 
-    TIntObjectHashMap\<SIndex> indexMap = new TIntObjectHashMap();
+    IndexMap indexMap = new IndexMap();
     IndexUtil indexUtil = new IndexUtil(this, reallock);
 
     SArrayList\<Node> nodeList;

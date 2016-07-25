@@ -76,9 +76,6 @@ public class Analysis {
         p = _p;
     }
 
-    public Rule getCanonicalRule(Rule r) { return p.getCanonRule(r); }
-    public Object monitor() { return p.monitor(); }
-
     public Query getQuery() { return query; }
     public List<Epoch> getEpochs() { return epochs; }
     public List<Rule> getRules() { return rules; }
@@ -237,13 +234,45 @@ public class Analysis {
         computeRuleDeps();
         makeEpochs();
 
+        optimizeLock();
         createDeltaRules();
-
-        privatize();
         processRemoteRules();
 
         prepareEpochs();
         processDropTableStmt();
+    }
+
+    void optimizeLock() {
+        for (Rule r: rules) {
+            selectPartitionTable(r);
+        }
+    }
+    void selectPartitionTable(Rule r) {
+        Table headT = tableMap.get(r.getHead().name());
+        Param param = r.getHead().inputParams()[headT.getPartitionColumn()];
+        if (r.getBodyP().size()==0) {
+            r.setAsyncEval();
+            return;
+        }
+        Literal l = r.getBody().get(0);
+        if (l instanceof Predicate) {
+            Predicate p = (Predicate)l;
+            Table t = tableMap.get(p.name());
+            r.setPartitionTable(t, p);
+            if (p.first().equals(param)) {
+                r.setAsyncEval();
+                return;
+            }
+        }
+        for (Predicate p:r.getBodyP()) {
+            Table t = tableMap.get(p.name());
+            int col = t.getPartitionColumn();
+            if (p.inputParams()[col].equals(param)) {
+                r.setAsyncEval();
+                r.setPartitionTable(t, p);
+                return;
+            }
+        }
     }
 
     void processDropTableStmt() {
@@ -299,19 +328,6 @@ public class Analysis {
         for (Rule r : rules) {
             setGroupby(r);
         }
-        /*for (Table t:newTables) {
-            if (!t.hasGroupby()) {
-                if (t.getColumn(t.numColumns()-1).isIndexed()) {
-                    continue;
-                }
-                int groupby = t.getColumns().length-1;
-                if (t.nestingBegins(groupby)) continue;
-                try { t.setGroupByColNum(groupby); }
-                catch (InternalException e) {
-                    Assert.impossible();
-                }
-            }
-        }*/
     }
 
     void setGroupby(Rule r) {
@@ -337,24 +353,6 @@ public class Analysis {
         } catch (InternalException e) {
             throw new AnalysisException(e.getMessage(), r);
         }
-    }
-
-    boolean isLeftRec(Rule r) {
-        List<Rule> rulesUsingThis = r.getRulesUsingThis();
-        if (!rulesUsingThis.contains(r)) return false;
-
-        Predicate h = r.getHead();
-        int count = 0;
-        for (Predicate p : r.getBodyP()) {
-            if (p.isNegated()) continue;
-            if (h.name().equals(p.name())) {
-                count++;
-            }
-        }
-        Predicate f = r.firstP();
-        if (count == 1 && canMatch(h, f))
-            return true;
-        return false;
     }
 
     public static boolean canMatch(Predicate p1, Predicate p2,
@@ -457,13 +455,6 @@ public class Analysis {
         } else {
             return false;
         }
-    }
-
-    // XXX: re-implement privatization as rule rewriting, so that JoinerCodeGen does not need to know the details.
-    // e.g.  Triangle(0, $inc(1)) :- Edge(a,b), Edge(b,c), Edge(c,a).
-    //       => _Thread_Local_Triangle(worker, $inc(1)) :- Edge(a,b), Edge(b,c), Edge(c,a), worker=$workerId().
-    void privatize() {
-        if (true) return;
     }
 
     @SuppressWarnings("rawtypes")
@@ -1664,8 +1655,9 @@ public class Analysis {
         return resolved[p.getPos()].contains(v);
     }
     public static boolean isResolved(Set<Variable>[] resolvedVarsArray, Predicate p, Object param) {
-        if (param instanceof Variable)
+        if (param instanceof Variable) {
             return isResolved(resolvedVarsArray, p, (Variable)param);
+        }
         assert !(param instanceof Function);
         return true;
     }

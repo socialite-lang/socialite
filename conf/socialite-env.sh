@@ -9,10 +9,10 @@
 export SOCIALITE_BASE_PORT=50100
 
 # The heap size (in MB) for a worker.
-export SOCIALITE_HEAPSIZE=8000
+export SOCIALITE_HEAPSIZE=4000
 
 # The number of worker nodes.
 export SOCIALITE_WORKER_NUM=2
 
 # The number of threads on a single worker.
-export SOCIALITE_WORKER_THREAD_NUM=4
+export SOCIALITE_WORKER_THREAD_NUM=2

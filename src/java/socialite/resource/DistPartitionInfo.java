@@ -79,7 +79,6 @@ class DistArrayTablePartitionInfo implements PartitionInfo {
         }
     }
 
-    @Override
     public int[] getRange(int partitionIdx) {
         int[] range = new int[2];
         range[0] = arrayBegin + partitionSize * partitionIdx;
@@ -104,10 +103,17 @@ class DistArrayTablePartitionInfo implements PartitionInfo {
     public int getIndex(int range) {
         return getRangeIndex(range);
     }
+
+    public int getIndex(long val) {
+        return getRangeIndex(val);
+    }
+
     public int getRangeIndex(int range) {
         return (range - arrayBegin) >> shiftForPartitionIdx;
     }
-
+    public int getRangeIndex(long range) {
+        return (int)((range - arrayBegin) >> shiftForPartitionIdx);
+    }
     public int machineIndexFor(Object o) {
         int rangeVal = (Integer)o;
         return partitionNodeMap.node(getRangeIndex(rangeVal));
@@ -188,6 +194,8 @@ class DistHashPartitionInfo implements PartitionInfo {
     public int getIndex(int val) {
         return getHashIndex(val);
     }
+
+    public int getIndex(long val) { return getHashIndex(Long.hashCode(val)); }
 
     public int machineIndexFor(Object o) {
         int hashVal = HashCode.get(o);
