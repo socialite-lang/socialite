@@ -140,17 +140,22 @@ package socialite.tables;
         }
     }
 
-    void wlock(<first(columns).type> a) {
-        if (lockStatus == LockStatus.disabled) { return; }
-
-        _lock((int)(a-base), writeMarker);
-    }
-    void wunlock(<first(columns).type> a) {
-        if (lockStatus == LockStatus.disabled) { return; }
-
-        if (filled.get((int)(a-base)) != 1) {
-            filled.set((int)(a-base), (byte)1);
+    void markFilled(int i) {
+        if (lockStatus == LockStatus.disabled) {
+            filled.set(i, (byte)1);
+        } else {
+            // wunlock() will mark the slot.
         }
+    }
+    void wlock(int i) {
+        if (lockStatus == LockStatus.disabled) { return; }
+
+        _lock(i, writeMarker);
+    }
+    void wunlock(int i) {
+        if (lockStatus == LockStatus.disabled) { return; }
+
+        filled.set(i, (byte)1);
     }
 
     public boolean isEntryEmpty(int i) {
@@ -219,11 +224,11 @@ package socialite.tables;
     }
 
     public boolean insert(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
-        wlock(a0);
+        wlock((int)(a0-base));
         try {
             return insert_really(a0<rest(columns): {c|, a<i>}>);
         } finally {
-            wunlock(a0);
+            wunlock((int)(a0-base));
         }
     }
     boolean insert_really(<first(columns).type> a0<rest(columns): {c|, <c.type> a<i>}>) {
@@ -239,7 +244,7 @@ package socialite.tables;
 
         <rest(columns):{c|setCol<i>(i, a<i>);<\n>}>
         <idxCols:{ic|index<ic.relPos>.add(a<ic.relPos>, i);<\n>}>
-        filled.set(i, (byte)1);
+        markFilled(i);
         return true;
     }
 
@@ -310,8 +315,8 @@ groupbyArray() ::= <<
     public boolean groupby_update(<columns:{c|<c.type> a<i0>,}><gbAggrColumns:{c|AbstractAggregation f<i0>};separator=",">) {
         int i=(int)(a0-base); rangeCheck(i);
 
-        boolean updated = false;
-        wlock(a0);
+        boolean updatedAcc = false;
+        wlock(i);
         try {
             if (isEntryEmpty(i)) {
                 return insert_really(<columns:{c|a<i0>}; separator=", ">);
@@ -320,15 +325,16 @@ groupbyArray() ::= <<
                 if (f<i0>!=null) {
                     <c.type> oldVal<i0> = col<c.relPos>(i);
                     <c.type> ans<i0> = f<i0>.apply(oldVal<i0>, a<c.relPos>);
-                    updated |= !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
+                    boolean updated = !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
                     if (updated) {
                         a<c.relPos> = ans<i0>;
                     \} else {
                         a<c.relPos> = oldVal<i0>;
                     \}
+                    updatedAcc |= updated;
                 \}
             }>
-                if (updated) {
+                if (updatedAcc) {
                     <rest(columns): {c|setCol<i>(i, a<i>);<\n>}>;
                     return true;
                 } else {
@@ -337,6 +343,6 @@ groupbyArray() ::= <<
             } else {
                 throw new AssertionError("Unexpected groupby operation");
             }
-        } finally { wunlock(a0); }
+        } finally { wunlock(i); }
     }
 >>
