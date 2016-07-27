@@ -1,7 +1,7 @@
 package socialite.functions;
 
 import socialite.type.Utf8;
-public class Sum extends AbstractAggregation {
+public final class Sum extends AbstractAggregation {
     static Sum inst = new Sum();
     public static Sum get() { return inst; }
 

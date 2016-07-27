@@ -1,6 +1,5 @@
 package socialite.eval;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
@@ -15,6 +14,7 @@ import socialite.codegen.Epoch;
 import socialite.codegen.RuleComp;
 import socialite.dist.EvalRefCount;
 import socialite.parser.Const;
+import socialite.parser.GeneratedT;
 import socialite.parser.Rule;
 import socialite.parser.Table;
 import socialite.parser.antlr.ClearTable;
@@ -25,46 +25,6 @@ import socialite.tables.TableInst;
 import socialite.util.SociaLiteException;
 import socialite.yarn.ClusterConf;
 
-class InitThread extends Thread {
-    static final Log L = LogFactory.getLog(EvalParallel.class);
-
-    CyclicBarrier barrier;
-    Runnable r;
-
-    public InitThread(CyclicBarrier _barrier, String name) {
-        super(name);
-        barrier = _barrier;
-    }
-
-    public void run() {
-        while (true) {
-            try {
-                waitForTask();
-                r.run();
-                if (interrupted()) { break; }
-                barrier();
-            } catch (InterruptedException ie) {
-                break;
-            }
-        }
-    }
-
-    public synchronized void set(Runnable _r) {
-        r = _r;
-        this.notify();
-    }
-
-    synchronized void waitForTask() throws InterruptedException {
-        if (r == null)
-            wait();
-    }
-
-    void barrier() throws InterruptedException {
-        r = null;
-        try { barrier.await(); }
-        catch (BrokenBarrierException e) { throw new SociaLiteException(e); }
-    }
-}
 
 public class EvalParallel extends Eval {
     public static final Log L = LogFactory.getLog(EvalParallel.class);
@@ -83,9 +43,12 @@ public class EvalParallel extends Eval {
         }
         partitionMap = runtime.getPartitionMap();
         tableRegistry = runtime.getTableRegistry();
+        tableMap = runtime.getTableMap();
         manager = Manager.getInst();
 
-        if (!manager.isAlive()) manager.start();
+        if (!manager.isAlive()) {
+            manager.start();
+        }
     }
 
     protected void parallelInit(int i, Runnable r) {
@@ -162,7 +125,32 @@ public class EvalParallel extends Eval {
             tableArray[i] = null;
     }
 
+    void enableLock(int tableid) {
+        TableInst[] tableArray = tableRegistry.getTableInstArray(tableid);
+        for (TableInst t:tableArray) {
+            if (t != null) {
+                t.enableInternalLock(true);
+            }
+        }
+    }
+    void disableLock(int tableid) {
+        TableInst[] tableArray = tableRegistry.getTableInstArray(tableid);
+        for (TableInst t:tableArray) {
+            if (t != null) {
+                t.disableInternalLock();
+            }
+        }
+    }
     public void init() {
+        for (Rule r:epoch.getRules()) {
+            Table t = tableMap.get(r.getHead().name());
+            if (t instanceof GeneratedT) { continue; }
+            if (r.isAsyncEval()) {
+                disableLock(t.id());
+            } else {
+                enableLock(t.id());
+            }
+        }
         for (TableStmt s:epoch.tableStmts()) {
             if (s instanceof ClearTable) {
                 clearTable(s.id());
@@ -267,5 +255,45 @@ public class EvalParallel extends Eval {
 			str += r;
 		}*/
         return str;
+    }
+}
+class InitThread extends Thread {
+    static final Log L = LogFactory.getLog(EvalParallel.class);
+
+    CyclicBarrier barrier;
+    Runnable r;
+
+    public InitThread(CyclicBarrier _barrier, String name) {
+        super(name);
+        barrier = _barrier;
+    }
+
+    public void run() {
+        while (true) {
+            try {
+                waitForTask();
+                r.run();
+                if (interrupted()) { break; }
+                barrier();
+            } catch (InterruptedException ie) {
+                break;
+            }
+        }
+    }
+
+    public synchronized void set(Runnable _r) {
+        r = _r;
+        this.notify();
+    }
+
+    synchronized void waitForTask() throws InterruptedException {
+        if (r == null)
+            wait();
+    }
+
+    void barrier() throws InterruptedException {
+        r = null;
+        try { barrier.await(); }
+        catch (BrokenBarrierException e) { throw new SociaLiteException(e); }
     }
 }

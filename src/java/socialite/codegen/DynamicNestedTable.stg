@@ -83,7 +83,7 @@ package socialite.tables;
         }
     }
 
-    TIntObjectHashMap\<SIndex> indexMap = new TIntObjectHashMap();
+    IndexMap indexMap = new IndexMap();
     IndexUtil indexUtil = new IndexUtil(this, reallock);
 
     SArrayList\<Node> nodeList;
@@ -404,7 +404,7 @@ groupbyDynNested() ::= <<
             force_runlock();
         }
     // update value:
-        boolean updated = false;
+        boolean updatedAcc = false;
         boolean equals = false;
         <getNodeAndOffset()>
 
@@ -416,15 +416,16 @@ groupbyDynNested() ::= <<
                 <c.type> ans<i0> = f<i0>.apply(oldVal<i0>, a<c.relPos>);
 
                 equals &= a<c.relPos><EqOpMap.(c.type)>(oldVal<i0>);
-                updated |= !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
+                boolean updated |= !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
                 if (updated) {
                     a<c.relPos> = ans<i0>;
                 \} else {
                     a<c.relPos> = oldVal<i0>;
                 \}
+                updatedAcc |= updated;
             \}
          }>
-            if (updated) {
+            if (updatedAcc) {
                 n.update(offset<columns:{c|, a<i0>}><nestedColumns:{c|, b<i0>}>);
                 return true;
             } else {

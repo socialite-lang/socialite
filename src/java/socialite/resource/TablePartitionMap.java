@@ -25,13 +25,13 @@ public class TablePartitionMap {
 
     public TablePartitionMap() {
         int threadNum = ClusterConf.get().getNumWorkerThreads();
-        int partitionNum = threadNum*16;
+        int partitionNum = threadNum*8;
         defaultPartitionNum = BitUtils.nextHighestPowerOf2(partitionNum);
         partitionInfo = new CopyOnWriteArrayList<>();
     }
 
     void addNullPartitionInfo(int maxIdx) {
-        ArrayList<PartitionInfo> tmp = new ArrayList<PartitionInfo>(maxIdx+1-partitionInfo.size());
+        ArrayList<PartitionInfo> tmp = new ArrayList<>(maxIdx+1-partitionInfo.size());
         synchronized(partitionInfo) {
             for (int i = 0; i < maxIdx + 1 - partitionInfo.size(); i++) {
                 tmp.add(null);
@@ -65,7 +65,7 @@ public class TablePartitionMap {
     public int getIndex(int tableId, int rangeOrHash) {
         return partitionInfo.get(tableId).getIndex(rangeOrHash);
     }
-    public int getIndex(int tableId, long rangeOrHash) { return getHashIndex(tableId, rangeOrHash); }
+    public int getIndex(int tableId, long rangeOrHash) { return partitionInfo.get(tableId).getIndex(rangeOrHash); }
     public int getIndex(int tableId, float rangeOrHash) { return getHashIndex(tableId, rangeOrHash); }
     public int getIndex(int tableId, double rangeOrHash) { return getHashIndex(tableId, rangeOrHash); }
 

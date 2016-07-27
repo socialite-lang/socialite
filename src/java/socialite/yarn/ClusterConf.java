@@ -16,7 +16,8 @@ public class ClusterConf {
 
     ClusterConf() {
         numWorkers = Integer.parseInt(System.getProperty("socialite.worker.num", "2"));
-        numWorkerThreads = Integer.parseInt(System.getProperty("socialite.worker.num_threads", "8"));
+        String numCores = ""+Runtime.getRuntime().availableProcessors();
+        numWorkerThreads = Integer.parseInt(System.getProperty("socialite.worker.num_threads", numCores));
         workerHeapSize = Integer.parseInt(System.getProperty("socialite.worker.heap_size", "8192"));
 
         int max = Integer.parseInt(System.getProperty("socialite.worker.max", "-1"));

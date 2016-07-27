@@ -200,6 +200,7 @@ t_opt returns [TableOpt result]
 	|^(ORDER_BY ID) {$result = new OrderBy($ID.text);}
 	|^(INDEX_BY ID) {$result = new IndexBy($ID.text);}
 	|^(GROUP_BY INT) { $result = new GroupBy(Integer.parseInt($INT.text));}
+	|^(SHARD_BY ID) {$result = new ShardBy($ID.text);}
 	| PREDEFINED {$result = new Predefined(); }
 	| CONCURRENT {$result = new Concurrent(); }
 	| MULTISET {$result = new MultiSet();}	

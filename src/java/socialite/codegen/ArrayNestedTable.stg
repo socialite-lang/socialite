@@ -146,17 +146,22 @@ package socialite.tables;
             }
         }
     }
-    void wlock(<first(columns).type> a) {
-        if (lockStatus == LockStatus.disabled) { return; }
-
-        _lock((int)(a-base), writeMarker);
-    }
-    void wunlock(<first(columns).type> a) {
-        if (lockStatus == LockStatus.disabled) { return; }
-
-        if (filled.get((int)(a-base)) != 1) {
-            filled.set((int)(a-base), (byte)1);
+    void markFilled(int i) {
+        if (lockStatus == LockStatus.disabled) {
+            filled.set(i, (byte)1);
+        } else {
+            // wunlock() will mark the slot.
         }
+    }
+    void wlock(int i) {
+        if (lockStatus == LockStatus.disabled) { return; }
+
+        _lock(i, writeMarker);
+    }
+    void wunlock(int i) {
+        if (lockStatus == LockStatus.disabled) { return; }
+
+        filled.set(i, (byte)1);
     }
 
     public boolean isEntryEmpty(int i) {
@@ -199,9 +204,7 @@ package socialite.tables;
         int i=(int)(n-base); rangeCheck(i);
         if (isEntryEmpty(i)) { return false; }
 
-        if (true<rest(columns): {c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>) {
-            return true;
-        } else { return false; }
+        return true<rest(columns): {c|&&(col<i>(i)<EqOpMap.(c.type)>(a<i>))}>;
     }
     public boolean contains(int n<rest(columns):{c|, <c.type> a<i>}><nestedColumns:{c|, <c.type> b<i>}>) {
         boolean contains_prefix=contains_prefix(n<rest(columns):{c|, a<i>}>);
@@ -212,11 +215,11 @@ package socialite.tables;
     }
     public boolean insert(<columns:{c|<c.type> a<i0>};separator=","><nestedColumns:{c|, <c.type> b<i>}>) {
         int i=(int)(a0-base); rangeCheck(i);
-        wlock(a0);
+        wlock(i);
         try {
             return insert_really(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i>}>);
         } finally {
-            wunlock(a0);
+            wunlock(i);
         }
     }
     boolean insert_really(<columns:{c|<c.type> a<i0>};separator=","><nestedColumns:{c|, <c.type> b<i>}>) {
@@ -241,7 +244,7 @@ package socialite.tables;
         if (nestedTables[i]==null) { nested = nestedTables[i] = <nestedTable>.create(); }
         nested.insert(<nestedColumns:{c|b<i>};separator=", ">);
         <idxCols:{ic|index<ic.relPos>.add(a<ic.relPos>, i);<\n>}>
-        filled.compareAndSet(i, (byte)0, (byte)1);
+        markFilled(i);
         return true;
     }
 
@@ -337,15 +340,15 @@ groupbyArrayNested() ::= <<
         int i=(int)(a0-base); rangeCheck(i);
 
         boolean updated = false;
-        wlock(a0);
+        wlock(i);
         if (isEntryEmpty(i)) {
             updated = insert_really(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>);
-            wunlock(a0);
+            wunlock(i);
         } else if (true<rest(gbColumns):{c|&&(col<i>[i]<EqOpMap.(c.type)>(a<i>))}>) {
-            wunlock(a0);
+            wunlock(i);
             updated = nestedTables[i].groupby_update(<nestedColumns:{c|b<i0>,}><gbAggrColumns:{c|f<i0>};separator=",">);
         } else {
-            wunlock(a0);
+            wunlock(i);
             throw new AssertionError("Unexpected groupby operation");
         }
         return updated;
@@ -355,9 +358,9 @@ groupbyArrayNested() ::= <<
                                   <gbAggrColumns:{c|AbstractAggregation f<i0>};separator=",">) {
         int i=(int)(a0-base); rangeCheck(i);
 
-        boolean updated = false;
+        boolean updatedAcc = false;
         boolean equals = false;
-        wlock(a0);
+        wlock(i);
         try {
             if (isEntryEmpty(i)) {
                 return insert_really(<columns:{c|a<i0>};separator=","><nestedColumns:{c|,b<i0>}>);
@@ -368,15 +371,16 @@ groupbyArrayNested() ::= <<
                     <c.type> ans<i0> = f<i0>.apply(oldVal<i0>, a<c.relPos>);
 
                     equals &= a<c.relPos><EqOpMap.(c.type)>(oldVal<i0>);
-                    updated |= !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
+                    boolean updated = !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
                     if (updated) {
                         a<c.relPos> = ans<i0>;
                     \} else {
                         a<c.relPos> = oldVal<i0>;
                     \}
+                    updatedAcc |= updated;
                 \}
             }>
-                if (updated) {
+                if (updatedAcc) {
                     <rest(columns): {c|setCol<i>(i, a<i>);<\n>}>;
                     nestedTables[i].clear();
                     nestedTables[i].insert(offset<nestedColumns:{c|, b<i0>}>);
@@ -390,7 +394,7 @@ groupbyArrayNested() ::= <<
             } else {
                 throw new AssertionError("Unexpected groupby operation");
             }
-        } finally { wunlock(a0); }
+        } finally { wunlock(i); }
     }
 <endif> // // ] gbNestedColumns
 >>

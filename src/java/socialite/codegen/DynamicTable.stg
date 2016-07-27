@@ -339,7 +339,7 @@ groupbyDyn() ::= <<
             force_runlock();
         }
     // update value:
-        boolean updated = false;
+        boolean updatedAcc = false;
         <getNodeAndOffset()>
 
         n.wlock();
@@ -348,15 +348,16 @@ groupbyDyn() ::= <<
             if (f<i0>!=null) {
                 <c.type> oldVal<i0> = n.col<c.relPos>(offset);
                 <c.type> ans<i0> = f<i0>.apply(oldVal<i0>, a<c.relPos>);
-                updated |= !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
+                boolean updated = !(ans<i0><EqOpMap.(c.type)>(oldVal<i0>));
                 if (updated) {
                     a<c.relPos> = ans<i0>;
                 \} else {
                     a<c.relPos> = oldVal<i0>;
                 \}
+                updatedAcc |= updated;
             \}
         }>
-            if (updated) {
+            if (updatedAcc) {
                 n.update(offset<columns:{c|, a<i0>}>);
                 return true;
             } else {

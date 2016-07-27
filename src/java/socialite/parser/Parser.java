@@ -48,7 +48,6 @@ public class Parser {
     String program;
     SociaLiteParser antlrParser;
     Map<String, TableDecl> tableDeclMap = new HashMap<String, TableDecl>();
-    List<RuleDecl> ruleDecls = new ArrayList<RuleDecl>();
     List<TableStmt> tableStmts = new ArrayList<TableStmt>();
     Map<String, Rule> canonRuleMap = new HashMap<String, Rule>();
     List<Rule> newRules = new ArrayList<Rule>();
@@ -110,6 +109,7 @@ public class Parser {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         antlrParser = new SociaLiteParser(tokens);
         antlrParser.parser = this;
+        newTables.clear();
     }
 
     public void parse(String program) {
@@ -149,16 +149,6 @@ public class Parser {
         return msg;
     }
 
-    void removeCompiledTables(List<Table> _tables) {
-        List<Table> toRemove = new ArrayList<Table>();
-        for (Table t : _tables) {
-            if (t.isCompiled()) {
-                toRemove.add(t);
-            }
-        }
-        _tables.removeAll(toRemove);
-    }
-
     void exceptionCleanup() {
         List<TableDecl> toRemove = new ArrayList<TableDecl>();
         for (TableDecl decl : tableDeclMap.values()) {
@@ -172,8 +162,6 @@ public class Parser {
     }
 
     public void parse() {
-        removeCompiledTables(newTables);
-
         SociaLiteParser.prog_return prog = null;
         try {
             prog = antlrParser.prog();
@@ -324,6 +312,7 @@ public class Parser {
 
     void createTable(TableDecl decl) {
         List<Table> tables = TableFactory.create(decl);
+
         newTables.addAll(tables);
         for (Table t : tables) {
             tableMap.put(t.name(), t);
@@ -357,7 +346,7 @@ public class Parser {
     }
 
     public List<Table> getNewTables() {
-        return new ArrayList<Table>(newTables);
+        return new ArrayList<>(newTables);
     }
 
     public Map<String, Table> getTableMap() {

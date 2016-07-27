@@ -140,9 +140,7 @@ public class SRuntime {
         createVisitorBuilderFor(e.getRules());
 
         for (Table t : e.getNewTables()) {
-            if (t.isCompiled()) {
-                getPartitionMap().addTable(t);
-            }
+            getPartitionMap().addTable(t);
             if (t instanceof GeneratedT) {
                 Class<?> tableCls = TableUtil.load(t.className());
                 assert tableCls != null;
@@ -150,8 +148,9 @@ public class SRuntime {
         }
 
         addRuleMap(e.getRules(), e.getRuleMap());
-        for (Rule r : e.getRules()) {
-            if (r.isSimpleArrayInit()) continue;
+        for (Rule r:e.getRules()) {
+            if (r.isSimpleArrayInit()) { continue; }
+
             String visitorClsName = e.getVisitorClassName(r.id());
             if (visitorClsName != null) {
                 Class<?> visitorCls = Loader.forName(visitorClsName);

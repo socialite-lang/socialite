@@ -25,18 +25,19 @@ import socialite.util.InternalException;
 public class Rule implements Externalizable {
     private static final long serialVersionUID = 1;
 
-    transient List<Rule> deps = new ArrayList<Rule>();
-    transient List<Rule> usedBy = new ArrayList<Rule>();
+    transient List<Rule> deps = new ArrayList<>();
+    transient List<Rule> usedBy = new ArrayList<>();
     transient Epoch epoch=null;
 
     int epochId;
     int id;
     RuleDecl ruleDecl;
-    boolean isLeftRec=false; // indicates that this rule is (linearly) left-recursive
-    boolean isLeftRecOpt=false; // above plus array table is used for the rule-head
     boolean inScc=false;
     boolean simpleArrayInit=false;
     boolean hasPipelined = false;
+    boolean asyncEval = false;
+    Table partitionTable;
+    Predicate partitionPredicate;
 
     public Rule() { }
 
@@ -45,8 +46,22 @@ public class Rule implements Externalizable {
         id = IdFactory.nextRuleId();
     }
 
+    public void setAsyncEval() {
+        asyncEval = true;
+    }
+    public boolean isAsyncEval() { return asyncEval; }
+
+    public void setPartitionTable(Table t, Predicate p) {
+        partitionTable = t;
+        partitionPredicate = p;
+    }
+    public Table getPartitionTable() {
+        return partitionTable;
+    }
+    public Predicate getPartitionPredicate() { return partitionPredicate; }
+
     Set<Function> findFunctions() {
-        Set<Function> s = new LinkedHashSet<Function>();
+        Set<Function> s = new LinkedHashSet<>();
         if (ruleDecl.head.hasFunctionParam()) {
             for (AggrFunction f:ruleDecl.head.getAggrFuncs()) {
                 s.add(f);
@@ -75,8 +90,6 @@ public class Rule implements Externalizable {
         epochId = r.epochId;
         inScc = r.inScc;
         simpleArrayInit = r.simpleArrayInit;
-        isLeftRecOpt = r.isLeftRecOpt;
-        isLeftRec = r.isLeftRec;
         hasPipelined = r.hasPipelined;
     }
 
@@ -200,29 +213,8 @@ public class Rule implements Externalizable {
         return hasPipelined;
     }
 
-    void addVariablesForPredicate(Predicate p, Set<Variable> vars) {
-        for(int i=0; i<p.params.size(); i++) {
-            if (p.params.get(i) instanceof Variable) {
-                vars.add((Variable)p.params.get(i));
-            } else if (p.params.get(i) instanceof Function) {
-                Function f = (Function)p.params.get(i);
-                vars.addAll(f.getInputVariables());
-                vars.addAll(f.getReturnVars());
-            }
-        }
-    }
-
-    void addVariablesForExpr(Expr expr, Set<Variable> vars) {
-        vars.addAll(expr.getVariables());
-    }
-
-    void addVariablesForFunc(Function f, Set<Variable> vars) {
-        vars.addAll(f.getInputVariables());
-        vars.addAll(f.getReturnVars());
-    }
-
     public Map<String, Variable> getBodyVariableMap() {
-        HashMap<String, Variable> map = new HashMap<String, Variable>();
+        HashMap<String, Variable> map = new HashMap<>();
         for (Variable v:getBodyVariables()) {
             map.put(v.name, v);
         }
@@ -232,11 +224,14 @@ public class Rule implements Externalizable {
         Set<Variable> vars = new LinkedHashSet<Variable>();
         for (Object o:getBody()) {
             if (o instanceof Predicate) {
-                addVariablesForPredicate((Predicate)o, vars);
+                Predicate p = (Predicate)o;
+                vars.addAll(p.getVariables());
             } else if (o instanceof Expr) {
-                addVariablesForExpr((Expr)o, vars);
+                vars.addAll(((Expr)o).getVariables());
             } else if (o instanceof Function) {
-                addVariablesForFunc((Function)o, vars);
+                Function f = (Function)o;
+                vars.addAll(f.getInputVariables());
+                vars.addAll(f.getReturnVars());
             } else {
                 Assert.die("Unexpected type, o["+
                         o.getClass().getSimpleName()+"]");
@@ -255,12 +250,6 @@ public class Rule implements Externalizable {
             AssignOp op=(AssignOp)expr.root;
             if (op.fromFunction()) // not a simple assignment
                 return false;
-        }
-        return true;
-    }
-    boolean allVariables(Object[] params) {
-        for (Object o:params) {
-            if (!(o instanceof Variable)) return false;
         }
         return true;
     }
@@ -347,8 +336,6 @@ public class Rule implements Externalizable {
         ruleDecl.readExternal(in);
         id = in.readInt();
         epochId = in.readInt();
-        isLeftRec = in.readBoolean();
-        isLeftRecOpt = in.readBoolean();
         inScc = in.readBoolean();
         simpleArrayInit = in.readBoolean();
         hasPipelined = in.readBoolean();
@@ -358,8 +345,6 @@ public class Rule implements Externalizable {
         ruleDecl.writeExternal(out);
         out.writeInt(id);
         out.writeInt(epochId);
-        out.writeBoolean(isLeftRec);
-        out.writeBoolean(isLeftRecOpt);
         out.writeBoolean(inScc);
         out.writeBoolean(simpleArrayInit);
         out.writeBoolean(hasPipelined);

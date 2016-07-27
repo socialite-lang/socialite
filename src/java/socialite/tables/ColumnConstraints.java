@@ -133,7 +133,12 @@ public class ColumnConstraints {
     public boolean isEmpty() {
         return constraints.isEmpty();
     }
-    public boolean hasRange(int col) { return hasRange; }
+    public boolean hasRange(int col) {
+        if (hasRange) {
+            return getRange(col) != null;
+        }
+        return false;
+    }
     public ColumnRange getRange(int col) {
         for (int i=0; i<constraints.size(); i++) {
             Constraint val = constraints.getQuick(i);

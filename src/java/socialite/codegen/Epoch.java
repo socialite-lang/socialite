@@ -61,7 +61,6 @@ public class Epoch implements Externalizable {
 		
 		topologicalOrder = topologicalSort(ruleComps);
 	}
-	@SuppressWarnings("unchecked")
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
@@ -81,13 +80,13 @@ public class Epoch implements Externalizable {
 			_name[i] = in.readChar();
 		evalClassName = new String(_name);
 
-    	visitorClassMap = new TIntObjectHashMap<String>(0);
+    	visitorClassMap = new TIntObjectHashMap<>(0);
         visitorClassMap.readExternal(in);
 		ruleMap = new RuleMap();
 		ruleMap.readExternal(in);
-		topologicalOrder = new SArrayList<RuleComp>(0);
+		topologicalOrder = new SArrayList<>(0);
 		topologicalOrder.readExternal(in);
-        ruleComps = new SArrayList<RuleComp>(topologicalOrder);
+        ruleComps = new SArrayList<>(topologicalOrder);
 	}
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
@@ -178,8 +177,9 @@ public class Epoch implements Externalizable {
 	}
 	public void addNewTables(List<Table> _newTables) {
 		for (Table t:_newTables) {
-			if (!newTables.contains(t))
+			if (!newTables.contains(t)) {
 				newTables.add(t);
+			}
 		}
 	}
 	public List<Table> getNewTables() {

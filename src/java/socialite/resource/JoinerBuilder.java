@@ -38,13 +38,14 @@ public class JoinerBuilder {
 
     void generateRuleInfo(List<? extends Rule> rules) {
         for (Rule r:rules) {
+            Table ruleTable = r.getPartitionTable();
+            Literal l = r.getBody().get(0);
             Table firstT=null;
-            Object term0 = r.getBody().get(0);
-            if (term0 instanceof Predicate) {
-                Predicate firstP = (Predicate)term0;
+            if (l instanceof Predicate) {
+                Predicate firstP = (Predicate) l;
                 firstT = tableMap.get(firstP.name());
             }
-            RuleInfo info=new RuleInfo(r, firstT, r.getConsts());
+            RuleInfo info=new RuleInfo(r, ruleTable, firstT, r.getConsts());
             ruleInfoMap.put(r.id(), info);
         }
     }
@@ -102,15 +103,15 @@ public class JoinerBuilder {
             args = makeArgsForConstr(constr[0], ruleId, tmpTable);
         }
 
-        int joinerNum, firstTablePartitionIdx;
+        int joinerNum, ruleTablePartitionIdx;
         joinerNum = ruleInfoMap.get(ruleId).getJoinerNum(partitionMap);
         assert joinerNum>0;
-        firstTablePartitionIdx = ruleInfoMap.get(ruleId).getFirstTablePartitionIdx(partitionMap);
+        ruleTablePartitionIdx = ruleInfoMap.get(ruleId).getRuleTablePartitionIdx(partitionMap);
 
         Joiner[] joiners = new Joiner[joinerNum];
         try {
             if (joiners.length == 1) {
-                args[args.length - 1] = firstTablePartitionIdx;
+                args[args.length - 1] = ruleTablePartitionIdx;
                 joiners[0] = (Joiner)constr[0].newInstance(args);
             } else {
                 for (int j = 0; j < joiners.length; j++) {
@@ -157,24 +158,24 @@ public class JoinerBuilder {
 
 class RuleInfo {
     final Rule r;
-    final Table firstT; /* if null, first term in the rule is not a table */
+    final Table shardTable, firstTable;
     final List<Const> consts;
 
-    RuleInfo(Rule _r, Table _firstT, List<Const> _consts) {
+    RuleInfo(Rule _r, Table _shardT, Table _firstT, List<Const> _consts) {
         r = _r;
-        firstT = _firstT;
+        shardTable = _shardT;
+        firstTable = _firstT;
         consts = _consts;
     }
-    boolean startWithT() { return firstT != null; }
     public int getEpochId() {
         return r.getEpochId();
     }
 
-    public int getFirstTablePartitionIdx(TablePartitionMap partitionMap) {
-        if (firstT == null) {
+    public int getRuleTablePartitionIdx(TablePartitionMap partitionMap) {
+        if (shardTable == null) {
             return -1;
         }
-        int id = firstT.id();
+        int id = shardTable.id();
 
         Predicate firstP = (Predicate)r.getBody().get(0);
         if (firstP.first() instanceof Const) {
@@ -187,18 +188,20 @@ class RuleInfo {
     }
 
     public int getJoinerNum(TablePartitionMap partitionMap)  {
-        if (!startWithT()) { return 1; }
-        if (firstT instanceof GeneratedT) {
+        if (shardTable == null) { return 1; }
+        if (shardTable instanceof GeneratedT) {
             // Generated tables have a single partition
             return 1;
         }
 
-        Predicate p = (Predicate)r.getBody().get(0);
-        if (p.first() instanceof Const) {
+        int col = shardTable.getPartitionColumn();
+        Predicate p = r.getPartitionPredicate();
+        if (p.paramAt(col) instanceof Const) {
             return 1;
         }
 
-        return partitionMap.partitionNum(firstT.id());
+        int num = partitionMap.partitionNum(shardTable.id());
+        return num;
     }
 
     public String toString() {

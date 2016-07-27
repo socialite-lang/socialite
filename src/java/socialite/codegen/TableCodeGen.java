@@ -344,7 +344,6 @@ public class TableCodeGen {
                     throw new InternalException(msg);
                 }
                 TableUtil.load(t.className());
-                t.setCompiled();
             } else {
                 if (!TableUtil.exists(t.className())) {
                     String src = gen.generate();
@@ -357,7 +356,6 @@ public class TableCodeGen {
                     generatedClasses.putAll(c.getCompiledClasses());
                 }
                 TableUtil.load(t.className());
-                t.setCompiled();
             }
         }
         return generatedClasses;

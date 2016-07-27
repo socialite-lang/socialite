@@ -189,7 +189,7 @@ public class Predicate implements Literal {
     }
 
     public Set<Variable> getVariables() {
-        Set<Variable> vars = new LinkedHashSet<Variable>();
+        Set<Variable> vars = new LinkedHashSet<>();
         for (Param p : params) {
             if (p instanceof Variable) vars.add((Variable) p);
             if (p instanceof AggrFunction) {
@@ -200,6 +200,9 @@ public class Predicate implements Literal {
         return vars;
     }
 
+    public Param paramAt(int pos) {
+        return params.get(pos);
+    }
     public Param first() {
         return params.get(0);
     }

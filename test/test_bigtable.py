@@ -48,7 +48,6 @@ class TestArrayTable(TestDynamicTable):
         s.drop("*")
 
 
-@unittest.skip("")
 class TestDynamicNestedTable(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -79,7 +78,6 @@ class TestDynamicNestedTable(unittest.TestCase):
 
         self.assertEqual(sorted(result), sorted(expected))
 
-@unittest.skip("")
 class TestArrayNestedTable(TestDynamicNestedTable):
     @classmethod
     def setUpClass(cls):

@@ -145,7 +145,7 @@ public class JoinerCodeGen {
         }
         declareParamVariables();
 
-        joinerTmpl.add("fieldDecls", decl("int", firstTablePartitionIdx()));
+        joinerTmpl.add("fieldDecls", decl("int", myPartitionIdx()));
 
         declareRemoteTablesIfAny();
         declareVisitorVars();
@@ -256,14 +256,14 @@ public class JoinerCodeGen {
         }
 
         code.add("args", decl("SRuntime", concat("_", runtimeVar())));
-        code.add("args", decl("int", concat("_", firstTablePartitionIdx())));
+        code.add("args", decl("int", concat("_", myPartitionIdx())));
 
         code.add("stmts", init(epochIdVar(), concat("_", epochIdVar())));
         code.add("stmts", init(ruleIdVar(), concat("_", ruleIdVar())));
         code.add("stmts", init(runtimeVar(), concat("_", runtimeVar())));
         code.add("stmts", init(partitionMapVar(), call(runtimeVar(), "getPartitionMap")));
         code.add("stmts", init(registryVar(), call(runtimeVar(), "getTableRegistry")));
-        code.add("stmts", init(firstTablePartitionIdx(), concat("_", firstTablePartitionIdx())));
+        code.add("stmts", init(myPartitionIdx(), concat("_", myPartitionIdx())));
 
         for (Predicate p : rule.getAllP()) {
             Table t = getTable(p);
@@ -663,8 +663,8 @@ public class JoinerCodeGen {
         String v1 = getVarName(p1);
         String v2 = getVarName(p2);
         if (p1.getPos() == 0) {
-            v1 += "["+ firstTablePartitionIdx()+"]";
-            v2 += "["+ firstTablePartitionIdx()+"]";
+            v1 += "["+ myPartitionIdx()+"]";
+            v2 += "["+ myPartitionIdx()+"]";
             invoke += concatCommaSeparated(v1, v2)+")";
             return invoke;
         } else {
@@ -708,13 +708,13 @@ public class JoinerCodeGen {
                     break;
                 } else {
                     Table t = getTable(p);
+                    int shardCol = t.getPartitionColumn();
                     String tableVar = getVarName(p);
                     if (isTablePartitioned(t)) {
-                        boolean first = rule.getBody().get(0).equals(p);
-                        if (first) {
-                            tableVar += "[" + firstTablePartitionIdx() + "]";
-                        } else if (isResolved(p, p.first())) {
-                            tableVar += "[" + partitionIdx(t, p.first()) + "]";
+                        if (t.equals(rule.getPartitionTable())) {
+                            tableVar += "[" + myPartitionIdx() + "]";
+                        } else if (isResolved(p, p.paramAt(shardCol))) {
+                            tableVar += "[" + partitionIdx(t, p.paramAt(shardCol)) + "]";
                         } else {
                             ST for_ = forVarUpto("_$i", call(partitionMapVar(), "partitionNum", t.id()));
                             code.add("stmts", for_);
@@ -1035,6 +1035,7 @@ public class JoinerCodeGen {
 
     boolean canCombineIterate(Predicate p) {
         // Returns true if p and the next predicate can be iterated in a lock-step.
+        if (true) {return false; }
 
         int nextPos = p.getPos() + 1;
         List body = rule.getBody();
@@ -1217,12 +1218,13 @@ public class JoinerCodeGen {
     String headTablePartition() {
         if (!isTablePartitioned(headT)) { return ""; }
 
+        int shardCol = headT.getPartitionColumn();
         if (updateFromRemoteHeadT()) {
-                return "["+ partitionIdx(headT, headP.first())+"]";
+                return "["+ partitionIdx(headT, headP.paramAt(shardCol))+"]";
         } else if (Analysis.updateParallelShard(rule, tableMap)) {
-                return "["+ firstTablePartitionIdx()+"]";
+                return "["+ myPartitionIdx()+"]";
         } else {
-                return "["+ partitionIdx(headT, headP.first())+"]";
+                return "["+ partitionIdx(headT, headP.paramAt(shardCol))+"]";
         }
     }
 
@@ -1311,11 +1313,7 @@ public class JoinerCodeGen {
     String partitionIdx(Table t, Object val) {
         if (isSequential()) return "0";
 
-        if (t.isArrayTable()) {
-            return call(partitionMapVar(), "getRangeIndex", t.id(), val);
-        } else {
-            return call(partitionMapVar(), "getHashIndex", t.id(), val);
-        }
+        return call(partitionMapVar(), "getIndex", t.id(), val);
     }
 
     ST handleErrorFor(AssignOp assign, ST code) {
@@ -1463,9 +1461,13 @@ public class JoinerCodeGen {
 
         String tableVar = getVarName(p);
         if (isTablePartitioned(t)) {
-            boolean partitionSelected = Analysis.isResolved(resolvedVarsArray, p, p.first());
-            if (partitionSelected) {
-                tableVar += arrayIdx(partitionIdx(t, p.first()));
+            int shardCol = t.getPartitionColumn();
+            Param shardParam = p.inputParams()[shardCol];
+            boolean shardSelected = Analysis.isResolved(resolvedVarsArray, p, shardParam);
+            if (t.equals(rule.getPartitionTable())) {
+                tableVar += arrayIdx(myPartitionIdx());
+            } else if (shardSelected) {
+                tableVar += arrayIdx(partitionIdx(t, shardParam));
             } else {
                 ST for_ = forVarUpto("_$$i", call(partitionMapVar(), "partitionNum", t.id()));
                 code.add("stmts", for_);
@@ -1651,7 +1653,7 @@ public class JoinerCodeGen {
     }
     String constraintVar(Predicate p) { return "$constr"+p.getPos(); }
     String headTableVar() { return "$headTable"; }
-    String firstTablePartitionIdx() { return "$firstTablePartitionIdx"; }
+    String myPartitionIdx() { return "$selectedTablePartitionIdx"; }
     String registryVar() { return "$registry"; }
     String partitionMapVar() { return "$partitionMap"; }
     String runtimeVar() { return "$runtime"; }
