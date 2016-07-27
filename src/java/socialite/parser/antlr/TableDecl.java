@@ -26,7 +26,6 @@ public class TableDecl implements Serializable {
     List<ColumnDecl> colDecls;
     NestedTableDecl nestedTable;
     Map<String, SortBy> sortBy;
-    Map<String, OrderBy>  orderBy;
     Map<String, IndexBy>  indexBy;
     TObjectIntHashMap<String> colNameToPos;
     boolean predefined=false;
@@ -36,7 +35,7 @@ public class TableDecl implements Serializable {
     int iterCol = -1;
     int maxIter = 2;
     int groupby = -1;
-    TemplateType templateType;
+    TemplateType templateType; // for future use
 
     public TableDecl(String _name, List<ColumnDecl> _colDecls, NestedTableDecl _table) {
         name = _name;
@@ -307,6 +306,10 @@ public class TableDecl implements Serializable {
             } else if (opt instanceof ShardBy) {
                 String col = opt.columnName();
                 partitionCol = colNameToPos.get(col);
+                ColOpt colOpt = allColDecls().get(partitionCol).option();
+                if (partitionCol != 0 && colOpt instanceof ColRange) {
+                    throw new ParseException("Cannot use shardby for a column with a range annotation, except for a first column.");
+                }
             } else if (opt instanceof GroupBy) {
                 int gb = ((GroupBy)opt).groupby();
                 if (hasIterColumn()) gb--;
